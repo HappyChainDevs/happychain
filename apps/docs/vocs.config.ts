@@ -82,5 +82,24 @@ export default defineConfig({
                 },
             ],
         },
+        {
+            text: "Boop (Account Abstraction)",
+            collapsed: false,
+            items: [
+                {
+                    text: "Client SDK",
+                    items: [
+                        {
+                            text: "Getting Started",
+                            link: "/submitter/client/getting-started",
+                        },
+                        {
+                            text: "API Reference",
+                            link: "/submitter/client/api",
+                        },
+                    ],
+                },
+            ],
+        },
     ],
 })

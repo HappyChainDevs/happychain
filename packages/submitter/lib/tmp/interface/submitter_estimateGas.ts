@@ -55,7 +55,7 @@ export type EstimateGasOutput = Prettify<(
 )>
 
 /**
- * POST /submitter_estimateGas
+ * POST `/submitter_simulate`
  *
  * Given a happyTx possibly missing some gas limits or gas fee parameters, returns estimates for
  * these limits and parameters, and the result of simulation.

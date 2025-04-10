@@ -7,11 +7,11 @@ export type StateRequestInput = {
 }
 
 /**
- * GET /submitter_state/${hash}
+ * GET `/submitter_state/{hash}`
  *
  * Returns the state of the HappyTx as known by the submitter.
  *
- * Depending on the submitter's state retentin policies, he might not be able to answer this query,
+ * Depending on the submitter's state retention policies, he might not be able to answer this query,
  * even if he did see the HappyTx before. In this case he should answer with a status of
  * {@link StateRequestStatus.UnknownHappyTx}.
  */

@@ -7,7 +7,7 @@ import env from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 
 type NonceTrack = bigint
 type NonceValue = bigint
@@ -71,7 +71,7 @@ export class BoopNonceManagerService {
             )
 
             track.set(tx.nonceValue, {
-                hash: computeHappyTxHash(tx),
+                hash: computeBoopHash(tx),
                 resolve: (response: Result<undefined, SubmitterError>) => {
                     clearTimeout(timeout)
                     resolve(response)

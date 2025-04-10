@@ -18,8 +18,8 @@ export type ReceiptInput = {
 }
 
 /**
- * GET /submitter_receipt/${hash}
- * GET /submitter_receipt/${hash}?timeout=${timeout}
+ * GET `/submitter_receipt/{hash}`
+ * GET `/submitter_receipt/{hash}?timeout={timeout}`
  *
  * Instructs the submitter to wait for the HappyTx's receipt then return.
  *

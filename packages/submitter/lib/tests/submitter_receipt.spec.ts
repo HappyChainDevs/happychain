@@ -5,7 +5,7 @@ import { app } from "#lib/server"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 
@@ -35,7 +35,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const happyTxHash = computeHappyTxHash(signedTx)
+        const happyTxHash = computeBoopHash(signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
@@ -53,7 +53,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const happyTxHash = computeHappyTxHash(signedTx)
+        const happyTxHash = computeBoopHash(signedTx)
 
         // submit transaction but don't wait to complete
         client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })

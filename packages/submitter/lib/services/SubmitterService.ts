@@ -6,7 +6,7 @@ import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 import type { HappyReceiptService } from "./HappyReceiptService"
 import type { HappyStateService } from "./HappyStateService"
@@ -20,7 +20,7 @@ export class SubmitterService {
     ) {}
 
     async initialize(entryPoint: `0x${string}`, happyTx: HappyTx) {
-        const happyTxHash = computeHappyTxHash(happyTx)
+        const happyTxHash = computeBoopHash(happyTx)
         return await this.happyTransactionService.insert({ happyTxHash, entryPoint, ...happyTx })
     }
 
@@ -39,7 +39,7 @@ export class SubmitterService {
 
     async finalizeWhenReady(happyTx: HappyTx, txHash: `0x${string}`) {
         try {
-            const happyTxHash = computeHappyTxHash(happyTx)
+            const happyTxHash = computeBoopHash(happyTx)
             const persisted = await this.happyTransactionService.findByHappyTxHash(happyTxHash)
             if (!persisted?.id) {
                 const logData = { txHash, happyTxHash, happyTx }

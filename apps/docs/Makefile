@@ -23,7 +23,7 @@ clean: typedoc.clean ## Removes build artifacts
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
-preview: ## Previews previously built docs
+preview: vocs ## Previews previously built docs
 	vocs preview;
 .PHONY: preview
 
@@ -40,15 +40,17 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc: ## Generates the markdown files from package source code
-	concurrently --names "js,react,vue,txm"\
+	concurrently --names "js,react,vue,submitter-client,txm"\
 		'make typedoc-js'\
 		'make typedoc-react'\
 		'make typedoc-vue'\
+		'make typedoc-submitter-client'\
 		'make typedoc-txm';
 .PHONY: typedoc
 
 typedoc.clean:
 	rm -rf src/pages/sdk/{js,react,vue}/api
+	rm -rf src/pages/submitter-client/api
 	rm -rf src/pages/txm/api
 .PHONY: typedoc
 
@@ -70,6 +72,11 @@ typedoc-react:
 typedoc-vue:
 	typedoc --options ./typedoc.vue.js;
 .PHONY: typedoc-vue
+
+# generate Vue markdown API reference
+typedoc-submitter-client:
+	typedoc --options ./typedoc.submitter-client.js;
+.PHONY: typedoc-submitter-client
 
 # generate Transaction Manager markdown API reference
 typedoc-txm:

@@ -32,7 +32,7 @@ export type SubmitOutput =
       }
 
 /**
- * POST /submitter_submit
+ * POST `/submitter_submit`
  *
  * Given a HappyTx, sends it to the submitter which will either accept it and return its hash,
  * or fail with a rejection status.

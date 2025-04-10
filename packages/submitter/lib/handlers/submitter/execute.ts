@@ -3,11 +3,11 @@ import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { happyReceiptService } from "#lib/services"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
 import { type ExecuteInput, type ExecuteOutput, ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { submit } from "./submit"
 
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
-    const happyTxHash = computeHappyTxHash(data.tx)
+    const happyTxHash = computeBoopHash(data.tx)
     const status = await submit(data)
 
     if (status.isErr()) {

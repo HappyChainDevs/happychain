@@ -1,7 +1,7 @@
 import type { Account } from "viem"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { computeHappyTxHash } from "./computeHappyTxHash"
+import { computeBoopHash } from "./computeBoopHash"
 import { getDefaultExecutionAccount, getExecutionAccounts } from "./getExecutionAccounts"
 
 /**
@@ -38,6 +38,6 @@ const defaultAccount = getDefaultExecutionAccount()
 export function findExecutionAccount(tx?: HappyTx): Account {
     if (!tx) return defaultAccount
 
-    const hash = computeHappyTxHash(tx)
+    const hash = computeBoopHash(tx)
     return executorService.get(hash, tx.account, tx.nonceTrack)
 }
