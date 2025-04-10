@@ -1,5 +1,5 @@
-import { FIFOCache, HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
-import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
+import { FIFOCache, HappyMethodNames, PermissionNames } from "@happy.tech/common"
+import { computeBoopHash } from "@happy.tech/submitter-client"
 import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
@@ -9,38 +9,39 @@ import {
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { decodeNonce } from "permissionless"
 import {
     type Address,
     type Client,
     type Hash,
+    type Hex,
     InvalidAddressError,
     type Transaction,
-    type TransactionReceipt,
     hexToBigInt,
     isAddress,
-    parseSignature,
 } from "viem"
-import {
-    type GetUserOperationReturnType,
-    type UserOperation,
-    type UserOperationReceipt,
-    getUserOperationHash,
-} from "viem/account-abstraction"
-import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
-import { parseUserOpCalldata, sendUserOp } from "#src/requests/userOps"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
+import { getBoopAccount } from "#src/state/boopAccount"
+import { getBoopClient, getNonce } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
-import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
+import { formatBoopReceiptToTransactionReceipt, formatTransactionFromBoopReceipt, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
+
+import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
+// Import types from your HappyTx system
+import type { HappyTxReceipt } from "../../../../packages/submitter/lib/tmp/interface/HappyTxReceipt"
+import { StateRequestStatus } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
+import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
+
+/** Cache Boop receipts - store both the receipt and the original transaction */
+export const boopReceiptCache = new FIFOCache<Hash, { receipt: HappyTxReceipt; tx: HappyTx }>(100)
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -49,9 +50,6 @@ import { appForSourceID, checkAuthenticated } from "./utils"
 export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     void sendResponse(request, dispatchHandlers)
 }
-
-/** Cache userOp receipts that we already have from pimlico_sendUserOperationNow. */
-export const receiptCache = new FIFOCache<Hash, [UserOperationReceipt, GetUserOperationReturnType]>(100)
 
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
@@ -78,25 +76,23 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
             if (!sessionKey) throw new EIP1193UnauthorizedError()
 
-            return await sendUserOp({
+            // Use sendBoop instead of sendUserOp for Boop account abstraction
+            return await sendBoop({
                 user,
                 tx,
-                validator: contractAddresses.SessionKeyValidator,
-                signer: async (userOp, smartAccountClient) => {
-                    const hash = getUserOperationHash({
-                        userOperation: {
-                            ...userOp,
-                            sender: smartAccountClient.account.address,
-                            signature: "0x",
-                        } as UserOperation<"0.7">,
-                        entryPointAddress: entryPoint07Address,
-                        entryPointVersion: "0.7",
-                        chainId: Number(getCurrentChain().chainId),
-                    })
-                    return await getWalletClient()!.signMessage({
+                signer: async (boop) => {
+                    // Sign the boop hash with the session key
+                    const boopHash = computeBoopHash(boop)
+
+                    const validatorData = await getWalletClient()!.signMessage({
                         account: privateKeyToAccount(sessionKey),
-                        message: { raw: hash },
+                        message: { raw: boopHash },
                     })
+
+                    return {
+                        ...boop,
+                        validatorData,
+                    }
                 },
             })
         }
@@ -120,86 +116,89 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionByHash": {
             const [hash] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient())!
+            const boopClient = await getBoopClient()
 
-            // Attempt to retrieve UserOperation details first.
-            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            if (!boopClient) {
+                return await sendToPublicClient(app, request)
+            }
+
+            const cachedTx = boopReceiptCache.get(hash)
+            if (cachedTx) {
+                const receipt = cachedTx.receipt
+                const tx = cachedTx.tx
+
+                return formatTransactionFromBoopReceipt(hash, receipt, tx)
+            }
+
             try {
-                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
-                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
-                const { v, r, s, yParity } = parseSignature(userOpInfo.userOperation.signature)
+                const statusResult = await boopClient.boop.getStatus(hash)
 
-                return {
-                    // Standard transaction fields
-                    blockHash: userOpInfo.blockHash,
-                    blockNumber: userOpInfo.blockNumber,
-                    from: userOpInfo.userOperation.sender,
-                    gas: userOpInfo.userOperation.callGasLimit,
-                    maxFeePerGas: userOpInfo.userOperation.maxFeePerGas,
-                    maxPriorityFeePerGas: userOpInfo.userOperation.maxPriorityFeePerGas,
-                    nonce: Number(userOpInfo.userOperation.nonce),
-                    to,
-                    hash, // hash of the userop
-                    value,
-                    // Normally this is the tx index for regular transactions that have been
-                    // included, but is allowed to be null for pending transactions. Since we don't
-                    // get the userOp index, and returning the bundler tx index (1) wouldn't be
-                    // meaningfully useful and (2) would require an extra call to try to get the
-                    // userOp receipt, we always return null here.
-                    // If truly required, use `eth_getTransactionReceipt`.
-                    transactionIndex: null,
-                    accessList: [],
-                    type: "eip1559",
-                    typeHex: TransactionType.EIP1559,
-                    v: v!, // We're always under EIP-155
-                    r,
-                    s,
-                    yParity,
-                    chainId: Number(getCurrentChain().chainId),
-                    // Weird non-standard Viem extension: "Contract code or a hashed method call"
-                    // We just leave this empty.
-                    input: "0x",
-                    // Extra field for HappyWallet-aware users
-                    userOp: userOpInfo.userOperation,
-                } as Transaction // performs type-check, but allows extra fields
+                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                    return await sendToPublicClient(app, request)
+                }
+
+                const state = statusResult.value.state
+
+                if (!state.included || !state.receipt) {
+                    const boopAccount = await getBoopAccount()
+                    if (!boopAccount) return await sendToPublicClient(app, request)
+
+                    return {
+                        hash,
+                        from: boopAccount.address,
+                        nonce: 0x0,
+                        blockHash: null,
+                        blockNumber: null,
+                        transactionIndex: null,
+                        input: "0x",
+                    } as Partial<Transaction>
+                }
+
+                const receipt = state.receipt
+
+                // We don't have the original transaction details, just the receipt
+                // So we'll work with what we have
+                return formatTransactionFromBoopReceipt(hash, receipt)
             } catch (_err) {
-                // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
                 return await sendToPublicClient(app, request)
             }
         }
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-            // Attempt to retrieve UserOperation details first.
-            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            const boopClient = await getBoopClient()
+
+            if (!boopClient) {
+                return await sendToPublicClient(app, request)
+            }
+
+            // First, check cached boops to avoid unnecessary call
+            const cachedTx = boopReceiptCache.get(hash)
+            if (cachedTx) {
+                return formatBoopReceiptToTransactionReceipt(hash, cachedTx.receipt)
+            }
+
+            // If not in cache, get the receipt from the submitter
             try {
-                const [userOpReceipt, userOpInfo] =
-                    receiptCache.get(hash) ??
-                    (await Promise.all([
-                        smartAccountClient.getUserOperationReceipt({ hash }),
-                        smartAccountClient.getUserOperation({ hash }),
-                    ]))
-                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
-                return {
-                    // Standard transaction receipt fields
-                    blockHash: userOpInfo.blockHash,
-                    blockNumber: userOpInfo.blockNumber,
-                    contractAddress: userOpReceipt.receipt.contractAddress,
-                    cumulativeGasUsed: userOpReceipt.receipt.cumulativeGasUsed,
-                    effectiveGasPrice: userOpReceipt.receipt.effectiveGasPrice,
-                    from: userOpInfo.userOperation.sender,
-                    gasUsed: userOpReceipt.receipt.gasUsed,
-                    logs: userOpReceipt.receipt.logs,
-                    logsBloom: userOpReceipt.receipt.logsBloom,
-                    status: userOpReceipt.success ? "success" : "reverted",
-                    to,
-                    transactionHash: hash, // userop hash
-                    transactionIndex: userOpReceipt.receipt.transactionIndex,
-                    type: userOpReceipt.receipt.type,
-                    userOpReceipt, // Extra field for HappyWallet-aware users
-                    value, // Extra field because why not?
-                } as TransactionReceipt // performs type-check, but allows extra fields
+                const statusResult = await boopClient.boop.getStatus(hash)
+
+                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                    return await sendToPublicClient(app, request)
+                }
+
+                const state = statusResult.value.state
+                if (!state.included || !state.receipt) {
+                    // Transaction is not yet included, return null (according to Ethereum JSON-RPC specs)
+                    return null
+                }
+
+                const receipt = state.receipt
+
+                boopReceiptCache.put(hash, {
+                    receipt,
+                    tx: null as unknown as HappyTx,
+                })
+                return formatBoopReceiptToTransactionReceipt(hash, receipt)
             } catch (_err) {
                 return sendToPublicClient(app, request)
             }
@@ -207,42 +206,50 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+            const boopClient = await getBoopClient()
+            const boopAccount = await getBoopAccount()
 
-            if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
-                /**
-                 * For smart accounts, nonces combine :
-                 * - A key (upper 192 bits) for custom wallet logic
-                 * - A sequence number (lower 64 bits) for maintaining uniqueness
-                 *
-                 * @see {@link https://docs.stackup.sh/docs/useroperation-nonce} for detailed explanation
-                 * @see {@link https://github.com/pimlicolabs/entrypoint-estimations/blob/main/lib/account-abstraction/contracts/interfaces/INonceManager.sol}
-                 *
-                 * `eth_getTransactionCount` should only return the sequence number to match
-                 * traditional account behavior and maintain compatibility with existing tools.
-                 */
-                const fullNonce = await smartAccountClient.account.getNonce()
-                const { sequence } = decodeNonce(fullNonce)
-                return sequence
+            if (boopClient && boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
+                // In Boop, nonces are stored per account and nonce track in the EntryPoint
+                const nonceTrack = 0n // Default nonce track
+
+                try {
+                    return await getNonce(address as Address, nonceTrack)
+                } catch (error) {
+                    console.error("Encountered error while fetching nonce:", error)
+                    throw error
+                }
             }
 
-            throw new InvalidAddressError({ address })
+            return await sendToPublicClient(app, request)
         }
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-            const gasEstimation = await smartAccountClient.estimateUserOperationGas({
-                calls: [
-                    {
-                        to: tx.to as `0x${string}`,
-                        data: tx.data || "0x",
-                        value: tx.value ? hexToBigInt(tx.value) : 0n,
-                    },
-                ],
-            })
+            const boopClient = await getBoopClient()
 
-            return gasEstimation.callGasLimit
+            if (boopClient) {
+                try {
+                    const boop = await boopClient.boop.prepareTransaction({
+                        dest: tx.to as Address,
+                        callData: tx.data || "0x",
+                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    })
+
+                    const estimateResult = await boopClient.boop.estimateGas(boop)
+
+                    if (estimateResult.isErr() || estimateResult.value.status !== EntryPointStatus.Success) {
+                        return await sendToPublicClient(app, request)
+                    }
+
+                    const gasLimit = estimateResult.value.executeGasLimit
+                    return `0x${gasLimit.toString(16)}`
+                } catch (error) {
+                    console.error("Encountered error while estimating gas:", error)
+                    return await sendToPublicClient(app, request)
+                }
+            }
+            return await sendToPublicClient(app, request)
         }
 
         case "wallet_getPermissions":
@@ -261,12 +268,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "wallet_addEthereumChain":
             // If this is permissionless, the chain already exists, so we simply succeed.
-            // The app may have bypassed the permission check, but this doesn't do anything.
             return null
 
         case "wallet_switchEthereumChain":
             // If this is permissionless, we're already on the right chain so we simply succeed.
-            // The app may have bypassed the permission check, but this doesn't do anything.
             return null
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
