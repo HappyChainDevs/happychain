@@ -4,14 +4,14 @@ import { eventBus } from "./EventBus"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
 
-interface LivenessEvent {
-    occurredAt: Date
-    success: boolean
+interface SecondCounters {
+    successCount: number
+    errorCount: number
 }
 
 export class RpcLivenessMonitor {
     private txmgr: TransactionManager
-    private events: LivenessEvent[]
+    private counters: Record<number, SecondCounters>
     public isAlive: boolean
     private isDownSince: Date | null
     private checkIfHealthyInterval: NodeJS.Timer | null
@@ -19,35 +19,54 @@ export class RpcLivenessMonitor {
 
     constructor(txmgr: TransactionManager) {
         this.txmgr = txmgr
-        this.events = []
+        this.counters = {}
         this.isAlive = true
         this.isDownSince = null
         this.checkIfHealthyInterval = null
         this.consecutiveSuccessesWhileCheckingIfHealthy = 0
         TxmMetrics.getInstance().rpcLivenessMonitorGauge.record(this.isAlive ? 1 : 0)
+
+        setInterval(() => {
+            this.cleanOldCounters()
+        }, 1000)
+    }
+
+    private getCurrentSecond(): number {
+        return Math.floor(Date.now() / 1000)
+    }
+
+    private cleanOldCounters(): void {
+        const now = this.getCurrentSecond()
+        const oldestAllowedSecond = now - Math.floor(this.txmgr.livenessWindow / 1000)
+
+        Object.keys(this.counters).forEach((secondStr) => {
+            const second = Number.parseInt(secondStr, 10)
+            if (second < oldestAllowedSecond) {
+                delete this.counters[second]
+            }
+        })
     }
 
     trackSuccess() {
-        this.events.push({
-            occurredAt: new Date(),
-            success: true,
-        })
+        const currentSecond = this.getCurrentSecond()
+
+        if (!this.counters[currentSecond]) {
+            this.counters[currentSecond] = { successCount: 0, errorCount: 0 }
+        }
+
+        this.counters[currentSecond].successCount++
         this.checkIfDown()
     }
 
     trackError() {
-        this.events.push({
-            occurredAt: new Date(),
-            success: false,
-        })
-        this.checkIfDown()
-    }
+        const currentSecond = this.getCurrentSecond()
 
-    cleanOldEvents() {
-        const now = new Date()
-        this.events = this.events.filter((event) => {
-            return now.getTime() - event.occurredAt.getTime() < this.txmgr.livenessWindow
-        })
+        if (!this.counters[currentSecond]) {
+            this.counters[currentSecond] = { successCount: 0, errorCount: 0 }
+        }
+
+        this.counters[currentSecond].errorCount++
+        this.checkIfDown()
     }
 
     private checkIfDown() {
@@ -83,7 +102,7 @@ export class RpcLivenessMonitor {
             this.isAlive = true
             this.isDownSince = null
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0
-            this.events = []
+            this.counters = {}
             this.updateLivenessMetrics()
             eventBus.emit(Topics.RpcIsUp)
             if (this.checkIfHealthyInterval) {
@@ -97,8 +116,14 @@ export class RpcLivenessMonitor {
     }
 
     ratioOfSuccess() {
-        this.cleanOldEvents()
-        const successEvents = this.events.filter((event) => event.success)
-        return successEvents.length / this.events.length
+        let totalSuccesses = 0
+        let totalEvents = 0
+
+        Object.values(this.counters).forEach((counter) => {
+            totalSuccesses += counter.successCount
+            totalEvents += counter.successCount + counter.errorCount
+        })
+
+        return totalEvents > 0 ? totalSuccesses / totalEvents : 1
     }
 }
