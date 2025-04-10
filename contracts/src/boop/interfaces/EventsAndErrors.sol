@@ -43,12 +43,12 @@ event BoopSubmitted(
 event CallReverted(bytes revertData);
 
 /**
- * When the {IAccount.execute} call fails but does not revert.
+ * When the {IAccount.execute} call rejects the execution but does not revert.
  *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IAccount.execute}.
+ * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an
+ * encoded custom error returned by {IAccount.execute}.
  */
-event ExecutionFailed(bytes reason);
+event ExecutionRejected(bytes reason);
 
 /**
  * When the {IAccount.execute} call reverts (in violation of the spec).
@@ -86,12 +86,12 @@ error InvalidNonce();
 error ValidationReverted(bytes revertData);
 
 /**
- * When the account validation of the boop fails.
+ * When the validation of the boop fails because the account rejects it.
  *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
+ * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an encoded
  * custom error returned by {IAccount.validate}.
  */
-error ValidationFailed(bytes reason);
+error ValidationRejected(bytes reason);
 
 /**
  * When the paymaster validation of the boop reverts (in violation of the spec).
@@ -101,12 +101,12 @@ error ValidationFailed(bytes reason);
 error PaymentValidationReverted(bytes revertData);
 
 /**
- * When the paymaster validation of the boop fails.
+ * When the validation of the boop fails because the paymaster rejects it.
  *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IPaymaster.validatePayment}.
+ * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an
+ * encoded custom error returned by {IPaymaster.validatePayment}.
  */
-error PaymentValidationFailed(bytes reason);
+error PaymentValidationRejected(bytes reason);
 
 /**
  * When self-paying and the payment from the account fails, either because {IAccount.payout}

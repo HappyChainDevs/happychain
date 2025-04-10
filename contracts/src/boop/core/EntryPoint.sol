@@ -13,15 +13,15 @@ import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {
     BoopSubmitted,
     CallReverted,
-    ExecutionFailed,
+    ExecutionRejected,
     ExecutionReverted,
     GasPriceTooHigh,
     InsufficientStake,
     InvalidNonce,
     ValidationReverted,
-    ValidationFailed,
+    ValidationRejected,
     PaymentValidationReverted,
-    PaymentValidationFailed,
+    PaymentValidationRejected,
     PayoutFailed,
     UnknownDuringSimulation
 } from "boop/interfaces/EventsAndErrors.sol";
@@ -69,8 +69,8 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * with `address(0)` as the sender (`tx.origin`) -— as this scenario is
      * impossible onchain. We call this "simulation mode".
      *
-     * In simulation mode, this function must ignore failed (but not
-     * reverted) account and paymaster validation if their result is
+     * In simulation mode, this function must ignore rejections (but not reverts) from
+     * account and paymaster validation if their result is
      * the selector of {UnknownDuringSimulation} or
      * {FutureNonceDuringSimulation}.
      *
@@ -120,7 +120,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         if (result == Validity.CALL_REVERTED) revert ValidationReverted(revertData);
         if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
-        if (result == Validity.VALIDATION_FAILED) revert ValidationFailed(revertData);
+        if (result == Validity.VALIDATION_FAILED) revert ValidationRejected(revertData);
         if (result == Validity.UNKNOWN_DURING_SIMULATION) {
             output.validityUnknownDuringSimulation = true;
         }
@@ -135,7 +135,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
             if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
             if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
-            if (result == Validity.VALIDATION_FAILED) revert PaymentValidationFailed(revertData);
+            if (result == Validity.VALIDATION_FAILED) revert PaymentValidationRejected(revertData);
             if (result == Validity.UNKNOWN_DURING_SIMULATION) {
                 output.paymentValidityUnknownDuringSimulation = true;
             }
@@ -165,7 +165,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
             if (output.callStatus == CallStatus.CALL_REVERTED) {
                 emit CallReverted(output.revertData);
             } else if (output.callStatus == CallStatus.EXECUTE_FAILED) {
-                emit ExecutionFailed(output.revertData);
+                emit ExecutionRejected(output.revertData);
             }
         }
 

@@ -17,10 +17,10 @@ import {
     CallStatus,
     SubmitOutput,
     InsufficientStake,
-    PaymentValidationFailed,
+    PaymentValidationRejected,
     PaymentValidationReverted,
     PayoutFailed,
-    ValidationFailed,
+    ValidationRejected,
     ValidationReverted,
     GasPriceTooHigh,
     InvalidNonce
@@ -341,14 +341,14 @@ contract EntryPointTest is BoopTestUtils {
         entryPoint.submit(boop.encode());
     }
 
-    function testValidationFailedInvalidSignature() public {
+    function testValidationRejectedInvalidSignature() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
         // Change any field (except nonce) to invalid the signature over the boop
         boop.gasLimit += 10;
 
         vm.expectRevert(
-            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidSignature.selector))
+            abi.encodeWithSelector(ValidationRejected.selector, abi.encodeWithSelector(InvalidSignature.selector))
         );
 
         // Submit the transaction to trigger the revert
@@ -409,7 +409,7 @@ contract EntryPointTest is BoopTestUtils {
     // ====================================================================================================
     // PAYMASTER VALIDATION TESTS
 
-    function testPaymasterValidationFailedSubmitterFeeTooHigh() public {
+    function testPaymasterValidationRejectedSubmitterFeeTooHigh() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         // maxFeePerByte = maxFeePerGas * 16
         // maxSubmitterFee = maxFeePerByte * totalSize (totalSize <= 10000, in this case)
@@ -417,7 +417,7 @@ contract EntryPointTest is BoopTestUtils {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                PaymentValidationFailed.selector, abi.encodeWithSelector(SubmitterFeeTooHigh.selector)
+                PaymentValidationRejected.selector, abi.encodeWithSelector(SubmitterFeeTooHigh.selector)
             )
         );
         entryPoint.submit(boop.encode());
