@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 import {Test} from "forge-std/Test.sol";
+import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 
 contract HappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));
@@ -14,10 +15,12 @@ contract HappyAccountFactoryTest is Test {
 
     HappyAccountFactory private factory;
     HappyAccount private implementation;
+    HappyAccountBeacon private accountBeacon;
 
     function setUp() public {
         implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
-        factory = new HappyAccountFactory(address(implementation));
+        accountBeacon = new HappyAccountBeacon(address(implementation), address(this));
+        factory = new HappyAccountFactory(address(accountBeacon));
     }
 
     function testInitialDeployment() public {
