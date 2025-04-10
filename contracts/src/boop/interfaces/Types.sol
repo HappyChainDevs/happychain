@@ -41,26 +41,46 @@ struct Boop {
 // ====================================================================================================
 // ENTRYPOINT TYPES
 
-/// Represents the status of a call, used internally by the {EntryPoint.validate} function
+/**
+ * Represents the status of the call specified by a boop.
+ */
+// forgefmt: disable-next-item
 enum CallStatus {
-    SUCCEEDED, // The call succeeded.
-    CALL_REVERTED, // The call reverted.
-    EXECUTE_FAILED, // The {IAccount.execute} function failed (incorrect input).
-    EXECUTE_REVERTED // The {IAccount.execute} function reverted (in violation of the spec).
-
+    /** The call succeeded. */
+    SUCCEEDED,
+    /** The call reverted. */
+    CALL_REVERTED,
+    /** The {IAccount.execute} function rejected the boop (incorrect input). */
+    EXECUTE_FAILED,
+    /** The {IAccount.execute} function reverted (in violation of the spec). */
+    EXECUTE_REVERTED
 }
 
-/// Represents the validation result from account or paymaster validation calls, used internally by the {EntryPoint.validate} function
+/**
+ * Represents the validation result from account or paymaster validation calls, used internally by
+ * the {EntryPoint.validate} function.
+ */
+// forgefmt: disable-next-item
 enum Validity {
-    SUCCESS, // The validation call succeeded and returned a success status.
-    CALL_REVERTED, // The validation call itself reverted (in violation of the spec).
-    INVALID_RETURN_DATA, // The validation call returned malformed data (in violation of the spec).
-    VALIDATION_FAILED, // The validation call succeeded but returned a failure status (e.g., invalid signature).
-    UNKNOWN_DURING_SIMULATION // The validation result needs more data during simulation (e.g., missing gas limit).
-
+    /** The validation call succeeded. */
+    SUCCESS,
+    /** The validation call itself reverted (in violation of the spec). */
+    CALL_REVERTED,
+    /** The validation call returned malformed data (in violation of the spec). */
+    INVALID_RETURN_DATA,
+    /** The validation call succeeded but returned rejection data (e.g., invalid signature). */
+    VALIDATION_FAILED,
+    /**
+     * Only in simulation mode: The validation call succeeded, but indicated that some needed
+     * information is unavailable at simulation time (e.g., signature).
+     */
+    UNKNOWN_DURING_SIMULATION
 }
 
-/// Output structure returned by the {submit} function containing gas estimations and execution results
+/**
+ * Output structure returned by the {submit} function containing gas estimations and execution
+ * results.
+ */
 struct SubmitOutput {
     /**
      * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
@@ -104,8 +124,9 @@ struct SubmitOutput {
      */
     CallStatus callStatus;
     /**
-     * The revertData with which either the call or the {IAccount.execute} function reverted
-     * (when the associated `callStatus` is set).
+     * Depending on {callstatus}: the revertData with which either the call or the
+     * {IAccount.execute} function reverted, or the rejection reason (encoded error) returned by
+     * {IAccount.execute}.
      */
     bytes revertData;
 }
@@ -115,11 +136,14 @@ struct SubmitOutput {
 
 /**
  * Output struct returned by {IAccount.execute}.
- * @param status      - Status of the execution (succeeded, failed, or call reverted)
- * @param revertData  - The associated revert data if the call specified by the boop reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
     CallStatus status;
+    /**
+     * The associated revert data if the call specified by the boop reverts (with
+     * {CallStatus.CALL_REVERTED}, or the rejection reason if {IAccount.execute} rejects the boop
+     * (with {CallStatus.EXECUTE_FAILED}), otherwise empty.
+     */
     bytes revertData;
 }
 
