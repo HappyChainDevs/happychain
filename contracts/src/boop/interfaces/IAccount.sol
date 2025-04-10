@@ -37,7 +37,7 @@ interface IAccount {
     function validate(Boop memory boop) external returns (bytes memory);
 
     /**
-     * Executes the call specified by a Boop.
+     * Executes the call specified by a boop.
      *
      * The account is allowed to customize the call, or to perform additional pre and post
      * operations.
@@ -88,7 +88,6 @@ interface IAccount {
      * - {IERC1271}: Contract signature validation (0x1626ba7e)
      *
      * Optional interfaces:
-     * - {IPaymaster}: For accounts that want to act as their own paymaster (0x24542ca5)
      * - {IExtensibleAccount}: For accounts that want to support extensions (0xf0223481)
      */
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
