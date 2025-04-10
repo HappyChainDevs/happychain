@@ -60,7 +60,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
         // Only validate positive submitter fees
         if (boop.submitterFee > 0) {
             uint256 txSize = Utils.estimateSubmitterTxSize(boop);
-            uint256 maxFeePerByte = Utils.maxCalldataFeePerByte(boop);
+            uint256 maxFeePerByte = boop.maxFeePerGas * 16; // 16 = calldata cost for non-zero byte
             uint256 maxSubmitterFee = txSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
             if (uint256(boop.submitterFee) > maxSubmitterFee) {
