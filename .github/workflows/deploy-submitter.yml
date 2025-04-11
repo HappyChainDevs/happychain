@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "apps/submitter/build/*"
+          source: "apps/submitter/build/*,packages/submitter/build/cli"
           target: /home/deployer/happy-submitter
           strip_components: 2   
           rm: true
