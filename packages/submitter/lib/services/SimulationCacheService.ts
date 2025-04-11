@@ -7,7 +7,7 @@ import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 export class SimulationCacheService extends Map<string, SimulationResult> {
     private maxSize: number
     private ttl: number
-    private expiryMap: Map<string, { timeoutId: NodeJS.Timeout; expiresAt: number; ttl: number }>
+    private expiryMap: Map<string, NodeJS.Timeout>
 
     constructor(size = env.SIMULATION_CACHE_SIZE, ttl = env.SIMULATION_CACHE_TTL) {
         super()
@@ -33,10 +33,8 @@ export class SimulationCacheService extends Map<string, SimulationResult> {
 
         super.set(key, value)
 
-        const now = Date.now()
-        const expiresAt = now + this.ttl
         const timeoutId = setTimeout(() => this.delete(key), this.ttl)
-        this.expiryMap.set(key, { timeoutId, expiresAt, ttl: this.ttl })
+        this.expiryMap.set(key, timeoutId)
 
         // Enforce maxSize by evicting the oldest entry if needed
         if (this.maxSize > 0 && this.size > this.maxSize) {
@@ -56,18 +54,16 @@ export class SimulationCacheService extends Map<string, SimulationResult> {
         const expiry = this.expiryMap.get(key)
         if (!expiry) return
 
-        clearTimeout(expiry.timeoutId)
-        const now = Date.now()
-        const newExpiresAt = now + expiry.ttl
-        const newTimeoutId = setTimeout(() => this.delete(key), expiry.ttl)
-        this.expiryMap.set(key, { ...expiry, timeoutId: newTimeoutId, expiresAt: newExpiresAt })
+        clearTimeout(expiry)
+        const newTimeoutId = setTimeout(() => this.delete(key), this.ttl)
+        this.expiryMap.set(key, newTimeoutId)
     }
 
     private clearExpiry(key: string): void {
         const expiry = this.expiryMap.get(key)
         if (!expiry) return
 
-        clearTimeout(expiry.timeoutId)
+        clearTimeout(expiry)
         this.expiryMap.delete(key)
     }
 }
