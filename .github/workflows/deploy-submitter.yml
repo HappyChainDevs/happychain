@@ -27,6 +27,7 @@ jobs:
       - name: Build code
         run: |
           make submitter.build
+          ls -R packages/submitter/build
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
@@ -39,6 +40,7 @@ jobs:
           target: /home/deployer/happy-submitter
           strip_components: 2   
           rm: true
+          debug: true
 
       - name: Deploy submitter to server
         uses: appleboy/ssh-action@v1.1.0
