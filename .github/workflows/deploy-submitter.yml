@@ -54,8 +54,10 @@ jobs:
               rm -rf /home/submitter/build
               cp -r /tmp/happy-submitter/* /home/submitter/build
               
-              ls -R /tmp/happy-submitter
-              bun /home/submitter/build/migrate.es.js
+              
+              cd /home/submitter/build
+              ls -R
+              bun migrate.es.js
 
               cat > /home/submitter/build/.env <<-EOF
             PRIVATE_KEY_LOCAL=${{ secrets.SUBMITTER_PRIVATE_KEY_LOCAL }}
