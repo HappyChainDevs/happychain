@@ -7,4 +7,5 @@ export function isFirebaseError(error: unknown, code: FirebaseErrorCode): error 
 export enum FirebaseErrorCode {
     PopupBlocked = "auth/popup-blocked",
     PopupClosed = "auth/popup-closed-by-user",
+    // todo : auth/cancelled-popup-request
 }
