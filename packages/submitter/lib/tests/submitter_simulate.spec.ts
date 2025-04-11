@@ -116,7 +116,7 @@ describe("submitter_simulate", () => {
         })
 
         // Contract Bug
-        it.skip("should simulate revert on unfunded self-sponsored", async () => {
+        it("should simulate revert on unfunded self-sponsored", async () => {
             unsignedTx.paymaster = smartAccount
             unsignedTx.executeGasLimit = 0n
             unsignedTx.gasLimit = 0n
