@@ -55,7 +55,8 @@ jobs:
               cp -r /tmp/happy-submitter/* /home/submitter/build
               
               ls -R /tmp/happy-submitter
-              cp /tmp/happy-submitter/packages/submitter/build/cli /home/submitter/build/submitter-cli
+              cp /tmp/happy-submitter/build/cli /home/submitter/build/submitter-cli
+              chmod +x /home/submitter/build/submitter-cli
               /home/submitter/build/submitter-cli migrate latest
 
               cat > /home/submitter/build/.env <<-EOF
