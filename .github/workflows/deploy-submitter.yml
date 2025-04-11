@@ -27,7 +27,6 @@ jobs:
       - name: Build code
         run: |
           make submitter.build
-          ls -R packages/submitter/build
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
@@ -49,6 +48,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          script_stop: true
           script: |
             chmod -R o+rX /home/deployer/happy-submitter
             mv /home/deployer/happy-submitter /tmp
