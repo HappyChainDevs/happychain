@@ -37,7 +37,6 @@ setup:
 
 build: 
 	@$(MAKE) -f ../../makefiles/bundling.mk $@
-	@bun build bin/cli.ts --outfile build/cli --compile --external kysely-codegen --external zod-openapi
 	ln -sf ../build/cli ./dist/cli;
 .PHONY: build
 

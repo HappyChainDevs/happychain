@@ -2,7 +2,7 @@ import { defineConfig } from "@happy.tech/happybuild"
 
 export default defineConfig([
     {
-        exports: ["."],
+        exports: [".", "./migrate"],
         bunConfig: {
             target: "bun",
         },
