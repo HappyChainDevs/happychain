@@ -1,7 +1,7 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
-import happychainLogo from "#src/assets/happychain.png"
+import happychainIcon from "#src/assets/happychain.png"
 import type { AppPermissions } from "#src/state/permissions"
 import { getAppURL } from "#src/utils/appURL"
 
@@ -17,16 +17,16 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
             <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
                 <img
                     alt={dappUrl}
-                    className="text-transparent"
+                    className="text-transparent rounded-full"
                     loading="lazy"
-                    height="16"
+                    height="20"
+                    width="20"
                     onError={() => setIsFaviconBroken(true)}
                     src={
                         isFaviconBroken || dappUrl.includes("localhost:")
-                            ? happychainLogo
+                            ? happychainIcon
                             : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
                     }
-                    width="16"
                 />
                 <span className="me-auto inline-block">{dappUrl}</span>
                 <span className="p-0.5 rounded-full center" data-part="icon">
