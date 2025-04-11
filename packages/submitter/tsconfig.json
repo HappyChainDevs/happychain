@@ -9,5 +9,5 @@
         },
         "moduleResolution": "bundler"
     },
-    "include": ["*.ts", "lib", "./package.json"]
+    "include": ["*.ts", "lib", "./package.json", "bin/cli.ts"]
 }

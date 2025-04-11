@@ -33,7 +33,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness
 # packages needed to build the backend services (order matters)
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
-SUBMITTER_PKGS := support/common,packages/submitter,packages/submitter-client
+SUBMITTER_PKGS := packages/submitter,packages/submitter-client
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},${SUBMITTER_PKGS}

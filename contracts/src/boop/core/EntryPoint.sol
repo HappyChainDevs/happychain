@@ -186,9 +186,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
                 0, // maxCopy
                 abi.encodeWithSelector(IAccount.payout.selector, cost)
             );
-            if (
-                !success || gasBeforePayout - gasleft() > 15000 || (tx.origin.balance < balance + cost)
-            ) {
+            if (!success || gasBeforePayout - gasleft() > 15000 || (tx.origin.balance < balance + cost)) {
                 revert PayoutFailed();
             }
         } /* paymaster */ else {

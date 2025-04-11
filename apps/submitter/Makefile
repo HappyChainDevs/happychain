@@ -1,7 +1,5 @@
-SRC_ROOT_DIR ?= src
 include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
-include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
 dev: 
@@ -25,3 +23,28 @@ migrate-rollback: ## Rollsback latest migrations
 	@submitter-cli migrate down
 .PHONY: rollback
 
+clean: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: clean
+
+setup: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: setup
+
+build: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: build
+
+build.watch: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: build.watch
+
+setup-symlinks:
+	@mkdir -p dist
+	@if ! [[ -r ./dist/index.es.js ]]; then \
+		ln -sf ../src/index.ts ./dist/index.es.js; \
+		ln -sf ../src/index.ts ./dist/index.es.d.ts; \
+		mkdir -p node_modules/.tmp; \
+		touch node_modules/.tmp/.dev; \
+	fi
+.PHONY: setup-symlinks

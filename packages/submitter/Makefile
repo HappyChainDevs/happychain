@@ -1,32 +1,24 @@
 include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
-include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
 -include .env
 
-setup-symlinks::
-	@if ! [[ -r ./dist/client.es.js ]]; then \
-  		ln -sf ../lib/client.ts ./dist/client.es.js; \
-  		ln -sf ../lib/client.ts ./dist/client.es.d.ts; \
-	fi
-.PHONY: setup-symlinks
-
 migrate: ## Runs latest migrations
-	@./bin/cli.ts migrate latest
+	@./dist/cli migrate latest
 .PHONY: migrate
 
 migrate-fresh: ## Deletes database and starts fresh
 	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
-	@./bin/cli.ts migrate latest
+	@./dist/cli migrate latest
 .PHONY: migrate-fresh
 
 migrate-rollback: ## Rollsback latest migrations
-	@./bin/cli.ts migrate down
+	@./dist/cli migrate down
 .PHONY: rollback
 
 routes: ## Display all available routes
-	@./bin/cli.ts routes
+	@./dist/cli routes
 .PHONY: routes
 
 test: ## Run the submitter tests
@@ -36,3 +28,52 @@ test: ## Run the submitter tests
 test-watch: ## Run the submitter tests
 	@bun test --watch
 .PHONY: test-watch
+
+##@ HappyBuild
+
+setup: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: setup
+
+build: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+	@bun build bin/cli.ts --outfile build/cli --compile --external kysely-codegen --external zod-openapi
+	ln -sf ../build/cli ./dist/cli;
+.PHONY: build
+
+build.watch: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: build.watch
+
+clean: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: clean
+
+dev: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+.PHONY: dev
+
+# Sets up the symlink necessary for vite dev to work across the monorepo, but only if a build is not present.
+# This is a :: rule that can be repeated to be extended with more commands.
+setup-symlinks:
+	@mkdir -p dist
+	@if ! [[ -r ./dist/index.es.js ]]; then \
+  		ln -sf ../lib/index.ts ./dist/index.es.js; \
+  		ln -sf ../lib/index.ts ./dist/index.es.d.ts; \
+		mkdir -p node_modules/.tmp; \
+		touch node_modules/.tmp/.dev; \
+	fi
+	@if ! [[ -r ./dist/client.es.js ]]; then \
+  		ln -sf ../lib/client.ts ./dist/client.es.js; \
+  		ln -sf ../lib/client.ts ./dist/client.es.d.ts; \
+	fi
+	@if ! [[ -r ./dist/cli ]]; then \
+  		ln -sf ../bin/cli.ts ./dist/cli; \
+	fi
+.PHONY: setup-symlinks
+
+node_modules: 
+	@$(MAKE) -f ../../makefiles/bundling.mk $@
+
+dist:
+	@$(MAKE) -f ../../makefiles/bundling.mk $@

@@ -11,11 +11,10 @@
         "#lib/*": "./lib/*"
     },
     "bin": {
-        "submitter-cli": "./bin/cli.ts"
+        "submitter-cli": "./dist/cli"
     },
     "exports": {
         "./package.json": "./package.json",
-        "./migrations": "./migrations",
         ".": {
             "types": "./dist/index.es.d.ts",
             "default": "./dist/index.es.js"
