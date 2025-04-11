@@ -1,7 +1,46 @@
 import type { Account } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
+import { ExecutorCacheService } from "#lib/services/ExecutorCacheService.ts"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import { computeHappyTxHash } from "./computeHappyTxHash"
+
+/**
+  flowchart TD
+    A[New Request: hash + account + nonceTrack] --> B[Construct Key: account-nonceTrack]
+    B --> C{Key exists in expiryMap?}
+    
+    C -->|Yes| D{Hash exists in key's entries?}
+    C -->|No| E[Create New Entry]
+    
+    D -->|Yes| F[Reset hash's timeout]
+    D -->|No| G[Track new hash with timeout]
+    
+    E --> H[Get least-used executor from heap]
+    H --> I[Create expiration entry with hash]
+    I --> J[Increment executor's job count]
+    
+    G --> K[Add hash to existing] 
+    K --> L[Increment job count]
+    L --> M[Set new timeout]
+    
+    F --> N[Cancel old timeout]
+    N --> O[Set new timeout]
+    
+    J --> P[Store expiration entry]
+    M --> Q[Continue processing]
+    O --> Q
+    P --> Q
+ */
+
+const executorService = new ExecutorCacheService()
+
+const accounts = env.EXECUTOR_KEYS.map((key) => privateKeyToAccount(key))
+const defaultAccount = accounts[0]
+
+for (const account of accounts) {
+    executorService.registerExecutor(account)
+}
 
 // use mnemonic to derive multiple wallets from a single seed?
 // const account = mnemonicToAccount("legal winner thank year wave sausage worth useful legal winner thank yellow", {
@@ -13,21 +52,12 @@ import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 //     addressIndex: 0,
 // })
 
-const defaultAccount = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
-
-// These fields where chosen as they could be useful when selection which account to execute with.
-// can be adjusted to fit the actual requirements
-type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "payer" | "dest">
-
-const accounts = [defaultAccount]
-
-export function findExecutionAccount(tx?: PartialTx): Account {
+export function findExecutionAccount(tx?: HappyTx): Account {
     if (!tx) return defaultAccount
+    const account = tx.account
+    const nonceTrack = tx.nonceTrack
 
-    // TODO: select wallet per account.
-    // One approach would be to check all current/pending/processed transactions
-    // to find the least used account, then save this useraddress<->systemaccount relation
-    // for future transactions to ensure that the same user account will always be processed
-    // by the same system account
-    return accounts[0]
+    const hash = computeHappyTxHash(tx)
+
+    return executorService.get(hash, account, nonceTrack)
 }
