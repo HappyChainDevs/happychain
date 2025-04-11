@@ -56,16 +56,13 @@ jobs:
               rm -rf /home/submitter/build
               cp -r /tmp/happy-submitter/* /home/submitter/build
               
-              
-              cd /home/submitter/build
-              ls -R
-              bun migrate.es.js
-
               cat > /home/submitter/build/.env <<-EOF
             PRIVATE_KEY_LOCAL=${{ secrets.SUBMITTER_PRIVATE_KEY_LOCAL }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
             ${{vars.SUBMITTER_ENV}}
             EOF
+              cd /home/submitter/build
+              bun migrate.es.js
             '
             rm -rf /tmp/happy-submitter
             sudo /bin/systemctl restart submitter.service
