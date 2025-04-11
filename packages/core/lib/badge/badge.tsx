@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import { icon64x64 } from "@happy.tech/common"
+import { happyIcon64x64 } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
 import { onUserUpdate } from "../functions"
@@ -56,10 +56,11 @@ const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecti
     return <>{label.length > 15 ? `${label.slice(0, 12)}...` : label}</>
 }
 
+// the main one!
 const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     const [loadFailed, setLoadFailed] = useState(false)
     if (!user?.avatar || loadFailed) {
-        return <img src={icon64x64} alt="HappyChain logo" className="happychain-icon" />
+        return <img src={happyIcon64x64} alt="HappyChain logo" className="happychain-icon" />
     }
 
     return (
