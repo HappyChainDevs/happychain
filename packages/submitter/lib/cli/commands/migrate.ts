@@ -1,30 +1,21 @@
-import fs from "node:fs/promises"
-import path, { join } from "node:path"
-import { FileMigrationProvider, type MigrationResultSet, Migrator } from "kysely"
-import { KyselyBunSqliteDialect, generate } from "kysely-codegen"
+import { type Migration, type MigrationProvider, type MigrationResultSet, Migrator } from "kysely"
 import { z } from "zod"
 import { db } from "#lib/database"
-import { overrides } from "#lib/database/type-generation-overrides"
 import env from "#lib/env"
 import { type getCommand, showHelp } from "../utils"
 
-const baseDir = join(import.meta.dir, "../../../")
+import { migrations } from "../../database/migrations"
 
-const typeGenOutFile = "lib/database/generated.d.ts"
-const typeCodeGenOptions = {
-    camelCase: false,
-    db,
-    dialect: new KyselyBunSqliteDialect(),
-    // logger: new Logger(),
-    outFile: join(baseDir, typeGenOutFile),
-    overrides,
-    singular: true,
-    verify: false,
+class ObjectMigrationProvider implements MigrationProvider {
+    constructor(private migrations: Record<string, Migration>) {}
+
+    async getMigrations(): Promise<Record<string, Migration>> {
+        return this.migrations
+    }
 }
 
 export async function migrateCommand({ positionals }: ReturnType<typeof getCommand>) {
-    const migrationFolder = join(baseDir, "./migrations")
-    const provider = new FileMigrationProvider({ fs, path, migrationFolder })
+    const provider = new ObjectMigrationProvider(migrations)
     const migrator = new Migrator({ db, provider })
 
     const command = z.enum(["latest", "up", "down"]).safeParse(positionals[0])
@@ -60,8 +51,6 @@ async function processMigrationResults({ error, results }: MigrationResultSet) {
         for (const result of results) {
             console.log(`[${result.status}] ${result.direction} ${result.migrationName}`)
         }
-        await generate(typeCodeGenOptions)
-        console.log(`\nSuccessfully Generated types: ${typeGenOutFile}`)
     } else if (!error) {
         console.log("No migrations were run")
     }
