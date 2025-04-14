@@ -1,21 +1,7 @@
-import { type Migration, type MigrationProvider, Migrator } from "kysely"
 import { db } from "#lib/database"
-import { migrations } from "#lib/database/migrations"
-
-class ObjectMigrationProvider implements MigrationProvider {
-    constructor(private migrations: Record<string, Migration>) {}
-
-    async getMigrations(): Promise<Record<string, Migration>> {
-        return this.migrations
-    }
-}
+import { migrator } from "./database/utils/migrator"
 
 async function migrateToLatest() {
-    const migrator = new Migrator({
-        db,
-        provider: new ObjectMigrationProvider(migrations),
-    })
-
     const { error, results } = await migrator.migrateToLatest()
 
     results?.forEach((it) => {
