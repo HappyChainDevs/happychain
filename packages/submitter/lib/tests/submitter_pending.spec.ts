@@ -3,7 +3,7 @@ import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx.ts"
+import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 

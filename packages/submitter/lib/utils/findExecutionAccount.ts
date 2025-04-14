@@ -1,9 +1,8 @@
 import type { Account } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import env from "#lib/env"
-import { ExecutorCacheService } from "#lib/services/ExecutorCacheService.ts"
+import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { computeHappyTxHash } from "./computeHappyTxHash"
+import { getDefaultExecutionAccount, getExecutionAccounts } from "./getExecutionAccounts"
 
 /**
   flowchart TD
@@ -33,31 +32,12 @@ import { computeHappyTxHash } from "./computeHappyTxHash"
     P --> Q
  */
 
-const executorService = new ExecutorCacheService()
-
-const accounts = env.EXECUTOR_KEYS.map((key) => privateKeyToAccount(key))
-const defaultAccount = accounts[0]
-
-for (const account of accounts) {
-    executorService.registerExecutor(account)
-}
-
-// use mnemonic to derive multiple wallets from a single seed?
-// const account = mnemonicToAccount("legal winner thank year wave sausage worth useful legal winner thank yellow", {
-//     /** The account index to use in the path (`"m/44'/60'/${accountIndex}'/0/0"`). */
-//     accountIndex: 0,
-//     /** The change index to use in the path (`"m/44'/60'/0'/${changeIndex}/0"`). */
-//     changeIndex: 0,
-//     /** The address index to use in the path (`"m/44'/60'/0'/0/${addressIndex}"`). */
-//     addressIndex: 0,
-// })
+const executorService = new ExecutorCacheService(getExecutionAccounts())
+const defaultAccount = getDefaultExecutionAccount()
 
 export function findExecutionAccount(tx?: HappyTx): Account {
     if (!tx) return defaultAccount
-    const account = tx.account
-    const nonceTrack = tx.nonceTrack
 
     const hash = computeHappyTxHash(tx)
-
-    return executorService.get(hash, account, nonceTrack)
+    return executorService.get(hash, tx.account, tx.nonceTrack)
 }
