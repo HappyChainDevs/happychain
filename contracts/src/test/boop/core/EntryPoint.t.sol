@@ -65,9 +65,9 @@ contract EntryPointTest is BoopTestUtils {
 
         entryPoint = deployer.entryPoint();
         paymaster = address(deployer.happyPaymaster());
-        smartAccount = deployer.happyAccountFactory().createAccount(SALT, owner);
+        smartAccount = deployer.happyAccountBeaconFactory().createAccount(SALT, owner);
 
-        dest = deployer.happyAccountFactory().createAccount(SALT2, owner);
+        dest = deployer.happyAccountBeaconFactory().createAccount(SALT2, owner);
 
         // Fund the smart account and paymaster
         vm.deal(paymaster, INITIAL_DEPOSIT);

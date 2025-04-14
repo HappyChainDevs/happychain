@@ -42,9 +42,9 @@ contract HappyPaymasterTest is BoopTestUtils {
 
         entryPoint = deployer.entryPoint();
         _entryPoint = address(entryPoint);
-        smartAccount = deployer.happyAccountFactory().createAccount(SALT, owner);
+        smartAccount = deployer.happyAccountBeaconFactory().createAccount(SALT, owner);
 
-        dest = deployer.happyAccountFactory().createAccount(SALT2, owner);
+        dest = deployer.happyAccountBeaconFactory().createAccount(SALT2, owner);
 
         paymaster = address(deployer.happyPaymaster());
 

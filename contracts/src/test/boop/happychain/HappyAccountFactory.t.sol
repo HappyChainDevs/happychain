@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {Test} from "forge-std/Test.sol";
+
+import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
+import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 import {Test} from "forge-std/Test.sol";
@@ -13,14 +17,14 @@ contract HappyAccountFactoryTest is Test {
     address private constant OWNER = address(0xdead);
     address private constant OWNER2 = address(0xbeef);
 
-    HappyAccountFactory private factory;
+    HappyAccountBeaconFactory private factory;
     HappyAccount private implementation;
     HappyAccountBeacon private accountBeacon;
 
     function setUp() public {
         implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
         accountBeacon = new HappyAccountBeacon(address(implementation), address(this));
-        factory = new HappyAccountFactory(address(accountBeacon));
+        factory = new HappyAccountBeaconFactory(address(accountBeacon));
     }
 
     function testInitialDeployment() public {
@@ -44,7 +48,7 @@ contract HappyAccountFactoryTest is Test {
         factory.createAccount(DEPLOYMENT_SALT, OWNER);
 
         // Try to deploy again with same salt and owner - should revert
-        vm.expectRevert(HappyAccountFactory.AlreadyDeployed.selector);
+        vm.expectRevert(HappyAccountFactoryBase.AlreadyDeployed.selector);
         factory.createAccount(DEPLOYMENT_SALT, OWNER);
     }
 

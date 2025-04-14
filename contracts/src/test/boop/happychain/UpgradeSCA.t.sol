@@ -10,13 +10,7 @@ import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
-import {Boop} from "boop/interfaces/Types.sol";
-import {Test} from "forge-std/Test.sol";
-import {MessageHashUtils} from "openzeppelin/utils/cryptography/MessageHashUtils.sol";
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
-import {MockERC20} from "src/mocks/MockERC20.sol";
+import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
 
 contract UpgradeSCATest is Test {
     using Encoding for Boop;
@@ -32,7 +26,7 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // STATE VARIABLES
 
-    HappyAccountFactory private happyAccountFactory;
+    HappyAccountBeaconFactory private happyAccountFactory;
     EntryPoint private entrypoint;
     HappyAccountBeacon private accountBeacon;
     HappyAccount private happyAccountImpl;
@@ -57,7 +51,7 @@ contract UpgradeSCATest is Test {
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyAccountFactory = deployer.happyAccountFactory();
+        happyAccountFactory = deployer.happyAccountBeaconFactory();
         entrypoint = deployer.entryPoint();
         accountBeacon = deployer.happyAccountBeacon();
         happyAccountImpl = deployer.happyAccountImpl();

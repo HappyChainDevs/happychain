@@ -9,7 +9,7 @@ import {ERC1967Proxy} from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 /**
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
  */
-contract HappyAccountFactory {
+contract HappyAccountFactoryBase {
     // ====================================================================================================
     // ERRORS
 
@@ -18,19 +18,6 @@ contract HappyAccountFactory {
 
     /// Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
-
-    // ====================================================================================================
-    // IMMUTABLES AND STATE VARIABLES
-
-    /// The implementation contract that all proxies will delegate to {HappyAccount}.
-    address public immutable ACCOUNT_BEACON;
-
-    // ====================================================================================================
-    // CONSTRUCTOR
-
-    constructor(address beacon) {
-        ACCOUNT_BEACON = beacon;
-    }
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
@@ -81,10 +68,6 @@ contract HappyAccountFactory {
     }
 
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
-    function _prepareContractCode(address owner) internal view returns (bytes memory) {
-        bytes memory creationCode = type(BeaconProxy).creationCode;
-        bytes memory initData = abi.encodeCall(HappyAccount.initialize, (owner));
-        bytes memory constructorArgs = abi.encode(ACCOUNT_BEACON, initData);
-        return abi.encodePacked(creationCode, constructorArgs);
+    function _prepareContractCode(address owner) internal virtual view returns (bytes memory) {
     }
 }
