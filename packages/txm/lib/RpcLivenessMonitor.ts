@@ -1,10 +1,10 @@
-import { LogTag, Logger } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { Topics } from "./EventBus"
 import { eventBus } from "./EventBus"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 
 interface SecondCounters {
     successCount: number
@@ -83,7 +83,7 @@ export class RpcLivenessMonitor {
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0
             this.updateLivenessMetrics()
             eventBus.emit(Topics.RpcIsDown)
-            Logger.instance.error(LogTag.TXM, "Detected that the RPC is not healthy")
+            logger.error("Detected that the RPC is not healthy")
 
             span.addEvent("txm.rpc-liveness-monitor.check-if-down.is-down")
             span.setStatus({ code: SpanStatusCode.ERROR })
@@ -114,7 +114,7 @@ export class RpcLivenessMonitor {
         }
 
         if (this.consecutiveSuccessesWhileCheckingIfHealthy > this.txmgr.livenessSuccessCount) {
-            Logger.instance.info(LogTag.TXM, "Detected that the RPC is healthy")
+            logger.info("Detected that the RPC is healthy")
             span.addEvent("txm.rpc-liveness-monitor.check-if-healthy.is-up")
             this.isAlive = true
             this.isDownSince = null

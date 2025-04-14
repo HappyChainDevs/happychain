@@ -1,8 +1,8 @@
-import { LogTag, Logger } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 
 /*
 /*
@@ -51,7 +51,7 @@ export class NonceManager {
         })
 
         if (blockchainNonceResult.isErr()) {
-            Logger.instance.error(LogTag.TXM, `Failed to get transaction count for address ${address}`, {
+            logger.error(`Failed to get transaction count for address ${address}`, {
                 error: blockchainNonceResult.error,
             })
             throw new Error("Failed to get transaction count for address")
@@ -130,7 +130,7 @@ export class NonceManager {
         })
 
         if (blockchainNonceResult.isErr()) {
-            Logger.instance.error(LogTag.TXM, `Failed to get transaction count for address ${address}`, {
+            logger.error(`Failed to get transaction count for address ${address}`, {
                 error: blockchainNonceResult.error,
             })
             this.txmgr.rpcLivenessMonitor.trackError()

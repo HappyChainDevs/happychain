@@ -18,11 +18,13 @@ export enum LogLevel {
 /**
  * Tags that categorize log messages by subsystem or feature area.
  */
-export enum LogTag {
-    ALL = "All",
-    SUBMITTER = "Submitter",
-    TXM = "Txm",
-    RANDOM = "Random",
+export type LogTag = string
+
+/**
+ * Logger interface that injects the log tag into the logging methods automatically.
+ */
+export type TaggedLogger = {
+    [K in keyof Logger]: Logger[K] extends (tag: LogTag, ...args: infer P) => infer R ? (...args: P) => R : Logger[K]
 }
 
 /**
@@ -34,7 +36,7 @@ export enum LogTag {
  * 1) The global log level (OFF, ERROR, WARN, INFO, TRACE).
  * 2) A set of "enabled" tags that filter messages by subsystem. All enabled by default.
  * Example usage:
- *  const logger = Logger.instance;
+ *  const logger = Logger.create("MyTag");
  *  logger.info(LogTag.ALL, 'User logged in.'); // prints "[INFO] User logged in."
  *  logger.setLogLevel(LogLevel.INFO); // Now only INFO and above will print.
  */
@@ -62,6 +64,24 @@ export class Logger {
             Logger._instance = new Logger()
         }
         return Logger._instance
+    }
+
+    public static create(tag: LogTag, logLevel?: LogLevel): TaggedLogger {
+        Logger.instance.enableTags(tag)
+        if (logLevel) Logger.instance.setLogLevel(logLevel)
+
+        return new Proxy(Logger.instance, {
+            get(target, prop, receiver) {
+                const value = Reflect.get(target, prop, receiver)
+                if (typeof value === "function") {
+                    return (...args: unknown[]) => {
+                        const method = value as (tag: LogTag, ...args: unknown[]) => unknown
+                        return method.call(target, tag, ...args)
+                    }
+                }
+                return value
+            },
+        }) as TaggedLogger
     }
 
     /**

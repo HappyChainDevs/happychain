@@ -1,4 +1,3 @@
-import { LogTag, Logger } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
@@ -6,6 +5,7 @@ import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 
 /**
  * This module is responsible for retrieving transactions from the originators when a new block is received.
@@ -51,7 +51,7 @@ export class TransactionCollector {
             for (const transaction of transactionsBatch) {
                 eventBus.emit(Topics.TransactionSaveFailed, { transaction })
             }
-            Logger.instance.error(LogTag.TXM, "Error saving transactions", saveResult.error)
+            logger.error("Error saving transactions", saveResult.error)
 
             span.addEvent("txm.transaction-collector.on-new-block.save-failed")
             span.recordException(saveResult.error)
@@ -62,7 +62,7 @@ export class TransactionCollector {
         TxmMetrics.getInstance().transactionCollectedCounter.add(transactionsBatch.length)
 
         if (!this.txmgr.rpcLivenessMonitor.isAlive) {
-            Logger.instance.error(LogTag.TXM, "RPC is not alive, skipping attempt to submit transactions")
+            logger.error("RPC is not alive, skipping attempt to submit transactions")
             span.addEvent("txm.transaction-collector.on-new-block.rpc-not-alive")
             span.setStatus({ code: SpanStatusCode.ERROR })
             return

@@ -7,7 +7,7 @@ import { Drand } from "./Drand"
 import type { DrandRepository } from "./DrandRepository"
 import type { TransactionFactory } from "./TransactionFactory"
 import { env } from "./env"
-import { RAND_TAG, logger } from "./utils/logger"
+import { logger } from "./utils/logger"
 
 const drandBeaconSchema = z.object({
     round: z.number().int().positive(),
@@ -86,7 +86,7 @@ export class DrandService {
                 return err(DrandError.TooEarly)
             }
 
-            logger.error(RAND_TAG, "Drand beacon fetch error status", response.value.status)
+            logger.error("Drand beacon fetch error status", response.value.status)
             return err(DrandError.Other)
         }
 
@@ -137,7 +137,7 @@ export class DrandService {
         try {
             await this._handleNewDrandBeacons()
         } catch (error) {
-            logger.error(RAND_TAG, "Error in handleNewDrandBeacons: ", error)
+            logger.error("Error in handleNewDrandBeacons: ", error)
         }
         this.getDrandBeaconLocked = false
 
@@ -154,7 +154,7 @@ export class DrandService {
                 const drandBeacon = await this.getDrandBeacon(round)
 
                 if (drandBeacon.isErr()) {
-                    logger.error(RAND_TAG, "Failed to get drand beacon", drandBeacon?.error)
+                    logger.error("Failed to get drand beacon", drandBeacon?.error)
                     return
                 }
 
@@ -164,7 +164,7 @@ export class DrandService {
                 })
 
                 if (postDrandTransactionResult.isErr()) {
-                    logger.error(RAND_TAG, "Failed to create post drand transaction", postDrandTransactionResult.error)
+                    logger.error("Failed to create post drand transaction", postDrandTransactionResult.error)
                     return
                 }
 
@@ -179,7 +179,7 @@ export class DrandService {
                 const drandSaved = await this.drandRepository.saveDrand(drand)
 
                 if (drandSaved.isErr()) {
-                    logger.error(RAND_TAG, "Failed to save drand", drandSaved.error)
+                    logger.error("Failed to save drand", drandSaved.error)
                     return
                 }
 

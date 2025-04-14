@@ -1,2 +1,2 @@
 import { Logger } from "@happy.tech/common"
-export const logger = Logger.instance
+export const logger = Logger.create("Core")
