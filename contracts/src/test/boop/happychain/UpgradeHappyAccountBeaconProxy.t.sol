@@ -2,7 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
@@ -12,7 +14,7 @@ import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
 
-contract UpgradeSCATest is Test {
+contract UpgradeHappyAccountBeaconProxy is Test {
     using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
@@ -25,7 +27,6 @@ contract UpgradeSCATest is Test {
 
     // ====================================================================================================
     // STATE VARIABLES
-
     HappyAccountBeaconFactory private happyAccountFactory;
     EntryPoint private entrypoint;
     HappyAccountBeacon private accountBeacon;
