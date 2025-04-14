@@ -15,7 +15,7 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountProxy} from "boop/happychain/HappyAccountProxy.sol";
 import {HappyAccountProxyFactory} from "boop/happychain/factories/HappyAccountProxyFactory.sol";
 
-contract UpgradeSCATest is Test {
+contract UpgradeHappyAccountProxyTest is Test {
     using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
@@ -182,7 +182,7 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to sign a boop.
     function _signBoop(Boop memory boop) internal view returns (bytes memory signature) {
-        bytes32 hash = keccak256(boop.encode()).toEthSignedMessageHash();
+        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
     }
