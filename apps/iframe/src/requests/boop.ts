@@ -1,4 +1,4 @@
-import { computeBoopHash } from "@happy.tech/submitter-client"
+import { computeBoopHash,  type Result, type SubmitOutput, type HappyTx, type HappyTxReceipt, type StateRequestOutput, EntryPointStatus } from "@happy.tech/submitter-client"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address, Hash, RpcTransactionRequest, Transaction, TransactionReceipt } from "viem"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
@@ -6,14 +6,6 @@ import { StorageKey, storage } from "#src/services/storage"
 import { getBoopClient } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
 import { signWithSessionKey } from "./modules/session-keys/helpers"
-
-import type { Result } from "../../../../packages/submitter-client/lib/utils/neverthrow"
-// @todo - cleanup imports
-import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
-import type { HappyTxReceipt } from "../../../../packages/submitter/lib/tmp/interface/HappyTxReceipt"
-import type { StateRequestOutput } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
-import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
-import type { SubmitOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_submit"
 
 export type BoopSigner = (boop: HappyTx) => Promise<HappyTx>
 
@@ -39,7 +31,7 @@ export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: Happy
         logs: receipt.logs || [],
         logsBloom: receipt.txReceipt.logsBloom || "0x0",
         status: receipt.status === EntryPointStatus.Success ? "0x1" : "0x0",
-        to: receipt.txReceipt.to,
+        to: receipt.dest,
         transactionHash: hash,
         transactionIndex: receipt.txReceipt.transactionIndex || "0x0",
         type: receipt.txReceipt.type || "eip1559",

@@ -32,12 +32,7 @@ import { formatBoopReceiptToTransactionReceipt, formatTransactionFromBoopReceipt
 import { signWithSessionKey } from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
-
-// @todo - cleanup imports
-import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
-import type { HappyTxReceipt } from "../../../../packages/submitter/lib/tmp/interface/HappyTxReceipt"
-import { StateRequestStatus } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
-import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
+import { type HappyTx, type HappyTxReceipt, StateRequestStatus, EntryPointStatus } from "@happy.tech/submitter-client"
 
 /** Cache Boop receipts - store both the receipt and the original transaction */
 export const boopReceiptCache = new FIFOCache<Hash, { receipt: HappyTxReceipt; tx: HappyTx }>(100)
