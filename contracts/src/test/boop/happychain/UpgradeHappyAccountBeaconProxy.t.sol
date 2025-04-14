@@ -55,7 +55,7 @@ contract UpgradeHappyAccountBeaconProxy is Test, BoopTestUtils {
         accountBeacon = deployer.happyAccountBeacon();
         happyAccountImpl = deployer.happyAccountImpl();
 
-        // Deploy and initialize the proxy for scrappy account
+        // Deploy and initialize the account
         smartAccount = happyAccountFactory.createAccount(SALT, owner);
 
         // Deploy the new implementation
@@ -69,9 +69,9 @@ contract UpgradeHappyAccountBeaconProxy is Test, BoopTestUtils {
     }
 
     // ====================================================================================================
-    // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
+    // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT PROXY BEACON
 
-    /// @dev Test upgradeability vai beacon
+    /// @dev Test upgradeability via beacon
     function testUpgradeImplForSmartAccountViaBeacon() public {
         // Beacon slot should point to the beacon address
         bytes32 beacon = vm.load(smartAccount, ERC1967_BEACON_SLOT);
