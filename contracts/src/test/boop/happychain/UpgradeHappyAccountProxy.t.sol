@@ -77,8 +77,13 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
         bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
 
         // Create and submit upgrade transaction
-        Boop memory upgradeBoop =
-            createSignedBoop(smartAccount, smartAccount, smartAccount, privKey, _getUpgradeCallData());
+        Boop memory upgradeBoop = createSignedBoop(
+            smartAccount,
+            smartAccount,
+            smartAccount,
+            privKey,
+            abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, ""))
+        );
         entryPoint.submit(upgradeBoop.encode());
 
         // Verify implementation was updated
@@ -138,13 +143,5 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
         // Verify implementation was not updated
         bytes32 impl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
         assertEq(impl, oldImpl, "Implementation should not have changed");
-    }
-
-    // ====================================================================================================
-    // Upgrade Helper Functions
-
-    /// @dev Internal helper function to create calldata for UUPSUpgradeable.upgradeToAndCall
-    function _getUpgradeCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, ""));
     }
 }
