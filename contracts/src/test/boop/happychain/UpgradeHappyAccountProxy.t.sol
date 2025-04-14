@@ -10,7 +10,6 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
-import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountProxy} from "boop/happychain/HappyAccountProxy.sol";
 import {HappyAccountProxyFactory} from "boop/happychain/factories/HappyAccountProxyFactory.sol";
@@ -32,7 +31,7 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
     // STATE VARIABLES
 
     HappyAccountProxyFactory private happyAccountFactory;
-    
+
     address private smartAccount;
     address private mockToken;
     address private newImpl;
@@ -78,7 +77,8 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
         bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
 
         // Create and submit upgrade transaction
-        Boop memory upgradeBoop = createSignedBoop(smartAccount, smartAccount, smartAccount, privKey, _getUpgradeCallData());
+        Boop memory upgradeBoop =
+            createSignedBoop(smartAccount, smartAccount, smartAccount, privKey, _getUpgradeCallData());
         entryPoint.submit(upgradeBoop.encode());
 
         // Verify implementation was updated
@@ -147,5 +147,4 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
     function _getUpgradeCallData() internal view returns (bytes memory) {
         return abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, ""));
     }
-
 }

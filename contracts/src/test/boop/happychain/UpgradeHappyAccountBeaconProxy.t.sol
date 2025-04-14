@@ -10,7 +10,6 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
-import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
 import {BoopTestUtils} from "../Utils.sol";
