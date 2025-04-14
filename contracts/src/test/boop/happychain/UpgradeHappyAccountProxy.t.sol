@@ -14,8 +14,9 @@ import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountProxy} from "boop/happychain/HappyAccountProxy.sol";
 import {HappyAccountProxyFactory} from "boop/happychain/factories/HappyAccountProxyFactory.sol";
+import {BoopTestUtils} from "../Utils.sol";
 
-contract UpgradeHappyAccountProxyTest is Test {
+contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
@@ -26,14 +27,12 @@ contract UpgradeHappyAccountProxyTest is Test {
         0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
     bytes32 private constant SALT = 0;
     uint256 private constant DEPOSIT = 10 ether;
-    uint256 private constant MINT_AMOUNT = 5 ether;
 
     // ====================================================================================================
     // STATE VARIABLES
 
     HappyAccountProxyFactory private happyAccountFactory;
-    EntryPoint private entryPoint;
-
+    
     address private smartAccount;
     address private mockToken;
     address private newImpl;
@@ -79,7 +78,7 @@ contract UpgradeHappyAccountProxyTest is Test {
         bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
 
         // Create and submit upgrade transaction
-        Boop memory upgradeBoop = _createSignedBoop(smartAccount, _getUpgradeCallData());
+        Boop memory upgradeBoop = createSignedBoop(smartAccount, smartAccount, smartAccount, privKey, _getUpgradeCallData());
         entryPoint.submit(upgradeBoop.encode());
 
         // Verify implementation was updated
@@ -91,11 +90,11 @@ contract UpgradeHappyAccountProxyTest is Test {
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
 
         // Create and submit mint transaction to verify new implementation works
-        Boop memory mintBoop = _createSignedBoop(mockToken, _getMintCallData());
+        Boop memory mintBoop = createSignedBoopForMintToken(smartAccount, owner, smartAccount, mockToken, privKey);
         entryPoint.submit(mintBoop.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+        assertEq(MockERC20(mockToken).balanceOf(owner), TOKEN_MINT_AMOUNT, "Mint operation failed");
     }
 
     /// @dev Test upgradeability via a vanilla ethereum tx
@@ -116,11 +115,11 @@ contract UpgradeHappyAccountProxyTest is Test {
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
 
         // Create and submit mint transaction to verify new implementation works
-        Boop memory mintBoop = _createSignedBoop(mockToken, _getMintCallData());
+        Boop memory mintBoop = createSignedBoopForMintToken(smartAccount, owner, smartAccount, mockToken, privKey);
         entryPoint.submit(mintBoop.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+        assertEq(MockERC20(mockToken).balanceOf(owner), TOKEN_MINT_AMOUNT, "Mint operation failed");
     }
 
     /// @dev Test that upgradeability fails when not called by owner or account
@@ -142,58 +141,11 @@ contract UpgradeHappyAccountProxyTest is Test {
     }
 
     // ====================================================================================================
-    // BOOP CREATION UTILS
-
-    /// @dev Internal helper function to create a signed boop.
-    function _createSignedBoop(address dest, bytes memory callData) internal view returns (Boop memory) {
-        Boop memory boop = _getStubBoop();
-        boop.dest = dest;
-        boop.callData = callData;
-        boop.validatorData = _signBoop(boop);
-        return boop;
-    }
-
-    /// @dev Internal helper function to create a stub boop.
-    function _getStubBoop() internal view returns (Boop memory) {
-        return Boop({
-            account: smartAccount,
-            gasLimit: 4000000000,
-            executeGasLimit: 4000000000,
-            validateGasLimit: 4000000000,
-            validatePaymentGasLimit: 4000000000,
-            dest: 0x0000000000000000000000000000000000000000,
-            paymaster: smartAccount,
-            value: 0,
-            nonceTrack: 0,
-            nonceValue: _getNonce(),
-            maxFeePerGas: 1200000000,
-            submitterFee: 100,
-            callData: "",
-            paymasterData: "",
-            validatorData: "",
-            extraData: ""
-        });
-    }
-
-    /// @dev Internal helper function to get the nonce of a smart account.
-    function _getNonce() internal view returns (uint64) {
-        return entryPoint.nonceValues(smartAccount, 0);
-    }
-
-    /// @dev Internal helper function to sign a boop.
-    function _signBoop(Boop memory boop) internal view returns (bytes memory signature) {
-        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
-        signature = abi.encodePacked(r, s, v);
-    }
+    // Upgrade Helper Functions
 
     /// @dev Internal helper function to create calldata for UUPSUpgradeable.upgradeToAndCall
     function _getUpgradeCallData() internal view returns (bytes memory) {
         return abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, ""));
     }
 
-    /// @dev Internal helper function to create calldata for IERC20.mint().
-    function _getMintCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20.mint, (owner, MINT_AMOUNT));
-    }
 }
