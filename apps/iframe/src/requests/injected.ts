@@ -1,4 +1,5 @@
 import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
+import { type HappyTx, type HappyTxState, StateRequestStatus, EntryPointStatus } from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -36,11 +37,6 @@ import {
 } from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
-
-// @todo - cleanup imports
-import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
-import { type HappyTxState, StateRequestStatus } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
-import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
 
 // Local cache for transaction receipts to avoid repeated calls
 const receiptCache = new Map<Hash, HappyTxState>()

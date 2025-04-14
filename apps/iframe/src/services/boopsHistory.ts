@@ -1,8 +1,6 @@
 import type { Address, Hash } from "viem"
 import { type BoopEntry, type PendingBoop, StorageKey, storage } from "./storage"
-
-// @todo - cleanup import
-import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
+import type { ExecuteOutput } from "@happy.tech/submitter-client"
 
 export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, "createdAt" | "status">): void {
     const entry: PendingBoop = {

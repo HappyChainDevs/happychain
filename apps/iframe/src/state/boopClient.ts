@@ -18,15 +18,7 @@ import { getBoopAccount } from "./boopAccount"
 import { currentChainAtom } from "./chains"
 import { getPublicClient } from "./publicClient"
 import { walletClientAtom } from "./walletClient"
-
-import type { Result } from "../../../../packages/submitter-client/lib/utils/neverthrow"
-// @todo - cleanup imports later x_x
-import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
-import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
-import type { EstimateGasOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_estimateGas"
-import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
-import type { StateRequestOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_state"
-import type { SubmitOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_submit"
+import { EntryPointStatus, type SubmitOutput, type StateRequestOutput, type ExecuteOutput, type EstimateGasOutput, type Result, type HappyTx, } from "@happy.tech/submitter-client"
 
 export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     const publicClient = getPublicClient()
