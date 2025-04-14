@@ -10,7 +10,6 @@ import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFac
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
  */
 contract HappyAccountBeaconFactory is HappyAccountFactoryBase {
-
     /// The implementation contract that all proxies will delegate to {HappyAccount}.
     address public immutable ACCOUNT_BEACON;
 
@@ -21,7 +20,7 @@ contract HappyAccountBeaconFactory is HappyAccountFactoryBase {
         ACCOUNT_BEACON = beacon;
     }
 
-    /// @dev Prepares the contract creation code for ERC1967Proxy contract.
+    /// @dev Prepares the contract creation code for a BeaconProxy contract.
     function _prepareContractCode(address owner) internal view override returns (bytes memory) {
         bytes memory creationCode = type(BeaconProxy).creationCode;
         bytes memory initData = abi.encodeCall(HappyAccount.initialize, (owner));

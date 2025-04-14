@@ -7,9 +7,10 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {ERC1967Proxy} from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 /**
- * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+ * Base factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
  */
-contract HappyAccountFactoryBase {
+
+abstract contract HappyAccountFactoryBase {
     // ====================================================================================================
     // ERRORS
 
@@ -33,7 +34,6 @@ contract HappyAccountFactoryBase {
 
         // Prepare contract creation code to avoid re-computation in _getAddress
         bytes memory contractCode = _prepareContractCode(owner);
-
         address predictedAddress = _getAddress(combinedSalt, contractCode);
         if (predictedAddress.code.length > 0) revert AlreadyDeployed();
 
@@ -67,7 +67,6 @@ contract HappyAccountFactoryBase {
         );
     }
 
-    /// @dev Prepares the contract creation code for ERC1967Proxy contract.
-    function _prepareContractCode(address owner) internal virtual view returns (bytes memory) {
-    }
+    /// @dev Prepares the contract creation code for a proxy contract.
+    function _prepareContractCode(address owner) internal view virtual returns (bytes memory);
 }

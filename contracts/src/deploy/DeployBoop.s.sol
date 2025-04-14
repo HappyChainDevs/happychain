@@ -22,7 +22,7 @@ contract DeployBoopContracts is BaseDeployScript {
     HappyAccountBeacon public happyAccountBeacon;
 
     HappyPaymaster public happyPaymaster;
-    
+
     HappyAccountBeaconFactory public happyAccountBeaconFactory;
     HappyAccountProxyFactory public happyAccountProxyFactory;
 
@@ -99,6 +99,7 @@ contract DeployBoopContracts is BaseDeployScript {
             abi.encode(_happyAccountProxy),
             DEPLOYMENT_SALT //-
         );
+        happyAccountProxyFactory = HappyAccountProxyFactory(_happyAccountProxyFactory);
 
         // -----------------------------------------------------------------------------------------
 
