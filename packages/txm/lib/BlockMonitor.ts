@@ -1,10 +1,10 @@
-import { LogTag, Logger } from "@happy.tech/common"
 import { ROOT_CONTEXT, SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
  */
@@ -35,7 +35,7 @@ export class BlockMonitor {
     @TraceMethod("txm.block-monitor.on-new-block")
     private onNewBlock(block: LatestBlock | undefined) {
         if (!block) {
-            Logger.instance.error(LogTag.TXM, "Received undefined block")
+            logger.error("Received undefined block")
             return
         }
 
@@ -46,7 +46,7 @@ export class BlockMonitor {
             const description = `Received block number less than or equal to latest processed block number. Skipping. Latest processed block number: ${this.latestProcessedBlockNumber}, received block number: ${block.number}`
             span.recordException(new Error(description))
             span.setStatus({ code: SpanStatusCode.ERROR })
-            Logger.instance.warn(LogTag.TXM, description)
+            logger.warn(description)
             return
         }
 
@@ -66,7 +66,7 @@ export class BlockMonitor {
     @TraceMethod("txm.block-monitor.schedule-timeout")
     private scheduleTimeout() {
         this.blockTimeout = setTimeout(() => {
-            Logger.instance.warn(LogTag.TXM, "Timeout reached. Resetting block subscription.")
+            logger.warn("Timeout reached. Resetting block subscription.")
             this.resetBlockSubscription()
         }, this.txmgr.blockInactivityTimeout)
     }

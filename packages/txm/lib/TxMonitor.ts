@@ -1,4 +1,4 @@
-import { LogTag, Logger, bigIntMax, bigIntReplacer, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { bigIntMax, bigIntReplacer, promiseWithResolvers, unknownToError } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
@@ -9,6 +9,7 @@ import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 
 type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
@@ -69,7 +70,7 @@ export class TxMonitor {
         } catch (error) {
             span.recordException(unknownToError(error))
             span.setStatus({ code: SpanStatusCode.ERROR })
-            Logger.instance.error(LogTag.TXM, "Error in handleNewBlock: ", error)
+            logger.error("Error in handleNewBlock: ", error)
         }
         this.locked = false
 
@@ -88,7 +89,7 @@ export class TxMonitor {
         if (!this.transactionManager.rpcLivenessMonitor.isAlive) {
             span.addEvent("txm.tx-monitor.handle-new-block.rpc-not-alive")
             span.setStatus({ code: SpanStatusCode.ERROR })
-            Logger.instance.warn(LogTag.TXM, "RPC is not alive, skipping attempt to monitor transactions")
+            logger.warn("RPC is not alive, skipping attempt to monitor transactions")
             return
         }
 
@@ -165,7 +166,7 @@ export class TxMonitor {
                     const description = `Failed to get transaction receipt for transaction ${transaction.intentId}`
                     span.recordException(new Error(description))
                     span.setStatus({ code: SpanStatusCode.ERROR })
-                    Logger.instance.error(LogTag.TXM, description)
+                    logger.error(description)
                     return
                 }
 
@@ -175,7 +176,7 @@ export class TxMonitor {
                     const description = `Transaction ${transaction.intentId} inconsistent state: no nonce found`
                     span.recordException(new Error(description))
                     span.setStatus({ code: SpanStatusCode.ERROR })
-                    Logger.instance.error(LogTag.TXM, description)
+                    logger.error(description)
                     return
                 }
 
@@ -202,7 +203,7 @@ export class TxMonitor {
 
             if (receipt.status === "success") {
                 if (attempt.type === AttemptType.Cancellation) {
-                    Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} was cancelled`)
+                    logger.error(`Transaction ${transaction.intentId} was cancelled`)
                     return transaction.changeStatus(TransactionStatus.Cancelled)
                 }
                 return transaction.changeStatus(TransactionStatus.Success)
@@ -216,7 +217,7 @@ export class TxMonitor {
             )
 
             if (!shouldRetry) {
-                Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} failed`)
+                logger.error(`Transaction ${transaction.intentId} failed`)
                 return transaction.changeStatus(TransactionStatus.Failed)
             }
 
@@ -233,7 +234,7 @@ export class TxMonitor {
         )
 
         if (result.isErr()) {
-            Logger.instance.error(LogTag.TXM, "Error flushing transactions in onNewBlock")
+            logger.error("Error flushing transactions in onNewBlock")
         }
     }
 
@@ -277,7 +278,7 @@ export class TxMonitor {
             const description = `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleExpiredTransaction`
             span.recordException(new Error(description))
             span.setStatus({ code: SpanStatusCode.ERROR })
-            Logger.instance.error(LogTag.TXM, description)
+            logger.error(description)
             return
         }
 
@@ -318,13 +319,12 @@ export class TxMonitor {
             const description = `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleStuckTransaction`
             span.recordException(new Error(description))
             span.setStatus({ code: SpanStatusCode.ERROR })
-            Logger.instance.error(LogTag.TXM, description)
+            logger.error(description)
             return
         }
 
         if (!this.shouldEmitNewAttempt(attempt)) {
-            Logger.instance.info(
-                LogTag.TXM,
+            logger.info(
                 `Transaction ${transaction.intentId} is stuck, but the gas price is still sufficient for current network conditions. Sending same attempt again.`,
             )
             const result = await this.transactionManager.transactionSubmitter.resubmitAttempt(transaction, attempt)
@@ -335,8 +335,7 @@ export class TxMonitor {
             return
         }
 
-        Logger.instance.info(
-            LogTag.TXM,
+        logger.info(
             `Transaction ${transaction.intentId} is stuck and the gas price is below optimal network parameters. Sending new attempt.`,
         )
 

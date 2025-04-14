@@ -1,4 +1,4 @@
-import { LogTag, Logger, bigIntReplacer } from "@happy.tech/common"
+import { bigIntReplacer } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
 import type { TransactionRequestEIP1559 } from "viem"
@@ -7,6 +7,7 @@ import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TraceMethod } from "./telemetry/traces"
+import { logger } from "./utils/logger"
 
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
@@ -108,7 +109,7 @@ export class TransactionSubmitter {
                     contractName: transaction.contractName,
                 })
                 span.setStatus({ code: SpanStatusCode.ERROR })
-                Logger.instance.error(LogTag.TXM, `ABI not found for contract ${transaction.contractName}`)
+                logger.error(`ABI not found for contract ${transaction.contractName}`)
                 return err({
                     cause: AttemptSubmissionErrorCause.ABINotFound,
                     description: `ABI not found for contract ${transaction.contractName}`,

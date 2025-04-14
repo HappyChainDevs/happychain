@@ -9,7 +9,7 @@ import { Randomness, RandomnessStatus } from "./Randomness.js"
 import { RandomnessRepository } from "./RandomnessRepository.js"
 import { TransactionFactory } from "./TransactionFactory.js"
 import { env } from "./env.js"
-import { RAND_TAG, logger } from "./utils/logger"
+import { logger } from "./utils/logger"
 
 class RandomnessService {
     private readonly randomnessRepository: RandomnessRepository
@@ -53,7 +53,7 @@ class RandomnessService {
         this.txm.addHook(TxmHookType.TransactionStatusChanged, this.onTransactionStatusChange.bind(this))
         this.txm.addHook(TxmHookType.NewBlock, this.onNewBlock.bind(this))
         this.txm.addHook(TxmHookType.TransactionSubmissionFailed, (_, description) => {
-            logger.error(RAND_TAG, description)
+            logger.error(description)
         })
 
         await this.drandService.start()
@@ -83,7 +83,7 @@ class RandomnessService {
             if (successStatuses.includes(transaction.status) || failedStatuses.includes(transaction.status)) {
                 this.randomnessRepository.updateRandomness(randomness).then((result) => {
                     if (result.isErr()) {
-                        logger.error(RAND_TAG, "Failed to update randomness", result.error)
+                        logger.error("Failed to update randomness", result.error)
                     }
                 })
             }
@@ -95,7 +95,6 @@ class RandomnessService {
 
         if (drand) {
             logger.info(
-                RAND_TAG,
                 `Drand ${drand.round} transaction ${transaction.intentId} status changed to ${transaction.status})`,
             )
             if (failedStatuses.includes(transaction.status)) {
@@ -105,20 +104,20 @@ class RandomnessService {
             }
 
             this.drandRepository.updateDrand(drand).catch((error) => {
-                logger.error(RAND_TAG, "Failed to update drand", error)
+                logger.error("Failed to update drand", error)
             })
 
             return
         }
 
-        logger.warn(RAND_TAG, "Couldn't find randomness or drand with intentId", transaction.intentId)
+        logger.warn("Couldn't find randomness or drand with intentId", transaction.intentId)
     }
 
     private async onNewBlock(block: LatestBlock) {
         this.handleRevealNotSubmittedOnTime(block)
         this.randomnessRepository.pruneRandomnesses(block.number).then((result) => {
             if (result.isErr()) {
-                logger.error(RAND_TAG, "Failed to prune commitments", result.error)
+                logger.error("Failed to prune commitments", result.error)
             }
         })
     }
@@ -131,7 +130,7 @@ class RandomnessService {
                 randomness.revealNotSubmittedOnTime()
                 this.randomnessRepository.updateRandomness(randomness).then((result) => {
                     if (result.isErr()) {
-                        logger.error(RAND_TAG, "Failed to update randomness", result.error)
+                        logger.error("Failed to update randomness", result.error)
                     }
                 })
             }
@@ -172,7 +171,7 @@ class RandomnessService {
             // We don't await for saving the commitment, because we dont want to block the transaction collection
             this.randomnessRepository.saveRandomness(newRandomness).then((result) => {
                 if (result.isErr()) {
-                    logger.error(RAND_TAG, "Failed to save commitment", result.error)
+                    logger.error("Failed to save commitment", result.error)
                 }
             })
         }
@@ -188,7 +187,7 @@ class RandomnessService {
 
             this.randomnessRepository.updateRandomness(randomnessToReveal).then((result) => {
                 if (result.isErr()) {
-                    logger.error(RAND_TAG, "Failed to update randomness", result.error)
+                    logger.error("Failed to update randomness", result.error)
                 }
             })
         }
@@ -201,13 +200,13 @@ class RandomnessService {
             const drand = this.drandRepository.getDrandByTransactionIntentId(transaction.intentId)
 
             if (!drand) {
-                logger.error(RAND_TAG, "Drand not found for transaction", transaction.intentId)
+                logger.error("Drand not found for transaction", transaction.intentId)
                 return
             }
 
             drand.transactionSubmitted()
             this.drandRepository.updateDrand(drand).catch((error) => {
-                logger.error(RAND_TAG, "Failed to update drand", error)
+                logger.error("Failed to update drand", error)
             })
         })
 
