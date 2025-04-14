@@ -9,14 +9,8 @@ include ../../makefiles/help.mk
 # Also using concurrently rather than `make -j 3` for the same reason: concurrently restarts
 # the three processes as a group if one crashes.
 dev: ## Serves the docs in watch mode
-	concurrently \
-		--restart-tries -1 \
-		--names "doc-js,doc-react,docs-vue,vocs" \
-		'make typedoc-js.watch'\
-		'make typedoc-react.watch'\
-		'make typedoc-vue.watch'\
-		'make typedoc-txm.watch'\
-		'make vocs.watch';
+	make typedoc;
+	make vocs.watch;
 .PHONY: dev
 
 # precompile API reference docs, then build full vocs output
@@ -63,45 +57,17 @@ typedoc-js:
 	typedoc --options ./typedoc.core.js;
 .PHONY: typedoc-js
 
-# generate JS markdown API reference in watch mode
-typedoc-js.watch:
-	typedoc\
-		--watch\
-		--options ./typedoc.core.js;
-.PHONY: typedoc-js.watch
-
 # generate React markdown API reference
 typedoc-react:
 	typedoc --options ./typedoc.react.js;
 .PHONY: typedoc-react
-
-# generate React markdown API reference in watch mode
-typedoc-react.watch:
-	typedoc\
-		--watch\
-		--options ./typedoc.react.js;
-.PHONY: typedoc-react.watch
 
 # generate Vue markdown API reference
 typedoc-vue:
 	typedoc --options ./typedoc.vue.js;
 .PHONY: typedoc-vue
 
-# generate Vue markdown API reference in watch mode
-typedoc-vue.watch:
-	typedoc\
-		--watch\
-		--options ./typedoc.vue.js;
-.PHONY: typedoc-vue.watch
-
 # generate Transaction Manager markdown API reference
 typedoc-txm:
 	typedoc --options ./typedoc.txm.js;
 .PHONY: typedoc-txm
-
-# generate Transaction Manager markdown API reference in watch mode
-typedoc-txm.watch:
-	typedoc\
-		--watch\
-		--options ./typedoc.txm.js;
-.PHONY: typedoc-txm.watch
