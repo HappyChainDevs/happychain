@@ -8,16 +8,9 @@ describe("ExecutorCacheService", () => {
     let accounts: Account[]
 
     beforeEach(() => {
-        executorService = new ExecutorCacheService(100)
+        accounts = [privateKeyToAccount(generatePrivateKey()), privateKeyToAccount(generatePrivateKey())]
+        executorService = new ExecutorCacheService(accounts, 100)
         testUserAccount = privateKeyToAccount(generatePrivateKey())
-
-        const defaultAccount = privateKeyToAccount(generatePrivateKey())
-        const accountOne = privateKeyToAccount(generatePrivateKey())
-        accounts = [defaultAccount, accountOne]
-
-        for (const account of accounts) {
-            executorService.registerExecutor(account)
-        }
     })
     it("returns an executor", () => {
         const account = executorService.get("0x1", testUserAccount.address, 1n)
