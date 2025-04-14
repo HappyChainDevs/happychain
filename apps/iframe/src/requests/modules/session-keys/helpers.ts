@@ -1,14 +1,11 @@
 // @todo - switch to import from happy-sepolia ;
 // @todo - maybe write a helper function to return the appropriate contracts & ABIs depending on current chain ID ?
 import { abis as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
-import { type HappyTx, computeBoopHash } from "@happy.tech/submitter-client"
+import { type HappyTx, computeBoopHash, EntryPointStatus } from "@happy.tech/submitter-client"
 import { type Address, type Hash, type Hex, encodeFunctionData, isAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { getBoopClient } from "#src/state/boopClient"
 import { getPublicClient } from "#src/state/publicClient"
-
-// @todo - cleanup import
-import { EntryPointStatus } from "../../../../../../packages/submitter/lib/tmp/interface/status"
 
 export const SESSION_KEY_VALIDATOR_ADDRESS = happyAccAbsDeployment.SessionKeyValidator as Address
 const EXTENSION_TYPE_VALIDATOR = 0
