@@ -71,6 +71,9 @@ const ConnectContent = () => {
     const mutationLogin = useMutation({
         mutationFn: async (provider: ConnectionProvider) => {
             // if no dapp-request exists here, we will initiate a new one
+
+            // we're checking firebase connections here
+            console.log({ provider })
             const connectRequest = clientConnectionRequest ?? {
                 key: createUUID(),
                 windowId: iframeID(),

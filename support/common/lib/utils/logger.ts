@@ -22,6 +22,7 @@ export enum LogTag {
     ALL = "All",
     SUBMITTER = "Submitter",
     TXM = "Txm",
+    IFRAME = "Iframe",
     RANDOM = "Random",
 }
 

@@ -1,3 +1,4 @@
+import { LogTag } from "@happy.tech/common"
 import {
     type ConnectionProvider,
     type HappyUser,
@@ -16,9 +17,10 @@ import {
 } from "firebase/auth"
 import { AccountNotFoundError } from "permissionless"
 import type { EIP1193Provider } from "viem"
-import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
-import { getPermissions } from "#src/state/permissions.ts"
-import { getAppURL } from "#src/utils/appURL.ts"
+import { getKernelAccountAddress } from "#src/state/kernelAccount"
+import { getPermissions } from "#src/state/permissions"
+import { getAppURL } from "#src/utils/appURL"
+import { logger } from "#src/utils/logger.ts"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
 import {
@@ -67,7 +69,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             const userCredential = await signInWithPopup(
                 firebaseAuth,
                 this.getAuthProvider(),
-                browserPopupRedirectResolver,
+                browserPopupRedirectResolver, // primarily for mobile, might not be needed for mobile
             )
             const token = await this.fetchLoginTokenForUser(userCredential.user)
             const happyUser = await this.connectWithWeb3Auth(
@@ -178,43 +180,66 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         } satisfies JWTLoginParams
     }
 
+    private authChangeCallbackRunning = false
+    /**
+     * Firebase internally maintains a "pending promise" to track popup-based sign-in flows
+     * (e.g., `signInWithPopup`). If multiple concurrent auth-related flows occur — such as
+     * when `onAuthStateChanged` fires while `signInWithPopup` is still resolving —
+     * Firebase may throw the error:
+     *
+     *   _INTERNAL ASSERTION FAILED: Pending promise was never set_
+     *
+     * This error occurs due to race conditions between Firebase's redirect resolver state
+     * and overlapping login attempts.
+     *
+     * To prevent this, this listener uses an `authChangeCallbackRunning` guard to ensure
+     * only one instance of the callback executes at a time. This protects against re-entrant
+     * calls or concurrent auth resolution events.
+     */
     private listenForAuthChange() {
         onAuthStateChanged(firebaseAuth, async (_user) => {
-            if (!_user) {
-                if ((await getFirebaseAuthState()) !== FirebaseAuthState.Disconnecting) {
-                    await this.disconnect()
-                }
+            if (this.authChangeCallbackRunning) {
+                logger.warn(LogTag.ALL, "authChangeCallbackRunning: skipping callback execution")
                 return
             }
-            // if we land here and have a _user, and are already connecting, then another connection
-            // attempt must be ongoing elsewhere. Exit early, and leave state updates to whoever is
-            // currently connecting
-            if (this.instanceIsConnecting === true) {
-                this.instanceIsConnecting = false
-                return
-            }
-            // web3auth doesn't need this call as calling connect() multiple times simply returns
-            // the current user if they are already logged in, however each firebase JWT can be used
-            // only once, so if a user is not connected already, we must refresh the JWT with
-            // firebase prior to a connection.
-            if (await isWeb3AuthConnected()) {
-                const user = await getFirebaseSharedUser()
-                if (user) {
-                    await this.onReconnect(user, web3AuthEIP1193Provider)
+            this.authChangeCallbackRunning = true
+            console.warn("authChangeCallbackRunning: skipping callback execution")
+
+            try {
+                if (!_user) {
+                    if ((await getFirebaseAuthState()) !== FirebaseAuthState.Disconnecting) {
+                        await this.disconnect()
+                    }
                     return
                 }
-                // allow fall through to refresh JWT and log in again
-                console.warn("failed to reconnect to network")
-            }
-            const token = await this.fetchLoginTokenForUser(_user)
-            const happyUser = await this.connectWithWeb3Auth(
-                FirebaseConnector.makeHappyUserPartial(_user, this.id),
-                token,
-            )
-            if (happyUser) {
-                await this.onReconnect(happyUser, web3AuthEIP1193Provider)
-            } else {
-                console.warn("failed to connect")
+
+                if (this.instanceIsConnecting) {
+                    this.instanceIsConnecting = false
+                    return
+                }
+
+                if (await isWeb3AuthConnected()) {
+                    const user = await getFirebaseSharedUser()
+                    if (user) {
+                        await this.onReconnect(user, web3AuthEIP1193Provider)
+                        return
+                    }
+                    console.warn("failed to reconnect to network")
+                }
+
+                const token = await this.fetchLoginTokenForUser(_user)
+                const happyUser = await this.connectWithWeb3Auth(
+                    FirebaseConnector.makeHappyUserPartial(_user, this.id),
+                    token,
+                )
+                if (happyUser) {
+                    await this.onReconnect(happyUser, web3AuthEIP1193Provider)
+                } else {
+                    logger.warn(LogTag.IFRAME, "failed to connect")
+                }
+            } finally {
+                this.authChangeCallbackRunning = false
+                logger.info(LogTag.IFRAME, "[AuthState] END authChangeCallback")
             }
         })
     }
