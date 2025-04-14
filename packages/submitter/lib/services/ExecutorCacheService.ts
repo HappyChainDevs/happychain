@@ -1,5 +1,5 @@
 import type { Account } from "viem/accounts"
-import { ExecutorHeap } from "#lib/utils/ExecutorHeap.ts"
+import { ExecutorHeap } from "#lib/utils/ExecutorHeap"
 
 interface Expiry {
     executor: { account: Account }
@@ -18,10 +18,15 @@ export class ExecutorCacheService {
          * so as long as the account submits a transaction within 30 seconds, the cache will always
          * return the same executor for this account+nonceTrack
          */
+        accounts: Account[],
         private ttl = 30_000,
-        public heap = new ExecutorHeap(),
+        private heap = new ExecutorHeap(),
         private expiryMap = new Map<string, Expiry>(),
-    ) {}
+    ) {
+        for (const account of accounts) {
+            this.registerExecutor(account)
+        }
+    }
 
     /**
      * Useful for debugging.

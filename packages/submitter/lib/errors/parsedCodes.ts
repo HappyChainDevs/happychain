@@ -1,6 +1,6 @@
 import type { AbiFunction } from "viem"
 import { decodeErrorResult, getAbiItem, parseAbi, toFunctionSelector } from "viem/utils"
-import { logger } from "#lib/logger.ts"
+import { logger } from "#lib/logger"
 
 /**
  * Used to calculate the selectors for the following _errors_
