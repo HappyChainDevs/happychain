@@ -1,4 +1,5 @@
-import { keccak256 } from "viem/utils"
+import { encodePacked, keccak256 } from "viem/utils"
+import { chain } from "../clients"
 import type { HappyTx } from "../tmp/interface/HappyTx"
 import { encodeHappyTx } from "./encodeHappyTx"
 
@@ -20,5 +21,5 @@ export function computeHappyTxHash(happyTx: HappyTx): `0x${string}` {
         ? { ...happyTx, validatorData: "0x" }
         : { ...happyTx, validatorData: "0x", ...paymasterGasData }
 
-    return keccak256(encodeHappyTx(hashData))
+    return keccak256(encodePacked(["bytes", "uint"], [encodeHappyTx(hashData), BigInt(chain.id)]))
 }

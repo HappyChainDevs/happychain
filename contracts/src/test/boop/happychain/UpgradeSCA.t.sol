@@ -182,7 +182,7 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to sign a boop.
     function _signBoop(Boop memory boop) internal view returns (bytes memory signature) {
-        bytes32 hash = keccak256(boop.encode()).toEthSignedMessageHash();
+        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
     }

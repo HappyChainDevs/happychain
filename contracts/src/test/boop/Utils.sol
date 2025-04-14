@@ -70,7 +70,7 @@ contract BoopTestUtils is Test {
         });
     }
 
-    function signBoop(Boop memory boop, uint256 privKey) public pure returns (bytes memory signature) {
+    function signBoop(Boop memory boop, uint256 privKey) public view returns (bytes memory signature) {
         // Store the original gas values
         uint32 origGasLimit;
         uint32 origValidateGasLimit;
@@ -99,8 +99,7 @@ contract BoopTestUtils is Test {
             boop.submitterFee = 0;
         }
         boop.validatorData = ""; // erase existing signature if any
-
-        bytes32 hash = keccak256(boop.encode()).toEthSignedMessageHash();
+        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
 
