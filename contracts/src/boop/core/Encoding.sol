@@ -8,7 +8,7 @@ library Encoding {
     error MalformedBoop();
 
     /// @dev Size of the static fields in the encoded Boop.
-    /// (20 + 4 + 4 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 204)
+    /// (20 + 20 + 20 + 32 + 32 + 32 + 24 + 8 + 4 + 4 + 4 = 204)
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 204;
 
     /**
@@ -212,6 +212,7 @@ library Encoding {
             // Copy submitterFee (32 bytes)
             calldatacopy(memPtr, cdPtr, 32)
             cdPtr := add(cdPtr, 32)
+            memPtr := add(memPtr, 32)
 
             // Copy gasLimit (4 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 28), cdPtr, 4)
