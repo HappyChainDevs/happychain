@@ -5,35 +5,37 @@ pragma solidity ^0.8.20;
 
 /**
  * Represents a boop - a "transaction" made by a Boop account that can be submitted to the chain by
- * a permissionless submitter. Each boop specifies a *call* to a destination address, which will
- * receive it with the Boop account as its msg.sender.
+ * a permissionless submitter. Each boop specifies a call to a destination address, which will
+ * receive it with the Boop account as its `msg.sender`.
  */
 // forgefmt: disable-next-item
 struct Boop {
-    address account;            // Account sending the boop
-    uint32 gasLimit;            // Global gas limit (max gas the account will pay for)
-    uint32 validateGasLimit;    // Gas limit for Account.validate
-    uint32 executeGasLimit;     // Gas limit for Account.execute
-    uint32 validatePaymentGasLimit; // Gas limit for Paymaster.validatePayment
-    address dest;               // Destination address for call carried by the boop
-    address paymaster;          // Fee payer: This can be the
-                                //   1. account (if it implements Paymaster)
-                                //   2. external paymaster (implementing IPaymaster)
-                                //   3. 0x0...0, representing payment by a sponsoring submitter
+    address account;            // Account initiating the boop
+    address dest;               // Destination address for the call carried by the boop
+    address payer;              // Fee payer. This can be:
+                                //   1. the account (if it's a self-paying transaction)
+                                //   2. an external paymaster contract (implementing {IPaymaster})
+                                //   3. 0x0...0: payment by a sponsoring submitter
+    
     uint256 value;              // Amount of gas tokens (in wei) to transfer
-    uint192 nonceTrack;         // Nonces are ordered within tracks, no ordering constraint across tracks
-    uint64 nonceValue;          // The nonce sequence number within the nonce track
+    uint192 nonceTrack;         // Nonces are ordered within tracks; there is no ordering constraint across tracks
+    uint64 nonceValue;          // Nonce sequence number within the nonce track
+
 
     uint256 maxFeePerGas;       // Maximum fee per gas unit paid by the payer
-    int256 submitterFee;        // Flat fee in gas token wei for submitter (can be negative for rebates)
-                                //   - Submitter asks for this on top of payment of gas. This can be used to pay
-                                //     for extra costs (e.g. DA costs on rollups, server costs), or for profits.
-                                //   - Acts as rebate when negative (e.g. to refund part of the intrinsic transaction
-                                //     cost if the submitter batches multiple boops together), but in no case does
-                                //     this lead to the submitter transferring funds to accounts.
+    int256 submitterFee;        // Flat fee in gas token wei for the submitter (can be negative for rebates)
+                                //   - The submitter requests this on top of gas payment. This can be used to cover
+                                //     extra costs (e.g., DA costs on rollups, server costs), or as profit.
+                                //   - Acts as a rebate when negative (e.g., to refund part of the intrinsic transaction
+                                //     cost if the submitter batches multiple boops together). In no case does this
+                                //     lead to the submitter transferring funds to accounts.
+
+    uint32 gasLimit;            // Global gas limit (maximum gas the account will pay for)
+    uint32 validateGasLimit;    // Gas limit for {IAccount.validate}
+    uint32 executeGasLimit;     // Gas limit for {IAccount.execute}
+    uint32 validatePaymentGasLimit; // Gas limit for {IPaymaster.validatePayment}
 
     bytes callData;             // Call data for the call carried by the boop
-    bytes paymasterData;        // Extra data passed to the paymaster
     bytes validatorData;        // Extra data for validation (e.g., signatures)
     bytes extraData;            // Extra dictionary-structured data for extensions
 }
@@ -141,8 +143,8 @@ struct ExecutionOutput {
     CallStatus status;
     /**
      * The associated revert data if the call specified by the boop reverts (with
-     * {CallStatus.CALL_REVERTED}, or the rejection reason if {IAccount.execute} rejects the boop
-     * (with {CallStatus.EXECUTE_REJECTED}), otherwise empty.
+     * {CallStatus.CALL_REVERTED}), or the rejection reason if {IAccount.execute} rejects the boop
+     * (with {CallStatus.EXECUTE_REJECTED}). Otherwise, this is empty.
      */
     bytes revertData;
 }
@@ -159,7 +161,7 @@ enum ExtensionType {
 }
 
 /**
- * Information (destination, value and calldata) for a call to be made by the account on behalf
+ * Information (destination, value, and callData) for a call to be made by the account on behalf
  * of an execution extension.
  */
 struct CallInfo {
