@@ -6,22 +6,21 @@ export function decodeHappyTx(encoded: `0x${string}`): HappyTx {
 
     // Read static fields (204 bytes total)
     const account = bytesToAddress(getBytes(encodedBytes, 0, 20))
-    const gasLimit = bytesToBigInt(getBytes(encodedBytes, 20, 4))
-    const validateGasLimit = bytesToBigInt(getBytes(encodedBytes, 24, 4))
-    const executeGasLimit = bytesToBigInt(getBytes(encodedBytes, 28, 4))
-    const validatePaymentGasLimit = bytesToBigInt(getBytes(encodedBytes, 32, 4))
     const dest = bytesToAddress(getBytes(encodedBytes, 36, 20))
-    const paymaster = bytesToAddress(getBytes(encodedBytes, 56, 20))
+    const payer = bytesToAddress(getBytes(encodedBytes, 56, 20))
     const value = bytesToBigInt(getBytes(encodedBytes, 76, 32))
     const nonceTrack = bytesToBigInt(getBytes(encodedBytes, 108, 24))
     const nonceValue = bytesToBigInt(getBytes(encodedBytes, 132, 8))
     const maxFeePerGas = bytesToBigInt(getBytes(encodedBytes, 140, 32))
     const submitterFee = bytesToBigInt(getBytes(encodedBytes, 172, 32))
+    const gasLimit = bytesToBigInt(getBytes(encodedBytes, 20, 4))
+    const validateGasLimit = bytesToBigInt(getBytes(encodedBytes, 24, 4))
+    const executeGasLimit = bytesToBigInt(getBytes(encodedBytes, 28, 4))
+    const validatePaymentGasLimit = bytesToBigInt(getBytes(encodedBytes, 32, 4))
 
     // Read dynamic fields with their 4-byte length prefixes
     const [callData, callDataEndOffset] = getDynamicLengthBytes(encodedBytes, 204)
-    const [paymasterData, paymasterDataEndOffset] = getDynamicLengthBytes(encodedBytes, callDataEndOffset)
-    const [validatorData, validatorDataEndOffset] = getDynamicLengthBytes(encodedBytes, paymasterDataEndOffset)
+    const [validatorData, validatorDataEndOffset] = getDynamicLengthBytes(encodedBytes, callDataEndOffset)
     const [extraData] = getDynamicLengthBytes(encodedBytes, validatorDataEndOffset)
 
     return {
@@ -31,14 +30,13 @@ export function decodeHappyTx(encoded: `0x${string}`): HappyTx {
         executeGasLimit,
         validatePaymentGasLimit,
         dest,
-        paymaster,
+        payer,
         value,
         nonceTrack,
         nonceValue,
         maxFeePerGas,
         submitterFee,
         callData: `0x${callData}`,
-        paymasterData: `0x${paymasterData}`,
         validatorData: `0x${validatorData}`,
         extraData: `0x${extraData}`,
     }
