@@ -169,7 +169,6 @@ contract UpgradeSCATest is Test {
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: "",
-            paymasterData: "",
             validatorData: "",
             extraData: ""
         });

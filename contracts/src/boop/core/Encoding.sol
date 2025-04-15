@@ -37,8 +37,6 @@ library Encoding {
      *
      * - dynamic fields:
      *      - callData (length: 4b = N, data: Nb)
-     *      - paymasterData (length: 4b = N, data: Nb)
-     *      - validatorData (length: 4b = N, data: Nb)
      *      - extraData (length: 4b = N, data: Nb)
      */
     function encode(Boop memory boop) internal pure returns (bytes memory result) {
@@ -47,7 +45,6 @@ library Encoding {
         // forgefmt: disable-next-item
         uint256 totalSize = DYNAMIC_FIELDS_OFFSET
             + (4 + boop.callData.length)
-            + (4 + boop.paymasterData.length)
             + (4 + boop.validatorData.length)
             + (4 + boop.extraData.length);
 
@@ -125,9 +122,8 @@ library Encoding {
 
             // Handle dynamic fields
             let callDataOffset := mload(inPtr)
-            let pmDataOffset := mload(add(inPtr, 32))
-            let validatorDataOffset := mload(add(inPtr, 64))
-            let extraDataOffset := mload(add(inPtr, 96))
+            let validatorDataOffset := mload(add(inPtr, 32))
+            let extraDataOffset := mload(add(inPtr, 64))
 
             let len
 
@@ -136,13 +132,6 @@ library Encoding {
             mcopy(outPtr, add(callDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
             mcopy(outPtr, add(callDataOffset, 32), len)
-            outPtr := add(outPtr, len)
-
-            // paymasterData
-            len := mload(pmDataOffset)
-            mcopy(outPtr, add(pmDataOffset, 28), 4)
-            outPtr := add(outPtr, 4)
-            mcopy(outPtr, add(pmDataOffset, 32), len)
             outPtr := add(outPtr, len)
 
             // validatorData
@@ -242,12 +231,6 @@ library Encoding {
         len = uint32(bytes4(encodedBoop[offset:offset + 4]));
         offset += 4;
         result.callData = encodedBoop[offset:offset + len];
-        offset += len;
-
-        // Read paymasterData length (4 bytes) and data
-        len = uint32(bytes4(encodedBoop[offset:offset + 4]));
-        offset += 4;
-        result.paymasterData = encodedBoop[offset:offset + len];
         offset += len;
 
         // Read validatorData length (4 bytes) and data

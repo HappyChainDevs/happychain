@@ -64,7 +64,6 @@ contract BoopTestUtils is Test {
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,
-            paymasterData: "",
             validatorData: "",
             extraData: ""
         });
