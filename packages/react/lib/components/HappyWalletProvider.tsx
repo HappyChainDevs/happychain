@@ -42,12 +42,12 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
     return <HappyContext.Provider value={{ user, initialized: true }}>{children}</HappyContext.Provider>
 }
 
-export function useHappyChain() {
+export function useHappyWallet() {
     const { user, initialized } = useContext(HappyContext)
 
     useEffect(() => {
         if (!initialized) {
-            console.warn("useHappyChain() is not initialized. Did you miss adding <HappyWalletProvider />?")
+            console.warn("useHappyWallet() is not initialized. Did you miss adding <HappyWalletProvider />?")
         }
     }, [initialized])
 

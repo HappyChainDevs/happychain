@@ -39,13 +39,13 @@ createApp(App)
 
 ### Getting the Active User with the Composition API
 
-The `useHappyChain` composable returns the current authenticated user's data as 
+The `useHappyWallet` composable returns the current authenticated user's data as 
 [HappyUser](/sdk/js/api/type-aliases/HappyUser), or `undefined` when no user is connected.
 
 ```vue twoslash
 <script setup lang="ts">
-import { useHappyChain } from '@happy.tech/vue'
-const { user } = useHappyChain()
+import { useHappyWallet } from '@happy.tech/vue'
+const { user } = useHappyWallet()
 </script>
 
 <template>

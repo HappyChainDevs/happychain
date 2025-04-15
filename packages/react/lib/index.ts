@@ -1,6 +1,6 @@
 export {
     HappyWalletProvider,
-    useHappyChain,
+    useHappyWallet,
     type HappyWalletProviderProps,
 } from "./components/HappyWalletProvider"
 export { ConnectButton, type BadgeProps } from "./components/Badge"

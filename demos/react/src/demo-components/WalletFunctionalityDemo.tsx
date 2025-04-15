@@ -1,11 +1,11 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
-import { useHappyChain } from "@happy.tech/react"
+import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 import useClients from "../useClients"
 
 const WalletFunctionalityDemo = () => {
-    const { user, showSendScreen, loadAbi } = useHappyChain()
+    const { user, showSendScreen, loadAbi } = useHappyWallet()
     const { walletClient } = useClients()
 
     async function addNewToken() {
