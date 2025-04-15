@@ -102,17 +102,19 @@ describe("submitter_simulate", () => {
 
     describe("failure", () => {
         it("can't use a too-low nonce", async () => {
+            // execute so that this nonce has been used
             await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
+            // simulate with same nonce again
             const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
 
             const response = (await results.json()) as any
 
             expect(results.status).toBe(422)
+            expect(response.simulationResult.revertData).toBe("0x756688fe") // InvalidNonce
             expect(response.status).toBe(EntryPointStatus.UnexpectedReverted)
         })
 
-        // Contract Bug
         it("should simulate revert on unfunded self-sponsored", async () => {
             unsignedTx.payer = smartAccount
             unsignedTx.executeGasLimit = 0n
