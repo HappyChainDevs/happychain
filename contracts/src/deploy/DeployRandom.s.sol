@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {AddressBook} from "./../AddressBook.sol";
+import {Random} from "./../randomness/Random.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {Random} from "../randomness/Random.sol";
-import {AddressBook} from "../AddressBook.sol";
 /**
  * @dev Deploys the Randomness contract.
  */

@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-
-import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "../../../boop/core/Encoding.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {Test} from "forge-std/Test.sol";
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Encoding} from "./../../../boop/core/Encoding.sol";
+import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
 
 contract UpgradeSCATest is Test {
     using Encoding for Boop;

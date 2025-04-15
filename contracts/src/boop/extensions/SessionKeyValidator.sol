@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "solady/utils/ECDSA.sol";
-
-import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "../core/Encoding.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
-import {ICustomValidator} from "../interfaces/ICustomValidator.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {Encoding} from "./../core/Encoding.sol";
+import {ICustomValidator} from "./../interfaces/ICustomValidator.sol";
 
 /**
  * This validator maintains a mapping from (account, target) pair to session keys, and authorizes

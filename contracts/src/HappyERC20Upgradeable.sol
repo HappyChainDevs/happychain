@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {
-    ERC20Upgradeable, ERC20PermitUpgradeable
-} from "oz-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
-import {ERC20BurnableUpgradeable} from "oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC20BurnableUpgradeable} from "oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import {
+    ERC20Upgradeable, ERC20PermitUpgradeable
+} from "oz-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 /**
  * @notice An upgradeable version of the $HAPPY token, as deployed on Ethereum and testnets L1s.

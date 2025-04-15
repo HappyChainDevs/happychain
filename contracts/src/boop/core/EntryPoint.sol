@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-
-import {Utils} from "./Utils.sol";
-import {Encoding} from "./Encoding.sol";
-
 import {Staking} from "boop/core/Staking.sol";
-import {IAccount} from "boop/interfaces/IAccount.sol";
-import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {
     BoopSubmitted,
     CallReverted,
@@ -25,7 +18,12 @@ import {
     PayoutFailed,
     UnknownDuringSimulation
 } from "boop/interfaces/EventsAndErrors.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
+import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
+import {Encoding} from "./Encoding.sol";
+import {Utils} from "./Utils.sol";
 
 /// @notice cf. {EntryPoint.submit}
 contract EntryPoint is Staking, ReentrancyGuardTransient {

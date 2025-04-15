@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "solady/utils/ECDSA.sol";
-
-import {BoopTestUtils} from "../Utils.sol";
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {MockRevert} from "../../../mocks/MockRevert.sol";
-import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
-
-import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "../../../boop/core/Encoding.sol";
 import {SessionKeyValidator, InvalidSignature} from "boop/extensions/SessionKeyValidator.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {Encoding} from "./../../../boop/core/Encoding.sol";
+import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
+import {MockRevert} from "./../../../mocks/MockRevert.sol";
+import {MockHappyAccount} from "./../../../test/mocks/MockHappyAccount.sol";
+import {BoopTestUtils} from "./../Utils.sol";
 
 contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
