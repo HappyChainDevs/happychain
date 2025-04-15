@@ -5,6 +5,6 @@ import type { PendingHappyTxInput, PendingHappyTxOutput } from "#lib/tmp/interfa
 export async function pendingByAccount({
     account,
 }: PendingHappyTxInput): Promise<Result<PendingHappyTxOutput, PendingHappyTxOutput>> {
-    const pending = boopNonceManager.getPendingBoops(account)
+    const pending = boopNonceManager.getBlockedBoops(account)
     return ok({ pending })
 }

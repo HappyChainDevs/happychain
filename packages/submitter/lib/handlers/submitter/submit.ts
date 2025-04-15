@@ -4,6 +4,7 @@ import { abis, deployment } from "#lib/env"
 import { UnknownError } from "#lib/errors/contract-errors"
 import { parseFromViemError } from "#lib/errors/utils"
 import { boopNonceManager, submitterService } from "#lib/services"
+import { SimulatedValidationStatus } from "#lib/tmp/interface/status"
 import { type SubmitInput, type SubmitOutput, SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { decodeBoop } from "#lib/utils/decodeBoop"
 import { encodeBoop } from "#lib/utils/encodeBoop"
@@ -21,10 +22,8 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
     // Simulation failed, we can abort the transaction
     if (simulate.isErr()) return err(simulate.error)
 
-    // @note: we could check {simulate.simulation.validationStatus === SimulatedValidationStatus.FutureNonce}
-    // however it isn't really needed as we need to compare with the local nonce anyways,
-    // (potentially fetching from onchain)
-    if (await boopNonceManager.checkIfBlocked(entryPoint, data.tx)) {
+    const isFutureNonce = simulate.value.simulation.validationStatus === SimulatedValidationStatus.FutureNonce
+    if (isFutureNonce && (await boopNonceManager.checkIfBlocked(entryPoint, data.tx))) {
         const resp = await boopNonceManager.pauseUntilUnblocked(entryPoint, data.tx)
         if (resp.isErr()) return err(resp.error)
 
@@ -35,7 +34,11 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
     // use simulated result instead of the original tx as it may have updated gas values
     const writeResponse = await submitWriteContract(simulate.value.request)
 
-    if (writeResponse.isErr()) return writeResponse
+    if (writeResponse.isErr()) {
+        // Unknown error cause, we will reset the local view nonce as a precaution
+        boopNonceManager.resetLocalNonce(data.tx)
+        return writeResponse
+    }
 
     // Increment the localNonce so the next tx can be executed (if available)
     boopNonceManager.incrementLocalNonce(data.tx)

@@ -1,5 +1,8 @@
 import { type Result, err, ok } from "neverthrow"
 import { deployment } from "#lib/env"
+import { getSelectorFromErrorName } from "#lib/errors/parsedCodes"
+import { boopNonceManager } from "#lib/services"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
 import { encodeBoop } from "#lib/utils/encodeBoop"
@@ -32,6 +35,11 @@ export async function simulate(data: EstimateGasInput): Promise<Result<EstimateG
             status: simulation.error.simulation?.status ?? SubmitterErrorStatus.UnexpectedError,
             simulationResult: simulation.error.simulation,
         } as EstimateGasOutput)
+    }
+
+    if (simulation.error.simulation.revertData === getSelectorFromErrorName("InvalidNonce")) {
+        // We don't necessarily need to reset the nonce here, but we do it to be safe.
+        boopNonceManager.resetLocalNonce(data.tx as Boop)
     }
 
     return err({
