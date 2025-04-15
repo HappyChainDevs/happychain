@@ -28,7 +28,6 @@ event BoopSubmitted(
     uint256 maxFeePerGas,
     int256 submitterFee,
     bytes callData,
-    bytes paymasterData,
     bytes validatorData,
     bytes extraData
 );

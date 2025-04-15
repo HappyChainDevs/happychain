@@ -36,7 +36,6 @@ struct Boop {
     uint32 validatePaymentGasLimit; // Gas limit for {IPaymaster.validatePayment}
 
     bytes callData;             // Call data for the call carried by the boop
-    bytes paymasterData;        // Extra data for the paymaster (if present)
     bytes validatorData;        // Extra data for validation (e.g., signatures)
     bytes extraData;            // Extra dictionary-structured data for extensions
 }
