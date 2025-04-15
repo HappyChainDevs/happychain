@@ -1,4 +1,4 @@
-import { useHappyChain } from "@happy.tech/react"
+import { useHappyWallet } from "@happy.tech/react"
 import ChainSwitchingDemo from "./demo-components/ChainSwitchingDemo"
 import ConnectionDemo from "./demo-components/ConnectionDemo"
 import SessionKeyDemo from "./demo-components/SessionKeyDemo"
@@ -6,7 +6,7 @@ import WalletCallsDemo from "./demo-components/WalletCallsDemo"
 import WalletFunctionalityDemo from "./demo-components/WalletFunctionalityDemo"
 
 function App() {
-    const { user } = useHappyChain()
+    const { user } = useHappyWallet()
 
     return (
         <main className='flex min-h-dvh w-full flex-col items-center gap-4 bg-[url("/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg")] bg-cover p-4'>

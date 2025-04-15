@@ -20,15 +20,15 @@ createApp(App)
     .mount("#app")
 ```
 
-## useHappyChain composable
+## useHappyWallet composable
 
-The `useHappyChain` composable returns the current authenticated user's data as 
+The `useHappyWallet` composable returns the current authenticated user's data as
 `HappyUser`, or `undefined` when no user is connected.
 
 ```vue
 <script setup>
-import { useHappyChain } from '@happy.tech/vue'
-const { user } = useHappyChain()
+import { useHappyWallet } from '@happy.tech/vue'
+const { user } = useHappyWallet()
 </script>
 
 <template>

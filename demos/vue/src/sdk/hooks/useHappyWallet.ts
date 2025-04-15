@@ -7,7 +7,7 @@ onUserUpdate((_user: HappyUser | undefined) => {
     user.value = _user
 })
 
-export function useHappyChain(): { user: Ref<HappyUser | undefined>; happyProvider: HappyProvider } {
+export function useHappyWallet(): { user: Ref<HappyUser | undefined>; happyProvider: HappyProvider } {
     return {
         user,
         happyProvider: happyProvider!,

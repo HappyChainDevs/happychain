@@ -1,4 +1,4 @@
-import { useHappyChain } from "@happy.tech/react"
+import { useHappyWallet } from "@happy.tech/react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import useClients from "../useClients"
@@ -8,7 +8,7 @@ const WalletCallsDemo = () => {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { user } = useHappyChain()
+    const { user } = useHappyWallet()
     const { walletClient, publicClient } = useClients()
 
     async function getBlock() {

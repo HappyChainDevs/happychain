@@ -3,7 +3,7 @@
  */
 
 export * from "@happy.tech/core"
-export { useHappyChain } from "./hooks/useHappyChain"
+export { useHappyWallet } from "./hooks/useHappyWallet"
 export { HappyChainPlugin } from "./plugin"
 export type { HappyChainOptions } from "./plugin"
 export { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"

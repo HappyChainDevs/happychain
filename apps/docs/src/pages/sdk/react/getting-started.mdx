@@ -65,18 +65,18 @@ Of particular relevance to React users, we provide an easy way to create a wagmi
 
 ### Getting the Active User
 
-The [`useHappyChain`] hook returns the current user as a [`HappyUser`]
+The [`useHappyWallet`] hook returns the current user as a [`HappyUser`]
 if the user is connected, otherwise it returns undefined.
 
-[`userHappyChain`]: /sdk/react/api/functions/useHappyChain
+[`userHappyChain`]: /sdk/react/api/functions/useHappyWallet
 [`HappyUser`]: /sdk/js/api/type-aliases/HappyUser
 
 ```tsx twoslash
 import React from 'react'
-import { useHappyChain } from '@happy.tech/react'
+import { useHappyWallet } from '@happy.tech/react'
 
 function UserAddressComponent() {
-    const { user } = useHappyChain()
+    const { user } = useHappyWallet()
 
     if (!user) {
         return <div>Not connected</div>

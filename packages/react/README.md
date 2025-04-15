@@ -22,13 +22,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 ```
 
-## useHappyChain hook
+## useHappyWallet hook
 
 ```tsx
-import { useHappyChain } from '@happy.tech/react'
+import { useHappyWallet } from '@happy.tech/react'
 
 function App() {
-    const { provider, user } = useHappyChain()
+    const { provider, user } = useHappyWallet()
 
     // viem
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])

@@ -1,4 +1,4 @@
-import { useHappyChain } from "@happy.tech/react"
+import { useHappyWallet } from "@happy.tech/react"
 import { useMemo } from "react"
 import {
     type Account,
@@ -17,7 +17,7 @@ export default function useClients(): {
     publicClient: PublicClient
     walletClient: WalletClient<CustomTransport, undefined, Account> | null
 } {
-    const { provider, user } = useHappyChain()
+    const { provider, user } = useHappyWallet()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
 
