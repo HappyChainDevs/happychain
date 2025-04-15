@@ -34,10 +34,16 @@ interface IExtensibleAccount is IAccount {
     // FUNCTIONS
 
     /// Adds an extension to the account, can revert with ExtensionAlreadyRegistered.
-    function addExtension(address extension, ExtensionType extensionType) external;
+    /// @param extension The address of the extension contract
+    /// @param extensionType The type of the extension
+    /// @param initData Calldata to execute on the extension after registration
+    function addExtension(address extension, ExtensionType extensionType, bytes calldata initData) external;
 
     /// Removes an extension from the account, can revert with ExtensionNotRegistered.
-    function removeExtension(address extension, ExtensionType extensionType) external;
+    /// @param extension The address of the extension contract
+    /// @param extensionType The type of the extension
+    /// @param deInitData Calldata to execute on the extension after removal
+    function removeExtension(address extension, ExtensionType extensionType, bytes calldata deInitData) external;
 
     /// Checks if an extension is already registered.
     function isExtensionRegistered(address extension, ExtensionType extensionType) external view returns (bool);

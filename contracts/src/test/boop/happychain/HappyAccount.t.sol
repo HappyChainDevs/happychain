@@ -20,6 +20,8 @@ import {
     NotFromEntryPoint,
     UnknownDuringSimulation,
     ExtensionAlreadyRegistered,
+    ExtensionDeInitializationFailed,
+    ExtensionInitializationFailed,
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
@@ -574,7 +576,7 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Test adding a validator extension
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator, "");
 
         // Verify the validator extension is now registered
         assertTrue(
@@ -583,7 +585,7 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Test adding an executor extension
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor, "");
 
         // Verify the executor extension is now registered
         assertTrue(
@@ -595,18 +597,18 @@ contract HappyAccountTest is BoopTestUtils {
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
         );
-        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator, "");
 
         // Try adding the same executor extension again - should revert with ExtensionAlreadyRegistered
         vm.prank(owner);
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockExecutorExtension, ExtensionType.Executor)
         );
-        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor, "");
 
         // Test adding the same address but as a different extension type (should work)
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor, "");
 
         // Verify both extension types are registered for the validator address
         assertTrue(
@@ -618,7 +620,7 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Test adding extension from the account itself (using onlySelfOrOwner modifier)
         vm.prank(smartAccount);
-        HappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator, "");
 
         // Verify the new extension is registered
         assertTrue(HappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator));
@@ -627,7 +629,7 @@ contract HappyAccountTest is BoopTestUtils {
         address nonOwner = address(0x9999);
         vm.prank(nonOwner);
         vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
-        HappyAccount(payable(smartAccount)).addExtension(address(0xDEAD), ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(address(0xDEAD), ExtensionType.Validator, "");
     }
 
     function testRemoveExtension() public {
@@ -637,9 +639,9 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Add the extensions first
         vm.startPrank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
-        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
-        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor); // Same address, different type
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator, "");
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor, "");
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor, ""); // Same address, different type
         vm.stopPrank();
 
         // Verify the extensions are registered
@@ -655,7 +657,7 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Test removing a validator extension
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator, "");
 
         // Verify the validator extension is no longer registered
         assertFalse(
@@ -669,7 +671,7 @@ contract HappyAccountTest is BoopTestUtils {
 
         // Test removing an executor extension
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Executor, "");
 
         // Verify the executor extension is no longer registered
         assertFalse(
@@ -681,11 +683,11 @@ contract HappyAccountTest is BoopTestUtils {
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionNotRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
         );
-        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator, "");
 
         // Test removing extension from the account itself (using onlySelfOrOwner modifier)
         vm.prank(smartAccount);
-        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Executor, "");
 
         // Verify the extension is no longer registered
         assertFalse(
@@ -697,17 +699,72 @@ contract HappyAccountTest is BoopTestUtils {
 
         // First add an extension to remove
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Validator, "");
 
         // Try to remove it as non-owner
         vm.prank(nonOwner);
         vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
-        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Validator, "");
 
         // Verify the extension is still registered
         assertTrue(
             HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Validator)
         );
+    }
+
+    // ====================================================================================================
+    // EXTENSIONS INIT/DEINIT TESTS
+
+    function testAddExtensionWithInitDataPasses() public {
+        // Should succeed when initValidator(1) is called
+        bytes memory initData = abi.encodeCall(MockValidator.initValidator, (1));
+        vm.prank(owner);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidator, ExtensionType.Validator, initData);
+        // Should be registered
+        assertTrue(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));
+    }
+
+    function testAddExtensionWithInitDataFails() public {
+        // Should revert when initValidator(0) is called
+        bytes memory initData = abi.encodeCall(MockValidator.initValidator, (0));
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtensionInitializationFailed.selector, mockValidator, ExtensionType.Validator, initData
+            )
+        );
+        HappyAccount(payable(smartAccount)).addExtension(mockValidator, ExtensionType.Validator, initData);
+        // Should not be registered
+        assertFalse(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));
+    }
+
+    function testRemoveExtensionWithDeInitDataPasses() public {
+        // Add first
+        vm.prank(owner);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidator, ExtensionType.Validator, "");
+        // Should succeed when deInitValidator(1) is called
+        bytes memory deInitData = abi.encodeCall(MockValidator.deInitValidator, (1));
+        vm.prank(owner);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidator, ExtensionType.Validator, deInitData);
+        // Should not be registered
+        assertFalse(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));
+    }
+
+    function testRemoveExtensionWithDeInitDataFails() public {
+        // Add first
+        vm.prank(owner);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidator, ExtensionType.Validator, "");
+        // Should revert when deInitValidator(0) is called
+        bytes memory deInitData = abi.encodeCall(MockValidator.deInitValidator, (0));
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtensionDeInitializationFailed.selector, mockValidator, ExtensionType.Validator, deInitData
+            )
+        );
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidator, ExtensionType.Validator, deInitData);
+        // Should still be registered
+        assertTrue(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));
     }
 
     // ====================================================================================================
@@ -733,19 +790,19 @@ contract HappyAccountTest is BoopTestUtils {
     // HELPERS
 
     // Helper function to set up any extension type
-    function _setupExtension(address _extension, ExtensionType _extensionType) internal {
+    function _setupExtension(address _extension, ExtensionType _extensionType, bytes memory initData) internal {
         // Add the extension to the smart account
         vm.prank(owner);
-        HappyAccount(payable(smartAccount)).addExtension(_extension, _extensionType);
+        HappyAccount(payable(smartAccount)).addExtension(_extension, _extensionType, initData);
     }
 
     // Helper function to set up a mock executor (for backward compatibility)
     function _setupMockExecutor(address _mockExecutor) internal {
-        _setupExtension(_mockExecutor, ExtensionType.Executor);
+        _setupExtension(_mockExecutor, ExtensionType.Executor, "");
     }
 
     function _setupMockValidator(address _mockValidator) internal {
-        _setupExtension(_mockValidator, ExtensionType.Validator);
+        _setupExtension(_mockValidator, ExtensionType.Validator, "");
     }
 
     /**
