@@ -162,7 +162,7 @@ contract UpgradeSCATest is Test {
             validateGasLimit: 4000000000,
             validatePaymentGasLimit: 4000000000,
             dest: 0x0000000000000000000000000000000000000000,
-            paymaster: smartAccount,
+            payer: smartAccount,
             value: 0,
             nonceTrack: 0,
             nonceValue: _getNonce(),

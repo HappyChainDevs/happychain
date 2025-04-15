@@ -127,7 +127,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
                 }
             }
         } else {
-            if (boop.paymaster != address(this)) {
+            if (boop.payer != address(this)) {
                 // The boop is not self-paying.
                 // The signer does not sign over these fields to avoid extra network roundtrips
                 // validation policy falls to the paymaster or the sponsoring submitter.

@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import {Boop} from "boop/interfaces/Types.sol";
 
 /**
- * Selector returned from {IPaymaster.payout} when the paymaster's fee exceeds
- * the maximum allowed.
+ * Selector returned from {IPaymaster.validatePayment} when the boop's fee exceeds
+ * the maximum allowed fee.
  */
 error SubmitterFeeTooHigh();
 

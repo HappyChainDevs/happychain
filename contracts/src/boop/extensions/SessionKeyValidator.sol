@@ -77,7 +77,7 @@ contract SessionKeyValidator is ICustomValidator {
     }
 
     function validate(Boop memory boop) external view returns (bytes memory) {
-        if (boop.paymaster == boop.account) {
+        if (boop.payer == boop.account) {
             return abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector);
         }
 

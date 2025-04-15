@@ -86,14 +86,14 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
-        // 1. Validate gas price & paymaster balance, validate & update nonce
+        // 1. Validate gas price & payer balance, validate & update nonce
 
         if (tx.gasprice > boop.maxFeePerGas) {
             revert GasPriceTooHigh();
         }
 
-        if (boop.paymaster != address(0) && boop.paymaster != boop.account) {
-            if (stakes[boop.paymaster].balance < boop.gasLimit * tx.gasprice) {
+        if (boop.payer != address(0) && boop.payer != boop.account) {
+            if (stakes[boop.payer].balance < boop.gasLimit * tx.gasprice) {
                 revert InsufficientStake();
             }
         }
@@ -121,7 +121,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 3. Validate with paymaster (if specified)
 
-        if (boop.paymaster != address(0) && boop.paymaster != boop.account) {
+        if (boop.payer != address(0) && boop.payer != boop.account) {
             (result, gasUsed, revertData) =
                 _validate(IPaymaster.validatePayment.selector, boop, boop.validatePaymentGasLimit);
 
@@ -171,10 +171,10 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         uint128 cost;
 
-        if ( /* sponsoring submitter */ boop.paymaster == address(0)) {
+        if ( /* sponsoring submitter */ boop.payer == address(0)) {
             output.gas = Utils.estimateSubmitterTxGas(gasStart - gasleft(), encodedBoop.length);
             // done!
-        } else if ( /* self-paying */ boop.paymaster == boop.account) {
+        } else if ( /* self-paying */ boop.payer == boop.account) {
             uint256 balance = tx.origin.balance;
             uint256 gasBeforePayout = gasleft();
             // The constant 15000 overestimates the cost of the rest of execution, including
@@ -198,7 +198,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
             (output.gas, cost) = _computeCost(boop, gasStart - gasleft() + 16000, encodedBoop.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
-            _transferTo(boop.paymaster, payable(tx.origin), cost);
+            _transferTo(boop.payer, payable(tx.origin), cost);
         }
     }
 
@@ -241,7 +241,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
     {
         bool isSimulation = tx.origin == address(0);
         if (isSimulation && gasLimit == 0) gasLimit = gasleft();
-        address targetAddress = fn == IAccount.validate.selector ? boop.account : boop.paymaster;
+        address targetAddress = fn == IAccount.validate.selector ? boop.account : boop.payer;
         bytes memory callData = abi.encodeWithSelector(fn, boop);
 
         uint256 gasBefore = gasleft();
