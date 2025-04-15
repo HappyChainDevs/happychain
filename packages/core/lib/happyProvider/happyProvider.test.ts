@@ -19,7 +19,7 @@ import type { RpcBlock } from "viem"
 import { config } from "../config"
 // This must be before the HappyProvider import or there is a circular-dependency-induced error during the tests.
 import "./initialize.ts"
-import { HappyProvider } from "./happyProvider"
+import { HappyProviderImplem } from "./happyProvider"
 
 const emptyRpcBlock = {
     baseFeePerGas: null,
@@ -91,7 +91,7 @@ describe("HappyProvider", () => {
 
     let windowId: UUID
 
-    let provider: HappyProvider
+    let provider: HappyProviderImplem
 
     function test_autoApprovePermissionCheck() {
         // auto approve permissions (no popup)
@@ -119,7 +119,7 @@ describe("HappyProvider", () => {
 
         windowId = createUUID()
 
-        provider = new HappyProvider({
+        provider = new HappyProviderImplem({
             iframePath: config.iframePath,
             windowId: windowId,
             providerBus: appProviderBus,

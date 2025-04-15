@@ -11,10 +11,10 @@ import {
 } from "@happy.tech/wallet-common"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderMsgsFromIframe } from "@happy.tech/wallet-common"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
-import type { EIP1193ConnectionHandler, HappyProviderConfig, HappyProviderPublic } from "./interface"
+import type { EIP1193ConnectionHandler, HappyProvider, HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
 
-export class HappyProvider extends SafeEventEmitter implements HappyProviderPublic {
+export class HappyProviderImplem extends SafeEventEmitter implements HappyProvider {
     private readonly injectedWalletHandler: EIP1193ConnectionHandler
     private readonly socialWalletHandler: EIP1193ConnectionHandler
 
@@ -135,7 +135,7 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 /**
  * Mock implementation that ensures the SDK can be imported in SSR-first frameworks without errors
  */
-export class HappyProviderSSRSafe extends SafeEventEmitter implements HappyProviderPublic {
+export class HappyProviderSSRSafe extends SafeEventEmitter implements HappyProvider {
     async request(): Promise<never> {
         throw new Error("Provider not available in server environment")
     }

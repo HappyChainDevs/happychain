@@ -1,7 +1,7 @@
 export { register } from "./register"
 export type { WalletRegisterOptions } from "./register"
 
-export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
+export type { HappyProvider } from "./happyProvider/interface"
 
 export {
     devnet,
