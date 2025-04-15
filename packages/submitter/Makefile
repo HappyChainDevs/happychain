@@ -33,6 +33,7 @@ test-watch: ## Run the submitter tests
 
 setup: 
 	@$(MAKE) -f ../../makefiles/bundling.mk $@
+	make setup-symlinks;
 .PHONY: setup
 
 build: 

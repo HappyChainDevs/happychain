@@ -143,7 +143,7 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 ##@ Demos & Apps
 
 submitter.dev: setup.ts shared.dev
-	@cd contracts && make setup;
+	cd contracts && make setup;
 	make anvil > /dev/null 2>&1 &
 	cd contracts && make deploy-boop;
 	cd contracts && make deploy-mocks;
