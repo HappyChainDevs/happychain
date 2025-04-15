@@ -87,14 +87,11 @@ const ConnectContent = () => {
             if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) return setPopupBlocked(true)
             else setPopupBlocked(false)
 
-            // unknown error, just log it.
-            if (_error && !isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) return console.error(_error)
-
             // user just closed the popup without connecting
             // Don't need to log the error
             if (_error && isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) return
 
-            // _error should always be null here, so if its not, something strange happened...
+            // unknown error, just log it.
             if (_error) return console.error(_error)
 
             // iframe-originated requests won't need any response to be emitted
