@@ -20,7 +20,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -47,7 +47,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0x000C3501
             validatePaymentGasLimit: 800002, // 0x000C3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -74,7 +74,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -108,7 +108,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.executeGasLimit, 800001); // 000C3501
         assertEq(decoded.validatePaymentGasLimit, 800002); // 000C3502
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
-        assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
+        assertEq(decoded.payer, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
         assertEq(decoded.nonceTrack, 1234);
         assertEq(decoded.nonceValue, 5678);
@@ -132,7 +132,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.executeGasLimit, 800001);
         assertEq(decoded.validatePaymentGasLimit, 800002);
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
-        assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
+        assertEq(decoded.payer, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
         assertEq(decoded.nonceTrack, 1234);
         assertEq(decoded.nonceValue, 5678);
@@ -156,7 +156,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.executeGasLimit, 800001);
         assertEq(decoded.validatePaymentGasLimit, 800002);
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
-        assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
+        assertEq(decoded.payer, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
         assertEq(decoded.nonceTrack, 1234);
         assertEq(decoded.nonceValue, 5678);
@@ -188,7 +188,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -207,7 +207,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.gasLimit, input.gasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
-        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.payer, input.payer);
         assertEq(decoded.value, input.value);
         assertEq(decoded.nonceTrack, input.nonceTrack);
         assertEq(decoded.nonceValue, input.nonceValue);
@@ -227,7 +227,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -246,7 +246,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.gasLimit, input.gasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
-        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.payer, input.payer);
         assertEq(decoded.value, input.value);
         assertEq(decoded.nonceTrack, input.nonceTrack);
         assertEq(decoded.nonceValue, input.nonceValue);
@@ -266,7 +266,7 @@ contract CoreLibsTest is Test {
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
-            paymaster: 0x3456789012345678901234567890123456789012,
+            payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
             nonceTrack: 1234, // 0x4D2
             nonceValue: 5678, // 0x162E
@@ -285,7 +285,7 @@ contract CoreLibsTest is Test {
         assertEq(decoded.gasLimit, input.gasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
-        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.payer, input.payer);
         assertEq(decoded.value, input.value);
         assertEq(decoded.nonceTrack, input.nonceTrack);
         assertEq(decoded.nonceValue, input.nonceValue);

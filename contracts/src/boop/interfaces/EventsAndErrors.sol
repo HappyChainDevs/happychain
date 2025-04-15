@@ -21,7 +21,7 @@ event BoopSubmitted(
     uint32 executeGasLimit,
     uint32 validatePaymentGasLimit,
     address dest,
-    address paymaster,
+    address payer,
     uint256 value,
     uint192 nonceTrack,
     uint64 nonceValue,
@@ -126,8 +126,7 @@ event Received(address sender, uint256 amount);
 // SHARED ERRORS
 
 /**
- * Selector returned by {IAccount.validate} and
- * {IPaymaster.payout} in simulation mode if the validity of the boop
+ * Selector returned by {EntryPoint._validate} in simulation mode if the validity of the boop
  * cannot be ascertained during simulation.
  *
  * e.g. we can't verify a signature over the gas limit during simulation,

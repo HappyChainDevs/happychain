@@ -18,20 +18,24 @@ library Encoding {
      * as uint32.
      *
      * Encoding Format:
-     * - fixed size fields
+     * - fixed size fields:
      *      - account (20b)
+     *      - dest (20b)
+     *      - payer (20b)
+     *
+     *      - value (32b)
+     *      - nonceTrack (24b)
+     *      - nonce (8b)
+     *
+     *      - maxFeePerGas (32b)
+     *      - submitterFee (32b)
+     *
      *      - gasLimit (4b)
      *      - validateGasLimit (4b)
      *      - executeGasLimit (4b)
      *      - validatePaymentGasLimit (4b)
-     *      - destination (20b)
-     *      - paymaster (20b)
-     *      - value (32b)
-     *      - nonceTrack (24b)
-     *      - nonce (8b)
-     *      - maxFeePerGas (32b)
-     *      - submitterFee (32b)
-     * - dynamic fields
+     *
+     * - dynamic fields:
      *      - callData (length: 4b = N, data: Nb)
      *      - paymasterData (length: 4b = N, data: Nb)
      *      - validatorData (length: 4b = N, data: Nb)
@@ -64,32 +68,12 @@ library Encoding {
             outPtr := add(outPtr, 20)
             inPtr := add(inPtr, 32)
 
-            // Copy gasLimit (4 bytes)
-            mcopy(outPtr, add(inPtr, 28), 4)
-            outPtr := add(outPtr, 4)
-            inPtr := add(inPtr, 32)
-
-            // Copy validateGasLimit (4 bytes)
-            mcopy(outPtr, add(inPtr, 28), 4)
-            outPtr := add(outPtr, 4)
-            inPtr := add(inPtr, 32)
-
-            // Copy executeGasLimit (4 bytes)
-            mcopy(outPtr, add(inPtr, 28), 4)
-            outPtr := add(outPtr, 4)
-            inPtr := add(inPtr, 32)
-
-            // Copy validatePaymentGasLimit (4 bytes)
-            mcopy(outPtr, add(inPtr, 28), 4)
-            outPtr := add(outPtr, 4)
-            inPtr := add(inPtr, 32)
-
             // Copy dest (20 bytes)
             mcopy(outPtr, add(inPtr, 12), 20)
             outPtr := add(outPtr, 20)
             inPtr := add(inPtr, 32)
 
-            // Copy paymaster (20 bytes)
+            // Copy payer (20 bytes)
             mcopy(outPtr, add(inPtr, 12), 20)
             outPtr := add(outPtr, 20)
             inPtr := add(inPtr, 32)
@@ -117,6 +101,26 @@ library Encoding {
             // Copy submitterFee (32 bytes)
             mcopy(outPtr, inPtr, 32)
             outPtr := add(outPtr, 32)
+            inPtr := add(inPtr, 32)
+
+            // Copy gasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
+
+            // Copy validateGasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
+
+            // Copy executeGasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
+
+            // Copy validatePaymentGasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
             // Handle dynamic fields
@@ -175,32 +179,12 @@ library Encoding {
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
 
-            // Copy gasLimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(add(memPtr, 28), cdPtr, 4)
-            cdPtr := add(cdPtr, 4)
-            memPtr := add(memPtr, 32)
-
-            // Copy validateGasLimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(add(memPtr, 28), cdPtr, 4)
-            cdPtr := add(cdPtr, 4)
-            memPtr := add(memPtr, 32)
-
-            // Copy executeGaslimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(add(memPtr, 28), cdPtr, 4)
-            cdPtr := add(cdPtr, 4)
-            memPtr := add(memPtr, 32)
-
-            // Copy validatePaymentGasLimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(add(memPtr, 28), cdPtr, 4)
-            cdPtr := add(cdPtr, 4)
-            memPtr := add(memPtr, 32)
-
             // Copy dest (20 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 12), cdPtr, 20)
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
 
-            // Copy paymaster (20 bytes) + zero pad to 32 bytes
+            // Copy payer (20 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 12), cdPtr, 20)
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
@@ -228,6 +212,26 @@ library Encoding {
             // Copy submitterFee (32 bytes)
             calldatacopy(memPtr, cdPtr, 32)
             cdPtr := add(cdPtr, 32)
+
+            // Copy gasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
+
+            // Copy validateGasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
+
+            // Copy executeGaslimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
+
+            // Copy validatePaymentGasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
 
             // Dynamic fields offset is the difference between current and start position
             offset := sub(cdPtr, encodedBoop.offset)

@@ -82,7 +82,7 @@ contract EntryPointTest is BoopTestUtils {
     // BASIC TESTS
 
     function testSelfPayingTx() public {
-        // Self-paying: paymaster == account itself
+        // Self-paying: payer == account itself
         uint256 initialBalance = getEthBalance(smartAccount);
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
@@ -99,7 +99,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testPaymasterSponsoredTx() public {
-        // Paymaster-sponsored: paymaster == HappyPaymaster
+        // Paymaster-sponsored: payer == HappyPaymaster
         uint256 initialStake = entryPoint.balanceOf(paymaster);
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
@@ -116,7 +116,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testSubmitterSponsoredTx() public {
-        // Submitter-sponsored: paymaster == address(0)
+        // Submitter-sponsored: payer == ZERO_ADDRESS
         address submitter = address(0xdeadbeef);
         vm.deal(submitter, INITIAL_DEPOSIT);
 
@@ -140,7 +140,7 @@ contract EntryPointTest is BoopTestUtils {
     // BAISC TESTS (SIMULATION)
 
     function testSimulateSelfPayingTx() public {
-        // Self-paying simulation: account == paymaster
+        // Self-paying simulation: payer == account
         uint256 id = vm.snapshotState();
 
         uint256 initialBalance = getEthBalance(smartAccount);
@@ -167,7 +167,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testSimulatePaymasterSponsoredTx() public {
-        // Paymaster-sponsored simulation: paymaster is the HappyPaymaster
+        // Paymaster-sponsored simulation: payer == paymaster
         uint256 id = vm.snapshotState();
 
         uint256 initialStake = entryPoint.balanceOf(paymaster);
@@ -197,7 +197,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testSimulateSubmitterSponsoredTx() public {
-        // Submitter-sponsored simulation: paymaster is zero address
+        // Submitter-sponsored simulation: payer == ZERO_ADDRESS
         uint256 id = vm.snapshotState();
 
         uint256 initialBalance = getEthBalance(smartAccount);
@@ -238,7 +238,7 @@ contract EntryPointTest is BoopTestUtils {
 
     function testInsufficientStake() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-        boop.paymaster = dest; // An address which hasn't staked to the entrypoint
+        boop.payer = dest; // An address which hasn't staked to the entrypoint
         vm.txGasPrice(boop.maxFeePerGas / 2);
         vm.expectRevert(InsufficientStake.selector);
         entryPoint.submit(boop.encode());
@@ -362,7 +362,7 @@ contract EntryPointTest is BoopTestUtils {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Change any field to invalid the signature over the boop
-        boop.paymaster = ZERO_ADDRESS; // This way, we don't have to stake a new account
+        boop.payer = ZERO_ADDRESS; // This way, we don't have to stake a new account
 
         // The function should return output.validationStatus = UnknownDuringSimulation.selector
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);

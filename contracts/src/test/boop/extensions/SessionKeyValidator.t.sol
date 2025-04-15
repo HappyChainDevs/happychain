@@ -170,7 +170,7 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         vm.prank(smartAccount);
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
-        // Create a Boop where account is also the paymaster (self-paying)
+        // Create a Boop where account is also the payer (self-paying)
         Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Call validate

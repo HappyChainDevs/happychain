@@ -28,24 +28,24 @@ contract BoopTestUtils is Test {
     function createSignedBoopForMintToken(
         address account,
         address mintTokenTo,
-        address paymaster,
+        address payer,
         address token,
         uint256 privKey
     ) public view returns (Boop memory boop) {
         bytes memory mintCallData = getMintTokenCallData(mintTokenTo, TOKEN_MINT_AMOUNT);
-        boop = createSignedBoop(account, token, paymaster, privKey, mintCallData);
+        boop = createSignedBoop(account, token, payer, privKey, mintCallData);
     }
 
-    function createSignedBoop(address account, address dest, address paymaster, uint256 privKey, bytes memory callData)
+    function createSignedBoop(address account, address dest, address payer, uint256 privKey, bytes memory callData)
         public
         view
         returns (Boop memory boop)
     {
-        boop = getStubBoop(account, dest, paymaster, callData);
+        boop = getStubBoop(account, dest, payer, callData);
         boop.validatorData = signBoop(boop, privKey);
     }
 
-    function getStubBoop(address _account, address _dest, address _paymaster, bytes memory _callData)
+    function getStubBoop(address _account, address _dest, address _payer, bytes memory _callData)
         public
         view
         returns (Boop memory)
@@ -57,7 +57,7 @@ contract BoopTestUtils is Test {
             validateGasLimit: 4000000,
             validatePaymentGasLimit: 4000000,
             dest: _dest,
-            paymaster: _paymaster,
+            payer: _payer,
             value: 0,
             nonceTrack: DEFAULT_NONCETRACK,
             nonceValue: entryPoint.nonceValues(_account, DEFAULT_NONCETRACK),
@@ -81,7 +81,7 @@ contract BoopTestUtils is Test {
         // Store original validator data (normally we'll use the signature to erase this)
         bytes memory origValidatorData;
 
-        if (boop.paymaster != boop.account) {
+        if (boop.payer != boop.account) {
             // If the boop is not self-paying, we don't sign over the gas values
             origGasLimit = boop.gasLimit;
             origValidateGasLimit = boop.validateGasLimit;
@@ -103,7 +103,7 @@ contract BoopTestUtils is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
 
-        if (boop.paymaster != boop.account) {
+        if (boop.payer != boop.account) {
             // Restore the original gas values after signing
             boop.gasLimit = origGasLimit;
             boop.validateGasLimit = origValidateGasLimit;
