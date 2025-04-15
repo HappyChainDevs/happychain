@@ -60,7 +60,7 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
         typeof revertData !== "string" ||
         (err.raw === "0x" && "reason" in err && err.reason === "execution reverted")
     ) {
-        throw new ExecuteRevertedError("Out Of Gas")
+        throw new ExecuteRevertedError("Out Of Gas - execution reverted")
     }
 
     switch (err.errorName) {
@@ -78,7 +78,7 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
         // === REVERT ERRORS ===================================================================
         case "ValidationReverted": {
             // TODO: is this a reliable way to check out of gas?
-            return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
+            return new ValidationRevertedError((revertData as string) === "0x" ? "Validation Out Of Gas" : revertData)
         }
         case "PaymentValidationReverted": {
             return new PaymentValidationRevertedError(revertData)

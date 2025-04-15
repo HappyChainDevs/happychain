@@ -1,8 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { app } from "#lib/server"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
@@ -15,14 +13,13 @@ import {
     getNonce,
     mockDeployments,
     signTx,
-    testPublicClient,
 } from "./utils"
+import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = async (tx: Boop) => await signTx(testAccount, tx)
 
 describe("submitter_execute", () => {
-    const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
@@ -38,17 +35,23 @@ describe("submitter_execute", () => {
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        signedTx = await sign(unsignedTx)
+        try {
+            nonceValue = await getNonce(smartAccount, nonceTrack)
+        } catch {
+            console.log("Error fetching nonce")
+        }
+        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        try {
+            signedTx = await sign(unsignedTx)
+        } catch {
+            console.log("Error signing transaction")
+        }
     })
 
     describe("self-paying", () => {
         beforeAll(async () => {
             // faucet for self paying
-            if ((await testPublicClient.getBalance({ address: smartAccount })) < 10n ** 16n) {
-                await fundAccount(smartAccount)
-            }
+            await fundAccount(smartAccount)
         })
 
         it("mints tokens", async () => {
@@ -58,9 +61,7 @@ describe("submitter_execute", () => {
             unsignedTx.executeGasLimit = 1000000n
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
-
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
-
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -122,8 +123,10 @@ describe("submitter_execute", () => {
             expect(Number(response.state.receipt.txReceipt.transactionIndex)).toBeGreaterThanOrEqual(0)
             expect(response.state.receipt.txReceipt.type).toBeString()
         })
+
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
+
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
 
@@ -163,8 +166,8 @@ describe("submitter_execute", () => {
             // execute tx with nonce, then another with nonce+1, wait for both to complete
             // this is to ensure that the nonce value is above `0` so that we don't fail for having a
             // _negative_ nonce
-            const tx1 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack))
-            const tx2 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
+            const tx1 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack))
+            const tx2 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
             await Promise.all([
                 client.api.v1.submitter.execute.$post({
                     json: { tx: serializeBigInt(tx1) },
@@ -176,7 +179,7 @@ describe("submitter_execute", () => {
 
             const jsonTx = await sign(
                 // mints a different amount of tokens, computes a difference hash, same nonce though
-                await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack, 5n * 10n ** 18n),
+                createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack, 5n * 10n ** 18n),
             )
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
@@ -189,7 +192,7 @@ describe("submitter_execute", () => {
 
         it("can't re-use a nonce", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
-            const jsonTx = await sign(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
+            const jsonTx = await sign(createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
 
             const result1 = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             // again with same nonce, will fail
@@ -214,7 +217,7 @@ describe("submitter_execute", () => {
 
         it("throws error when PaymentReverted with unsupported payer", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
-            const tx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+            const tx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
 
             // invalid payer
             tx.payer = mockDeployments.MockTokenA
@@ -229,7 +232,7 @@ describe("submitter_execute", () => {
 
         it("throws when invalid ABI is used to make call", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
-            const tx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+            const tx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
 
             tx.callData = encodeFunctionData({
                 abi: [{ type: "function", name: "badFunc", inputs: [], outputs: [], stateMutability: "nonpayable" }],
@@ -241,13 +244,13 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
-            // expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
+            expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
             expect(result.status).toBe(422)
             expect(response.status).toBe("entrypointCallReverted")
         })
 
         it("throws when using the wrong user account", async () => {
-            const tx = await createMockTokenAMintHappyTx(
+            const tx = createMockTokenAMintHappyTx(
                 `0x${(BigInt(smartAccount) + 1n).toString(16).padStart(40, "0")}`,
                 nonceValue,
                 nonceTrack,
@@ -257,8 +260,8 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
-            expect(result.status).toBe(422) // @note contract issue, this should throw not succeed
-            // expect(response.status).toBe("entrypointPaymentReverted")
+            expect(result.status).toBe(422)
+            expect(response.status).toBe("entrypointValidationReverted")
         })
     })
 })

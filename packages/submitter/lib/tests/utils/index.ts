@@ -1,9 +1,9 @@
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
-import type { Address, PrivateKeyAccount, PublicClient } from "viem"
-import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
-import { localhost } from "viem/chains"
+import type { Address, PrivateKeyAccount } from "viem"
+import { zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
+import { publicClient, walletClient } from "#lib/clients/index.ts"
 import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
@@ -11,32 +11,21 @@ import type { Boop } from "#lib/tmp/interface/Boop"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
-export { mockAbis, mockDeployments }
+export { mockDeployments, mockAbis }
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 
-const chain = localhost
-
-const config = { chain, transport: http() } as const
-
-export const testPublicClient: PublicClient<typeof config.transport, typeof config.chain> = //
-    createPublicClient({ ...config, batch: { multicall: true } })
-
 export async function fundAccount(address: Address) {
-    const hash = await createWalletClient({
-        chain,
-        transport: http(),
-        account: findExecutionAccount(/* Default Execution Account */),
-    }).sendTransaction({ to: address, value: parseEther("1") })
-
-    await testPublicClient.waitForTransactionReceipt({ hash })
+    const executor = findExecutionAccount(/* Default Execution Account */)
+    const hash = await walletClient.sendTransaction({ account: executor, to: address, value: parseEther("1") })
+    await publicClient.waitForTransactionReceipt({ hash })
 }
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
  */
 export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
-    return await testPublicClient.readContract({
+    return await publicClient.readContract({
         address: env.DEPLOYMENT_ENTRYPOINT,
         abi: abis.EntryPoint,
         functionName: "nonceValues",
@@ -45,7 +34,7 @@ export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigin
 }
 
 export async function getMockTokenABalance(account: Address) {
-    return await testPublicClient.readContract({
+    return await publicClient.readContract({
         address: mockDeployments.MockTokenA,
         abi: mockAbis.MockTokenA,
         functionName: "balanceOf",

@@ -23,7 +23,7 @@ routes: ## Display all available routes
 .PHONY: routes
 
 test: ## Run the submitter tests
-	@bun test
+	@bun test --bail
 .PHONY: test
 
 test-watch: ## Run the submitter tests
