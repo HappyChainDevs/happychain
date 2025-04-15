@@ -1,19 +1,17 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { app } from "#lib/server"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_state", () => {
-    const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n

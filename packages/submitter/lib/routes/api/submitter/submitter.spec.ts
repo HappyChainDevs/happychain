@@ -1,15 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeBoopHash } from "#lib/client"
-import { app } from "#lib/server"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
+import { client } from "#lib/tests/utils/client"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
-const client = testClient(app)
 
 describe("routes: api/submitter", () => {
     let smartAccount: `0x${string}`
@@ -29,7 +27,7 @@ describe("routes: api/submitter", () => {
         // Run each tests in isolated nonceTrack
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 

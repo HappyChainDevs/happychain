@@ -1,20 +1,18 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { encodeFunctionData } from "viem/utils"
 import env from "#lib/env"
-import { app } from "#lib/server"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus } from "#lib/tmp/interface/status"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
+import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_simulate", () => {
-    const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
@@ -141,7 +139,10 @@ describe("submitter_simulate", () => {
         })
 
         it("should revert on incorrect account", async () => {
-            const wrongAccount = await createMockTokenAMintHappyTx(`0x${(BigInt(smartAccount) + 1n).toString(16)}`, 0n)
+            const wrongAccount = await createMockTokenAMintHappyTx(
+                `0x${(BigInt(smartAccount) + 1n).toString(16).padStart(40, "0")}`,
+                0n,
+            )
             signedTx = await sign(wrongAccount)
             const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any

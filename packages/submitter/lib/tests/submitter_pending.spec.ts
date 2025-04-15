@@ -1,17 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
-import { app } from "#lib/server"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_pending", () => {
-    const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
@@ -37,7 +35,7 @@ describe("submitter_pending", () => {
 
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+                const dummyHappyTx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
                 return await sign(dummyHappyTx)
             }),
         )

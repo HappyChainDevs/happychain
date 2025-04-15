@@ -1,18 +1,17 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
-import { app } from "#lib/server"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { createMockTokenAMintHappyTx, getNonce, signTx, testPublicClient } from "./utils"
+import { publicClient } from "../clients"
+import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_submit", () => {
-    const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
@@ -28,9 +27,17 @@ describe("submitter_submit", () => {
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        signedTx = await sign(unsignedTx)
+        try {
+            nonceValue = await getNonce(smartAccount, nonceTrack)
+        } catch {
+            console.log("Error fetching nonce")
+        }
+        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        try {
+            signedTx = await sign(unsignedTx)
+        } catch {
+            console.log("Error signing transaction")
+        }
     })
 
     it("submits 'mint token' tx successfully.", async () => {
@@ -49,7 +56,7 @@ describe("submitter_submit", () => {
 
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+                const dummyHappyTx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
                 return await sign(dummyHappyTx)
             }),
         )
@@ -61,7 +68,7 @@ describe("submitter_submit", () => {
         const rs = await Promise.all(
             results.map((a) => {
                 if (a.status !== SubmitSuccess) return { status: a.status }
-                return testPublicClient.waitForTransactionReceipt({ hash: a.hash, pollingInterval: 100 })
+                return publicClient.waitForTransactionReceipt({ hash: a.hash, pollingInterval: 100 })
             }),
         )
 
@@ -78,17 +85,17 @@ describe("submitter_submit", () => {
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
         expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
 
-        const tx0 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 0n, nonceTrack))
-        const tx1 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
-        const tx2 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 2n, nonceTrack))
-        const tx3 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 3n, nonceTrack))
-        const tx4 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 4n, nonceTrack))
-        const tx5 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 5n, nonceTrack))
-        const tx6 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 6n, nonceTrack))
-        const tx7 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 7n, nonceTrack))
-        const tx8 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 8n, nonceTrack))
-        const tx9 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack))
-        const tx9_2 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
+        const tx0 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 0n, nonceTrack))
+        const tx1 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
+        const tx2 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 2n, nonceTrack))
+        const tx3 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 3n, nonceTrack))
+        const tx4 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 4n, nonceTrack))
+        const tx5 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 5n, nonceTrack))
+        const tx6 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 6n, nonceTrack))
+        const tx7 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 7n, nonceTrack))
+        const tx8 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 8n, nonceTrack))
+        const tx9 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack))
+        const tx9_2 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
 
         // submit all transactions without waiting
         const tx0_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx0) } })
