@@ -1,6 +1,6 @@
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import type { Chain } from "@wagmi/core/chains"
-import type { HappyProvider } from "../happyProvider/happyProvider"
+import type { HappyProviderImplem } from "../happyProvider/happyProvider"
 import { happyProvider } from "../happyProvider/initialize"
 
 /**
@@ -57,7 +57,7 @@ export function createHappyChainWagmiConfig(
         connectors: [connector],
         multiInjectedProviderDiscovery: false,
         transports: {
-            [chain.id]: custom(happyProvider as HappyProvider),
+            [chain.id]: custom(happyProvider as HappyProviderImplem),
         },
     })
 }

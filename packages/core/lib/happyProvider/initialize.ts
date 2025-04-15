@@ -11,8 +11,8 @@ import { EventBus, EventBusMode, Msgs, WalletDisplayAction } from "@happy.tech/w
 import { announceProvider, createStore } from "mipd"
 import type { Abi, Address, EIP1193Provider } from "viem"
 import { config } from "../config"
-import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
-import type { HappyProviderPublic } from "./interface"
+import { HappyProviderImplem, HappyProviderSSRSafe } from "./happyProvider"
+import type { HappyProvider } from "./interface"
 import { registerListeners } from "./listeners"
 
 const mipdStore = createStore()
@@ -67,7 +67,7 @@ function initializeProvider() {
         user = _user
     })
 
-    provider = new HappyProvider({
+    provider = new HappyProviderImplem({
         iframePath: config.iframePath,
         windowId: windowId as UUID,
         providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
@@ -193,7 +193,7 @@ export const happyProvider = (
  * })
  * ```
  */
-export const happyProviderPublic: HappyProviderPublic = happyProvider
+export const happyProviderPublic: HappyProvider = happyProvider
 
 const getListeners = () => {
     return iframeMessageBus
