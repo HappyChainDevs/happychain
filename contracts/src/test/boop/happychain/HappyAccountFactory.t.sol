@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
-import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {Test} from "forge-std/Test.sol";
 
 contract HappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ERC20, ERC20Permit} from "openzeppelin/token/ERC20/extensions/ERC20Permit.sol";
-import {ERC20Burnable} from "openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
-import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {ERC20Burnable} from "openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20, ERC20Permit} from "openzeppelin/token/ERC20/extensions/ERC20Permit.sol";
+import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @notice The $HAPPY token, as deployed on Ethereum and testnets L1s.

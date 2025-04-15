@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {CallInfo} from "../../boop/core/CallInfoEncoding.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
-import {ICustomExecutor} from "../../boop/interfaces/ICustomExecutor.sol";
+import {CallInfo} from "./../../boop/core/CallInfoEncoding.sol";
+import {ICustomExecutor} from "./../../boop/interfaces/ICustomExecutor.sol";
 
 /**
  * Mock implementation of ICustomExecutor for testing purposes.

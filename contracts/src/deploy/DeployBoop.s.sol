@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {BaseDeployScript} from "./BaseDeployScript.sol";
-
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
+import {BaseDeployScript} from "./BaseDeployScript.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));

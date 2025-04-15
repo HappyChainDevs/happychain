@@ -230,6 +230,10 @@ lint:
 	solhint --config ./.solhint.json "src/**/*.sol";
 .PHONY: lint
 
+lint-fix:
+	solhint --config ./.solhint.json "src/**/*.sol" --fix;
+.PHONY: lint-fix
+
 format:
 	@biome check ./scripts --write;
 	@# Temp workaround for forge fmt not supporting transient variables.

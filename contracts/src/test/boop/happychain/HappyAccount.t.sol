@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {BoopTestUtils} from "../Utils.sol";
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {MockRevert} from "../../../mocks/MockRevert.sol";
-import {MockValidator} from "../../../test/mocks/MockValidator.sol";
-import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-
 import {Encoding} from "boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
@@ -23,6 +16,16 @@ import {
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
+import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
+import {MockRevert} from "./../../../mocks/MockRevert.sol";
+import {MockExecutor} from "./../../../test/mocks/MockExecutor.sol";
+import {MockValidator} from "./../../../test/mocks/MockValidator.sol";
+import {BoopTestUtils} from "./../Utils.sol";
 
 contract HappyAccountTest is BoopTestUtils {
     using Encoding for Boop;

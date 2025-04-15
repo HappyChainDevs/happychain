@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {HappyERC20} from "./../HappyERC20.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {HappyERC20} from "../HappyERC20.sol";
 
 /**
  * @dev Deploys the HappyERC20 contract.

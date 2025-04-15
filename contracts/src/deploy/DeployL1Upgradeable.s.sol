@@ -2,9 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {ERC1967Proxy} from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
-
+import {HappyERC20Upgradeable} from "./../HappyERC20Upgradeable.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {HappyERC20Upgradeable} from "../HappyERC20Upgradeable.sol";
 
 /**
  * @dev Deploys an upgradeable version of the HappyERC20 contract.

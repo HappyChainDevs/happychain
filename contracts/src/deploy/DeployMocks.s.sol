@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MockERC20} from "../mocks/MockERC20.sol";
+import {MockGasBurner} from "./../mocks/GasBurner.sol";
+import {HappyCounter} from "./../mocks/HappyCounter.sol";
+import {MockERC20} from "./../mocks/MockERC20.sol";
+import {MockRevert} from "./../mocks/MockRevert.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {HappyCounter} from "../mocks/HappyCounter.sol";
-import {MockRevert} from "../mocks/MockRevert.sol";
-import {MockGasBurner} from "../mocks/GasBurner.sol";
 
 /**
  * @dev Deploys mock contracts for testing purposes.
