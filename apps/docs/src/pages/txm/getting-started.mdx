@@ -31,44 +31,43 @@ bun add @happy.tech/txm
 
 After installing, the first thing you will need to do is import the `TransactionManager` class and then create an instance of it.
 
-```ts
-import { TransactionManager } from '@happy.tech/txm'
-import { anvil } from "viem/chains"
+:::code-group
 
-const abis = {
-    "erc20": {
+```ts twoslash [app.ts]
+import { TransactionManager } from '@happy.tech/txm'
+import { abis } from "./abis"
+
+const txm = new TransactionManager({
+    privateKey: "0x...",
+    chainId: 31337,
+    abis: abis,
+    rpc: {
+        url: 'http://localhost:8545',
+    },
+    gas: {}
+})
+```
+
+```ts twoslash [abi.ts] filename="abis.ts"
+export const abis = ({
+    "erc20": [{
         "constant": false,
-        "inputs": [
-            {
-                "name": "_to",
-                "type": "address"
-            },
-            {
-                "name": "_value",
-                "type": "uint256"
-            }
-        ],
         "name": "transfer",
+        "inputs": [
+            { "name": "_to", "type": "address" },
+            { "name": "_value", "type": "uint256" }
+        ],
         "outputs": [
-            {
-                "name": "",
-                "type": "bool"
-            }
+            { "name": "", "type": "bool" }
         ],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
-    }
-}
-
-const txm = new TransactionManager({
-    account: privateKeyToAccount("0x..."),
-    transport: webSocket(),
-    chain: anvil,
-    id: "txm-demo",
-    abis
-})
+    }]
+}) as const
 ```
+
+:::
 
 After creating the transaction manager, you will need to start it.
 
@@ -89,16 +88,17 @@ You can see all the fields that our `Transaction` class has [here](/txm/api/clas
 To create a transaction, you will have to use its constructor. You can see all the fields that you can provide to the constructor [here](/txm/api/interfaces/TransactionConstructorConfig).
 
 
-```tsx
+```tsx twoslash
 import { Transaction } from '@happy.tech/txm'
 
 const tx = new Transaction({
-    chainId: 216,
     address: "0x...",
     functionName: "transfer",
     contractName: "erc20",
     args: ["0x...", "1000000000000000000"],
     deadline: Math.floor(Date.now() / 1000) + 60,
+    from: '0x...',
+    chainId: 216,
 })
 ```
 
