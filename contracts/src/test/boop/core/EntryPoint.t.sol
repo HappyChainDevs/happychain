@@ -8,10 +8,13 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {Boop} from "boop/interfaces/Types.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
+import {Boop, ExtensionType} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
+import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
 
 import {
     CallStatus,
@@ -404,6 +407,60 @@ contract EntryPointTest is BoopTestUtils {
         // This should revert with ValidationReverted since validate() will run out of gas
         vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, new bytes(0)));
         entryPoint.submit(boop2.encode());
+    }
+
+    // ====================================================================================================
+    // SESSION KEY VALIDATION TEST
+
+    function testSessionKeyValidatorFullFlow() public {
+        // Deploy the SessionKeyValidator
+        address sessionKeyValidator = address(new SessionKeyValidator());
+        address target = mockToken;
+        uint256 sessionKey = uint256(bytes32("deadbeef"));
+        address publicKey = vm.addr(sessionKey);
+
+        // Add the SessionKeyValidator as a validator extension, and add a session key for `mockToken`
+        bytes memory initData = abi.encodeCall(SessionKeyValidator.addSessionKey, (target, publicKey));
+        bytes memory callData =
+            abi.encodeCall(IExtensibleAccount.addExtension, (sessionKeyValidator, ExtensionType.Validator, initData));
+
+        // Send a boop to the smartAccount itself, so that it calls addExtension function on itself
+        Boop memory initBoop = createSignedBoop(smartAccount, smartAccount, ZERO_ADDRESS, privKey, callData);
+        entryPoint.submit(initBoop.encode());
+
+        // Check session key is set
+        assertEq(
+            SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target), publicKey, "Session key not set"
+        );
+
+        // Prepare a Boop signed by the session key, using SessionKeyValidator as external validator
+        Boop memory boop =
+            getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        // Set extraData to use the sessionKeyValidator as external validator
+        boop.extraData = abi.encodePacked(VALIDATOR_KEY, bytes3(0x000014), bytes20(sessionKeyValidator));
+        // Sign with session key
+        boop.validatorData = signBoop(boop, sessionKey);
+
+        // Submit the transaction (should succeed)
+        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+
+        // Now remove the validator extension and remove the session key
+        bytes memory deInitData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target));
+        bytes memory deCallData = abi.encodeCall(
+            IExtensibleAccount.removeExtension, (sessionKeyValidator, ExtensionType.Validator, deInitData)
+        );
+
+        // Send a boop to the smartAccount itself, so that it calls removeExtension function on itself
+        Boop memory deBoop = createSignedBoop(smartAccount, smartAccount, ZERO_ADDRESS, privKey, deCallData);
+        entryPoint.submit(deBoop.encode());
+
+        // Check session key is removed
+        assertEq(
+            SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target),
+            address(0),
+            "Session key not removed"
+        );
     }
 
     // ====================================================================================================

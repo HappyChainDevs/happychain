@@ -44,7 +44,7 @@ contract MockHappyAccount is IExtensibleAccount {
         return true;
     }
 
-    function addExtension(address extension, ExtensionType extensionType) external {
+    function addExtension(address extension, ExtensionType extensionType, bytes memory /*initData*/ ) external {
         if (extensions[extensionType][extension]) {
             revert ExtensionAlreadyRegistered(extension, extensionType);
         }
@@ -52,7 +52,7 @@ contract MockHappyAccount is IExtensibleAccount {
         emit ExtensionAdded(extension, extensionType);
     }
 
-    function removeExtension(address extension, ExtensionType extensionType) external {
+    function removeExtension(address extension, ExtensionType extensionType, bytes memory /*deInitData*/ ) external {
         if (!extensions[extensionType][extension]) {
             revert ExtensionNotRegistered(extension, extensionType);
         }

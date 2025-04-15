@@ -18,6 +18,8 @@ import {
     UnknownDuringSimulation,
     Received,
     ExtensionAlreadyRegistered,
+    ExtensionDeInitializationFailed,
+    ExtensionInitializationFailed,
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
@@ -86,22 +88,33 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         return extensions[extensionType][extension];
     }
 
-    function addExtension(address extension, ExtensionType extensionType) external onlySelfOrOwner {
+    /// @inheritdoc IExtensibleAccount
+    function addExtension(address extension, ExtensionType extensionType, bytes memory initData) external onlySelfOrOwner {
         if (extensions[extensionType][extension]) {
             revert ExtensionAlreadyRegistered(extension, extensionType);
         }
 
         extensions[extensionType][extension] = true;
         emit ExtensionAdded(extension, extensionType);
+
+        if (initData.length > 0) {
+            (bool success,) = extension.call(initData);
+            if (!success) revert ExtensionInitializationFailed(extension, extensionType, initData);
+        }
     }
 
-    function removeExtension(address extension, ExtensionType extensionType) external onlySelfOrOwner {
+    function removeExtension(address extension, ExtensionType extensionType, bytes memory deInitData) external onlySelfOrOwner {
         if (!extensions[extensionType][extension]) {
             revert ExtensionNotRegistered(extension, extensionType);
         }
 
         delete extensions[extensionType][extension];
         emit ExtensionRemoved(extension, extensionType);
+
+        if (deInitData.length > 0) {
+            (bool success,) = extension.call(deInitData);
+            if (!success) revert ExtensionDeInitializationFailed(extension, extensionType, deInitData);
+        }
     }
 
     function executeCallFromExecutor(CallInfo memory info) external returns (bool success, bytes memory returnData) {

@@ -35,6 +35,22 @@ contract MockValidator is ICustomValidator {
     }
 
     /**
+     * Used for extension initialization tests
+     * Reverts if input == 0
+     */
+    function initValidator(uint256 input) external pure {
+        require(input != 0, "Initialization of Mock Validator Failed");
+    }
+
+    /**
+     * Used for extension de-initialization tests
+     * Reverts if input == 0
+     */
+    function deInitValidator(uint256 input) external pure {
+        require(input != 0, "De-initialization of Mock Validator Failed");
+    }
+
+    /**
      * Validate a transaction based on the current validation mode
      * The boop parameter is intentionally unused in this mock implementation
      * @return result The validation result
