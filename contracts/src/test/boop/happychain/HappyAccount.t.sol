@@ -20,8 +20,6 @@ import {
     NotFromEntryPoint,
     UnknownDuringSimulation,
     ExtensionAlreadyRegistered,
-    ExtensionDeInitializationFailed,
-    ExtensionInitializationFailed,
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
@@ -728,11 +726,7 @@ contract HappyAccountTest is BoopTestUtils {
         // Should revert when initValidator(0) is called
         bytes memory initData = abi.encodeCall(MockValidator.initValidator, (0));
         vm.prank(owner);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ExtensionInitializationFailed.selector, mockValidator, ExtensionType.Validator, initData
-            )
-        );
+        vm.expectRevert();
         HappyAccount(payable(smartAccount)).addExtension(mockValidator, ExtensionType.Validator, initData);
         // Should not be registered
         assertFalse(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));
@@ -757,11 +751,7 @@ contract HappyAccountTest is BoopTestUtils {
         // Should revert when deInitValidator(0) is called
         bytes memory deInitData = abi.encodeCall(MockValidator.deInitValidator, (0));
         vm.prank(owner);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ExtensionDeInitializationFailed.selector, mockValidator, ExtensionType.Validator, deInitData
-            )
-        );
+        vm.expectRevert();
         HappyAccount(payable(smartAccount)).removeExtension(mockValidator, ExtensionType.Validator, deInitData);
         // Should still be registered
         assertTrue(HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidator, ExtensionType.Validator));

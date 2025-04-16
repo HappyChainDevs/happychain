@@ -161,16 +161,6 @@ error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType)
 error ExtensionNotRegistered(address extension, ExtensionType extensionType);
 
 /**
- * Thrown when the extension initialization call in addExtension fails.
- */
-error ExtensionInitializationFailed(address extension, ExtensionType extensionType, bytes initData);
-
-/**
- * Thrown when the extension de-initialization call in removeExtension fails.
- */
-error ExtensionDeInitializationFailed(address extension, ExtensionType extensionType, bytes deInitData);
-
-/**
  * Selector returned by extension functions and account functions if an extraData value read by an
  * extension is invalid.
  */
