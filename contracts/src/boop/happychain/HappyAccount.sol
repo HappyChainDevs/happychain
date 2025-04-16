@@ -18,8 +18,6 @@ import {
     UnknownDuringSimulation,
     Received,
     ExtensionAlreadyRegistered,
-    ExtensionDeInitializationFailed,
-    ExtensionInitializationFailed,
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
@@ -98,8 +96,12 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         emit ExtensionAdded(extension, extensionType);
 
         if (initData.length > 0) {
-            (bool success,) = extension.call(initData);
-            if (!success) revert ExtensionInitializationFailed(extension, extensionType, initData);
+            (bool success, bytes memory returnData) = extension.call(initData);
+            if (!success) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
         }
     }
 
@@ -113,7 +115,11 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
 
         if (deInitData.length > 0) {
             (bool success,) = extension.call(deInitData);
-            if (!success) revert ExtensionDeInitializationFailed(extension, extensionType, deInitData);
+            if (!success) {
+                assembly {
+                    revert(add(deInitData, 32), mload(deInitData))
+                }
+            }
         }
     }
 
