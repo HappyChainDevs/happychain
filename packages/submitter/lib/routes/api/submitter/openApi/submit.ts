@@ -8,7 +8,7 @@ import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { happyTxInputSchema } from "#lib/validation/schemas/happyTx"
+import { boopInputSchema } from "#lib/validation/schemas/boop"
 
 export const inputSchema = z.object({
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
@@ -20,7 +20,7 @@ export const inputSchema = z.object({
         .transform((a) => getAddress(a)),
 
     /** HappyTx to execute. */
-    tx: happyTxInputSchema,
+    tx: boopInputSchema,
 })
 
 const outputSchema = z.object({

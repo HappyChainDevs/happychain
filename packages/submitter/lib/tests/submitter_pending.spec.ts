@@ -3,12 +3,12 @@ import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_pending", () => {
     const client = testClient(app)

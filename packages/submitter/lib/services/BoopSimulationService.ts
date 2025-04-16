@@ -1,16 +1,18 @@
 import type { Hex } from "viem"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
-import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
+import { decodeBoop } from "#lib/utils/decodeBoop"
 import type { SubmitSimulateResult } from "#lib/utils/simulation-interfaces"
 import type { SimulationCacheService } from "./SimulationCacheService"
 
-export class HappySimulationService {
+/**
+ * Fetches and Saves Simulation Results
+ */
+export class BoopSimulationService {
     constructor(private simulationCacheService: SimulationCacheService) {}
 
-    async findResultByHappyTxHash(happyTxHash: Hex): Promise<SimulationResult | undefined> {
-        // const result = await this.happySimulationRepository.findByHappyTxHash(happyTxHash)
-        return this.simulationCacheService.get(happyTxHash)
+    async findResultByBoopHash(boopHash: Hex): Promise<SimulationResult | undefined> {
+        return this.simulationCacheService.get(boopHash)
     }
 
     async insertSimulationResult(simulationResult: SubmitSimulateResult): Promise<void> {
@@ -18,9 +20,9 @@ export class HappySimulationService {
 
         if (!simulation) return
 
-        const happyTxHash = computeBoopHash(decodeHappyTx(request.args[0]))
+        const boopHash = computeBoopHash(decodeBoop(request.args[0]))
 
-        this.simulationCacheService.set(happyTxHash, {
+        this.simulationCacheService.set(boopHash, {
             entryPoint: request.address,
             revertData: simulation.revertData || "0x",
             status: simulation.status,

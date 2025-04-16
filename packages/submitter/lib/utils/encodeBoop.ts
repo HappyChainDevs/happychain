@@ -1,13 +1,14 @@
 import type { Optional } from "@happy.tech/common"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { toBytes, toDynamicLengthBytes } from "./bytes"
 
-type OptionalHappyTxFields = "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee"
-export function encodeHappyTx(tx: Optional<HappyTx, OptionalHappyTxFields>): `0x${string}` {
+type OptionalBoopFields = "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee"
+export function encodeBoop(tx: Optional<Boop, OptionalBoopFields>): `0x${string}` {
     // Static fields
     const accountHex = tx.account.slice(2)
     const destHex = tx.dest.slice(2)
     const payerHex = tx.payer.slice(2)
+
     const valueHex = toBytes(tx.value, 32)
     const nonceTrackHex = toBytes(tx.nonceTrack, 24)
     const nonceValueHex = toBytes(tx.nonceValue, 8)

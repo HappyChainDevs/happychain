@@ -1,6 +1,8 @@
 {
   "EntryPoint": "EntryPoint",
-  "HappyAccount": "HappyAccount",
-  "HappyAccountFactory": "HappyAccountFactory",
+  "HappyAccountBeacon": "HappyAccountBeacon",
+  "HappyAccountBeaconProxyFactory": "HappyAccountBeaconProxyFactory",
+  "HappyAccountImpl": "HappyAccountImpl",
+  "HappyAccountRegistry": "HappyAccountRegistry",
   "HappyPaymaster": "HappyPaymaster"
 }

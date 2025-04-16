@@ -8,7 +8,7 @@ import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/statu
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
-import { happyTxInputSchema } from "#lib/validation/schemas/happyTx"
+import { boopInputSchema } from "#lib/validation/schemas/boop"
 import { simulationResultSchema } from "#lib/validation/schemas/simulationResult"
 
 const inputSchema = z.object({
@@ -19,7 +19,7 @@ const inputSchema = z.object({
      * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee
      * parameters are made optional.
      */
-    tx: happyTxInputSchema.merge(
+    tx: boopInputSchema.merge(
         z.object({
             maxFeePerGas: z.string().transform(toBigInt).openapi({ example: "1200000000" }).optional(), // UInt256 //
             submitterFee: z.string().transform(toBigInt).openapi({ example: "100" }).optional(), // Int256 //

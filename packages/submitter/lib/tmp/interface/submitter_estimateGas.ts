@@ -1,6 +1,6 @@
 import type { Optional } from "@happy.tech/common"
 import type { Prettify } from "viem"
-import type { HappyTx } from "./HappyTx"
+import type { Boop } from "./Boop"
 import type { SimulationResult } from "./SimulationResult"
 import type { Address } from "./common_chain"
 import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
@@ -13,7 +13,7 @@ export type EstimateGasInput = {
      * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee
      * parameters are made optional.
      */
-    tx: Optional<HappyTx, "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee">
+    tx: Optional<Boop, "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee">
 }
 
 export type EstimateGasStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus

@@ -20,7 +20,7 @@ class BaseFailedError extends HappyBaseError {
         public status:
             | EntryPointStatus.ValidationFailed
             | EntryPointStatus.ExecuteFailed
-            | EntryPointStatus.PaymentFailed,
+            | EntryPointStatus.PayoutFailed,
 
         /** The revert data *carried* by the returned custom error. */
         public revertData?: string,
@@ -73,9 +73,9 @@ export class ExecuteFailedError extends BaseFailedError {
     }
 }
 
-export class PaymentFailedError extends BaseFailedError {
+export class PayoutFailedError extends BaseFailedError {
     constructor(revertData?: string) {
-        super(EntryPointStatus.PaymentFailed, revertData)
+        super(EntryPointStatus.PayoutFailed, revertData)
     }
 }
 

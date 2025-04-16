@@ -1,5 +1,5 @@
-import type { HappyTx } from "./HappyTx"
-import type { HappyTxReceipt } from "./HappyTxReceipt"
+import type { Boop } from "./Boop"
+import type { BoopReceipt } from "./BoopReceipt"
 import type { Address, Hash } from "./common_chain"
 import type { SubmitterErrorStatus } from "./status"
 
@@ -17,7 +17,7 @@ export type SubmitInput = {
     entryPoint?: Address | undefined
 
     /** HappyTx to execute. */
-    tx: HappyTx
+    tx: Boop
 }
 
 export type SubmitOutput =
@@ -51,7 +51,7 @@ export type SubmitOutput =
  * impose additional restrictions, such as requesting a higher submitterFee for the replacement
  * transaction.
  */
-export declare function submitter_submit(input: HappyTx): SubmitOutput
+export declare function submitter_submit(input: Boop): SubmitOutput
 
 export enum SubmitCancelStatus {
     /** The cancellation was successfully submitted — it can still fail. */
@@ -72,7 +72,7 @@ export type SubmitCancelOutput = {
     status: SubmitCancelStatus.OriginalIncluded
 
     /** Receipt for the original transaction that was included onchain. */
-    receipt: HappyTxReceipt
+    receipt: BoopReceipt
     hash?: never
 } | {
     status: Exclude<

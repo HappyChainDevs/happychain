@@ -27,12 +27,12 @@ export class TransactionReplacedError extends SubmitterError {
 }
 
 export class InvalidTransactionRecipientError extends SubmitterError {
-    constructor(happyTxHash: `0x${string}`) {
-        super(`Invalid Receipt To - ${happyTxHash}`)
+    constructor(boopHash: `0x${string}`) {
+        super(`Invalid Receipt To - ${boopHash}`)
     }
 }
 export class InvalidTransactionTypeError extends SubmitterError {
-    constructor(happyTxHash: `0x${string}`) {
-        super(`Invalid Receipt Type - ${happyTxHash}`)
+    constructor(boopHash: `0x${string}`) {
+        super(`Invalid Receipt Type - ${boopHash}`)
     }
 }

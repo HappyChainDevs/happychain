@@ -1,5 +1,5 @@
 import "./env-bootstrap"
-import { migrator } from "#lib/database/utils/migrator.ts"
+import { migrator } from "#lib/database/utils/migrator"
 
 const { error } = await migrator.migrateToLatest()
 if (error) {

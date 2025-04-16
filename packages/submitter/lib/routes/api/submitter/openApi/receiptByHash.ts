@@ -11,7 +11,7 @@ const querySchema = z.object({
 
 export const description = describeRoute({
     validateResponse: !isProduction,
-    description: "Retrieve state by HappyTxHash, waiting if necessary",
+    description: "Retrieve state by BoopHash, waiting if necessary",
     responses: {
         200: {
             description: "Successful State Retrieval",

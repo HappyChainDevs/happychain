@@ -24,7 +24,7 @@ export const description = describeRoute({
     description: "Retrieve pending happy transactions for Account",
     responses: {
         200: {
-            description: "Pending HappyTransactions",
+            description: "Pending Boops",
             content: {
                 "application/json": {
                     schema: resolver(outputSchema),

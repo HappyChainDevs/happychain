@@ -2,10 +2,10 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { isProduction } from "#lib/utils/isProduction"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { happyTxStateSchema } from "#lib/validation/schemas/happyTxState"
+import { boopStateSchema } from "#lib/validation/schemas/boopState"
 
 export const inputSchema = z.object({
     hash: z
@@ -16,7 +16,7 @@ export const inputSchema = z.object({
 
 export const outputSchema = z.object({
     status: z.enum([StateRequestStatus.Success, StateRequestStatus.UnknownHappyTx]),
-    state: happyTxStateSchema.optional(),
+    state: boopStateSchema.optional(),
 })
 // export const outputSchema = z.discriminatedUnion("status", [
 //     z.object({
@@ -30,7 +30,7 @@ export const outputSchema = z.object({
 
 export const description = describeRoute({
     validateResponse: !isProduction,
-    description: "Retrieve state by HappyTxHash",
+    description: "Retrieve state by BoopHash",
     responses: {
         200: {
             description: "Successful State Retrieval",

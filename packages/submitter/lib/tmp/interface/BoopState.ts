@@ -1,5 +1,5 @@
 import type { Prettify } from "@happy.tech/common"
-import type { HappyTxReceipt } from "./HappyTxReceipt"
+import type { BoopReceipt } from "./BoopReceipt"
 import type { SimulationResult } from "./SimulationResult"
 import type {
     EntryPointStatus,
@@ -14,13 +14,13 @@ import type {
  * been included onchain yet.
  */
 // biome-ignore format: readability
-export type HappyTxStateSubmitterError = {
+export type BoopStateSubmitterError = {
     status: SubmitterErrorSimulationUnavailable
     included?: never,
     receipt?: never
     simulation?: never
 }
-export type HappyTxStateEntryPointError = {
+export type BoopStateEntryPointError = {
     status: EntryPointStatus | SubmitterErrorSimulationMaybeAvailable
 
     /** Whether the happyTx was included and executed onchain. */
@@ -37,15 +37,15 @@ export type HappyTxStateEntryPointError = {
 export type HappyTxStateSuccess = {
     status: EntryPointStatus.Success
     included: true
-    receipt: HappyTxReceipt
+    receipt: BoopReceipt
     simulation?: never
 }
 
-export type HappyTxState = Prettify<HappyTxStateSubmitterError | HappyTxStateEntryPointError | HappyTxStateSuccess>
+export type BoopState = Prettify<BoopStateSubmitterError | BoopStateEntryPointError | HappyTxStateSuccess>
 
 // -------------------------------------------------------------------------------------------------
 
-/** Status result of a request for {@link HappyTxState}. */
+/** Status result of a request for {@link BoopState}. */
 export enum StateRequestStatus {
     /** The state request succeeded — this does not mean the state is available! */
     Success = "receiptSuccess",
@@ -56,11 +56,11 @@ export enum StateRequestStatus {
 
 // -------------------------------------------------------------------------------------------------
 
-/** Output of a request for {@link HappyTxState}. */
+/** Output of a request for {@link BoopState}. */
 // biome-ignore format: readability
 export type StateRequestOutput = {
     status: StateRequestStatus.Success
-    state: HappyTxState
+    state: BoopState
 } | {
     status: StateRequestStatus.UnknownHappyTx
     state?: never

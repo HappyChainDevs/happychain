@@ -3,7 +3,7 @@ import type { Address, Bytes, Int256, UInt32, UInt256 } from "./common_chain"
 /**
  * Typescript version of the HappyTx onchain structure.
  */
-export type HappyTx = {
+export type Boop = {
     account: Address
     dest: Address
     payer: Address

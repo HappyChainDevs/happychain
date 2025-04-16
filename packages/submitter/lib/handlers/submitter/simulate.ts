@@ -1,13 +1,13 @@
 import env from "#lib/env"
 import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
-import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
+import { encodeBoop } from "#lib/utils/encodeBoop"
 import { simulateBoop } from "./simulateBoop"
 
 export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutput> {
     const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
 
-    const simulation = await simulateBoop(entryPoint, encodeHappyTx(data.tx))
+    const simulation = await simulateBoop(entryPoint, encodeBoop(data.tx))
 
     const maxFeePerGas = 1200000000n
     const submitterFee = 100n

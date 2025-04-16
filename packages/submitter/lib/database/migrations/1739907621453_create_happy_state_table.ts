@@ -5,7 +5,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable("happy_states")
         .addColumn("id", "integer", (col) => col.primaryKey())
-        // TODO: sqlite doesn't have enums, but we should still be able to generate this with enum as the type
         .addColumn("status", "text", (col) => col.notNull())
         .addColumn("included", "boolean", (col) => col.notNull())
         .addColumn("happyTransactionId", "integer", (col) => col.notNull())

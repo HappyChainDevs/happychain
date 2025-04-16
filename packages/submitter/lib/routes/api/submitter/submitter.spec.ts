@@ -1,22 +1,22 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { computeHappyTxHash } from "#lib/client"
+import { computeBoopHash } from "#lib/client"
 import { app } from "#lib/server"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 const client = testClient(app)
 
 describe("routes: api/submitter", () => {
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -48,12 +48,12 @@ describe("routes: api/submitter", () => {
         })
         it("should fetch state by hash", async () => {
             await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
-            const hash = computeHappyTxHash(unsignedTx)
+            const hash = computeBoopHash(unsignedTx)
             const result = await client.api.v1.submitter.state[":hash"].$get({ param: { hash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {
-            const hash = computeHappyTxHash(unsignedTx)
+            const hash = computeBoopHash(unsignedTx)
             const [result] = await Promise.all([
                 client.api.v1.submitter.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
                 // don't need results, just need it to complete

@@ -1,6 +1,5 @@
 import type { Address, Hex } from "viem"
-import { concat, encodeDeployData, encodeFunctionData, getAddress, keccak256 } from "viem"
-import { abis } from "#lib/deployments"
+import { concat, encodeDeployData, getAddress, keccak256 } from "viem"
 import env from "#lib/env"
 import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
 
@@ -26,12 +25,14 @@ export function computeHappyAccount(salt: Hex, owner: Address): Address {
     return getAddress(predicted)
 }
 
-function getInitData(owner: `0x${string}`) {
-    return encodeFunctionData({
-        abi: abis.HappyAccount,
-        functionName: "initialize",
-        args: [owner],
-    })
+function getInitData(_owner: `0x${string}`) {
+    return "0x" as const
+    // TODO: replace with the actual initialization data
+    // return encodeFunctionData({
+    //     abi: abis.HappyAccountImpl,
+    //     functionName: "initialize",
+    //     args: [owner],
+    // })
 }
 
 function getCodeHash(implementation: `0x${string}`, initData: `0x${string}`) {

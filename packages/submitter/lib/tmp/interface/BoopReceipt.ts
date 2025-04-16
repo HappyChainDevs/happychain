@@ -4,9 +4,9 @@ import type { EntryPointStatus } from "./status"
 /**
  * Describes the result of a HappyTx that has been submitted onchain.
  */
-export type HappyTxReceipt = {
+export type BoopReceipt = {
     /** HappyTx identifying hash. */
-    happyTxHash: Hash
+    boopHash: Hash
 
     /** Account that sent the HappyTx. */
     account: Address

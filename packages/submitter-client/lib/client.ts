@@ -36,10 +36,10 @@ export async function createAccount(data: CreateAccountInput): Promise<Result<Cr
 // == Submit API Routes ============================================================================
 
 /**
- * Submits a HappyTransaction to the network
+ * Submits a Boop to the network
  * @param data
  * @param data.entryPoint EntryPoint address
- * @param data.tx HappyTransaction to be submitted
+ * @param data.tx Boop to be submitted
  * @return transaction hash
  */
 export type { SubmitInput, SubmitOutput }
@@ -49,10 +49,10 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
 }
 
 /**
- * Submits a HappyTransaction to the network
+ * Submits a Boop to the network
  * @param data
  * @param data.entryPoint EntryPoint address
- * @param data.tx HappyTransaction to be submitted
+ * @param data.tx Boop to be submitted
  * @return receipt
  */
 export type { ExecuteInput, ExecuteOutput }
@@ -62,7 +62,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
 }
 
 /**
- * Estimates the gas for a HappyTransaction
+ * Estimates the gas for a Boop
  * @param data
  * @returns
  */
@@ -73,7 +73,7 @@ export async function estimateGas(data: EstimateGasInput): Promise<Result<Estima
 }
 
 /**
- * Get the receipt of a HappyTransaction
+ * Get the receipt of a Boop
  * @param data
  * @returns
  */
@@ -84,7 +84,7 @@ export async function state({ hash }: StateRequestInput): Promise<Result<StateRe
 }
 
 /**
- * Get the receipt of a HappyTransaction, waiting if needed
+ * Get the receipt of a Boop, waiting if needed
  * @param data
  * @returns
  */
@@ -95,7 +95,7 @@ export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<S
 }
 
 /**
- * Get the pending transactions of an account
+ * Get the pending Boops of an account
  * @param data
  * @returns
  */

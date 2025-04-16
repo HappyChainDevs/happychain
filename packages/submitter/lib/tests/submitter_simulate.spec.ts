@@ -5,21 +5,21 @@ import { encodeFunctionData } from "viem/utils"
 import env from "#lib/env"
 import { app } from "#lib/server"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus } from "#lib/tmp/interface/status"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_simulate", () => {
     const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -127,7 +127,7 @@ describe("submitter_simulate", () => {
             const sim = response.simulationResult as SimulationResult // TODO: error in contract?
             expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Failed)
-            expect(sim.status).toBe(EntryPointStatus.PaymentFailed)
+            expect(sim.status).toBe(EntryPointStatus.PayoutFailed)
             expect(sim.revertData).toBe("0x3b1ab104")
         })
 

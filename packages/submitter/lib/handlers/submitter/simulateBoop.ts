@@ -3,7 +3,7 @@ import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { abis } from "#lib/deployments"
-import { happySimulationService } from "#lib/services/index"
+import { boopSimulationService } from "#lib/services/index"
 import { getSimulationError } from "#lib/utils/getSimulationError"
 import { getSimulationResult } from "#lib/utils/getSimulationResult"
 import type { SubmitParameters, SubmitRequest, SubmitSimulateResult } from "#lib/utils/simulation-interfaces"
@@ -23,7 +23,7 @@ export async function simulateBoop(
 ): Promise<SubmitSimulateResult> {
     const simulationResult = await simulateContract(entryPoint, encodedBoop)
 
-    await happySimulationService.insertSimulationResult(simulationResult)
+    await boopSimulationService.insertSimulationResult(simulationResult)
 
     if (simulationResult.isErr()) return simulationResult
 

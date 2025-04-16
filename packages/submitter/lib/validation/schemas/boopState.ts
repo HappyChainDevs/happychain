@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
-import { happyReceiptSchema } from "./happyReceipt"
+import { boopReceiptSchema } from "./boopReceipt"
 import { simulationResultSchema } from "./simulationResult"
 
-const HappyTxStateSubmitterErrorSchema = z.object({
+const BoopStateSubmitterErrorSchema = z.object({
     status: z.enum([
         SubmitterErrorStatus.BufferExceeded,
         SubmitterErrorStatus.OverCapacity,
@@ -13,7 +13,7 @@ const HappyTxStateSubmitterErrorSchema = z.object({
     included: z.literal(undefined),
 })
 
-const HappyTxStateEntryPointErrorSchema = z.object({
+const BoopStateEntryPointErrorSchema = z.object({
     status: z.enum([
         // EntryPointStatus
         EntryPointStatus.Success,
@@ -22,7 +22,7 @@ const HappyTxStateEntryPointErrorSchema = z.object({
         EntryPointStatus.ExecuteReverted,
         EntryPointStatus.ExecuteFailed,
         EntryPointStatus.PaymentValidationReverted,
-        EntryPointStatus.PaymentFailed,
+        EntryPointStatus.PayoutFailed,
         EntryPointStatus.UnexpectedReverted,
         // SubmitterErrorSimulationMaybeAvailable
         SubmitterErrorStatus.SubmitTimeout,
@@ -32,14 +32,14 @@ const HappyTxStateEntryPointErrorSchema = z.object({
     simulation: simulationResultSchema.optional(),
 })
 
-const HappyTxStateSuccessSchema = z.object({
+const BoopStateSuccessSchema = z.object({
     status: z.literal(EntryPointStatus.Success).openapi({ example: EntryPointStatus.Success }),
     included: z.literal(true).openapi({ example: true }),
-    receipt: happyReceiptSchema,
+    receipt: boopReceiptSchema,
 })
 
-export const happyTxStateSchema = z.discriminatedUnion("included", [
-    HappyTxStateSuccessSchema,
-    HappyTxStateEntryPointErrorSchema,
-    HappyTxStateSubmitterErrorSchema,
+export const boopStateSchema = z.discriminatedUnion("included", [
+    BoopStateSuccessSchema,
+    BoopStateEntryPointErrorSchema,
+    BoopStateSubmitterErrorSchema,
 ])

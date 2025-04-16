@@ -1,28 +1,25 @@
 import { encodePacked, keccak256 } from "viem/utils"
 import { chain } from "../clients"
-import type { HappyTx } from "../tmp/interface/HappyTx"
-import { encodeHappyTx } from "./encodeHappyTx"
+import type { Boop } from "../tmp/interface/Boop"
+import { encodeBoop } from "./encodeBoop"
 
 // with paymaster, don't include gas values in the signature!
 const paymasterGasData = {
-    executeGasLimit: 0n,
-    gasLimit: 0n,
     maxFeePerGas: 0n,
     submitterFee: 0n,
+    gasLimit: 0n,
+    executeGasLimit: 0n,
     validateGasLimit: 0n,
     validatePaymentGasLimit: 0n,
 } as const
 
-/**
- * Given a Boop, returns the computed BoopHash of the transaction.
- */
-export function computeBoopHash(happyTx: HappyTx): `0x${string}` {
+export function computeBoopHash(happyTx: Boop): `0x${string}` {
     // Don't include validator data in the signature so that pre & post signing are the same
     const isSelfPaying = happyTx.payer === happyTx.account
 
-    const hashData: HappyTx = isSelfPaying
+    const hashData: Boop = isSelfPaying
         ? { ...happyTx, validatorData: "0x" }
         : { ...happyTx, validatorData: "0x", ...paymasterGasData }
 
-    return keccak256(encodePacked(["bytes", "uint"], [encodeHappyTx(hashData), BigInt(chain.id)]))
+    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(hashData), BigInt(chain.id)]))
 }

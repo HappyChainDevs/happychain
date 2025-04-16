@@ -7,8 +7,8 @@ import type { z } from "zod"
 import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
+import type { Boop } from "#lib/tmp/interface/Boop"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
 export { mockAbis, mockDeployments }
@@ -58,7 +58,7 @@ export function createMockTokenAMintHappyTx(
     nonceValue: bigint,
     nonceTrack = 0n,
     amount = 10n ** 18n,
-): HappyTx {
+): Boop {
     return {
         account,
         dest: mockDeployments.MockTokenA,
@@ -85,8 +85,8 @@ export function createMockTokenAMintHappyTx(
     }
 }
 
-export async function signTx(account: PrivateKeyAccount, happyTx: HappyTx): Promise<HappyTx> {
-    const happyTxHash = computeBoopHash(happyTx)
-    const validatorData = await account.signMessage({ message: { raw: happyTxHash } })
+export async function signTx(account: PrivateKeyAccount, happyTx: Boop): Promise<Boop> {
+    const boopHash = computeBoopHash(happyTx)
+    const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return { ...happyTx, validatorData }
 }

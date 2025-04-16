@@ -18,7 +18,7 @@ const walletClient = createWalletClient({ ...config, account })
 export async function create({ owner, salt }: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
     const predictedAddress = await publicClient.readContract({
         address: env.DEPLOYMENT_ACCOUNT_FACTORY,
-        abi: abis.HappyAccountFactory,
+        abi: abis.HappyAccountBeaconProxyFactory,
         functionName: "getAddress",
         args: [salt, owner],
     })
@@ -38,7 +38,7 @@ export async function create({ owner, salt }: CreateAccountInput): Promise<Resul
 
     const { request, result } = await publicClient.simulateContract({
         address: env.DEPLOYMENT_ACCOUNT_FACTORY,
-        abi: abis.HappyAccountFactory,
+        abi: abis.HappyAccountBeaconProxyFactory,
         functionName: "createAccount",
         args: [salt, owner],
         account,

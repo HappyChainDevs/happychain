@@ -1,4 +1,4 @@
-import type { StateRequestOutput } from "./HappyTxState"
+import type { StateRequestOutput } from "./BoopState"
 import type { Hash } from "./common_chain"
 
 export type ReceiptInput = {
