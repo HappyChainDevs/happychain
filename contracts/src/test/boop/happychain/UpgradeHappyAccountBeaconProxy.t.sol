@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-
-import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "../../../boop/core/Encoding.sol";
-import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
-import {BoopTestUtils} from "../Utils.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {Test} from "forge-std/Test.sol";
+import {Encoding} from "./../../../boop/core/Encoding.sol";
+import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
+import {BoopTestUtils} from "./../Utils.sol";
 
 contract UpgradeHappyAccountBeaconProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;

@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "../../../boop/core/Encoding.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
-import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
-import {BoopTestUtils} from "../Utils.sol";
-import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {Test} from "forge-std/Test.sol";
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Encoding} from "./../../../boop/core/Encoding.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
+import {BoopTestUtils} from "./../Utils.sol";
 
 contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;

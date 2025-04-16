@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {EntryPoint} from "boop/core/EntryPoint.sol";
-import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
-import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
+import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
+import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
