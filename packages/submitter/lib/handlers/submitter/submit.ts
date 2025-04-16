@@ -6,8 +6,8 @@ import { UnknownError } from "#lib/errors/contract-errors"
 import { parseFromViemError } from "#lib/errors/utils"
 import { boopNonceManager, submitterService } from "#lib/services"
 import { type SubmitInput, type SubmitOutput, SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
-import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
+import { decodeBoop } from "#lib/utils/decodeBoop"
+import { encodeBoop } from "#lib/utils/encodeBoop"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 import type { SubmitParameters, SubmitRequest, SubmitSimulateResponseErr } from "#lib/utils/simulation-interfaces"
 import { simulateBoop } from "./simulateBoop"
@@ -17,7 +17,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
     // Save original tx to the database for historic purposes and data recovery
     await submitterService.initialize(entryPoint, data.tx)
 
-    let simulate = await simulateBoop(entryPoint, encodeHappyTx(data.tx))
+    let simulate = await simulateBoop(entryPoint, encodeBoop(data.tx))
 
     // Simulation failed, we can abort the transaction
     if (simulate.isErr()) return err(simulate.error)
@@ -30,7 +30,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
         if (resp.isErr()) return err(resp.error)
 
         // update simulation
-        simulate = await simulateBoop(entryPoint, encodeHappyTx(data.tx))
+        simulate = await simulateBoop(entryPoint, encodeBoop(data.tx))
         if (simulate.isErr()) return err(simulate.error)
     }
     // use simulated result instead of the original tx as it may have updated gas values
@@ -46,7 +46,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
 }
 
 async function submitWriteContract(request: SubmitParameters): Promise<Result<SubmitOutput, Error>> {
-    const account = findExecutionAccount(decodeHappyTx(request.args[0]))
+    const account = findExecutionAccount(decodeBoop(request.args[0]))
 
     try {
         const transactionHash = await walletClient.writeContract({

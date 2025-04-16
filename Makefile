@@ -33,7 +33,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness
 # packages needed to build the backend services (order matters)
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
-SUBMITTER_PKGS := packages/submitter,packages/submitter-client
+SUBMITTER_PKGS := packages/submitter,packages/submitter-client,apps/submitter
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},${SUBMITTER_PKGS}
@@ -151,8 +151,7 @@ submitter.dev: setup.ts shared.dev
 	make anvil > /dev/null 2>&1 &
 	cd contracts && make deploy-boop;
 	cd contracts && make deploy-mocks;
-	cd packages/submitter && make dev;
-	cd packages/submitter-client && make dev;
+
 	cd apps/submitter && make migrate;
 	cd apps/submitter && make dev;
 .PHONY: submitter.dev

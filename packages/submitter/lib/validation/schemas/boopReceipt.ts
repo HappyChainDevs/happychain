@@ -5,8 +5,8 @@ import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { receiptSchema } from "./receipt"
 import { transactionSchema } from "./transaction"
 
-export const happyReceiptSchema = z.object({
-    happyTxHash: z.string().refine(isHexString).openapi({ example: "" }),
+export const boopReceiptSchema = z.object({
+    boopHash: z.string().refine(isHexString).openapi({ example: "" }),
     account: z.string().refine(isAddress).openapi({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" }),
     nonceTrack: z.string().openapi({ example: "69" }),
     nonceValue: z.string().openapi({ example: "420" }),

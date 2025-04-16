@@ -2,8 +2,8 @@ import { BaseError, ContractFunctionRevertedError } from "viem"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import {
     ExecuteRevertedError,
-    PaymentFailedError,
     PaymentValidationRevertedError,
+    PayoutFailedError,
     UnexpectedRevertedError,
     ValidationFailedError,
     ValidationRevertedError,
@@ -69,7 +69,7 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
             return new ValidationFailedError(revertData)
         }
         case "PayoutFailed": {
-            return new PaymentFailedError(revertData)
+            return new PayoutFailedError(revertData)
         }
         case "InvalidNonce": {
             return new ValidationFailedError("InvalidNonce")

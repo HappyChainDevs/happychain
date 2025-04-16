@@ -1,26 +1,26 @@
 import { db } from "#lib/database"
-import { HappyReceiptRepository } from "#lib/database/repositories/HappyReceiptRepository"
-import { HappyStateRepository } from "#lib/database/repositories/HappyStateRepository"
-import { HappyTransactionRepository } from "#lib/database/repositories/HappyTransactionRepository"
+import { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
+import { BoopStateRepository } from "#lib/database/repositories/BoopStateRepository"
+import { BoopTransactionRepository } from "#lib/database/repositories/BoopTransactionRepository"
 import { BoopNonceManagerService } from "./BoopNonceManagerService"
-import { HappyReceiptService } from "./HappyReceiptService"
-import { HappySimulationService } from "./HappySimulationService"
-import { HappyStateService } from "./HappyStateService"
-import { HappyTransactionService } from "./HappyTransactionService"
+import { BoopReceiptService } from "./BoopReceiptService"
+import { BoopSimulationService } from "./BoopSimulationService"
+import { BoopStateService } from "./BoopStateService"
+import { BoopTransactionService } from "./BoopTransactionService"
 import { SimulationCacheService } from "./SimulationCacheService"
 import { SubmitterService } from "./SubmitterService"
 
-//=== DB Repositories ==============================================================================
-const happyStateRepository = new HappyStateRepository(db)
-const happyTransactionRepository = new HappyTransactionRepository(db)
-const happyReceiptRepository = new HappyReceiptRepository(db)
-// const happySimulationRepository = new HappySimulationRepository(db)
+//=== Repositories ==============================================================================
+const boopStateRepository = new BoopStateRepository(db)
+const boopTransactionRepository = new BoopTransactionRepository(db)
+const boopReceiptRepository = new BoopReceiptRepository(db)
+const simulationCacheService = new SimulationCacheService()
 
 //=== Services ==================================================================================
-const happyTransactionService = new HappyTransactionService(happyTransactionRepository)
-const happyStateService = new HappyStateService(happyStateRepository)
-export const happyReceiptService = new HappyReceiptService(happyReceiptRepository)
-export const simulationCacheService = new SimulationCacheService()
+const boopTransactionService = new BoopTransactionService(boopTransactionRepository)
+const boopStateService = new BoopStateService(boopStateRepository)
+export const boopReceiptService = new BoopReceiptService(boopReceiptRepository)
+
 export const boopNonceManager = new BoopNonceManagerService()
-export const happySimulationService = new HappySimulationService(simulationCacheService)
-export const submitterService = new SubmitterService(happyTransactionService, happyStateService, happyReceiptService)
+export const boopSimulationService = new BoopSimulationService(simulationCacheService)
+export const submitterService = new SubmitterService(boopTransactionService, boopStateService, boopReceiptService)

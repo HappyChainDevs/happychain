@@ -5,7 +5,7 @@ import { z } from "zod"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
 import { isProduction } from "#lib/utils/isProduction"
-import { happyReceiptSchema } from "#lib/validation/schemas/happyReceipt"
+import { boopReceiptSchema } from "#lib/validation/schemas/boopReceipt"
 import { inputSchema } from "./submit"
 
 export { inputSchema }
@@ -15,7 +15,7 @@ const outputSchema = z.object({
     state: z.object({
         status: z.string().openapi({ example: EntryPointStatus.Success }),
         included: z.boolean().openapi({ example: true }),
-        receipt: happyReceiptSchema,
+        receipt: boopReceiptSchema,
     }),
 })
 

@@ -31,7 +31,7 @@ const simulationResultFailureSchema = z.object({
     status: z.enum([
         EntryPointStatus.ValidationFailed, //
         EntryPointStatus.ExecuteFailed,
-        EntryPointStatus.PaymentFailed,
+        EntryPointStatus.PayoutFailed,
     ]),
     validationStatus: validationStatus,
     entryPoint: z.string().refine(isAddress),

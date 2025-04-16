@@ -1,13 +1,13 @@
 import { type Result, err, ok } from "neverthrow"
-import { happyReceiptService, happySimulationService } from "#lib/services"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import { boopReceiptService, boopSimulationService } from "#lib/services"
+import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import type { StateRequestInput } from "#lib/tmp/interface/submitter_state"
 
 export async function stateByHash({
     hash,
 }: StateRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
-    const receipt = await happyReceiptService.findByHappyTxHash(hash)
+    const receipt = await boopReceiptService.findByBoopHash(hash)
 
     if (receipt?.status === EntryPointStatus.Success) {
         return ok({
@@ -16,7 +16,7 @@ export async function stateByHash({
         })
     }
 
-    const simulation = await happySimulationService.findResultByHappyTxHash(hash)
+    const simulation = await boopSimulationService.findResultByBoopHash(hash)
 
     if (simulation?.status) {
         return ok({

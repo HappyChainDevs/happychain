@@ -31,9 +31,10 @@ test-watch: ## Run the submitter tests
 
 ##@ HappyBuild
 
-setup: 
-	@$(MAKE) -f ../../makefiles/bundling.mk $@
-	make setup-symlinks;
+
+setup: node_modules setup-symlinks
+	@# call bun install again in order to install the cli in node_modules/.bin
+	@bun install
 .PHONY: setup
 
 build: 

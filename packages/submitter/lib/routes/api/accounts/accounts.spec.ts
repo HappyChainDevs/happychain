@@ -34,7 +34,7 @@ describe("routes: api/accounts", () => {
 
             const predictedAddress = await testPublicClient.readContract({
                 address: env.DEPLOYMENT_ACCOUNT_FACTORY,
-                abi: abis.HappyAccountFactory,
+                abi: abis.HappyAccountBeaconProxyFactory,
                 functionName: "getAddress",
                 args: [salt, owner],
             })

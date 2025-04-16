@@ -1,18 +1,18 @@
 import type { Insertable, Kysely } from "kysely"
-import type { DB, HappyTransaction } from "#lib/database/generated"
+import type { BoopTransaction, DB } from "#lib/database/generated"
 
-export class HappyTransactionRepository {
+export class BoopTransactionRepository {
     constructor(private db: Kysely<DB>) {}
 
-    async findByHappyTxHash(happyTxHash: `0x${string}`): Promise<HappyTransaction | undefined> {
+    async findByBoopHash(boopHash: `0x${string}`): Promise<BoopTransaction | undefined> {
         return await this.db
-            .selectFrom("happy_transactions")
+            .selectFrom("boop_transactions")
             .selectAll()
-            .where("happyTxHash", "=", happyTxHash)
+            .where("boopHash", "=", boopHash)
             .executeTakeFirst()
     }
 
-    async insert(state: Insertable<HappyTransaction>): Promise<HappyTransaction | undefined> {
+    async insert(state: Insertable<BoopTransaction>): Promise<BoopTransaction | undefined> {
         const {
             account,
             callData,
@@ -23,7 +23,7 @@ export class HappyTransactionRepository {
             validatePaymentGasLimit,
             extraData,
             gasLimit,
-            happyTxHash,
+            boopHash,
             maxFeePerGas,
             nonceTrack,
             nonceValue,
@@ -33,7 +33,7 @@ export class HappyTransactionRepository {
             value,
         } = state
         const data = await this.db //
-            .insertInto("happy_transactions")
+            .insertInto("boop_transactions")
             .values({
                 account,
                 callData,
@@ -44,7 +44,7 @@ export class HappyTransactionRepository {
                 validatePaymentGasLimit,
                 extraData,
                 gasLimit,
-                happyTxHash,
+                boopHash,
                 maxFeePerGas,
                 nonceTrack,
                 nonceValue,
@@ -58,7 +58,7 @@ export class HappyTransactionRepository {
                 // this will be a conflict on txHash, all signed data will be the same
                 // but we should update the unsigned data
                 oc
-                    .column("happyTxHash")
+                    .column("boopHash")
                     .doUpdateSet({
                         executeGasLimit,
                         extraData,

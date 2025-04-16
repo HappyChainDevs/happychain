@@ -2,23 +2,23 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import type { Boop } from "#lib/tmp/interface/Boop"
+import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_state", () => {
     const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -41,7 +41,7 @@ describe("submitter_state", () => {
             .then((a) => a.json())) as any
 
         const state = (await client.api.v1.submitter.state[":hash"]
-            .$get({ param: { hash: response.state.receipt.happyTxHash } })
+            .$get({ param: { hash: response.state.receipt.boopHash } })
             .then((a) => a.json())) as any
 
         expect(response.error).toBeUndefined()
@@ -49,7 +49,7 @@ describe("submitter_state", () => {
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(EntryPointStatus.Success)
         expect(state.state.included).toBe(true)
-        expect(state.state.receipt.happyTxHash).toBe(response.state.receipt.happyTxHash)
+        expect(state.state.receipt.boopHash).toBe(response.state.receipt.boopHash)
         expect(state.state.simulation).toBeUndefined()
     })
 
@@ -67,14 +67,14 @@ describe("submitter_state", () => {
         const nonce = nonceValue + 5n // future nonce so that is submits, but doesn't finalize
         const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
         const signedTx = await sign(unsignedTx)
-        const happyTxHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(signedTx)
         // submit transaction, but don't wait for it to complete
         client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }).then((a) => a.json())
 
         await new Promise((resolve) => setTimeout(resolve, 100))
 
         const state = (await client.api.v1.submitter.state[":hash"]
-            .$get({ param: { hash: happyTxHash } })
+            .$get({ param: { hash: boopHash } })
             .then((a) => a.json())) as any
 
         expect(state.error).toBeUndefined()

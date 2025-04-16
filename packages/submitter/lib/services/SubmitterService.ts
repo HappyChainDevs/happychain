@@ -2,51 +2,51 @@ import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
-import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
+import type { Boop } from "#lib/tmp/interface/Boop"
+import type { BoopReceipt } from "#lib/tmp/interface/BoopReceipt"
+import type { BoopState } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
-import type { HappyReceiptService } from "./HappyReceiptService"
-import type { HappyStateService } from "./HappyStateService"
-import type { HappyTransactionService } from "./HappyTransactionService"
+import type { BoopReceiptService } from "./BoopReceiptService"
+import type { BoopStateService } from "./BoopStateService"
+import type { BoopTransactionService } from "./BoopTransactionService"
 
 export class SubmitterService {
     constructor(
-        private happyTransactionService: HappyTransactionService,
-        private happyStateService: HappyStateService,
-        private happyReceiptService: HappyReceiptService,
+        private boopTransactionService: BoopTransactionService,
+        private boopStateService: BoopStateService,
+        private boopReceiptService: BoopReceiptService,
     ) {}
 
-    async initialize(entryPoint: `0x${string}`, happyTx: HappyTx) {
-        const happyTxHash = computeBoopHash(happyTx)
-        return await this.happyTransactionService.insert({ happyTxHash, entryPoint, ...happyTx })
+    async initialize(entryPoint: `0x${string}`, happyTx: Boop) {
+        const boopHash = computeBoopHash(happyTx)
+        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...happyTx })
     }
 
-    async finalize(happyTransactionId: number, state: HappyTxState) {
-        const { id: happyReceiptId } = state.receipt
-            ? await this.happyReceiptService.insertOrThrow(state.receipt)
+    async finalize(boopTransactionId: number, state: BoopState) {
+        const { id: boopReceiptId } = state.receipt
+            ? await this.boopReceiptService.insertOrThrow(state.receipt)
             : { id: null }
 
-        await this.happyStateService.insert({
+        await this.boopStateService.insert({
             status: state.status,
-            happyTransactionId,
-            happyReceiptId: happyReceiptId as number,
+            boopTransactionId,
+            boopReceiptId: boopReceiptId as number,
             included: state.included ?? false,
         })
     }
 
-    async finalizeWhenReady(happyTx: HappyTx, txHash: `0x${string}`) {
+    async finalizeWhenReady(happyTx: Boop, txHash: `0x${string}`) {
         try {
-            const happyTxHash = computeBoopHash(happyTx)
-            const persisted = await this.happyTransactionService.findByHappyTxHash(happyTxHash)
+            const boopHash = computeBoopHash(happyTx)
+            const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
             if (!persisted?.id) {
-                const logData = { txHash, happyTxHash, happyTx }
+                const logData = { txHash, boopHash, happyTx }
                 logger.warn("Persisted HappyTx not found. Could not finalize.", logData)
                 return
             }
-            const receipt = await this.waitForSubmitReceipt({ happyTxHash, txHash })
+            const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
             return await this.finalize(persisted.id, {
                 status: receipt.status as unknown as EntryPointStatus.Success,
                 included: Boolean(receipt.txReceipt.transactionHash) as true,
@@ -57,18 +57,18 @@ export class SubmitterService {
         }
     }
 
-    private async waitForSubmitReceipt(params: { txHash: Hex; happyTxHash: Hex }): Promise<HappyTxReceipt> {
-        const { txHash, happyTxHash } = params
+    private async waitForSubmitReceipt(params: { txHash: Hex; boopHash: Hex }): Promise<BoopReceipt> {
+        const { txHash, boopHash } = params
 
-        const happyTx = await this.happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
+        const happyTx = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
-        if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(happyTxHash)
-        if (!isValidTransactionType(receipt.type)) throw new InvalidTransactionTypeError(happyTxHash)
+        if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)
+        if (!isValidTransactionType(receipt.type)) throw new InvalidTransactionTypeError(boopHash)
 
         return {
-            happyTxHash,
+            boopHash,
 
             /** Account that sent the HappyTx. */
             account: happyTx.account,

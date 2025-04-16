@@ -3,33 +3,33 @@
  * Please do not edit it manually.
  */
 
-export interface HappyReceipt {
+export interface BoopReceipt {
+  boopHash: `0x${string}`;
   gasCost: bigint;
   gasUsed: bigint;
-  happyTxHash: `0x${string}`;
   id: number | null;
   revertData: `0x${string}`;
   status: string;
   transactionHash: `0x${string}`;
 }
 
-export interface HappyState {
-  happyReceiptId: number | null;
-  happyTransactionId: number;
+export interface BoopState {
+  boopReceiptId: number | null;
+  boopTransactionId: number;
   id: number | null;
   included: boolean;
   status: string;
 }
 
-export interface HappyTransaction {
+export interface BoopTransaction {
   account: `0x${string}`;
+  boopHash: `0x${string}`;
   callData: `0x${string}`;
   dest: `0x${string}`;
   entryPoint: `0x${string}`;
   executeGasLimit: bigint;
   extraData: `0x${string}`;
   gasLimit: bigint;
-  happyTxHash: `0x${string}`;
   id: number | null;
   maxFeePerGas: bigint;
   nonceTrack: bigint;
@@ -43,7 +43,7 @@ export interface HappyTransaction {
 }
 
 export interface DB {
-  happy_receipts: HappyReceipt;
-  happy_states: HappyState;
-  happy_transactions: HappyTransaction;
+  boop_receipts: BoopReceipt;
+  boop_states: BoopState;
+  boop_transactions: BoopTransaction;
 }

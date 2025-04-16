@@ -1,6 +1,8 @@
 {
-  "EntryPoint": "0x380A03CCeea9b646aB951A87e5dd9Fc46dcfD29d",
-  "HappyAccount": "0xdb550f73F393d537b4Cf322b2C515650a3f30B8D",
-  "HappyAccountFactory": "0x27Dafd896E7702c8da77008eF388F0CAc6Db80Ab",
-  "HappyPaymaster": "0x58AB21567baf8a8F5dD1f7a9847DaeDcAc0629f4"
+  "EntryPoint": "0xD04DEB068A663e7f21DCa3839DBA8432c7d9b698",
+  "HappyAccountBeacon": "0x8d41f71bBe5db7aF83D56cF7aBf374f6fd2d1261",
+  "HappyAccountBeaconProxyFactory": "0x0ea0E3a4c4AB194220f1F690130dBB1ab3fb72A9",
+  "HappyAccountImpl": "0x6De89281155D7e5b5c790C4b4Df8d98f9ecfBb28",
+  "HappyAccountRegistry": "0xD170D0f841D1bb6BE34cb134fC0a35A1df434A5D",
+  "HappyPaymaster": "0xe444A431412402759f24CA78004A099990b3e4CF"
 }

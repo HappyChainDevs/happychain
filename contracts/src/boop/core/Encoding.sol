@@ -25,7 +25,7 @@ library Encoding {
      *
      *      - value (32b)
      *      - nonceTrack (24b)
-     *      - nonce (8b)
+     *      - nonceValue (8b)
      *
      *      - maxFeePerGas (32b)
      *      - submitterFee (32b)

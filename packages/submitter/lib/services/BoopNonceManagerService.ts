@@ -5,9 +5,9 @@ import { publicClient } from "#lib/clients"
 import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
@@ -46,14 +46,14 @@ export class BoopNonceManagerService {
         })
     }
 
-    public async checkIfBlocked(entryPoint: Address, tx: HappyTx): Promise<boolean> {
+    public async checkIfBlocked(entryPoint: Address, tx: Boop): Promise<boolean> {
         const account = tx.account
         const nonceTrack = tx.nonceTrack
         const localNonce = await this.getLocalNonce(entryPoint, account, nonceTrack)
         return tx.nonceValue > localNonce
     }
 
-    public async pauseUntilUnblocked(entrypoint: Address, tx: HappyTx): Promise<Result<undefined, SubmitterError>> {
+    public async pauseUntilUnblocked(entrypoint: Address, tx: Boop): Promise<Result<undefined, SubmitterError>> {
         const track = this.pendingTxMap.getOrSet(tx.account, tx.nonceTrack, () => new Map())
         if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) return err(new SubmitterError("bufferExceeded"))
         if (this.totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) return err(new SubmitterError("maxCapacity"))
@@ -82,7 +82,7 @@ export class BoopNonceManagerService {
         })
     }
 
-    public incrementLocalNonce(tx: HappyTx): void {
+    public incrementLocalNonce(tx: Boop): void {
         this.totalCapacity--
 
         const account = tx.account

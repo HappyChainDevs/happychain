@@ -1,22 +1,22 @@
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { bytesToAddress, bytesToBigInt, getBytes, getDynamicLengthBytes } from "./bytes"
 
-export function decodeHappyTx(encoded: `0x${string}`): HappyTx {
+export function decodeBoop(encoded: `0x${string}`): Boop {
     const encodedBytes = encoded.slice(2)
 
     // Read static fields (204 bytes total)
     const account = bytesToAddress(getBytes(encodedBytes, 0, 20))
-    const dest = bytesToAddress(getBytes(encodedBytes, 36, 20))
-    const payer = bytesToAddress(getBytes(encodedBytes, 56, 20))
-    const value = bytesToBigInt(getBytes(encodedBytes, 76, 32))
-    const nonceTrack = bytesToBigInt(getBytes(encodedBytes, 108, 24))
-    const nonceValue = bytesToBigInt(getBytes(encodedBytes, 132, 8))
-    const maxFeePerGas = bytesToBigInt(getBytes(encodedBytes, 140, 32))
-    const submitterFee = bytesToBigInt(getBytes(encodedBytes, 172, 32))
-    const gasLimit = bytesToBigInt(getBytes(encodedBytes, 20, 4))
-    const validateGasLimit = bytesToBigInt(getBytes(encodedBytes, 24, 4))
-    const executeGasLimit = bytesToBigInt(getBytes(encodedBytes, 28, 4))
-    const validatePaymentGasLimit = bytesToBigInt(getBytes(encodedBytes, 32, 4))
+    const dest = bytesToAddress(getBytes(encodedBytes, 20, 20))
+    const payer = bytesToAddress(getBytes(encodedBytes, 40, 20))
+    const value = bytesToBigInt(getBytes(encodedBytes, 60, 32))
+    const nonceTrack = bytesToBigInt(getBytes(encodedBytes, 92, 24))
+    const nonceValue = bytesToBigInt(getBytes(encodedBytes, 116, 8))
+    const maxFeePerGas = bytesToBigInt(getBytes(encodedBytes, 124, 32))
+    const submitterFee = bytesToBigInt(getBytes(encodedBytes, 156, 32))
+    const gasLimit = bytesToBigInt(getBytes(encodedBytes, 188, 4))
+    const validateGasLimit = bytesToBigInt(getBytes(encodedBytes, 192, 4))
+    const executeGasLimit = bytesToBigInt(getBytes(encodedBytes, 196, 4))
+    const validatePaymentGasLimit = bytesToBigInt(getBytes(encodedBytes, 200, 4))
 
     // Read dynamic fields with their 4-byte length prefixes
     const [callData, callDataEndOffset] = getDynamicLengthBytes(encodedBytes, 204)

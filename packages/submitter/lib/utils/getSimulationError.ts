@@ -40,7 +40,7 @@ export function getSimulationError(req: SubmitParameters, err: unknown): Simulat
 function getEntrypointFailedStatus({ errorName }: { errorName?: string } = {}) {
     switch (errorName) {
         case "PayoutFailed":
-            return EntryPointStatus.PaymentFailed
+            return EntryPointStatus.PayoutFailed
         case "ValidationFailed":
             return EntryPointStatus.ValidationFailed
         default:

@@ -2,23 +2,23 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import type { Boop } from "#lib/tmp/interface/Boop"
+import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_receipt", () => {
     const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -35,35 +35,35 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const happyTxHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const state = (await client.api.v1.submitter.receipt[":hash"]
-            .$get({ param: { hash: happyTxHash }, query: { timeout: "0" } })
+            .$get({ param: { hash: boopHash }, query: { timeout: "0" } })
             .then((a) => a.json())) as any
 
         expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(EntryPointStatus.Success)
         expect(state.state.included).toBe(true)
-        expect(state.state.receipt.happyTxHash).toBe(happyTxHash)
+        expect(state.state.receipt.boopHash).toBe(boopHash)
         expect(state.state.simulation).toBeUndefined()
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const happyTxHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(signedTx)
 
         // submit transaction but don't wait to complete
         client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.submitter.receipt[":hash"]
-                .$get({ param: { hash: happyTxHash }, query: { timeout: "100" } }) // return near immediately
+                .$get({ param: { hash: boopHash }, query: { timeout: "100" } }) // return near immediately
                 .then((a) => a.json()) as any,
             client.api.v1.submitter.receipt[":hash"]
-                .$get({ param: { hash: happyTxHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
+                .$get({ param: { hash: boopHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
                 .then((a) => a.json()) as any,
         ])
 
@@ -76,7 +76,7 @@ describe("submitter_receipt", () => {
         expect(stateResolved.status).toBe(StateRequestStatus.Success)
         expect(stateResolved.state.status).toBe(EntryPointStatus.Success)
         expect(stateResolved.state.included).toBe(true)
-        expect(stateResolved.state.receipt.happyTxHash).toBe(happyTxHash)
+        expect(stateResolved.state.receipt.boopHash).toBe(boopHash)
         expect(stateResolved.state.simulation).toBeUndefined()
     })
 })

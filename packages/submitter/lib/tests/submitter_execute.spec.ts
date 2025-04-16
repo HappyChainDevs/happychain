@@ -3,7 +3,7 @@ import { testClient } from "hono/testing"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
@@ -19,15 +19,15 @@ import {
 } from "./utils"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_execute", () => {
     const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -81,7 +81,7 @@ describe("submitter_execute", () => {
             expect(response.status).toBe(ExecuteSuccess)
             expect(response.state.included).toBe(true)
             expect(response.state.receipt).not.toBeEmpty()
-            expect(response.state.receipt.happyTxHash).toBeString()
+            expect(response.state.receipt.boopHash).toBeString()
             expect(response.state.receipt.account).toBeString()
             expect(BigInt(response.state.receipt.nonceTrack)).toBeGreaterThanOrEqual(0n)
             expect(BigInt(response.state.receipt.nonceValue)).toBeGreaterThanOrEqual(0n)
@@ -126,6 +126,7 @@ describe("submitter_execute", () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
+
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)

@@ -1,5 +1,5 @@
-import { decodeHappyTx } from "./decodeHappyTx"
-import { encodeHappyTx } from "./encodeHappyTx"
+import { decodeBoop } from "./decodeBoop"
+import { encodeBoop } from "./encodeBoop"
 import type { SubmitSimulateResponseOk } from "./simulation-interfaces"
 
 /**
@@ -8,7 +8,7 @@ import type { SubmitSimulateResponseOk } from "./simulation-interfaces"
  */
 export function updateGasValues(args: `0x${string}`, result: SubmitSimulateResponseOk["result"]): `0x${string}` {
     // Update gas limits for the encoded tx if they where previously 0 and boop is not self-paying
-    const decoded = decodeHappyTx(args)
+    const decoded = decodeBoop(args)
     const isSelfPaying = decoded.payer === decoded.account
     if (isSelfPaying) return args // no changes needed
 
@@ -25,5 +25,5 @@ export function updateGasValues(args: `0x${string}`, result: SubmitSimulateRespo
         decoded.executeGasLimit = BigInt(result.executeGas)
     }
 
-    return encodeHappyTx(decoded)
+    return encodeBoop(decoded)
 }

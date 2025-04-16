@@ -1,4 +1,4 @@
-import { computeHappyTxHash as computeBoopHash } from "@happy.tech/submitter/client"
+import { computeBoopHash } from "@happy.tech/submitter/client"
 
 // == Utilities ====================================================================================
 

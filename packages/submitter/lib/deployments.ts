@@ -1,3 +1,2 @@
-import { abis as happyAAAbisAnvil } from "@happy.tech/contracts/boop/anvil"
-
-export const abis = happyAAAbisAnvil
+import { abis, deployment } from "@happy.tech/contracts/boop/anvil"
+export { abis, deployment }

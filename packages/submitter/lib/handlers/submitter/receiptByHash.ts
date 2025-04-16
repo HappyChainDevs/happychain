@@ -1,7 +1,7 @@
 import { type Result, err, ok } from "neverthrow"
 import { DEFAULT_RECEIPT_TIMEOUT_MS } from "#lib/data/defaults"
-import { happyReceiptService, happySimulationService } from "#lib/services"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import { boopReceiptService, boopSimulationService } from "#lib/services"
+import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import type { ReceiptInput } from "#lib/tmp/interface/submitter_receipt"
 
@@ -9,7 +9,7 @@ export async function receiptByHash({
     hash,
     timeout,
 }: ReceiptInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
-    const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(hash, timeout ?? DEFAULT_RECEIPT_TIMEOUT_MS)
+    const receipt = await boopReceiptService.findByBoopHashWithTimeout(hash, timeout ?? DEFAULT_RECEIPT_TIMEOUT_MS)
     if (receipt?.status === EntryPointStatus.Success) {
         return ok({
             status: StateRequestStatus.Success,
@@ -17,7 +17,7 @@ export async function receiptByHash({
         } satisfies StateRequestOutput)
     }
 
-    const simulation = await happySimulationService.findResultByHappyTxHash(hash)
+    const simulation = await boopSimulationService.findResultByBoopHash(hash)
 
     if (simulation?.status) {
         return ok({

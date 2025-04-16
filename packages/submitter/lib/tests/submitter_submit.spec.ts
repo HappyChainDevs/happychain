@@ -3,21 +3,21 @@ import { testClient } from "hono/testing"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
 import { app } from "#lib/server"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { Boop } from "#lib/tmp/interface/Boop"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testPublicClient } from "./utils"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: HappyTx) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("submitter_submit", () => {
     const client = testClient(app)
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
-    let unsignedTx: HappyTx
-    let signedTx: HappyTx
+    let unsignedTx: Boop
+    let signedTx: Boop
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create

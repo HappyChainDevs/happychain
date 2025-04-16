@@ -88,10 +88,10 @@ export enum EntryPointStatus {
     PaymentValidationReverted = "entrypointPaymentValidationReverted",
 
     /**
-     * Either the paymaster rejected the payout request, or the payment failed
-     * (no or not enough funds were transferred).
+     * When self-paying and the payment from the account fails, either because IAccount.payout
+     * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
      */
-    PaymentFailed = "entrypointPaymentFailed",
+    PayoutFailed = "entrypointPayoutFailed",
 
     /**
      * Unexpected revert of the submission, most likely out-of-gas.
@@ -126,7 +126,7 @@ export function isRevert(
 /** Whether the status indicates either a validation or payment failure. */
 export function isFailure(
     status: EntryPointStatus,
-): status is EntryPointStatus.ValidationFailed | EntryPointStatus.ExecuteFailed | EntryPointStatus.PaymentFailed {
+): status is EntryPointStatus.ValidationFailed | EntryPointStatus.ExecuteFailed | EntryPointStatus.PayoutFailed {
     return status.endsWith("Failed")
 }
 

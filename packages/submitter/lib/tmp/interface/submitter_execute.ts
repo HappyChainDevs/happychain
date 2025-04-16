@@ -1,6 +1,6 @@
-import type { HappyTx } from "./HappyTx"
-import type { HappyTxReceipt } from "./HappyTxReceipt"
-import type { HappyTxState } from "./HappyTxState"
+import type { Boop } from "./Boop"
+import type { BoopReceipt } from "./BoopReceipt"
+import type { BoopState } from "./BoopState"
 import type { Address, Hash } from "./common_chain"
 import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
 import { type SubmitStatus, SubmitSuccess } from "./submitter_submit"
@@ -13,13 +13,13 @@ export type ExecuteInput = {
     entryPoint?: Address | undefined
 
     /** HappyTx to execute. */
-    tx: HappyTx
+    tx: Boop
 }
 
 export type ExecuteOutput =
     | {
           status: ExecuteSuccess
-          state: HappyTxState
+          state: BoopState
       }
     | {
           status: Exclude<SubmitStatus, SubmitSuccess> | EntryPointStatus
@@ -60,7 +60,7 @@ export type ExecuteCancelOutput = {
     status: ExecuteCancelStatus.OriginalIncluded
 
     /** Receipt for the original transaction that was included onchain. */
-    receipt: HappyTxReceipt
+    receipt: BoopReceipt
 } | {
     status: Exclude<SubmitterErrorStatus, SubmitterErrorStatus.SimulationTimeout>
     receipt?: never
