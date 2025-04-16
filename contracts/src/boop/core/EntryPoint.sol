@@ -5,6 +5,7 @@ import {Encoding} from "boop/core/Encoding.sol";
 import {Staking} from "boop/core/Staking.sol";
 import {Utils} from "boop/core/Utils.sol";
 import {
+    BoopExecutionStarted,
     BoopSubmitted,
     CallReverted,
     ExecutionRejected,
@@ -134,6 +135,9 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         // ==========================================================================================
         // 4. Execute the call
+
+        // Emit event to mark the start of Boop execution for log delimiting, using the hash of the encoded Boop
+        emit BoopExecutionStarted(boop.account, keccak256(encodedBoop));
 
         bytes memory executeCallData = abi.encodeCall(IAccount.execute, (boop));
         uint256 gasBeforeExecute = gasleft();
