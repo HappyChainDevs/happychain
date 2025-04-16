@@ -84,6 +84,10 @@ app.get(
                     url: `http://localhost:${env.APP_PORT}`,
                     description: "Local server",
                 },
+                env.NODE_ENV === "staging" && {
+                    url: "https://submitter-staging.happy.tech",
+                    description: "Staging server",
+                },
                 { url: "https://submitter.happy.tech", description: "Production server" },
             ],
         },
