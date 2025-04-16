@@ -33,6 +33,12 @@ event BoopSubmitted(
 );
 
 /**
+ * When {EntryPoint.submit} is about to execute a Boop, emitted to delimit logs from the Boop execution
+ * using the {boop.account} and {keccak256(encodedBoop)}.
+ */
+event BoopExecutionStarted(address indexed account, bytes32 indexed boopHash);
+
+/**
  * When the {IAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
