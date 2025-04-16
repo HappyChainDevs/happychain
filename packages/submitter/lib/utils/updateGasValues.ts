@@ -9,7 +9,7 @@ import type { SubmitSimulateResponseOk } from "./simulation-interfaces"
 export function updateGasValues(args: `0x${string}`, result: SubmitSimulateResponseOk["result"]): `0x${string}` {
     // Update gas limits for the encoded tx if they where previously 0 and boop is not self-paying
     const decoded = decodeHappyTx(args)
-    const isSelfPaying = decoded.paymaster === decoded.account
+    const isSelfPaying = decoded.payer === decoded.account
     if (isSelfPaying) return args // no changes needed
 
     if (!decoded.gasLimit && result.gas) {

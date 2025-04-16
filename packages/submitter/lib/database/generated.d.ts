@@ -34,8 +34,7 @@ export interface HappyTransaction {
   maxFeePerGas: bigint;
   nonceTrack: bigint;
   nonceValue: bigint;
-  paymaster: `0x${string}`;
-  paymasterData: `0x${string}`;
+  payer: `0x${string}`;
   submitterFee: bigint;
   validateGasLimit: bigint;
   validatePaymentGasLimit: bigint;

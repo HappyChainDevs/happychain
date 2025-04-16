@@ -17,7 +17,7 @@ const defaultAccount = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
 
 // These fields where chosen as they could be useful when selection which account to execute with.
 // can be adjusted to fit the actual requirements
-type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "paymaster" | "dest">
+type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "payer" | "dest">
 
 const accounts = [defaultAccount]
 

@@ -117,7 +117,7 @@ describe("submitter_simulate", () => {
 
         // Contract Bug
         it("should simulate revert on unfunded self-sponsored", async () => {
-            unsignedTx.paymaster = smartAccount
+            unsignedTx.payer = smartAccount
             unsignedTx.executeGasLimit = 0n
             unsignedTx.gasLimit = 0n
             signedTx = await sign(unsignedTx)

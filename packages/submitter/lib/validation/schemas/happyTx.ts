@@ -15,6 +15,11 @@ export const happyTxInputSchema = z.object({
         .refine(isAddress)
         .transform(checksum)
         .openapi({ example: "0x07b354EFA748883a342a9ba4780Cc9728f51e3D5" }), // Address
+    payer: z
+        .string()
+        .refine(isAddress)
+        .transform(checksum)
+        .openapi({ example: "0x0000000000000000000000000000000000000000" }), // Address
     value: z.string().transform(toBigInt).openapi({ example: "0" }), // UInt256
     callData: z.string().refine(isHexString).openapi({
         example:
@@ -31,13 +36,6 @@ export const happyTxInputSchema = z.object({
     executeGasLimit: z.string().transform(toBigInt).openapi({ example: "4000000000" }), // UInt32 //
     validatePaymentGasLimit: z.string().transform(toBigInt).openapi({ example: "4000000000" }), // UInt32 //
 
-    // Paymaster Data
-    paymaster: z
-        .string()
-        .refine(isAddress)
-        .transform(checksum)
-        .openapi({ example: "0x0000000000000000000000000000000000000000" }), // Address
-    paymasterData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
     validatorData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
     extraData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
 })

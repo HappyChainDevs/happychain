@@ -66,8 +66,8 @@ export function createMockTokenAMintHappyTx(
         nonceValue: nonceValue,
         value: 0n,
 
-        // paymaster is default
-        paymaster: zeroAddress,
+        // payer is default
+        payer: zeroAddress,
         executeGasLimit: 0n,
         gasLimit: 0n,
         validatePaymentGasLimit: 4000000000n,
@@ -80,7 +80,6 @@ export function createMockTokenAMintHappyTx(
             functionName: "mint",
             args: [account, amount],
         }),
-        paymasterData: "0x",
         validatorData: "0x",
         extraData: "0x",
     }

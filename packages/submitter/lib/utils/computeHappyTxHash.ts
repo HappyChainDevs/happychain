@@ -15,7 +15,7 @@ const paymasterGasData = {
 
 export function computeHappyTxHash(happyTx: HappyTx): `0x${string}` {
     // Don't include validator data in the signature so that pre & post signing are the same
-    const isSelfPaying = happyTx.paymaster === happyTx.account
+    const isSelfPaying = happyTx.payer === happyTx.account
 
     const hashData: HappyTx = isSelfPaying
         ? { ...happyTx, validatorData: "0x" }
