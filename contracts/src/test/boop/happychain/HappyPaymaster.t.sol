@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop} from "boop/interfaces/Types.sol";
+import {Ownable} from "openzeppelin/access/Ownable.sol";
 import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
 import {BoopTestUtils} from "./../Utils.sol";
 

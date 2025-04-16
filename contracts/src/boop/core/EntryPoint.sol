@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {Encoding} from "boop/core/Encoding.sol";
 import {Staking} from "boop/core/Staking.sol";
+import {Utils} from "boop/core/Utils.sol";
 import {
     BoopSubmitted,
     CallReverted,
@@ -22,8 +23,7 @@ import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
-import {Encoding} from "./Encoding.sol";
-import {Utils} from "./Utils.sol";
+import {ReentrancyGuardTransient} from "openzeppelin/utils/ReentrancyGuardTransient.sol";
 
 /// @notice cf. {EntryPoint.submit}
 contract EntryPoint is Staking, ReentrancyGuardTransient {

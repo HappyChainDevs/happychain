@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {Encoding} from "boop/core/Encoding.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {Utils} from "boop/core/Utils.sol";
 import {Received, NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "./../core/Encoding.sol";
-import {Utils} from "./../core/Utils.sol";
+import {Ownable} from "openzeppelin/access/Ownable.sol";
+import {ReentrancyGuardTransient} from "openzeppelin/utils/ReentrancyGuardTransient.sol";
 
 /**
  * Information about a user's gas budget.
