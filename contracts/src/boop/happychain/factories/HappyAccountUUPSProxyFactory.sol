@@ -2,9 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
-import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
 /**
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.

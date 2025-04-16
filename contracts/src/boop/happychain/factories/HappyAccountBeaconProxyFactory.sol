@@ -2,9 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-
-import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
 /**
  * Factory contract for deploying deterministic Beacon based ERC1967 proxies for {HappyAccount}.
