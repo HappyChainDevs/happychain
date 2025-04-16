@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "boop/core/Encoding.sol";
+import {Boop} from "boop/interfaces/Types.sol";
+import {Test} from "forge-std/Test.sol";
 
 contract CoreLibsTest is Test {
     using Encoding for Boop;
