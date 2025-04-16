@@ -7,7 +7,7 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 
 /**
- * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+ * Factory contract for deploying deterministic Beacon based ERC1967 proxies for {HappyAccount}.
  */
 contract HappyAccountBeaconProxyFactory is HappyAccountFactoryBase {
     /// The implementation contract that all proxies will delegate to {HappyAccount}.
