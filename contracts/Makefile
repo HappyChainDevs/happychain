@@ -214,33 +214,35 @@ bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions
 ####################################################################################################
 # Code Quality
 
-check: lint format-check
-	biome check ./scripts;
-.PHONY: check
-
-format-check:
+forge-fmt-check:
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@forge fmt src || true
+	@forge fmt --check src || true
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
-.PHONY: format-check
+.PHONY: forge-fmt-check
 
-lint:
-	solhint --config ./.solhint.json "src/**/*.sol";
-.PHONY: lint
-
-lint-fix:
-	solhint --config ./.solhint.json "src/**/*.sol" --fix;
-.PHONY: lint-fix
-
-format:
+forge-fmt:
 	@biome check ./scripts --write;
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
+.PHONY: forge-fmt
+
+solhint-check:
+	solhint --config ./.solhint.json "src/**/*.sol";
+.PHONY: solhint-check
+
+solhint:
+	solhint --config ./.solhint.json "src/**/*.sol" --fix;
+.PHONY: solhint
+
+check: forge-fmt-check solhint-check
+.PHONY: check
+
+format: forge-fmt solhint
 .PHONY: format
 
 ####################################################################################################

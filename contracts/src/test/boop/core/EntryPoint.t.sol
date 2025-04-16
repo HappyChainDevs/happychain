@@ -1,21 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "solady/utils/ECDSA.sol";
-
-import {BoopTestUtils} from "../Utils.sol";
-import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {MockRevert} from "../../../mocks/MockRevert.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-
-import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
-import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
-import {Boop, ExtensionType} from "boop/interfaces/Types.sol";
-import {Encoding} from "../../../boop/core/Encoding.sol";
-import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
-import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
-import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
-
 import {
     CallStatus,
     SubmitOutput,
@@ -28,14 +13,26 @@ import {
     GasPriceTooHigh,
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
+import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
+import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
+import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
+import {Boop, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {Encoding} from "./../../../boop/core/Encoding.sol";
 import {Encoding} from "./../../../boop/core/Encoding.sol";
 import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
+import {MockERC20} from "./../../../mocks/MockERC20.sol";
 import {MockERC20} from "./../../../mocks/MockERC20.sol";
 import {MockRevert} from "./../../../mocks/MockRevert.sol";
+import {MockRevert} from "./../../../mocks/MockRevert.sol";
+import {BoopTestUtils} from "./../Utils.sol";
 import {BoopTestUtils} from "./../Utils.sol";
 
 contract EntryPointTest is BoopTestUtils {

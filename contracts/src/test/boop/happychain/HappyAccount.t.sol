@@ -3,11 +3,6 @@ pragma solidity ^0.8.20;
 
 import {Encoding} from "boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {IAccount} from "boop/interfaces/IAccount.sol";
-import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
-import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
-import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
-import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {
     InvalidSignature,
     NotFromEntryPoint,
@@ -17,8 +12,13 @@ import {
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
 import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
 import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
+import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
 import {MockERC20} from "./../../../mocks/MockERC20.sol";
