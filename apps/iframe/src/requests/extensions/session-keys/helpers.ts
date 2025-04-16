@@ -26,10 +26,8 @@ export function createValidatorExtraData(validatorAddress: Address): Hex {
     const keyBytes = "000001" // Key 1 in 3 bytes
     const lengthBytes = "000014" // Length 20 in 3 bytes (address is 20 bytes)
     const validatorAddressBytes = validatorAddress.slice(2).toLowerCase() // Remove 0x prefix
-    // @todo - Boop announcement noted this `We supply a library function to easily extract the value of a given key`
-    // dove in the codebase but couldn't seem to find aforementioned function ?
-    // so maybe this whole function is useless, TBD.
-
+    // Note: While Utils.sol contains a function to extract values from extraData on the contract side,
+    // we still need this client-side function to properly encode the data in the expected format.
     return ("0x" + keyBytes + lengthBytes + validatorAddressBytes) as Hex
 }
 
