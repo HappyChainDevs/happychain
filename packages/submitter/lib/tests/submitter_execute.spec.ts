@@ -53,10 +53,10 @@ describe("submitter_execute", () => {
 
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            // be your own paymaster! define your own gas!
+            // be your own payer! define your own gas!
             unsignedTx.gasLimit = 2000000n
             unsignedTx.executeGasLimit = 1000000n
-            unsignedTx.paymaster = smartAccount
+            unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
 
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
@@ -72,7 +72,7 @@ describe("submitter_execute", () => {
         })
     })
 
-    describe("paymaster", () => {
+    describe("payer", () => {
         it("proper response structure (mint tokens success)", async () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
@@ -211,12 +211,12 @@ describe("submitter_execute", () => {
             expect(result.status).toBe(422)
         })
 
-        it("throws error when PaymentReverted with unsupported paymaster", async () => {
+        it("throws error when PaymentReverted with unsupported payer", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
 
-            // invalid paymaster
-            tx.paymaster = mockDeployments.MockTokenA
+            // invalid payer
+            tx.payer = mockDeployments.MockTokenA
 
             const jsonTx = await sign(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })

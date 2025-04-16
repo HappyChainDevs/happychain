@@ -33,7 +33,7 @@ export type ExecuteOutput =
  * Given a happyTx, submits it onchain to be executed, waits for and returns the result of
  * execution.
  *
- * Unless `input.account === input.paymaster`, the `gasLimit`, `executeGasLimit`, `maxFeePerGas` and
+ * Unless `input.account === input.payer`, the `gasLimit`, `executeGasLimit`, `maxFeePerGas` and
  * `submitterFee` fields can be omitted and will be filled by the submitter.
  *
  * If the gas limits are provided, the submitter is free to perform or not perform simulation before
