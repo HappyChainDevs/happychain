@@ -5,11 +5,11 @@ import {CallInfo, CallInfoEncoding} from "boop/core/CallInfoEncoding.sol";
 import {Encoding} from "boop/core/Encoding.sol";
 import {BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo} from "boop/extensions/BatchCallExecutor.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {MockRevert} from "./../../../mocks/MockRevert.sol";
-import {MockHappyAccount} from "./../../../test/mocks/MockHappyAccount.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {MockRevert} from "src/mocks/MockRevert.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
+import {MockHappyAccount} from "src/test/mocks/MockHappyAccount.sol";
 
 contract BatchCallExecutorTest is BoopTestUtils {
     using Encoding for Boop;

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {CallInfo, CallInfoEncoding} from "boop/core/CallInfoEncoding.sol";
 import {Test} from "forge-std/Test.sol";
-
-import {CallInfo, CallInfoEncoding} from "../../../../boop/core/CallInfoEncoding.sol";
 
 contract CallInfoEncodingTest is Test {
     using CallInfoEncoding for bytes;

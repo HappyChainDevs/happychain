@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {Encoding} from "boop/core/Encoding.sol";
 import {
     CallStatus,
     SubmitOutput,
@@ -23,17 +24,10 @@ import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
-import {Encoding} from "./../../../boop/core/Encoding.sol";
-import {Encoding} from "./../../../boop/core/Encoding.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {MockRevert} from "./../../../mocks/MockRevert.sol";
-import {MockRevert} from "./../../../mocks/MockRevert.sol";
-import {BoopTestUtils} from "./../Utils.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {MockRevert} from "src/mocks/MockRevert.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
 
 contract EntryPointTest is BoopTestUtils {
     using Encoding for Boop;

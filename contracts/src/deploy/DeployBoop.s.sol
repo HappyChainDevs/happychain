@@ -5,7 +5,7 @@ import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
-import {BaseDeployScript} from "./BaseDeployScript.sol";
+import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));

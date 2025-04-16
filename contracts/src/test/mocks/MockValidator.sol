@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {ICustomValidator} from "boop/interfaces/ICustomValidator.sol";
 import {Boop} from "boop/interfaces/Types.sol";
-import {ICustomValidator} from "../../boop/interfaces/ICustomValidator.sol";
 
 /**
  * Mock implementation of ICustomValidator for testing purposes.

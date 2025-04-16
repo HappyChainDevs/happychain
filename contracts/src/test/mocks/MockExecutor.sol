@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {CallInfo} from "boop/core/CallInfoEncoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {ICustomExecutor} from "boop/interfaces/ICustomExecutor.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
-import {CallInfo} from "./../../boop/core/CallInfoEncoding.sol";
-import {ICustomExecutor} from "./../../boop/interfaces/ICustomExecutor.sol";
 
 /**
  * Mock implementation of ICustomExecutor for testing purposes.
