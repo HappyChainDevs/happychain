@@ -3,13 +3,11 @@ pragma solidity ^0.8.20;
 
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountBeaconProxy} from "boop/happychain/HappyAccountBeaconProxy.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
-import {console} from "forge-std/console.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
@@ -19,12 +17,12 @@ contract DeployBoopContracts is BaseDeployScript {
 
     EntryPoint public entryPoint;
     HappyAccount public happyAccountImpl;
-    address public happyAccount;
-    HappyAccountBeacon public happyAccountBeacon;
 
     HappyPaymaster public happyPaymaster;
 
     HappyAccountBeaconProxyFactory public happyAccountBeaconProxyFactory;
+    HappyAccountBeacon public happyAccountBeacon;
+
     HappyAccountUUPSProxyFactory public happyAccountUUPSProxyFactory;
 
     function deploy() internal override {
@@ -33,7 +31,7 @@ contract DeployBoopContracts is BaseDeployScript {
 
         string memory proxyType = vm.envOr("PROXY_TYPE", string(""));
         bool isUUPS = keccak256(bytes(proxyType)) == keccak256(bytes("UUPS"));
-        console.log("Proxy type: %s", proxyType);
+
         if (isLocal) {
             require(
                 msg.sender == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
@@ -66,18 +64,17 @@ contract DeployBoopContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
         if (isUUPS) {
-            (address payable _happyAccountProxy,) = deployDeterministic( //-
-                "HappyAccount",
+            (address payable _happyAccountUUPSImpl,) = deployDeterministic( //-
+                "HappyAccountUUPSImpl",
                 type(HappyAccountUUPSProxy).creationCode,
                 abi.encode(entryPoint),
                 DEPLOYMENT_SALT //-
             );
-            happyAccount = _happyAccountProxy;
 
             (address _happyAccountProxyFactory,) = deployDeterministic( //-
                 "HappyAccountUUPSProxyFactory",
                 type(HappyAccountUUPSProxyFactory).creationCode,
-                abi.encode(_happyAccountProxy),
+                abi.encode(_happyAccountUUPSImpl),
                 DEPLOYMENT_SALT //-
             );
             happyAccountUUPSProxyFactory = HappyAccountUUPSProxyFactory(_happyAccountProxyFactory);
@@ -98,14 +95,6 @@ contract DeployBoopContracts is BaseDeployScript {
                 DEPLOYMENT_SALT //-
             );
             happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
-
-            (address payable _happyAccountBeaconProxy,) = deployDeterministic( //-
-                "HappyAccount",
-                type(HappyAccountBeaconProxy).creationCode,
-                abi.encode(entryPoint, happyAccountBeacon, ""),
-                DEPLOYMENT_SALT //-
-            );
-            happyAccount = _happyAccountBeaconProxy;
         }
 
         // -----------------------------------------------------------------------------------------
