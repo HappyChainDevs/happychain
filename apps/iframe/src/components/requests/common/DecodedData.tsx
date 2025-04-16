@@ -7,6 +7,7 @@ import {
     recipeDisclosureSummary,
 } from "#src/components/primitives/disclosure/variants"
 import ArgsList from "./ArgsList"
+import { SectionBlock, SubsectionTitle } from "./Layout"
 
 interface DecodedDataProps {
     data: {
@@ -19,31 +20,38 @@ const DecodedData = ({ data }: DecodedDataProps) => {
     const { args = [], abiFuncDef } = data
 
     return (
-        <details className={recipeDisclosureDetails({ intent: "neutral" })}>
-            <summary className={recipeDisclosureSummary()}>
-                Decoded Function Data:
-                <CaretDown size="1.25em" />
-            </summary>
-            <div
-                className={cx(
-                    ["flex flex-col gap-y-2 size-full items-start justify-center"],
-                    recipeDisclosureContent({ intent: "neutral" }),
-                )}
-            >
-                <div className="flex w-full justify-start items-center gap-[1ex]">
-                    <WarningCircle size={"1.25em"} />
-                    <span className="italic text-neutral">This ABI is not verified.</span>
-                </div>
-                <div className="flex w-full justify-between items-baseline gap-[1ex]">
-                    <span className="text-sm opacity-75">Function Name:</span>
-                    <span className="font-mono text-sm truncate px-2 py-1 bg-primary rounded-md">
-                        {abiFuncDef.name}
-                    </span>
+        <SectionBlock>
+            <details className={recipeDisclosureDetails({ intent: "neutral" })}>
+                <summary className={recipeDisclosureSummary()}>
+                    <SubsectionTitle>{"Decoded Function Data"}</SubsectionTitle>
+                    <CaretDown size="1.25em" />
+                </summary>
+                <div className="flex items-center gap-2 p-2 border-t border-b border-neutral/10">
+                    <WarningCircle size="1.25em" />
+                    <SubsectionTitle>This ABI is not verified.</SubsectionTitle>
                 </div>
 
-                {args.length > 0 && <ArgsList args={args} fnInputs={abiFuncDef.inputs} />}
-            </div>
-        </details>
+                <div
+                    className={cx(
+                        "flex flex-col gap-4 w-full overflow-x-auto",
+                        recipeDisclosureContent({ intent: "neutral" }),
+                    )}
+                >
+                    <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
+                        <span className="opacity-75 text-xs">Function Name:</span>
+                        <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
+                            {abiFuncDef.name}
+                        </span>
+                    </div>
+
+                    {args.length > 0 && (
+                        <div className="w-full">
+                            <ArgsList args={args} fnInputs={abiFuncDef.inputs} />
+                        </div>
+                    )}
+                </div>
+            </details>
+        </SectionBlock>
     )
 }
 

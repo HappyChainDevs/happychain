@@ -190,10 +190,12 @@ export const EthSendTransaction = ({
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
+
+                {decodedData && <DecodedData data={decodedData} />}
+
                 <SectionBlock>
                     <SubsectionBlock>
-                        <SubsectionTitle>Decoded data</SubsectionTitle>
-                        {decodedData && <DecodedData data={decodedData} />}
+                        <SubsectionTitle>Raw Request</SubsectionTitle>
                         <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
                     </SubsectionBlock>
                 </SectionBlock>
