@@ -51,8 +51,8 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         deployer.deployForTests();
 
         entryPoint = deployer.entryPoint();
-        smartAccount = deployer.happyAccountBeaconFactory().createAccount(SALT, owner);
-        dest = deployer.happyAccountBeaconFactory().createAccount(SALT2, owner);
+        smartAccount = deployer.happyAccountBeaconProxyFactory().createAccount(SALT, owner);
+        dest = deployer.happyAccountBeaconProxyFactory().createAccount(SALT2, owner);
 
         // Fund the smart account
         vm.deal(smartAccount, INITIAL_DEPOSIT);

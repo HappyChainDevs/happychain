@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
-contract HappyAccountProxy is HappyAccount, UUPSUpgradeable {
+contract HappyAccountUUPSProxy is HappyAccount, UUPSUpgradeable {
     constructor(address entrypoint) HappyAccount(entrypoint) UUPSUpgradeable() {}
 
     /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
