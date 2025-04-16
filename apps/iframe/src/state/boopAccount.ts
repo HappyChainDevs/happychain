@@ -11,7 +11,7 @@ export interface BoopAccount {
 }
 
 export async function getBoopAccountAddress(owner: Address): Promise<Address> {
-    const salt = "0x1" // @todo - change this value for the real deal
+    const salt = "0x1"
     try {
         const result = await createAccount({
             // already verifies if the account is created under the hood
@@ -20,7 +20,7 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
         })
 
         if (result.isErr()) {
-            throw new Error(`Failed to create account: ${result.error.message || String(result.error)}`)
+            throw result.error
         }
 
         return result.value.address
