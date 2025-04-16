@@ -7,13 +7,13 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import {MockERC20} from "../../../mocks/MockERC20.sol";
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {BoopTestUtils} from "../Utils.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
 
 contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
@@ -45,15 +45,12 @@ contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the Deployment Script
-        DeployBoopContracts deployer = new DeployBoopContracts();
-
         // Deploy the boop contracts as foundry-account-0
-        vm.prank(owner);
-        deployer.deployForTests();
-
-        happyAccountFactory = deployer.happyAccountUUPSProxyFactory();
-        entryPoint = deployer.entryPoint();
+        vm.startPrank(owner);
+        entryPoint = new EntryPoint();
+        address happyAccountImplementation = address(new HappyAccountUUPSProxy(address(entryPoint)));
+        happyAccountFactory = new HappyAccountUUPSProxyFactory(happyAccountImplementation);
+        vm.stopPrank();
 
         // Deploy and initialize the proxy for happy account
         smartAccount = happyAccountFactory.createAccount(SALT, owner);

@@ -9,6 +9,7 @@ import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
+import {console} from "forge-std/console.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
@@ -18,7 +19,7 @@ contract DeployBoopContracts is BaseDeployScript {
 
     EntryPoint public entryPoint;
     HappyAccount public happyAccountImpl;
-    HappyAccountBeaconProxy public happyAccount;
+    address public happyAccount;
     HappyAccountBeacon public happyAccountBeacon;
 
     HappyPaymaster public happyPaymaster;
@@ -30,6 +31,9 @@ contract DeployBoopContracts is BaseDeployScript {
         string memory config = vm.envOr("CONFIG", string(""));
         bool isLocal = keccak256(bytes(config)) == keccak256(bytes("LOCAL"));
 
+        string memory proxyType = vm.envOr("PROXY_TYPE", string(""));
+        bool isUUPS = keccak256(bytes(proxyType)) == keccak256(bytes("UUPS"));
+        console.log("Proxy type: %s", proxyType);
         if (isLocal) {
             require(
                 msg.sender == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
@@ -60,46 +64,49 @@ contract DeployBoopContracts is BaseDeployScript {
         );
         happyAccountImpl = HappyAccount(_happyAccountImpl);
 
-        (address payable _happyAccountBeacon,) = deployDeterministic( //-
-            "HappyAccountBeacon",
-            type(HappyAccountBeacon).creationCode,
-            abi.encode(happyAccountImpl, owner),
-            DEPLOYMENT_SALT //-
-        );
-        happyAccountBeacon = HappyAccountBeacon(_happyAccountBeacon);
-
-        (address payable _happyAccountBeaconProxy,) = deployDeterministic( //-
-            "HappyAccountBeaconProxy",
-            type(HappyAccountBeaconProxy).creationCode,
-            abi.encode(entryPoint, happyAccountBeacon, ""),
-            DEPLOYMENT_SALT //-
-        );
-        happyAccount = HappyAccountBeaconProxy(_happyAccountBeaconProxy);
-
-        (address payable _happyAccountProxy,) = deployDeterministic( //-
-            "HappyAccountProxy",
-            type(HappyAccountUUPSProxy).creationCode,
-            abi.encode(entryPoint),
-            DEPLOYMENT_SALT //-
-        );
-
         // -----------------------------------------------------------------------------------------
+        if (isUUPS) {
+            (address payable _happyAccountProxy,) = deployDeterministic( //-
+                "HappyAccountUUPSProxy",
+                type(HappyAccountUUPSProxy).creationCode,
+                abi.encode(entryPoint),
+                DEPLOYMENT_SALT //-
+            );
+            happyAccount = _happyAccountProxy;
 
-        (address _happyAccountBeaconFactory,) = deployDeterministic( //-
-            "HappyAccountBeaconFactory",
-            type(HappyAccountBeaconProxyFactory).creationCode,
-            abi.encode(happyAccountBeacon),
-            DEPLOYMENT_SALT //-
-        );
-        happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
+            (address _happyAccountProxyFactory,) = deployDeterministic( //-
+                "HappyAccountUUPSProxyFactory",
+                type(HappyAccountUUPSProxyFactory).creationCode,
+                abi.encode(_happyAccountProxy),
+                DEPLOYMENT_SALT //-
+            );
+            happyAccountUUPSProxyFactory = HappyAccountUUPSProxyFactory(_happyAccountProxyFactory);
+        } else {
+            // default to beacon proxies
+            (address payable _happyAccountBeacon,) = deployDeterministic( //-
+                "HappyAccountBeaconProxy",
+                type(HappyAccountBeacon).creationCode,
+                abi.encode(happyAccountImpl, owner),
+                DEPLOYMENT_SALT //-
+            );
+            happyAccountBeacon = HappyAccountBeacon(_happyAccountBeacon);
 
-        (address _happyAccountProxyFactory,) = deployDeterministic( //-
-            "HappyAccountProxyFactory",
-            type(HappyAccountUUPSProxyFactory).creationCode,
-            abi.encode(_happyAccountProxy),
-            DEPLOYMENT_SALT //-
-        );
-        happyAccountUUPSProxyFactory = HappyAccountUUPSProxyFactory(_happyAccountProxyFactory);
+            (address _happyAccountBeaconFactory,) = deployDeterministic( //-
+                "HappyAccountBeaconProxyFactory",
+                type(HappyAccountBeaconProxyFactory).creationCode,
+                abi.encode(happyAccountBeacon),
+                DEPLOYMENT_SALT //-
+            );
+            happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
+
+            (address payable _happyAccountBeaconProxy,) = deployDeterministic( //-
+                "HappyAccountBeaconProxy",
+                type(HappyAccountBeaconProxy).creationCode,
+                abi.encode(entryPoint, happyAccountBeacon, ""),
+                DEPLOYMENT_SALT //-
+            );
+            happyAccount = _happyAccountBeaconProxy;
+        }
 
         // -----------------------------------------------------------------------------------------
 
