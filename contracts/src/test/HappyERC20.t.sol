@@ -3,13 +3,11 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {Initializable} from "oz-upgradeable/proxy/utils/Initializable.sol";
-
-import {DeployL1} from "../deploy/DeployL1.s.sol";
-import {DeployL1Upgradeable} from "../deploy/DeployL1Upgradeable.s.sol";
-
-import {HappyERC20} from "../HappyERC20.sol";
-import {HappyERC20Upgradeable} from "../HappyERC20Upgradeable.sol";
-import {HappyERC20Upgraded} from "./HappyERC20Upgraded.sol";
+import {DeployL1} from "src/deploy/DeployL1.s.sol";
+import {DeployL1Upgradeable} from "src/deploy/DeployL1Upgradeable.s.sol";
+import {HappyERC20} from "src/HappyERC20.sol";
+import {HappyERC20Upgradeable} from "src/HappyERC20Upgradeable.sol";
+import {HappyERC20Upgraded} from "src/test/HappyERC20Upgraded.sol";
 
 contract HappyERC20Test is Test {
     DeployL1 private l1Deployment;

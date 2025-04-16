@@ -20,12 +20,12 @@ import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {MockRevert} from "./../../../mocks/MockRevert.sol";
-import {MockExecutor} from "./../../../test/mocks/MockExecutor.sol";
-import {MockValidator} from "./../../../test/mocks/MockValidator.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {MockRevert} from "src/mocks/MockRevert.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
+import {MockExecutor} from "src/test/mocks/MockExecutor.sol";
+import {MockValidator} from "src/test/mocks/MockValidator.sol";
 
 contract HappyAccountTest is BoopTestUtils {
     using Encoding for Boop;

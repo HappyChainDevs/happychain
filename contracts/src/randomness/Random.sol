@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Drand} from "./Drand.sol";
-import {RandomCommitment} from "./RandomCommitment.sol";
+import {Drand} from "src/randomness/Drand.sol";
+import {RandomCommitment} from "src/randomness/RandomCommitment.sol";
 
 /**
  * This contract is checked by the sequencer to obtain its owner and to prioritize the owner's transaction,

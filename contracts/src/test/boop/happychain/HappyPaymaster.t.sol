@@ -6,8 +6,8 @@ import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Ownable} from "openzeppelin/access/Ownable.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
 
 contract HappyPaymasterTest is BoopTestUtils {
     // ====================================================================================================

@@ -1,8 +1,10 @@
-forge-std/=lib/forge-std/src/
+bls-bn254/=lib/bls-bn254/contracts/
 ds-test/=node_modules/ds-test/src/
 openzeppelin/=lib/openzeppelin/src/
 oz-upgradeable/=lib/oz-upgradeable/src/
-solady/=lib/solady/src/
+@openzeppelin/contracts/=lib/openzeppelin/src/
 ExcessivelySafeCall/=lib/ExcessivelySafeCall/src/
-bls-bn254/=lib/bls-bn254/contracts/
+forge-std/=lib/forge-std/src/
+solady/=lib/solady/src/
 boop/=src/boop/
+src/=src/
