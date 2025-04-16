@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
+import {MessageHashUtils} from "openzeppelin/utils/cryptography/MessageHashUtils.sol";
 import {Encoding} from "./../../boop/core/Encoding.sol";
 import {MockERC20} from "./../../mocks/MockERC20.sol";
 import {MockRevert} from "./../../mocks/MockRevert.sol";
