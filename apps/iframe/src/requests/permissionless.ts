@@ -1,4 +1,12 @@
-import { FIFOCache, HappyMethodNames, PermissionNames } from "@happy.tech/common"
+import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
+import { deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
+import {
+    EntryPointStatus,
+    type HappyTx,
+    StateRequestStatus,
+    state as boopState,
+    estimateGas,
+} from "@happy.tech/submitter-client"
 import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
@@ -17,25 +25,21 @@ import {
     type Transaction,
     hexToBigInt,
     isAddress,
+    zeroAddress,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
+import { boopReceiptsCache } from "#src/services/boopsReceiptsCache.ts"
 import { getBoopAccount } from "#src/state/boopAccount"
-import { getBoopClient, getNonce } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
-import { formatBoopReceiptToTransactionReceipt, formatTransactionFromBoopReceipt, sendBoop } from "./boop"
-import { signWithSessionKey } from "./modules/session-keys/helpers"
+import { formatBoopReceiptToTransactionReceipt, formatTransaction, getNonce, sendBoop } from "./boop"
+import { getSessionKeyForTarget } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
-import { type HappyTx, type HappyTxReceipt, StateRequestStatus, EntryPointStatus } from "@happy.tech/submitter-client"
-
-/** Cache Boop receipts - store both the receipt and the original transaction */
-export const boopReceiptCache = new FIFOCache<Hash, { receipt: HappyTxReceipt; tx: HappyTx }>(100)
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -67,13 +71,17 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             })
             if (permissions.length === 0) throw new EIP1193UnauthorizedError()
 
-            const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
+            const sessionKey = getSessionKeyForTarget(user.address, target)
+
             if (!sessionKey) throw new EIP1193UnauthorizedError()
             return await sendBoop({
-                user,
+                boopAccount: user.address,
                 tx,
-                signer: async (boop) => {
-                    return await signWithSessionKey(sessionKey, boop)
+                signer: async (boopHash: Hash) => {
+                    const account = privateKeyToAccount(sessionKey)
+                    return (await account.signMessage({
+                        message: { raw: boopHash },
+                    })) as Hex
                 },
             })
         }
@@ -97,28 +105,21 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionByHash": {
             const [hash] = request.payload.params
-            const boopClient = await getBoopClient()
-
-            if (!boopClient) {
-                return await sendToPublicClient(app, request)
-            }
-
-            const cachedTx = boopReceiptCache.get(hash)
+            const cachedTx = boopReceiptsCache.get(hash)
             if (cachedTx) {
                 const receipt = cachedTx.receipt
                 const tx = cachedTx.tx
-
-                return formatTransactionFromBoopReceipt(hash, receipt, tx)
+                return formatTransaction(hash, receipt, tx)
             }
 
             try {
-                const statusResult = await boopClient.boop.getStatus(hash)
+                const stateResult = await boopState({ hash })
 
-                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                if (stateResult.isErr() || stateResult.value.status !== StateRequestStatus.Success) {
                     return await sendToPublicClient(app, request)
                 }
 
-                const state = statusResult.value.state
+                const state = stateResult.value.state
 
                 if (!state.included || !state.receipt) {
                     const boopAccount = await getBoopAccount()
@@ -136,10 +137,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 }
 
                 const receipt = state.receipt
-
-                // We don't have the original transaction details, just the receipt
-                // So we'll work with what we have
-                return formatTransactionFromBoopReceipt(hash, receipt)
+                boopReceiptsCache.put(hash, { receipt: state.receipt })
+                return formatTransaction(hash, receipt)
             } catch (_err) {
                 return await sendToPublicClient(app, request)
             }
@@ -147,27 +146,19 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
-            const boopClient = await getBoopClient()
+            const cachedTx = boopReceiptsCache.get(hash)
 
-            if (!boopClient) {
-                return await sendToPublicClient(app, request)
-            }
-
-            // First, check cached boops to avoid unnecessary call
-            const cachedTx = boopReceiptCache.get(hash)
             if (cachedTx) {
                 return formatBoopReceiptToTransactionReceipt(hash, cachedTx.receipt)
             }
 
-            // If not in cache, get the receipt from the submitter
             try {
-                const statusResult = await boopClient.boop.getStatus(hash)
-
-                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                const stateResult = await boopState({ hash })
+                if (stateResult.isErr() || stateResult.value.status !== StateRequestStatus.Success) {
                     return await sendToPublicClient(app, request)
                 }
 
-                const state = statusResult.value.state
+                const state = stateResult.value.state
                 if (!state.included || !state.receipt) {
                     // Transaction is not yet included, return null (according to Ethereum JSON-RPC specs)
                     return null
@@ -175,9 +166,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
                 const receipt = state.receipt
 
-                boopReceiptCache.put(hash, {
+                boopReceiptsCache.put(hash, {
                     receipt,
-                    tx: null as unknown as HappyTx,
                 })
                 return formatBoopReceiptToTransactionReceipt(hash, receipt)
             } catch (_err) {
@@ -187,10 +177,9 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
-            const boopClient = await getBoopClient()
             const boopAccount = await getBoopAccount()
 
-            if (boopClient && boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
+            if (boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
                 // In Boop, nonces are stored per account and nonce track in the EntryPoint
                 const nonceTrack = 0n // Default nonce track
 
@@ -207,30 +196,47 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
-            const boopClient = await getBoopClient()
+            const boopAccount = await getBoopAccount()
+            try {
+                if (!boopAccount) throw new Error("Boop account not initialized")
 
-            if (boopClient) {
-                try {
-                    const boop = await boopClient.boop.prepareTransaction({
-                        dest: tx.to as Address,
-                        callData: tx.data || "0x",
-                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                    })
+                const nonceTrack = 0n // Default nonce track
+                const nonceValue = await getNonce(boopAccount.address, nonceTrack)
 
-                    const estimateResult = await boopClient.boop.estimateGas(boop)
+                const boop: HappyTx = {
+                    account: boopAccount.address,
+                    dest: tx.to as Address,
+                    nonceTrack,
+                    nonceValue,
+                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    paymaster: zeroAddress as Address,
+                    callData: tx.data || ("0x" as Hex),
+                    paymasterData: "0x" as Hex,
+                    validatorData: "0x" as Hex,
+                    extraData: "0x" as Hex,
+                    gasLimit: 0n,
+                    validateGasLimit: 0n,
+                    executeGasLimit: 0n,
+                    validatePaymentGasLimit: 0n,
+                    maxFeePerGas: 0n,
+                    submitterFee: 0n,
+                }
 
-                    if (estimateResult.isErr() || estimateResult.value.status !== EntryPointStatus.Success) {
-                        return await sendToPublicClient(app, request)
-                    }
+                const simulateResult = await estimateGas({
+                    entryPoint: happyAccAbsDeployment.HappyEntryPoint as Address,
+                    tx: boop,
+                })
 
-                    const gasLimit = estimateResult.value.executeGasLimit
-                    return `0x${gasLimit.toString(16)}`
-                } catch (error) {
-                    console.error("Encountered error while estimating gas:", error)
+                if (simulateResult.isErr() || simulateResult.value.status !== EntryPointStatus.Success) {
                     return await sendToPublicClient(app, request)
                 }
+
+                const gasLimit = simulateResult.value.executeGasLimit
+                return gasLimit
+            } catch (error) {
+                console.error("Encountered error while estimating gas:", error)
+                return await sendToPublicClient(app, request)
             }
-            return await sendToPublicClient(app, request)
         }
 
         case "wallet_getPermissions":
@@ -274,9 +280,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             }
 
             // Retrieve the stored session key for this user and target contract
-            const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
-            const sessionKey = storedSessionKeys?.[user!.address]?.[targetContractAddress]
-
+            const sessionKey = getSessionKeyForTarget(user!.address, targetContractAddress)
             if (!sessionKey) {
                 throw new Error("Session key not found")
             }

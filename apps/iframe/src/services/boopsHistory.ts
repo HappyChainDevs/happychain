@@ -1,6 +1,30 @@
+import { type ExecuteOutput, SubmitSuccess } from "@happy.tech/submitter-client"
 import type { Address, Hash } from "viem"
-import { type BoopEntry, type PendingBoop, StorageKey, storage } from "./storage"
-import type { ExecuteOutput } from "@happy.tech/submitter-client"
+import { StorageKey, storage } from "./storage"
+
+export interface PendingBoop {
+    boopHash: Hash
+    value: bigint
+    createdAt: number
+    status: "submitted" | "confirmed" | "failed"
+}
+
+export interface ConfirmedBoop extends PendingBoop {
+    status: "confirmed"
+    receipt: ExecuteOutput
+    confirmedAt: number
+}
+
+export interface FailedBoop extends PendingBoop {
+    status: "failed"
+    error?: {
+        message: string
+        code?: number | string
+    }
+    failedAt: number
+}
+
+export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
 
 export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, "createdAt" | "status">): void {
     const entry: PendingBoop = {
@@ -16,7 +40,7 @@ export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, 
 }
 
 export function markBoopAsConfirmed(account: Address, value: bigint, receipt: ExecuteOutput): void {
-    if (receipt.status !== "submitSuccess") {
+    if (receipt.status !== SubmitSuccess) {
         console.error("Cannot mark boop as confirmed: Boop hash is missing.")
         return
     }
