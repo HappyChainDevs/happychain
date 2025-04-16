@@ -11,11 +11,11 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountProxy} from "boop/happychain/HappyAccountProxy.sol";
-import {HappyAccountProxyFactory} from "boop/happychain/factories/HappyAccountProxyFactory.sol";
+import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
+import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {BoopTestUtils} from "../Utils.sol";
 
-contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
+contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
@@ -30,7 +30,7 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
     // ====================================================================================================
     // STATE VARIABLES
 
-    HappyAccountProxyFactory private happyAccountFactory;
+    HappyAccountUUPSProxyFactory private happyAccountFactory;
 
     address private smartAccount;
     address private mockToken;
@@ -52,14 +52,14 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyAccountFactory = deployer.happyAccountProxyFactory();
+        happyAccountFactory = deployer.happyAccountUUPSProxyFactory();
         entryPoint = deployer.entryPoint();
 
         // Deploy and initialize the proxy for happy account
         smartAccount = happyAccountFactory.createAccount(SALT, owner);
 
         // Deploy the new implementation
-        newImpl = address(new HappyAccountProxy(address(entryPoint)));
+        newImpl = address(new HappyAccountUUPSProxy(address(entryPoint)));
 
         // Deploy a mock ERC20 token
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
@@ -109,7 +109,7 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
 
         // Create and submit upgrade transaction
         vm.prank(owner);
-        HappyAccountProxy(payable(smartAccount)).upgradeToAndCall(newImpl, "");
+        HappyAccountUUPSProxy(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was updated
         bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -138,7 +138,7 @@ contract UpgradeHappyAccountProxyTest is Test, BoopTestUtils {
 
         // Expect revert when trying to upgrade
         vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
-        HappyAccountProxy(payable(smartAccount)).upgradeToAndCall(newImpl, "");
+        HappyAccountUUPSProxy(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was not updated
         bytes32 impl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);

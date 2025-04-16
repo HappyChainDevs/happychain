@@ -11,10 +11,10 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "../../../boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
+import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {BoopTestUtils} from "../Utils.sol";
 
-contract UpgradeHappyAccountBeaconProxy is Test, BoopTestUtils {
+contract UpgradeHappyAccountBeaconProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
@@ -26,7 +26,7 @@ contract UpgradeHappyAccountBeaconProxy is Test, BoopTestUtils {
 
     // ====================================================================================================
     // STATE VARIABLES
-    HappyAccountBeaconFactory private happyAccountFactory;
+    HappyAccountBeaconProxyFactory private happyAccountFactory;
     HappyAccountBeacon private accountBeacon;
     HappyAccount private happyAccountImpl;
 
@@ -50,7 +50,7 @@ contract UpgradeHappyAccountBeaconProxy is Test, BoopTestUtils {
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyAccountFactory = deployer.happyAccountBeaconFactory();
+        happyAccountFactory = deployer.happyAccountBeaconProxyFactory();
         entryPoint = deployer.entryPoint();
         accountBeacon = deployer.happyAccountBeacon();
         happyAccountImpl = deployer.happyAccountImpl();

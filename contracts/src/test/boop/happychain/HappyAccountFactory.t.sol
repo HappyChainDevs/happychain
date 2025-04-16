@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {HappyAccountBeaconFactory} from "boop/happychain/factories/HappyAccountBeaconFactory.sol";
+import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
@@ -17,14 +17,14 @@ contract HappyAccountFactoryTest is Test {
     address private constant OWNER = address(0xdead);
     address private constant OWNER2 = address(0xbeef);
 
-    HappyAccountBeaconFactory private factory;
+    HappyAccountBeaconProxyFactory private factory;
     HappyAccount private implementation;
     HappyAccountBeacon private accountBeacon;
 
     function setUp() public {
         implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
         accountBeacon = new HappyAccountBeacon(address(implementation), address(this));
-        factory = new HappyAccountBeaconFactory(address(accountBeacon));
+        factory = new HappyAccountBeaconProxyFactory(address(accountBeacon));
     }
 
     function testInitialDeployment() public {

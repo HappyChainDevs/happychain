@@ -9,7 +9,7 @@ import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFac
 /**
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
  */
-contract HappyAccountBeaconFactory is HappyAccountFactoryBase {
+contract HappyAccountBeaconProxyFactory is HappyAccountFactoryBase {
     /// The implementation contract that all proxies will delegate to {HappyAccount}.
     address public immutable ACCOUNT_BEACON;
 
