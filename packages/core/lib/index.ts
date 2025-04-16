@@ -23,7 +23,7 @@ export {
     onWalletVisibilityUpdate,
     onUserUpdate,
     getCurrentUser,
-    happyProviderPublic as happyProvider,
+    happyProvider,
     connect,
     disconnect,
     showSendScreen,
