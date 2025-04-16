@@ -200,7 +200,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         return interfaceId == 0x01ffc9a7  // ERC-165
             || interfaceId == 0x1626ba7e  // ERC-1271
             || interfaceId == 0x2eaf0775  // IAccount
-            || interfaceId == 0x2a73c833; // IExtensibleAccount
+            || interfaceId == 0x5c5d715d; // IExtensibleAccount
     }
 
     receive() external payable {

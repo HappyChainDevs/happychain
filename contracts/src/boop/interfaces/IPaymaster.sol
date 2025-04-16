@@ -5,7 +5,7 @@ import {Boop} from "boop/interfaces/Types.sol";
 
 /**
  * Selector returned from {IPaymaster.validatePayment} when the boop's fee exceeds
- * the maximum allowed fee.
+ * what the paymaster will accept.
  */
 error SubmitterFeeTooHigh();
 

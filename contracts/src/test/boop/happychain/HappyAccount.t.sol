@@ -11,6 +11,7 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {Encoding} from "boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
 import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
@@ -548,6 +549,11 @@ contract HappyAccountTest is BoopTestUtils {
         // IAccount interface ID
         bytes4 accountInterfaceId = IAccount.validate.selector ^ IAccount.execute.selector ^ IAccount.payout.selector;
         assertTrue(account.supportsInterface(accountInterfaceId), "Should support IAccount");
+
+        // IExtensibleAccount interface ID
+        bytes4 extensibleInterfaceId = IExtensibleAccount.isExtensionRegistered.selector
+            ^ IExtensibleAccount.addExtension.selector ^ IExtensibleAccount.removeExtension.selector;
+        assertTrue(account.supportsInterface(extensibleInterfaceId), "Should support IExtensibleAccount");
     }
 
     // ====================================================================================================

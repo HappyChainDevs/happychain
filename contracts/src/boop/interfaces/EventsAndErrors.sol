@@ -125,8 +125,9 @@ event Received(address sender, uint256 amount);
 // SHARED ERRORS
 
 /**
- * Selector returned by {EntryPoint._validate} in simulation mode if the validity of the boop
- * cannot be ascertained during simulation.
+ * Selector returned by {IAccount.validate} and
+ * {IPaymaster.validatePayment} in simulation mode if the validity of
+ * the boop cannot be ascertained during simulation.
  *
  * e.g. we can't verify a signature over the gas limit during simulation,
  * as simulation is used to estimate the gas.
