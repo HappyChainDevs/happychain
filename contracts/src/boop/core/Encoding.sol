@@ -37,6 +37,7 @@ library Encoding {
      *
      * - dynamic fields:
      *      - callData (length: 4b = N, data: Nb)
+     *      - validatorData (length: 4b = N, data: Nb)
      *      - extraData (length: 4b = N, data: Nb)
      */
     function encode(Boop memory boop) internal pure returns (bytes memory result) {
