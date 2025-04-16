@@ -16,6 +16,10 @@ include ../makefiles/help.mk
 # Must be exported as some deploy scripts depend on it.
 export CONFIG ?= LOCAL
 
+# Type of proxy contract to use for happy accounts in DeployBoop.s.sol.
+# Valid values: "BEACON" or "UUPS". Defaults to BEACON.
+export PROXY_TYPE ?= BEACON
+
 # Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
 export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
 
