@@ -109,6 +109,13 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
 
+            if (import.meta.env.PROD) {
+                throw getEIP1193ErrorObjectFromCode(
+                    EIP1193ErrorCodes.UnsupportedMethod,
+                    "Switching chain is not supported in production",
+                )
+            }
+
             const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Currently this fails: web3Auth is hardcoded to the default intial chain.
             setCurrentChain(chains[chainId])
