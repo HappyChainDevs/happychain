@@ -171,15 +171,6 @@ export function openWallet() {
 }
 
 /**
- * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
- */
-export const happyProvider = (
-    typeof window === "undefined"
-        ? new HappyProviderSSRSafe()
-        : (provider ?? initializeProvider() ?? new HappyProviderSSRSafe())
-) as HappyProvider & EIP1193Provider
-
-/**
  * HappyProvider is an [EIP1193](https://eips.ethereum.org/EIPS/eip-1193) Ethereum Provider.
  *
  * @example
@@ -193,7 +184,9 @@ export const happyProvider = (
  * })
  * ```
  */
-export const happyProviderPublic: HappyProvider = happyProvider
+export const happyProvider = (typeof window === "undefined"
+    ? new HappyProviderSSRSafe()
+    : (provider ?? initializeProvider() ?? new HappyProviderSSRSafe())) as HappyProvider satisfies EIP1193Provider
 
 const getListeners = () => {
     return iframeMessageBus
