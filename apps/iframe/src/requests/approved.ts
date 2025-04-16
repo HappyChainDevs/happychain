@@ -10,10 +10,9 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, type Hash, InvalidAddressError, isAddress } from "viem"
+import { type Client, type Hash, type Hex, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { StorageKey, storage } from "#src/services/storage"
-import { getBoopClient } from "#src/state/boopClient"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
@@ -25,10 +24,11 @@ import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendBoop } from "./boop"
 import {
-    checkIsSessionKeyModuleInstalled,
-    installSessionKeyModule,
+    checkIsSessionKeyExtensionInstalled,
+    installSessionKeyExtension,
     registerSessionKey,
-} from "./modules/session-keys/helpers"
+} from "./extensions/session-keys/helpers"
+import { hasExistingSessionKeys } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
@@ -53,15 +53,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()
-                const boopClient = await getBoopClient()
-                if (!boopClient) throw new Error("Boop client not initialized")
-
                 const tx = request.payload.params[0]
                 return await sendBoop({
-                    user,
+                    boopAccount: user.address,
                     tx,
-                    signer: async (boop) => {
-                        return await boopClient.boop.signTransaction(boop)
+                    signer: async (boopHash: Hash) => {
+                        const walletClient = getWalletClient()
+                        if (!walletClient) throw new Error("Wallet client not initialized")
+
+                        return (await walletClient.signMessage({
+                            account: walletClient.account!,
+                            message: { raw: boopHash },
+                        })) as Hex
                     },
                 })
             } catch (error) {
@@ -138,21 +141,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             // Generate a new session key
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
-
-            // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-            const hasExistingSessionKeys = Boolean(storedSessionKeys[user.address])
 
             let hash: Hash
-            // Only check module installation if we don't have any session keys stored
-            if (!hasExistingSessionKeys) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(user.address)
+            // Only check extension installation if we don't have any session keys stored
+            if (!hasExistingSessionKeys(user.address)) {
+                const isSessionKeyValidatorInstalled = await checkIsSessionKeyExtensionInstalled(user.address)
                 if (!isSessionKeyValidatorInstalled) {
                     // Install the SessionKeyValidator AND register session key
-                    hash = await installSessionKeyModule(user.address, accountSessionKey.address, targetContract)
+                    hash = await installSessionKeyExtension(user.address, accountSessionKey.address, targetContract)
                 }
             } else {
-                hash = await registerSessionKey(accountSessionKey.address, targetContract)
+                hash = await registerSessionKey(accountSessionKey.address, targetContract, user.address)
             }
 
             await publicClient.waitForTransactionReceipt({ hash: hash! })

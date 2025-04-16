@@ -1,11 +1,13 @@
 // @todo - switch to import from happy-sepolia ;
 // @todo - maybe write a helper function to return the appropriate contracts & ABIs depending on current chain ID ?
 import { abis as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
-import { type HappyTx, computeBoopHash, EntryPointStatus } from "@happy.tech/submitter-client"
+import { type HappyTx, computeBoopHash } from "@happy.tech/submitter-client"
 import { type Address, type Hash, type Hex, encodeFunctionData, isAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { getBoopClient } from "#src/state/boopClient"
+import { sendBoop } from "#src/requests/boop"
+import { StorageKey, storage } from "#src/services/storage"
 import { getPublicClient } from "#src/state/publicClient"
+import { getWalletClient } from "#src/state/walletClient"
 
 export const SESSION_KEY_VALIDATOR_ADDRESS = happyAccAbsDeployment.SessionKeyValidator as Address
 const EXTENSION_TYPE_VALIDATOR = 0
@@ -36,7 +38,7 @@ export function createValidatorExtraData(validatorAddress: Address): Hex {
  * @param accountAddress - The address of the Boop account
  * @returns `true` if the extension is registered, `false` otherwise
  */
-export async function checkIsSessionKeyModuleInstalled(accountAddress: Address): Promise<boolean> {
+export async function checkIsSessionKeyExtensionInstalled(accountAddress: Address): Promise<boolean> {
     const publicClient = getPublicClient()
 
     try {
@@ -57,19 +59,15 @@ export async function checkIsSessionKeyModuleInstalled(accountAddress: Address):
 
 /**
  * Install the SessionKeyValidator extension on the account
- * @param accountAddress - The address of the Boop account
+ * @param boopAccount - The address of the Boop account
  * @param sessionKey - (Optional) Session key to authorize immediately during installation
  * @param targetContract - (Optional) Target contract for the session key
- * @returns Transaction hash
  */
-export async function installSessionKeyModule(
-    accountAddress: Address,
+export async function installSessionKeyExtension(
+    boopAccount: Address,
     sessionKey?: Address,
     targetContract?: Address,
 ): Promise<Hash> {
-    const boopClient = await getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
-
     // Prepare transaction to add the SessionKeyValidator extension
     const callData = encodeFunctionData({
         abi: happyAccAbsAbis.IExtensibleAccount,
@@ -77,29 +75,28 @@ export async function installSessionKeyModule(
         args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
     })
 
-    // Execute the transaction to add the extension
-    const result = await boopClient.boop.sendTransaction({
-        dest: accountAddress, // The account itself is the destination
-        callData,
-        estimateGas: true,
+    const hash = await sendBoop({
+        boopAccount,
+        tx: {
+            to: boopAccount,
+            data: callData,
+        },
+        signer: async (boopHash: Hash) => {
+            const walletClient = getWalletClient()
+            return (await walletClient!.signMessage({
+                account: walletClient!.account!,
+                message: { raw: boopHash },
+            })) as Hex
+        },
+        //@todo - `isSponsored` field: default to `true` ?
     })
-
-    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
-        throw new Error("Failed to install session key validator")
-    }
-
-    const hash = result.value.hash!
 
     // If both session key & target contract are provided, register the session key directly
     if (sessionKey && isAddress(targetContract!)) {
-        // Wait for installation to be confirmed...
         const publicClient = getPublicClient()
         await publicClient.waitForTransactionReceipt({ hash })
-
-        // Register session key
-        await registerSessionKey(sessionKey, targetContract as Address)
+        await registerSessionKey(sessionKey, targetContract as Address, boopAccount)
     }
-
     return hash
 }
 
@@ -107,29 +104,36 @@ export async function installSessionKeyModule(
  * Register a session key for a specific target contract
  * @param sessionKeyAddress - The address of the session key to register
  * @param targetContract - The address of the contract the session key can interact with
+ * @param accountAddress - Boop account address
  * @returns Transaction hash
  */
-export async function registerSessionKey(sessionKeyAddress: Address, targetContract: Address): Promise<Hash> {
-    const boopClient = await getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
-
+export async function registerSessionKey(
+    sessionKeyAddress: Address,
+    targetContract: Address,
+    boopAccount: Address,
+): Promise<Hash> {
     const callData = encodeFunctionData({
         abi: happyAccAbsAbis.SessionKeyValidator,
         functionName: "addSessionKey",
         args: [targetContract, sessionKeyAddress],
     })
 
-    const result = await boopClient.boop.sendTransaction({
-        dest: SESSION_KEY_VALIDATOR_ADDRESS,
-        callData,
-        estimateGas: true,
+    return await sendBoop({
+        boopAccount,
+        tx: {
+            to: SESSION_KEY_VALIDATOR_ADDRESS,
+            data: callData,
+        },
+        signer: async (boopHash: Hash) => {
+            const walletClient = getWalletClient()
+            if (!walletClient) throw new Error("Wallet client not initialized")
+
+            return (await walletClient.signMessage({
+                account: walletClient.account!,
+                message: { raw: boopHash },
+            })) as Hex
+        },
     })
-
-    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
-        throw new Error("Failed to register session key") // @todo - use specific error ?
-    }
-
-    return result.value.hash!
 }
 
 /**
@@ -138,23 +142,13 @@ export async function registerSessionKey(sessionKeyAddress: Address, targetContr
  * @param boop - The Boop transaction to sign
  */
 export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Promise<HappyTx> {
-    // Create an account from the private key
     const account = privateKeyToAccount(privateKey)
-
     const boopToSign = {
         ...boop,
         validatorData: "" as Hex, // Temporarily empty for hash calculation
-        // When using a session key, we don't need to sign gas parameters
-        // These fields should be 0 according to SessionKeyValidator.sol
-        gasLimit: 0n,
-        validateGasLimit: 0n,
-        validatePaymentGasLimit: 0n,
-        executeGasLimit: 0n,
-        maxFeePerGas: 0n,
-        submitterFee: 0n,
     }
     const boopHash = computeBoopHash(boopToSign)
-    const validatorData = await account.signMessage({
+    const signature = await account.signMessage({
         message: { raw: boopHash },
     })
 
@@ -163,7 +157,7 @@ export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Pr
 
     return {
         ...boop,
-        validatorData,
+        validatorData: signature,
         extraData,
     }
 }
@@ -173,54 +167,76 @@ export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Pr
  * @param targetContract - Contract address to remove the session key for
  * @returns Transaction hash
  */
-export async function removeSessionKey(targetContract: Address): Promise<Hash> {
-    const boopClient = await getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
-
-    // Prepare transaction to remove the session key
+export async function removeSessionKey(targetContract: Address, boopAccount: Address): Promise<Hash> {
     const callData = encodeFunctionData({
         abi: happyAccAbsAbis.SessionKeyValidator,
         functionName: "removeSessionKey",
         args: [targetContract],
     })
 
-    const result = await boopClient.boop.sendTransaction({
-        dest: SESSION_KEY_VALIDATOR_ADDRESS,
-        callData,
-        estimateGas: true,
+    return await sendBoop({
+        boopAccount,
+        tx: {
+            to: SESSION_KEY_VALIDATOR_ADDRESS,
+            data: callData,
+        },
+        signer: async (boopHash: Hash) => {
+            const walletClient = getWalletClient()
+            if (!walletClient) throw new Error("Wallet client not initialized")
+
+            return (await walletClient.signMessage({
+                account: walletClient.account!,
+                message: { raw: boopHash },
+            })) as Hex
+        },
     })
-
-    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
-        throw new Error("Failed to remove session key") // @todo - use specific error ?
-    }
-
-    return result.value.hash!
 }
 
 /**
  * Remove the SessionKeyValidator extension from the account
- * @param accountAddress - Boop account address
+ * @param boopAccount - Boop account address
  * @returns Transaction hash
  */
-export async function uninstallSessionKeyModule(accountAddress: Address): Promise<Hash> {
-    const boopClient = await getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
-
+export async function uninstallSessionKeyExtension(boopAccount: Address): Promise<Hash> {
     const callData = encodeFunctionData({
         abi: happyAccAbsAbis.IExtensibleAccount,
         functionName: "removeExtension",
         args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
     })
 
-    const result = await boopClient.boop.sendTransaction({
-        dest: accountAddress,
-        callData,
-        estimateGas: true,
+    return await sendBoop({
+        boopAccount,
+        tx: {
+            to: boopAccount,
+            data: callData,
+        },
+        signer: async (boopHash: Hash) => {
+            const walletClient = getWalletClient()
+            if (!walletClient) throw new Error("Wallet client not initialized")
+
+            return (await walletClient.signMessage({
+                account: walletClient.account!,
+                message: { raw: boopHash },
+            })) as Hex
+        },
     })
+}
 
-    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
-        throw new Error("Failed to uninstall session key validator") // @todo - use specific error ?
-    }
+/**
+ * Check if a session key exists for a specific target contract
+ */
+export function getSessionKeyForTarget(userAddress: Address, targetContract: Address): Address | undefined {
+    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+    const accountSessionKeys = storedSessionKeys[userAddress]
 
-    return result.value.hash!
+    return accountSessionKeys?.[targetContract]
+}
+
+/**
+ * Check if user created session keys
+ */
+export function hasExistingSessionKeys(userAddress: Address): boolean {
+    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+
+    return Boolean(storedSessionKeys[userAddress])
 }

@@ -1,8 +1,8 @@
-import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
+import { createStorage } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address } from "abitype"
-import type { Hash, Hex } from "viem"
-import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
+import type { Hex } from "viem"
+import type { BoopEntry } from "./boopsHistory"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -18,30 +18,6 @@ export enum StorageKey {
 export type SessionKeysByTargetContract = Record<Address, Hex>
 export type SessionKeysByHappyUser = Record<Address, SessionKeysByTargetContract>
 
-export interface PendingBoop {
-    boopHash: Hash
-    value: bigint
-    createdAt: number
-    status: "submitted" | "confirmed" | "failed"
-}
-
-export interface ConfirmedBoop extends PendingBoop {
-    status: "confirmed"
-    receipt: ExecuteOutput
-    confirmedAt: number
-}
-
-export interface FailedBoop extends PendingBoop {
-    status: "failed"
-    error?: {
-        message: string
-        code?: number | string
-    }
-    failedAt: number
-}
-
-export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
-
 type StorageSchema = {
     // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
@@ -50,16 +26,6 @@ type StorageSchema = {
 }
 
 export const storage = createStorage<StorageSchema>()
-
-// biome-ignore lint/suspicious/noExplicitAny: let's not record the types for every version
-const migrations: Record<string, (oldVal: any) => any> = {
-    // Migration from UserOps to Boops if needed
-    [StorageKey.UserOps]: (oldVal) => {
-        // Convert UserOps to Boops format if needed
-        // This is a placeholder for actual migration logic
-        return oldVal
-    },
-}
 
 function cleanOrMigrateStorage() {
     if (typeof window === "undefined") return
@@ -73,18 +39,10 @@ function cleanOrMigrateStorage() {
             const newVersion = newKey?.split(":")[2]
 
             if (newKey && newVersion !== version) {
-                const migrate = migrations[key]
-                if (migrate) {
-                    console.log(`migrating happychain:${name} from ${version} to ${newVersion}`)
-                    const oldVal = JSON.parse(localStorage[key], bigIntReviver)
-                    localStorage[newKey] = JSON.stringify(migrate(oldVal), bigIntReplacer)
-                    delete localStorage[key]
-                } else {
-                    console.warn(
-                        `storage happychain:${name} updated from ${version} to ${newVersion}, removing old version`,
-                    )
-                    delete localStorage[key]
-                }
+                console.warn(
+                    `storage happychain:${name} updated from ${version} to ${newVersion}, removing old version`,
+                )
+                delete localStorage[key]
             }
         }
     }
