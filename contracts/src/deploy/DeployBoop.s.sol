@@ -67,7 +67,7 @@ contract DeployBoopContracts is BaseDeployScript {
         // -----------------------------------------------------------------------------------------
         if (isUUPS) {
             (address payable _happyAccountProxy,) = deployDeterministic( //-
-                "HappyAccountUUPSProxy",
+                "HappyAccount",
                 type(HappyAccountUUPSProxy).creationCode,
                 abi.encode(entryPoint),
                 DEPLOYMENT_SALT //-
@@ -84,7 +84,7 @@ contract DeployBoopContracts is BaseDeployScript {
         } else {
             // default to beacon proxies
             (address payable _happyAccountBeacon,) = deployDeterministic( //-
-                "HappyAccountBeaconProxy",
+                "HappyAccountBeacon",
                 type(HappyAccountBeacon).creationCode,
                 abi.encode(happyAccountImpl, owner),
                 DEPLOYMENT_SALT //-
@@ -100,7 +100,7 @@ contract DeployBoopContracts is BaseDeployScript {
             happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
 
             (address payable _happyAccountBeaconProxy,) = deployDeterministic( //-
-                "HappyAccountBeaconProxy",
+                "HappyAccount",
                 type(HappyAccountBeaconProxy).creationCode,
                 abi.encode(entryPoint, happyAccountBeacon, ""),
                 DEPLOYMENT_SALT //-
