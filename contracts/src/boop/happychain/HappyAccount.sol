@@ -87,7 +87,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
     }
 
     /// @inheritdoc IExtensibleAccount
-    function addExtension(address extension, ExtensionType extensionType, bytes memory initData) external onlySelfOrOwner {
+    function addExtension(address extension, ExtensionType extensionType, bytes memory installData) external onlySelfOrOwner {
         if (extensions[extensionType][extension]) {
             revert ExtensionAlreadyRegistered(extension, extensionType);
         }
@@ -95,8 +95,8 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         extensions[extensionType][extension] = true;
         emit ExtensionAdded(extension, extensionType);
 
-        if (initData.length > 0) {
-            (bool success, bytes memory returnData) = extension.call(initData);
+        if (installData.length > 0) {
+            (bool success, bytes memory returnData) = extension.call(installData);
             if (!success) {
                 assembly {
                     revert(add(returnData, 32), mload(returnData))
@@ -105,7 +105,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         }
     }
 
-    function removeExtension(address extension, ExtensionType extensionType, bytes memory deInitData) external onlySelfOrOwner {
+    function removeExtension(address extension, ExtensionType extensionType, bytes memory uninstallData) external onlySelfOrOwner {
         if (!extensions[extensionType][extension]) {
             revert ExtensionNotRegistered(extension, extensionType);
         }
@@ -113,11 +113,11 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         delete extensions[extensionType][extension];
         emit ExtensionRemoved(extension, extensionType);
 
-        if (deInitData.length > 0) {
-            (bool success,) = extension.call(deInitData);
+        if (uninstallData.length > 0) {
+            (bool success, bytes memory returnData) = extension.call(uninstallData);
             if (!success) {
                 assembly {
-                    revert(add(deInitData, 32), mload(deInitData))
+                    revert(add(returnData, 32), mload(returnData))
                 }
             }
         }

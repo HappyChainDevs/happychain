@@ -420,9 +420,9 @@ contract EntryPointTest is BoopTestUtils {
         address publicKey = vm.addr(sessionKey);
 
         // Add the SessionKeyValidator as a validator extension, and add a session key for `mockToken`
-        bytes memory initData = abi.encodeCall(SessionKeyValidator.addSessionKey, (target, publicKey));
+        bytes memory installData = abi.encodeCall(SessionKeyValidator.addSessionKey, (target, publicKey));
         bytes memory callData =
-            abi.encodeCall(IExtensibleAccount.addExtension, (sessionKeyValidator, ExtensionType.Validator, initData));
+            abi.encodeCall(IExtensibleAccount.addExtension, (sessionKeyValidator, ExtensionType.Validator, installData));
 
         // Send a boop to the smartAccount itself, so that it calls addExtension function on itself
         Boop memory initBoop = createSignedBoop(smartAccount, smartAccount, ZERO_ADDRESS, privKey, callData);
@@ -436,7 +436,9 @@ contract EntryPointTest is BoopTestUtils {
         // Prepare a Boop signed by the session key, using SessionKeyValidator as external validator
         Boop memory boop =
             getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
         // Set extraData to use the sessionKeyValidator as external validator
+        // 0x000014 is 20 (the length of an address) in bytes3 format; encoding matches the extraData extension spec for boops
         boop.extraData = abi.encodePacked(VALIDATOR_KEY, bytes3(0x000014), bytes20(sessionKeyValidator));
         // Sign with session key
         boop.validatorData = signBoop(boop, sessionKey);
@@ -446,9 +448,9 @@ contract EntryPointTest is BoopTestUtils {
         _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // Now remove the validator extension and remove the session key
-        bytes memory deInitData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target));
+        bytes memory uninstallData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target));
         bytes memory deCallData = abi.encodeCall(
-            IExtensibleAccount.removeExtension, (sessionKeyValidator, ExtensionType.Validator, deInitData)
+            IExtensibleAccount.removeExtension, (sessionKeyValidator, ExtensionType.Validator, uninstallData)
         );
 
         // Send a boop to the smartAccount itself, so that it calls removeExtension function on itself
