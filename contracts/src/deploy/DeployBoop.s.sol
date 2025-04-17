@@ -5,6 +5,7 @@ import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
@@ -20,6 +21,8 @@ contract DeployBoopContracts is BaseDeployScript {
     HappyAccount public happyAccountImpl;
 
     HappyPaymaster public happyPaymaster;
+
+    HappyAccountRegistry public happyAccountRegistry;
 
     HappyAccountBeaconProxyFactory public happyAccountBeaconProxyFactory;
     HappyAccountBeacon public happyAccountBeacon;
@@ -55,6 +58,17 @@ contract DeployBoopContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
 
+        (address payable _registry,) = deployDeterministic( //-
+            "HappyAccountRegistry",
+            type(HappyAccountRegistry).creationCode,
+            abi.encode(owner),
+            DEPLOYMENT_SALT //-
+        );
+        happyAccountRegistry = HappyAccountRegistry(_registry);
+        
+
+        // -----------------------------------------------------------------------------------------
+
         (address payable _happyAccountImpl,) = deployDeterministic( //-
             "HappyAccountImpl",
             type(HappyAccount).creationCode,
@@ -75,7 +89,7 @@ contract DeployBoopContracts is BaseDeployScript {
             (address _happyAccountProxyFactory,) = deployDeterministic( //-
                 "HappyAccountUUPSProxyFactory",
                 type(HappyAccountUUPSProxyFactory).creationCode,
-                abi.encode(_happyAccountUUPSImpl),
+                abi.encode(_happyAccountUUPSImpl, happyAccountRegistry),
                 DEPLOYMENT_SALT //-
             );
             happyAccountUUPSProxyFactory = HappyAccountUUPSProxyFactory(_happyAccountProxyFactory);
@@ -92,7 +106,7 @@ contract DeployBoopContracts is BaseDeployScript {
             (address _happyAccountBeaconFactory,) = deployDeterministic( //-
                 "HappyAccountBeaconProxyFactory",
                 type(HappyAccountBeaconProxyFactory).creationCode,
-                abi.encode(happyAccountBeacon),
+                abi.encode(happyAccountBeacon, happyAccountRegistry),
                 DEPLOYMENT_SALT //-
             );
             happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
@@ -117,9 +131,24 @@ contract DeployBoopContracts is BaseDeployScript {
             // Send dust to address(0) to avoid the 25000 extra gas cost when sending to an empty account during simulation
             // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
             vm.deal(address(0), 1 wei);
+
+            vm.prank(owner);
+            _setAuthorizedFactory(isUUPS);
+
+        } else {
+            _setAuthorizedFactory(isUUPS);
         }
 
         // -----------------------------------------------------------------------------------------
+    }
+
+    function _setAuthorizedFactory(bool isUUPS) internal {
+        if(isUUPS){
+            happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
+        }
+        else{
+            happyAccountRegistry.setAuthorizedFactory(address(happyAccountBeaconProxyFactory), true);
+        }
     }
 
     /// @dev Deployment for tests. Avoids broadcasting transactions, allowing use of vm.prank().

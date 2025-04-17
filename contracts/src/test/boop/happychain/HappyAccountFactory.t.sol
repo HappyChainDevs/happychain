@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
+import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {Test} from "forge-std/Test.sol";
@@ -18,11 +19,14 @@ contract HappyAccountFactoryTest is Test {
     HappyAccountBeaconProxyFactory private factory;
     HappyAccount private implementation;
     HappyAccountBeacon private accountBeacon;
+    HappyAccountRegistry private happyAccountRegistry;
 
     function setUp() public {
+        happyAccountRegistry = new HappyAccountRegistry(address(this));
         implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
         accountBeacon = new HappyAccountBeacon(address(implementation), address(this));
-        factory = new HappyAccountBeaconProxyFactory(address(accountBeacon));
+        factory = new HappyAccountBeaconProxyFactory(address(accountBeacon), address(happyAccountRegistry));
+        happyAccountRegistry.setAuthorizedFactory(address(factory), true);
     }
 
     function testInitialDeployment() public {
@@ -33,6 +37,10 @@ contract HappyAccountFactoryTest is Test {
         // Deploy and verify
         address deployed = factory.createAccount(DEPLOYMENT_SALT, OWNER);
         assertTrue(_hasCode(deployed), "Code should exist at deployed address");
+
+        // check present in registry
+        assertEq(happyAccountRegistry.registeredAccounts(deployed), address(factory), "Account should be registered");
+        
 
         // Verify predicted and deployed addresses match
         assertEq(predicted, deployed, "Predicted address should match deployed address");

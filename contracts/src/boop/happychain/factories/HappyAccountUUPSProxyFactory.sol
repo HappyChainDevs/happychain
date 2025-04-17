@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
+
 
 /**
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
@@ -15,8 +17,13 @@ contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
     // ====================================================================================================
     // CONSTRUCTOR
 
-    constructor(address accountImplementation) {
+    constructor(address accountImplementation, address happyAccountRegistry) HappyAccountFactoryBase(happyAccountRegistry) {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
+    }
+
+    function getRegisteredAccountImplementation(address payable account) external view override returns (address) {
+        require(happyAccountRegistry.registeredAccounts(account)== address(this), "Not a registered account");
+        return HappyAccountUUPSProxy(account).getImplementation();
     }
 
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
