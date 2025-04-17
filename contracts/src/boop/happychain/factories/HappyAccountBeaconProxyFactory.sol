@@ -20,8 +20,7 @@ contract HappyAccountBeaconProxyFactory is HappyAccountFactoryBase {
         ACCOUNT_BEACON = beacon;
     }
 
-    function getRegisteredAccountImplementation(address payable account) external view override returns (address){
-        require(happyAccountRegistry.registeredAccounts(account) == address(this), "Not a registered account");
+    function getAccountImplementation() external view returns (address){
         return UpgradeableBeacon(ACCOUNT_BEACON).implementation();
     }
 

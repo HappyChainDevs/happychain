@@ -21,8 +21,7 @@ contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
-    function getRegisteredAccountImplementation(address payable account) external view override returns (address) {
-        require(happyAccountRegistry.registeredAccounts(account)== address(this), "Not a registered account");
+    function getAccountImplementation(address payable account) external view returns (address) {
         return HappyAccountUUPSProxy(account).getImplementation();
     }
 
