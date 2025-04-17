@@ -10,7 +10,7 @@ import { setWalletOpenSignal } from "#src/state/interfaceState.ts"
  */
 
 export function signalOpen() {
-    setWalletOpenSignal(true) // signals to the HappyBalance for a refetch
+    setWalletOpenSignal(true) // signals to the HappyBalance component for a data refetch
     patchTimeoutOn()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true })
 }
