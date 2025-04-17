@@ -19,8 +19,14 @@ const ChainSwitchingDemo = () => {
     }
 
     async function switchChain(chainId: string | number) {
-        await walletClient.switchChain({ id: Number(chainId) })
-        toast.success(`Chains switched successfully to chainID: ${chainId}.`)
+        try {
+            await walletClient.switchChain({ id: Number(chainId) })
+            toast.success(`Chains switched successfully to chainID: ${chainId}.`)
+        } catch (error) {
+            console.error("[switchChain]:", error)
+            const msg = error instanceof Error ? error.message : undefined
+            toast.error(`Error switching chains${msg ? `: ${msg}` : ""}`)
+        }
     }
 
     return (
