@@ -14,25 +14,30 @@ import type { EIP1193ErrorObject } from "./eip-1193-interfaces"
  * Given (at minimum) the error code, this creates an error object with a standard description.
  *
  * @param code number (eip 1193 error code)
+ * @param message optional message to enhance debugging
  * @param data optional data to enhance debugging
  * @returns serializable error object
  */
-export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1193ErrorObject {
+export function getEIP1193ErrorObjectFromCode(code: number, message?: string, data?: string): EIP1193ErrorObject {
     switch (code) {
         case EIP1193ErrorCodes.UserRejectedRequest:
-            return { code, message: "The user rejected the request.", data }
+            return { code, message: message || "The user rejected the request.", data }
         case EIP1193ErrorCodes.Unauthorized:
-            return { code, message: "The requested method and/or account has not been authorized by the user.", data }
+            return {
+                code,
+                message: message || "The requested method and/or account has not been authorized by the user.",
+                data,
+            }
         case EIP1193ErrorCodes.UnsupportedMethod:
-            return { code, message: "The Provider does not support the requested method.", data }
+            return { code, message: message || "The Provider does not support the requested method.", data }
         case EIP1193ErrorCodes.Disconnected:
-            return { code, message: "The Provider is disconnected from all chains.", data }
+            return { code, message: message || "The Provider is disconnected from all chains.", data }
         case EIP1193ErrorCodes.ChainDisconnected:
-            return { code, message: "The Provider is not connected to the requested chain.", data }
+            return { code, message: message || "The Provider is not connected to the requested chain.", data }
         case EIP1193ErrorCodes.SwitchChainError:
-            return { code, message: "An error occurred when attempting to switch chain.", data }
+            return { code, message: message || "An error occurred when attempting to switch chain.", data }
         default:
-            return { code: -1, message: "An unknown RPC error occurred.", data }
+            return { code: -1, message: message || "An unknown RPC error occurred.", data }
     }
 }
 
