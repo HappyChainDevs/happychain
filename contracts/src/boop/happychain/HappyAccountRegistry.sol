@@ -5,7 +5,7 @@ import {Ownable} from "openzeppelin/access/Ownable.sol";
 
 contract HappyAccountRegistry is Ownable {
     mapping(address => bool) public isAuthorizedFactory;
-    mapping(address => address) public registeredAccounts; // account => factory
+    mapping(address account => address factory) public registeredAccounts;
 
     constructor(address owner) Ownable(owner){}
 

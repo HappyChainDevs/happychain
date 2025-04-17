@@ -61,7 +61,6 @@ abstract contract HappyAccountFactoryBase {
         return _getAddress(combinedSalt, contractCode);
     }
 
-    function getRegisteredAccountImplementation(address payable account) external view virtual returns (address);
 
     // ====================================================================================================
     // INTERNAL FUNCTIONS
