@@ -36,7 +36,7 @@ export function signalClosed() {
 const FIREBASE_MAGIC_TIMEOUT_MS = 8000
 
 /** Desired timeout fix */
-const FIREBASE_MAGIC_TIMEOUT_MS_FIX = 500
+const FIREBASE_MAGIC_TIMEOUT_MS_FIX = 3_000
 
 const originalSetTimeout = window.setTimeout
 
@@ -55,6 +55,6 @@ function patchTimeoutOn() {
     window.setTimeout = patchedSetTimeout
 }
 
-function patchTimeoutOff() {
+export function patchTimeoutOff() {
     window.setTimeout = originalSetTimeout
 }
