@@ -12,6 +12,7 @@ interface DisclosureSectionProps extends PropsWithChildren {
     title: string
     showWarning?: boolean
     warningText?: string
+    isOpen?: boolean
 }
 
 /**
@@ -19,10 +20,16 @@ interface DisclosureSectionProps extends PropsWithChildren {
  * message, and customizable content - for pertinent extra details in request popups.
  * It wraps content in a styled <details> block with toggle support.
  */
-const DisclosureSection = ({ title, showWarning = false, warningText, children }: DisclosureSectionProps) => {
+const DisclosureSection = ({
+    title,
+    showWarning = false,
+    warningText,
+    isOpen = false,
+    children,
+}: DisclosureSectionProps) => {
     return (
         <SectionBlock>
-            <details className={recipeDisclosureDetails({ intent: "neutral" })}>
+            <details className={recipeDisclosureDetails({ intent: "neutral" })} open={isOpen}>
                 <summary className={recipeDisclosureSummary()}>
                     <SubsectionTitle>{title}</SubsectionTitle>
                     <CaretDown size="1.25em" />

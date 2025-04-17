@@ -197,6 +197,7 @@ export const EthSendTransaction = ({
                         title="Decoded Function Data"
                         showWarning
                         warningText={"This ABI is not verified."}
+                        isOpen={true}
                     >
                         <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
                             <span className="opacity-75 text-xs">Function Name:</span>
