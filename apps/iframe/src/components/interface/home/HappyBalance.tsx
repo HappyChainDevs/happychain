@@ -1,12 +1,25 @@
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
+import { useEffect } from "react"
 import { useBalance } from "wagmi"
+import { walletOpenSignalAtom } from "#src/state/interfaceState.ts"
 import { userAtom } from "#src/state/user"
 import { formatUserBalance } from "#src/utils/formatUserBalance"
 
 export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
-    const { data: balance } = useBalance({ address: user?.address })
+    const { data: balance, refetch } = useBalance({
+        address: user?.address,
+        query: {
+            enabled: !!user?.address,
+        },
+    })
     const formattedBalance = formatUserBalance(balance?.value)
+    const [walletOpenSignal, setWalletOpenSignal] = useAtom(walletOpenSignalAtom)
+
+    useEffect(() => {
+        if (!walletOpenSignal) return
+        void refetch().then(() => setWalletOpenSignal(false))
+    }, [refetch, walletOpenSignal, setWalletOpenSignal])
 
     return (
         <div className="mx-auto">
