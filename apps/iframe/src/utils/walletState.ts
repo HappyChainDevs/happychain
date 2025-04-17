@@ -1,16 +1,16 @@
 import { AuthState, Msgs } from "@happy.tech/wallet-common"
 import { appMessageBus } from "#src/services/eventBus.ts"
 import { getAuthState } from "#src/state/authState.ts"
+import { setWalletOpenSignal } from "#src/state/interfaceState.ts"
 
 /**
  * Wallet State (open vs closed) is managed entirely through the WalletVisibility event here. This
  * provides a flexible way to open/close the wallet component from within the happy provider, inside
  * the wallet web-component on the app side, or from within the iframe.
- *
- *
  */
 
 export function signalOpen() {
+    setWalletOpenSignal(true) // signals to the HappyBalance for a refetch
     patchTimeoutOn()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true })
 }
