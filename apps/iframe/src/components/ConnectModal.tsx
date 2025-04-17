@@ -5,7 +5,7 @@ import { cx } from "class-variance-authority"
 import { useCallback, useEffect, useState } from "react"
 import { FirebaseErrorCode, isFirebaseError } from "#src/connections/firebase/errors.ts"
 import { iframeID } from "#src/requests/utils.ts"
-import { signalClosed } from "#src/utils/walletState.ts"
+import { patchTimeoutOff, signalClosed } from "#src/utils/walletState.ts"
 import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
@@ -85,7 +85,11 @@ const ConnectContent = () => {
         onSettled(response, _error) {
             // popup was blocked
             if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) return setPopupBlocked(true)
-            else setPopupBlocked(false)
+
+            setPopupBlocked(false)
+
+            // Remove timeout patch for next time in-case this is what caused the error
+            if (_error) patchTimeoutOff()
 
             // user just closed the popup without connecting
             // Don't need to log the error
