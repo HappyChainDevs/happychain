@@ -1,11 +1,11 @@
 import type { AbiParameter } from "viem"
 
 interface ArgsListProps {
-    args: readonly unknown[]
+    args: readonly unknown[] | undefined
     fnInputs: readonly AbiParameter[]
 }
 
-const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
+const ArgsList = ({ args = [], fnInputs }: ArgsListProps) => {
     return (
         <ul className="flex flex-col gap-2 w-full mt-2 px-2 py-1">
             {args.map((arg, idx) => {
@@ -24,7 +24,7 @@ const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
                         </span>
 
                         <span className="flex flex-col gap-0.5">
-                            <span className="font-mono bg-neutral/10 dark:bg-neutral/30 px-2 py-1 rounded-md text-xs overflow-hidden text-ellipsis hover:break-words max-w-full">
+                            <span className="font-mono bg-neutral/10 dark:bg-neutral px-2 py-1 rounded-md text-xs overflow-hidden text-ellipsis hover:break-words max-w-full">
                                 {value}
                             </span>
                             <span className="text-[10px] font-medium opacity-50">{type}</span>

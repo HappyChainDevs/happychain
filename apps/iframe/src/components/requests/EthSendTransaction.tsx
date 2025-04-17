@@ -15,7 +15,8 @@ import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import { BlobTxWarning } from "./BlobTxWarning"
-import DecodedData from "./common/DecodedData"
+import ArgsList from "./common/ArgsList"
+import DisclosureSection from "./common/DisclosureSection"
 import { GasFieldName } from "./common/GasFieldDisplay"
 import {
     FormattedDetailsLine,
@@ -191,14 +192,33 @@ export const EthSendTransaction = ({
                     </SubsectionBlock>
                 </SectionBlock>
 
-                {decodedData && <DecodedData data={decodedData} />}
+                {decodedData && (
+                    <DisclosureSection
+                        title="Decoded Function Data"
+                        showWarning
+                        warningText={"This ABI is not verified."}
+                    >
+                        <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
+                            <span className="opacity-75 text-xs">Function Name:</span>
+                            <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
+                                {decodedData.abiFuncDef.name}
+                            </span>
+                        </div>
 
-                <SectionBlock>
-                    <SubsectionBlock>
-                        <SubsectionTitle>Raw Request</SubsectionTitle>
+                        {decodedData.args?.length && (
+                            <div className="w-full">
+                                <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
+                            </div>
+                        )}
+                    </DisclosureSection>
+                )}
+
+                <DisclosureSection title="Raw Request">
+                    <div className="grid gap-4 p-2">
                         <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                    </SubsectionBlock>
-                </SectionBlock>
+                    </div>
+                </DisclosureSection>
+
                 {tx.type === TransactionType.EIP4844 && (
                     <SectionBlock>
                         <BlobTxWarning onReject={reject} />
