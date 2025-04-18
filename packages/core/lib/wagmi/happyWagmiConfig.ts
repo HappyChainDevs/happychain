@@ -11,6 +11,7 @@ import { happyProvider } from "../happyProvider/initialize"
  * ```ts twoslash
  * import { happyProvider, happyWagmiConnector, happyChainSepolia } from "@happy.tech/core"
  * import { type Config, createConfig, custom } from "@wagmi/core"
+ * import { connect } from "@wagmi/core"
  *
  * export const config: Config = createConfig({
  *  chains: [happyChainSepolia],
@@ -19,6 +20,8 @@ import { happyProvider } from "../happyProvider/initialize"
  *      [happyChainSepolia.id]: custom(happyProvider),
  *  },
  * })
+ * 
+ * 
  *
  */
 export function happyWagmiConnector(): CreateConnectorFn {
