@@ -16,3 +16,7 @@ export type { Prettify, Optional } from "@happy.tech/common"
 
 // === UTILITIES ===================================================================================
 export { computeHappyTxHash } from "./utils/computeHappyTxHash"
+
+// === ENUMS =======================================================================================
+export { EntryPointStatus } from "./tmp/interface/status"
+export { StateRequestStatus } from "./tmp/interface/HappyTxState"
