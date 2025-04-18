@@ -26,7 +26,7 @@ import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.so
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "openzeppelin/utils/ReentrancyGuardTransient.sol";
 
-/// @notice cf. {EntryPoint.submit}
+/// @notice cf. {submit}
 contract EntryPoint is Staking, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
