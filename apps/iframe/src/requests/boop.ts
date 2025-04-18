@@ -106,7 +106,7 @@ export async function sendBoop(
             validateGasLimit: 0n,
             validatePaymentGasLimit: 0n,
             // For sponsored transactions, use default/empty values, submitter will replace them
-            paymaster: isSponsored ? zeroAddress : ("0x0" as Address),
+            payer: isSponsored ? zeroAddress : ("0x0" as Address), //@todo - replace zeroAddress with env variable ?
             executeGasLimit: 0n,
             gasLimit: 0n,
             // If sponsored : use minimal values
@@ -114,7 +114,6 @@ export async function sendBoop(
             maxFeePerGas: isSponsored ? 0n : 1200000000n,
             submitterFee: isSponsored ? 0n : 100n,
             callData: processedCallData as Hex,
-            paymasterData: "0x" as Hex,
             validatorData: "0x" as Hex,
             extraData: "0x" as Hex,
         }
@@ -198,7 +197,7 @@ export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: Happy
         logs: receipt.logs || [],
         logsBloom: receipt.txReceipt.logsBloom || "0x0",
         status: receipt.status === EntryPointStatus.Success ? "0x1" : "0x0",
-        to: receipt.dest,
+        to: receipt.dest, // @todo - dest is not defined in HappyTxReceipt ? `to` is required in a TransactionReceipt though - TBD
         transactionHash: hash,
         transactionIndex: receipt.txReceipt.transactionIndex || "0x0",
         type: receipt.txReceipt.type || "eip1559",
