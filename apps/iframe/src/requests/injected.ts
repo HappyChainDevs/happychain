@@ -202,9 +202,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     nonceTrack,
                     nonceValue,
                     value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                    paymaster: zeroAddress as Address,
+                    payer: zeroAddress as Address, //@todo - replace zeroAddress with env variable ?
                     callData: tx.data || ("0x" as Hex),
-                    paymasterData: "0x" as Hex,
                     validatorData: "0x" as Hex,
                     extraData: "0x" as Hex,
                     gasLimit: 0n,
