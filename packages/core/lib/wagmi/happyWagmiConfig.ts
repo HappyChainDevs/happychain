@@ -20,8 +20,8 @@ import { happyProvider } from "../happyProvider/initialize"
  *      [happyChainSepolia.id]: custom(happyProvider),
  *  },
  * })
- *
- *
+ * 
+ * const connectionResult = await connect(config, { connector: happyWagmiConnector() })
  *
  */
 export function happyWagmiConnector(): CreateConnectorFn {
