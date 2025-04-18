@@ -146,7 +146,8 @@ test-happyAccountFactory:
 .PHONY: test-happyAccountFactory
 
 test-happyAccount-upgradeability:
-	forge test --match-contract UpgradeSCATest -vvv
+	forge test --match-contract UpgradeHappyAccountUUPSProxyTest -vvv
+	forge test --match-contract UpgradeHappyAccountBeaconProxyTest -vvv
 .PHONY: test-happyAccount-upgradeability
 
 test-predictDeploymentAddress:

@@ -7,6 +7,12 @@ import {ExtensionType} from "boop/interfaces/Types.sol";
 // ENTRYPOINT EVENTS
 
 /**
+ * This event is emitted by {EntryPoint.submit} just before executing a Boop, to delimit
+ * the Boop execution logs for easier indexing and improved visibility on block explorers.
+ */
+event BoopExecutionStarted();
+
+/**
  * This event exposes a Boop as an event and is emitted by {EntryPoint.submit}, for easier
  * indexing of Boops and easier visibility on block explorers.
  *
@@ -31,12 +37,6 @@ event BoopSubmitted(
     bytes validatorData,
     bytes extraData
 );
-
-/**
- * When {EntryPoint.submit} is about to execute a Boop, emitted to delimit logs from the Boop execution
- * using the {boop.account} and {keccak256(encodedBoop)}.
- */
-event BoopExecutionStarted(address indexed account, bytes32 indexed boopHash);
 
 /**
  * When the {IAccount.execute} call succeeds but reports that the

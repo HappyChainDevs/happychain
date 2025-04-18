@@ -137,7 +137,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         // 4. Execute the call
 
         // Emit event to mark the start of Boop execution for log delimiting, using the hash of the encoded Boop
-        emit BoopExecutionStarted(boop.account, keccak256(encodedBoop));
+        emit BoopExecutionStarted();
 
         bytes memory executeCallData = abi.encodeCall(IAccount.execute, (boop));
         uint256 gasBeforeExecute = gasleft();
