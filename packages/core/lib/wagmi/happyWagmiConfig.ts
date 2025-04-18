@@ -20,8 +20,8 @@ import { happyProvider } from "../happyProvider/initialize"
  *      [happyChainSepolia.id]: custom(happyProvider),
  *  },
  * })
- * 
- * 
+ *
+ *
  *
  */
 export function happyWagmiConnector(): CreateConnectorFn {
