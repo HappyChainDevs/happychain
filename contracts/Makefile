@@ -267,7 +267,7 @@ docs:
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@forge doc || true
+	@forge doc --serve --port 4000 || true
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
 .PHONY: docs
 
