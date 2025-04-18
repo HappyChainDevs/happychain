@@ -21,10 +21,6 @@ contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
-    function getAccountImplementation(address payable account) external view returns (address) {
-        return HappyAccountUUPSProxy(account).getImplementation();
-    }
-
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
     function _prepareContractCode(address owner) internal view override returns (bytes memory) {
         bytes memory creationCode = type(ERC1967Proxy).creationCode;
