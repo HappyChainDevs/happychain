@@ -88,7 +88,11 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         // 1. Validate gas price & payer balance, validate & update nonce
 
         if (tx.gasprice > boop.maxFeePerGas) {
-            revert GasPriceTooHigh();
+            if (isSimulation) {
+                output.feeTooLowDuringSimulation = true;
+            } else {
+                revert GasPriceTooHigh();
+            }
         }
 
         if (boop.payer != address(0) && boop.payer != boop.account) {

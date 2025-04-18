@@ -123,6 +123,11 @@ struct SubmitOutput {
      */
     bool futureNonceDuringSimulation;
     /**
+     * If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the
+     * current gas price.
+     */
+    bool feeTooLowDuringSimulation;
+    /**
      * Status of the call specified by the boop.
      */
     CallStatus callStatus;
