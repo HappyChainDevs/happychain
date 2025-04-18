@@ -1,5 +1,5 @@
-import { LogTag } from "@happy.tech/common"
-import { deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
+import { LogTag, Map2, Mutex } from "@happy.tech/common"
+import { abi as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
 import {
     EntryPointStatus,
     type HappyTx,
@@ -23,17 +23,59 @@ import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
 import { logger } from "#src/utils/logger"
 
-// @todo - rework nonce management system to be similar to previous implementation in userops.ts
-//         (getNextNonce, getOnchainNonce, deleteNonce ; getAcountNonce too ?)
-export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
+/**
+ * Local cache of nonces to avoid repeated
+ */
+const nonces = new Map2<Address, bigint, bigint>()
+const nonceMutexes = new Map2<Address, bigint, Mutex>()
+
+/**
+ * Deletes cached nonce
+ */
+export function deleteNonce(account: Address, nonceTrack = 0n): void {
+    nonces.delete(account, nonceTrack)
+}
+
+/**
+ * Returns the next nonce for the given account.
+ * Uses cached values when available and only fetches from chain when needed.
+ */
+export async function getNextNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
+    const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
+    return mutex.locked(async () => {
+        const nonce = await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
+
+        nonces.set(account, nonceTrack, nonce + 1n)
+        return nonce
+    })
+}
+
+/**
+ * Returns the nonce from the EntryPoint contract for a given account
+ */
+export async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     const publicClient = getPublicClient()
-    const nonce = await publicClient.readContract({
+    return await publicClient.readContract({
         address: happyAccAbsDeployment.HappyEntryPoint,
         abi: happyAccAbsAbis.HappyEntryPoint,
         functionName: "nonceValues",
         args: [account, nonceTrack],
     })
-    return nonce as unknown as bigint
+}
+
+/**
+ * Returns cached nonce.
+ * Fallback to fetching nonce from the EntryPoint contract.
+ */
+export async function getCurrentNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
+    const cachedNonce = nonces.get(account, nonceTrack)
+    if (cachedNonce !== undefined) {
+        return cachedNonce
+    }
+
+    const onchainNonce = await getOnchainNonce(account, nonceTrack)
+    nonces.set(account, nonceTrack, onchainNonce)
+    return onchainNonce
 }
 
 export type BoopSigner = (hash: Hash) => Promise<Hex>
@@ -42,14 +84,17 @@ export type SendBoopArgs = {
     tx: RpcTransactionRequest
     signer: BoopSigner
     isSponsored?: boolean
+    nonceTrack?: bigint
 }
 
-export async function sendBoop({ boopAccount, tx, signer, isSponsored }: SendBoopArgs, retry = 2): Promise<Hash> {
+export async function sendBoop(
+    { boopAccount, tx, signer, isSponsored, nonceTrack = 0n }: SendBoopArgs,
+    retry = 2,
+): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
 
     try {
-        const nonceTrack = 0n
-        const nonceValue = await getNonce(boopAccount, nonceTrack)
+        const nonceValue = await getNextNonce(boopAccount, nonceTrack)
 
         const processedCallData = tx.data
         const boop: HappyTx = {
@@ -121,6 +166,7 @@ export async function sendBoop({ boopAccount, tx, signer, isSponsored }: SendBoo
         return boopHash
     } catch (error) {
         logger.error(LogTag.SUBMITTER, "Boop submission failed: ", error)
+        deleteNonce(boopAccount, nonceTrack)
         if (retry > 0) {
             console.log(`Retrying Boop submission (${retry} attempts left)...`)
             return sendBoop({ boopAccount, tx, signer, isSponsored }, retry - 1)
