@@ -36,7 +36,7 @@ import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
-import { formatBoopReceiptToTransactionReceipt, formatTransaction, getNonce, sendBoop } from "./boop"
+import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import { getSessionKeyForTarget } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
@@ -178,20 +178,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
             const boopAccount = await getBoopAccount()
-
             if (boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
-                // In Boop, nonces are stored per account and nonce track in the EntryPoint
-                const nonceTrack = 0n // Default nonce track
-
-                try {
-                    return await getNonce(address as Address, nonceTrack)
-                } catch (error) {
-                    console.error("Encountered error while fetching nonce:", error)
-                    throw error
-                }
+                const nonceTrack = 0n
+                return await getCurrentNonce(address as Address, nonceTrack)
             }
-
-            return await sendToPublicClient(app, request)
+            throw new InvalidAddressError({ address })
         }
 
         case "eth_estimateGas": {
@@ -201,7 +192,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 if (!boopAccount) throw new Error("Boop account not initialized")
 
                 const nonceTrack = 0n // Default nonce track
-                const nonceValue = await getNonce(boopAccount.address, nonceTrack)
+                const nonceValue = await getCurrentNonce(boopAccount.address, nonceTrack)
 
                 const boop: HappyTx = {
                     account: boopAccount.address,

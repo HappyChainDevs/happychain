@@ -44,7 +44,7 @@ import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestReq
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
-import { formatBoopReceiptToTransactionReceipt, formatTransaction, getNonce, sendBoop } from "./boop"
+import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import {
     checkIsSessionKeyExtensionInstalled,
     installSessionKeyExtension,
@@ -182,15 +182,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             const boopAccount = await getBoopAccount()
             if (boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
                 const nonceTrack = 0n
-                try {
-                    return await getNonce(address as Address, nonceTrack)
-                } catch (error) {
-                    console.error("Error fetching nonce:", error)
-                    throw error
-                }
+                return await getCurrentNonce(address as Address, nonceTrack)
             }
-
-            return await sendToInjectedClient(app, request)
+            throw new InvalidAddressError({ address })
         }
 
         case "eth_estimateGas": {
@@ -200,7 +194,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             try {
                 if (!boopAccount) throw new Error("Boop account not initialized")
                 const nonceTrack = 0n // Default nonce track
-                const nonceValue = await getNonce(boopAccount.address, nonceTrack)
+                const nonceValue = await getCurrentNonce(boopAccount.address, nonceTrack)
 
                 const boop: HappyTx = {
                     account: boopAccount.address,
