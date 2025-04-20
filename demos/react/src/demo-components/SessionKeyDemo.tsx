@@ -4,34 +4,31 @@ import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import useClients from "../useClients"
+import { publicClient, walletClient } from "../clients"
 
 const SessionKeyDemo = () => {
     const { user, requestSessionKey } = useHappyWallet()
-    const { walletClient, publicClient } = useClients()
     const [counter, setCounter] = useState<bigint | undefined>()
     const [loading, setLoading] = useState(false)
 
     const getCounterValue = useCallback(async () => {
-        if (!publicClient) throw new Error("Public client not initialized")
-
         return await publicClient.readContract({
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "getCount",
             account: user?.address,
         })
-    }, [publicClient, user])
+    }, [user])
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: missing counter by design
     useEffect(() => {
-        if (!publicClient || !user) return
+        if (!user) return
         setLoading(true)
         getCounterValue().then((value) => {
             if (!counter) setCounter(value)
             setLoading(false)
         })
-    }, [user, publicClient, getCounterValue])
+    }, [user, getCounterValue])
 
     async function submitIncrement() {
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
@@ -47,7 +44,6 @@ const SessionKeyDemo = () => {
         try {
             const hash = await submitIncrement()
             if (!hash) return
-            if (!publicClient) return
 
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
             if (receipt.status === "reverted") {

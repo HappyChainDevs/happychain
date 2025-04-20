@@ -1,7 +1,7 @@
 import { useHappyWallet } from "@happy.tech/react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import useClients from "../useClients"
+import { publicClient, walletClient } from "../clients"
 
 const WalletCallsDemo = () => {
     const [signDelayCountdown, setSignDelayCountdown] = useState(0)
@@ -9,7 +9,6 @@ const WalletCallsDemo = () => {
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
     const { user } = useHappyWallet()
-    const { walletClient, publicClient } = useClients()
 
     async function getBlock() {
         const block = await publicClient.getBlock()
@@ -17,7 +16,7 @@ const WalletCallsDemo = () => {
     }
 
     async function signMessage(message: string) {
-        if (!user || !walletClient) {
+        if (!user) {
             toast.error("no user connected")
             return
         }
@@ -26,7 +25,7 @@ const WalletCallsDemo = () => {
 
         const signature = await walletClient.signMessage({ message })
 
-        const valid = await publicClient!.verifyMessage({
+        const valid = await publicClient.verifyMessage({
             address: user?.controllingAddress,
             message,
             signature,
@@ -42,7 +41,7 @@ const WalletCallsDemo = () => {
     }
 
     async function signMessageWithDelay(message: string) {
-        if (!user || !walletClient) {
+        if (!user) {
             toast.error("no user connected")
             return
         }

@@ -2,14 +2,13 @@ import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
-import useClients from "../useClients"
+import { walletClient } from "../clients"
 
 const WalletFunctionalityDemo = () => {
     const { user, showSendScreen, loadAbi } = useHappyWallet()
-    const { walletClient } = useClients()
 
     async function addNewToken() {
-        const watchAssetCall = await walletClient?.watchAsset({
+        const watchAssetCall = await walletClient.watchAsset({
             type: "ERC20",
             options: {
                 address: deployment.MockTokenA,
@@ -30,7 +29,7 @@ const WalletFunctionalityDemo = () => {
     /** mints 1 MTA token to the connected account */
     async function mintTokens() {
         try {
-            if (!walletClient || !user?.address) return
+            if (!user?.address) return
             const writeCallResult = await walletClient.writeContract({
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
