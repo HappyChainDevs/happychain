@@ -52,6 +52,6 @@ export type {
     EIP1193UserRejectedRequestError,
 } from "@happy.tech/wallet-common"
 
-export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
+export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi"
 
 export type { BadgeProps } from "./badge/define"
