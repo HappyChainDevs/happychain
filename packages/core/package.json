@@ -13,17 +13,9 @@
             "default": "./dist/index.es.js"
         }
     },
-    "peerDependencies": {
+    "dependencies": {
         "@wagmi/core": "^2.16.3",
         "viem": "^2.21.53"
-    },
-    "peerDependenciesMeta": {
-        "@wagmi/core": {
-            "optional": true
-        },
-        "viem": {
-            "optional": true
-        }
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
