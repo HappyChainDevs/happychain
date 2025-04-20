@@ -1,18 +1,16 @@
 import { happyChainSepolia } from "@happy.tech/core"
 import { toast } from "sonner"
 import { gnosis } from "viem/chains"
-import useClients from "../useClients"
+import { walletClient } from "../clients"
 
 const ChainSwitchingDemo = () => {
-    const { walletClient } = useClients()
-
     async function addChain() {
-        await walletClient?.addChain({ chain: gnosis })
+        await walletClient.addChain({ chain: gnosis })
         toast.success(`Chain details added: ${gnosis.id}.`)
     }
     async function addConflictedChain() {
         try {
-            await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
+            await walletClient.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
             toast.success(`Chain details added: ${gnosis.id}.`)
         } catch (error) {
             console.error("[addConflictedChain]:", error)
@@ -21,7 +19,7 @@ const ChainSwitchingDemo = () => {
     }
 
     async function switchChain(chainId: string | number) {
-        await walletClient?.switchChain({ id: Number(chainId) })
+        await walletClient.switchChain({ id: Number(chainId) })
         toast.success(`Chains switched successfully to chainID: ${chainId}.`)
     }
 
