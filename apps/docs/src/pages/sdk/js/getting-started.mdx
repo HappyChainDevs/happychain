@@ -73,7 +73,7 @@ const publicClient = createHappyPublicClient() // [!code focus]
 const walletClient = createHappyWalletClient() // [!code focus]
 ```
 
-```ts [Wagmi] twoslash
+```ts [Wagmi]
 import { happyChainSepolia } from "@happy.tech/core"
 import { createHappyChainWagmiConfig } from "@happy.tech/core/wagmi"
 import { connect } from "@wagmi/core"
@@ -99,7 +99,7 @@ const publicClient = createPublicClient({ transport }) // [!code focus]
 const walletClient = createWalletClient({ transport }) // [!code focus]
  ```
 
-```ts [Wagmi (custom)] twoslash
+```ts [Wagmi (custom)]
 import { happyChainSepolia, happyProvider } from "@happy.tech/core"
 import { happyWagmiConnector } from "@happy.tech/core/wagmi"
 import { connect, createConfig, custom } from "@wagmi/core"

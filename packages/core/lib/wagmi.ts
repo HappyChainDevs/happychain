@@ -16,10 +16,10 @@ const { happyProvider } = await import("@happy.tech" + "/core")
  *
  * @example
  * ### Connecting with the custom wagmi connector
- * ```ts twoslash
- * import { happyProvider, happyWagmiConnector, happyChainSepolia } from "@happy.tech/core"
- * import { type Config, createConfig, custom } from "@wagmi/core"
- * import { connect } from "@wagmi/core"
+ * ```ts
+ * import { happyProvider, happyChainSepolia } from "@happy.tech/core"
+ * import { happyWagmiConnector } from "@happy.tech/core/wagmi"
+ * import { type Config, connect, createConfig, custom } from "@wagmi/core"
  *
  * export const config: Config = createConfig({
  *  chains: [happyChainSepolia],
@@ -48,8 +48,9 @@ export function happyWagmiConnector(): CreateConnectorFn {
  * Creates a single-chain Wagmi configuration for use with the HappyWallet.
  *
  * @example
- * ```ts twoslash
- * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
+ * ```ts
+ * import { happyChainSepolia } from "@happy.tech/core"
+ * import { createHappyChainWagmiConfig } from "@happy.tech/core/wagmi"
  * import { connect } from "@wagmi/core"
  *
  * const config = createHappyChainWagmiConfig(happyChainSepolia)
