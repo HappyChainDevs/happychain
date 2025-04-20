@@ -42,7 +42,7 @@ The easiest way to acomplish this is by using our provided [`register`] method.
 [`register`]: /sdk/js/api/functions/register
 
 ```ts twoslash
-import { register } from '@happy.tech/core'
+import { register } from "@happy.tech/core"
 
 register()
 ```
@@ -127,7 +127,7 @@ shared info, such as wallet address and name.
 [`onUserUpdate`]: /sdk/js/api/functions/onUserUpdate
 
 ```ts twoslash
-import { onUserUpdate } from '@happy.tech/core'
+import { onUserUpdate } from "@happy.tech/core"
 
 // [!include ~/snippets/listeners.ts:onUserUpdate]
 ```
@@ -137,7 +137,7 @@ Alternatively, the current user is always exposed via the [`getCurrentUser`] cal
 [`getCurrentUser`]: /sdk/js/api/function/getCurrentUser
 
 ```ts twoslash
-import { getCurrentUser } from '@happy.tech/core'
+import { getCurrentUser } from "@happy.tech/core"
 
 // [!include ~/snippets/listeners.ts:getCurrentUser]
 ```
@@ -146,7 +146,7 @@ import { getCurrentUser } from '@happy.tech/core'
 current user, you should write your code as follows:
 
 ```ts twoslash
-import { type HappyUser, getCurrentUser, onUserUpdate } from '@happy.tech/core'
+import { type HappyUser, getCurrentUser, onUserUpdate } from "@happy.tech/core"
 
 // [!include ~/snippets/listeners.ts:getCurrentUserExample]
 ```
@@ -188,8 +188,8 @@ import {
     createHappyChainWagmiConfig,
     happyChainSepolia,
     requestSessionKey
-} from '@happy.tech/core'
-import { writeContract } from '@wagmi/core'
+} from "@happy.tech/core"
+import { writeContract } from "@wagmi/core"
 import { parseAbi, type Hash } from "viem"
 
 const config = createHappyChainWagmiConfig(happyChainSepolia)
