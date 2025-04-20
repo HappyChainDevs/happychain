@@ -60,15 +60,14 @@ The `HappyWalletProvider` takes care of calling the [`register()`] function for 
 To set up your web3 integration (via Viem, Wagmi, Ethers), see the [corresponding
 section][js-web3-integration] in the "Getting started with JavaScript/TypeScript" page.
 
-Of particular relevance to React users, we provide an easy way to create a wagmi connector
-([`happyWagmiConnector`]) and a wagmi config ([`createHappyChainWagmiConfig`]). Don't forget to call
-the wagmi [`connect`] function!
-
-[`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
-[`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig
-[`connect`]: https://wagmi.sh/core/api/actions/connect
+Of particular relevance to React users, we provide an easy way to create a Wagmi config
+([`createHappyChainWagmiConfig`]), and a Wagmi connector if you need to customize the config
+([`happyWagmiConnector`]). Don't forget to call the Wagmi [`connect`] function!
 
 [js-web3-integration]: /sdk/js/getting-started#web3-integration
+[`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig
+[`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
+[`connect`]: https://wagmi.sh/core/api/actions/connect
 
 ### Getting the Active User
 

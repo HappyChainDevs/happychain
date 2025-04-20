@@ -67,8 +67,10 @@ The most common examples are below, but it should be fully compatible with most 
 :::code-group
 
 ```ts [Viem] twoslash
-import { happyProvider } from '@happy.tech/core' 
-// [!include ~/snippets/createClients.ts:viem]
+import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/core"
+
+const publicClient = createHappyPublicClient() // [!code focus]
+const walletClient = createHappyWalletClient() // [!code focus]
 ```
 
 ```ts [Wagmi] twoslash
@@ -80,8 +82,37 @@ const result = await connect(config, {connector: config.connectors[0]}) // [!cod
 ```
 
 ```ts [Ethers] twoslash
-import { happyProvider } from '@happy.tech/core'
-// [!include ~/snippets/createClients.ts:ethers]
+import { happyProvider } from "@happy.tech/core"
+import { BrowserProvider } from "ethers"
+
+const ethersProvider = new BrowserProvider(happyProvider) // [!code focus]
+```
+
+```ts [Viem (custom)] twoslash
+// Don't include this in the snippet!
+import { happyProvider } from "@happy.tech/core"
+import { createPublicClient, createWalletClient, custom } from "viem"
+
+const transport = custom(happyProvider) // [!code focus]
+const publicClient = createPublicClient({ transport }) // [!code focus]
+const walletClient = createWalletClient({ transport }) // [!code focus]
+ ```
+
+```ts [Wagmi (custom)] twoslash
+import { happyChainSepolia, happyProvider } from "@happy.tech/core"
+import { happyWagmiConnector } from "@happy.tech/core"
+import { connect, createConfig, custom } from "@wagmi/core"
+
+const connector = happyWagmiConnector()
+const config = createConfig({
+        chains: [happyChainSepolia],
+        connectors: [connector],
+        multiInjectedProviderDiscovery: false,
+        transports: {
+            [happyChainSepolia.id]: custom(happyProvider),
+        },
+    })
+const result = await connect(config, { connector })
 ```
 
 :::
