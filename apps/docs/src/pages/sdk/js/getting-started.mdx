@@ -73,8 +73,10 @@ import { happyProvider } from '@happy.tech/core'
 
 ```ts [Wagmi] twoslash
 import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
+import { connect } from "@wagmi/core"
 
-const config = createHappyChainWagmiConfig(happyChainSepolia)
+const config = createHappyChainWagmiConfig(happyChainSepolia)// [!code focus]
+const result = await connect(config, {connector: config.connectors[0]}) // [!code focus]
 ```
 
 ```ts [Ethers] twoslash
