@@ -13,7 +13,6 @@ import { happyProvider } from "../happyProvider/initialize"
  * import { type Config, createConfig, custom } from "@wagmi/core"
  * import { connect } from "@wagmi/core"
  *
- * // ---cut---
  * export const config: Config = createConfig({
  *  chains: [happyChainSepolia],
  *  connectors: [happyWagmiConnector()], // voila!
@@ -45,7 +44,6 @@ export function happyWagmiConnector(): CreateConnectorFn {
  * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
  * import { connect } from "@wagmi/core"
  *
- * // ---cut---
  * const config = createHappyChainWagmiConfig(happyChainSepolia)
  * const result = await connect(config, {connector: config.connectors[0]})
  * ```
