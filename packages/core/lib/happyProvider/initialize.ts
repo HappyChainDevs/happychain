@@ -13,7 +13,15 @@ import type { Abi, Address, EIP1193Provider } from "viem"
 import { config } from "../config"
 import { HappyProviderImplem, HappyProviderSSRSafe } from "./happyProvider"
 import type { HappyProvider } from "./interface"
-import { registerListeners } from "./listeners"
+import {
+    type AuthStateUpdateCallback,
+    type DisplayOverlayErrorCallback,
+    type IframeInitCallback,
+    type ListenerUnsubscribeFn,
+    type UserUpdateCallback,
+    type WalletVisibilityCallback,
+    registerListeners,
+} from "./listeners"
 
 const mipdStore = createStore()
 
@@ -188,17 +196,32 @@ export const happyProvider = (typeof window === "undefined"
     ? new HappyProviderSSRSafe()
     : (provider ?? initializeProvider() ?? new HappyProviderSSRSafe())) as HappyProvider satisfies EIP1193Provider
 
-const getListeners = () => {
-    return iframeMessageBus
-        ? registerListeners(iframeMessageBus)
-        : {
-              onUserUpdate: () => () => {},
-              onWalletVisibilityUpdate: () => () => {},
-              onAuthStateUpdate: () => () => {},
-              onIframeInit: () => () => {},
-              onDisplayOverlayError: () => () => {},
-          }
+const listeners = iframeMessageBus
+    ? registerListeners(iframeMessageBus)
+    : {
+          onUserUpdate: () => () => {},
+          onWalletVisibilityUpdate: () => () => {},
+          onAuthStateUpdate: () => () => {},
+          onIframeInit: () => () => {},
+          onDisplayOverlayError: () => () => {},
+      }
+
+export function onUserUpdate(callback: UserUpdateCallback): ListenerUnsubscribeFn {
+    return listeners.onUserUpdate(callback)
 }
 
-export const { onUserUpdate, onWalletVisibilityUpdate, onAuthStateUpdate, onIframeInit, onDisplayOverlayError } =
-    getListeners()
+export function onWalletVisibilityUpdate(callback: WalletVisibilityCallback): ListenerUnsubscribeFn {
+    return listeners.onWalletVisibilityUpdate(callback)
+}
+
+export function onAuthStateUpdate(callback: AuthStateUpdateCallback): ListenerUnsubscribeFn {
+    return listeners.onAuthStateUpdate(callback)
+}
+
+export function onIframeInit(callback: IframeInitCallback): ListenerUnsubscribeFn {
+    return listeners.onIframeInit(callback)
+}
+
+export function onDisplayOverlayError(callback: DisplayOverlayErrorCallback): ListenerUnsubscribeFn {
+    return listeners.onDisplayOverlayError(callback)
+}
