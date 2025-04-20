@@ -30,6 +30,7 @@ preview: ## Previews previously built docs
 # build vocs docs from supplied markdown
 vocs:
 	vocs build;
+	rm -rf vocs.config.ts.timestamp-*
 .PHONY: vocs
 
 # build and watch for changes using dev server
