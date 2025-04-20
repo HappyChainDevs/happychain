@@ -35,14 +35,19 @@ After installing, the first thing you will need to do, is wrap your app in the [
 ```tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { HappyWalletProvider } from '@happy.tech/react' // [!code focus]
+import { HappyWalletProvider } from '@happy.tech/react'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <HappyWalletProvider> // [!code focus]
+    <HappyWalletProvider>
         {/* <YourApp /> */}
-    </HappyWalletProvider> // [!code focus]
+    </HappyWalletProvider>
 )
 ```
+
+{/*
+The code above used to have code focus but was removed because it's broken.
+Tracking: https://github.com/wevm/vocs/issues/291
+*/}
 
 The `HappyWalletProvider` takes care of calling the [`register()`] function for you.
 
