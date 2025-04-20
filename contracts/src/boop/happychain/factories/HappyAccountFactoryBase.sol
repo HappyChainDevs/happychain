@@ -61,6 +61,16 @@ abstract contract HappyAccountFactoryBase {
         return _getAddress(combinedSalt, contractCode);
     }
 
+    /**
+     * Returns the implementation address for an account deployed by this factory.
+     *
+     * IMPORTANT: Depending on the factory & account implementation, it's possible that the result
+     * of this operation can't be trusted, even if the factory itself is trusted. For instance, for
+     * a factory that deploys UUPS proxy, the implementation contract itself must return its
+     * own address, and if the proxiy is upgradeable independently, then it is updateable to an
+     * implementation that can lie about its address.
+     */
+    function getAccountImplementation(address payable account) external view virtual returns (address);
 
     // ====================================================================================================
     // INTERNAL FUNCTIONS
