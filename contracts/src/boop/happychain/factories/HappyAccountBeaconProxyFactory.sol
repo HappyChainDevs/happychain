@@ -24,6 +24,10 @@ contract HappyAccountBeaconProxyFactory is HappyAccountFactoryBase {
         return UpgradeableBeacon(ACCOUNT_BEACON).implementation();
     }
 
+    function getAccountImplementation(address payable) external view override returns (address){
+        return UpgradeableBeacon(ACCOUNT_BEACON).implementation();
+    }
+
     /// @dev Prepares the contract creation code for a BeaconProxy contract.
     function _prepareContractCode(address owner) internal view override returns (bytes memory) {
         bytes memory creationCode = type(BeaconProxy).creationCode;
