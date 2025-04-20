@@ -122,10 +122,10 @@ const result = await connect(config, { connector })
 
 User changes, such as when a user logs in or out, can be subscribed to the [`onUserUpdate`] listener.
 If the `user` is undefined, then they are not currently logged in have or have logged out. 
-If the `user` is a [HappyUser](/sdk/js/api/type-aliases/HappyUser) then it will be populated with all their 
+If the `user` is a [HappyUser](/sdk/js/api/index/type-aliases/HappyUser) then it will be populated with all their
 shared info, such as wallet address and name.
 
-[`onUserUpdate`]: /sdk/js/api/functions/onUserUpdate
+[`onUserUpdate`]: /sdk/js/api/index/functions/onUserUpdate
 
 ```ts twoslash
 import { onUserUpdate } from "@happy.tech/core"
@@ -135,7 +135,7 @@ import { onUserUpdate } from "@happy.tech/core"
 
 Alternatively, the current user is always exposed via the [`getCurrentUser`] call.
 
-[`getCurrentUser`]: /sdk/js/api/function/getCurrentUser
+[`getCurrentUser`]: /sdk/js/api/index/function/getCurrentUser
 
 ```ts twoslash
 import { getCurrentUser } from "@happy.tech/core"
@@ -164,10 +164,10 @@ The SDK makes the following functions available for wallet interaction:
 - [`loadAbi(abi: Abi)`] — Prompts the user to approve the ABI, which is then used to decode
   transactions in approval popups.
 
-[`connect()`]: /sdk/js/api/functions/connect
-[`disconnect()`]: /sdk/js/api/functions/disconnect
-[`openWallet()`]: /sdk/js/api/functions/openWallet
-[`loadAbi(abi: Abi)`]: /sdk/js/api/functions/loadAbi
+[`connect()`]: /sdk/js/api/index/functions/connect
+[`disconnect()`]: /sdk/js/api/index/functions/disconnect
+[`openWallet()`]: /sdk/js/api/index/functions/openWallet
+[`loadAbi(abi: Abi)`]: /sdk/js/api/index/functions/loadAbi
 
 {/*
 NOTE — not documenting `showSendScreen` and `onWalletVisibilityUpdate` as we might want to
@@ -179,7 +179,7 @@ deprecate these functions.
 You can call [`requestSessionKey(contract: Address)`] to prompt the user to approve a session key
 authorizing the app to transact with the selected contract on the user's behalf.
 
-[`requestSessionKey(contract: Address)`]: /sdk/js/api/functions/requestSessionKey
+[`requestSessionKey(contract: Address)`]: /sdk/js/api/index/functions/requestSessionKey
 
 The session key is persisted between session, and further calls to the function simply return without
 prompting the user, so it is safe to always call this function before other actions.
@@ -216,7 +216,7 @@ You can disable the default styles by passing the `disable-styles` property. In 
 probably want to specify your own style, for which you need to pass the `overrideBadgeStyles` option
 to [`register`].
 
-[`register`]: /sdk/js/api/functions/register
+[`register`]: /sdk/js/api/index/functions/register
 
 :::code-group
 
@@ -235,7 +235,7 @@ to [`register`].
 The package exports the HappyChain chain information in Viem format. This includes the chain ID, RPC
 & explorer URLs, addresses of key contracts, and more.
 
-- [`happychainSepolia](/sdk/js/api/variables/happyChainSepolia)
+- [`happychainSepolia](/sdk/js/api/index/variables/happyChainSepolia)
 
 ```ts [twoslash]
 import { happyChainSepolia } from "@happy.tech/core"

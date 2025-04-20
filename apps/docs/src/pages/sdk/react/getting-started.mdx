@@ -51,7 +51,7 @@ Tracking: https://github.com/wevm/vocs/issues/291
 
 The `HappyWalletProvider` takes care of calling the [`register()`] function for you.
 
-[`register()`]: /sdk/js/api/functions/register
+[`register()`]: /sdk/js/api/index/functions/register
 
 ## Usage
 
@@ -65,8 +65,8 @@ Of particular relevance to React users, we provide an easy way to create a Wagmi
 ([`happyWagmiConnector`]). Don't forget to call the Wagmi [`connect`] function!
 
 [js-web3-integration]: /sdk/js/getting-started#web3-integration
-[`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig
-[`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
+[`createHappyChainWagmiConfig`]: /sdk/js/api/index/functions/createHappyChainWagmiConfig
+[`happyWagmiConnector`]: /sdk/js/api/index/functions/happyWagmiConnector
 [`connect`]: https://wagmi.sh/core/api/actions/connect
 
 ### Getting the Active User
@@ -75,7 +75,7 @@ The [`useHappyWallet`] hook returns the current user as a [`HappyUser`]
 if the user is connected, otherwise it returns undefined.
 
 [`useHappyWallet`]: /sdk/react/api/functions/useHappyWallet
-[`HappyUser`]: /sdk/js/api/type-aliases/HappyUser
+[`HappyUser`]: /sdk/js/api/index/type-aliases/HappyUser
 
 ```tsx twoslash
 import React from "react"
