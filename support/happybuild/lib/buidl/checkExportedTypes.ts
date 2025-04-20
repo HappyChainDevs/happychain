@@ -15,7 +15,7 @@ export async function checkExportedTypes(configs: Config[]) {
     let output = ""
     // ATTW does not like symlinks
     await withOutputsInExportDirs(configs, { js: false, types: true }, async () => {
-        output = await $`bun attw --pack --ignore-rules cjs-resolves-to-esm`.nothrow().text()
+        output = await $`bun attw --pack --ignore-rules cjs-resolves-to-esm --format table`.nothrow().text()
     })
 
     if (output.includes("No problems found")) return
