@@ -277,24 +277,28 @@ endef
 # Fix doc links in EntryPoint.sol for IAccount, IPaymaster, EntryPoint
 .PHONY: fix-doc-links restore-doc-links
 
-ENTRYPOINT_SOL := src/boop/core/EntryPoint.sol
+SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
 fix-doc-links:
-	@cp $(ENTRYPOINT_SOL) $(ENTRYPOINT_SOL).bak
-	@awk '\
-		/^[[:space:]]*\/\// || /^[[:space:]]*\*/ { \
-			gsub(/\{IAccount\}/, "[IAccount](/src/boop/interfaces/IAccount.sol/interface.IAccount.html)"); \
-			gsub(/\{IAccount\.execute\}/, "[IAccount.execute](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#execute)"); \
-			gsub(/\{IAccount\.payout\}/, "[IAccount.payout](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#payout)"); \
-			gsub(/\{IPaymaster\}/, "[IPaymaster](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html)"); \
-			gsub(/\{IPaymaster\.validatePayment\}/, "[IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment)"); \
-			gsub(/\{EntryPoint\}/, "[EntryPoint](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html)"); \
-			gsub(/\{EntryPoint\.submit\}/, "[EntryPoint.submit](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html#submit)"); \
-		} \
-		{ print }' $(ENTRYPOINT_SOL).bak > $(ENTRYPOINT_SOL)
+	@for file in $(SOL_FILES); do \
+		cp $$file $$file.bak; \
+		awk '\
+			/^[[:space:]]*\/\// || /^[[:space:]]*\*/ { \
+				gsub(/\{IAccount\}/, "[IAccount](/src/boop/interfaces/IAccount.sol/interface.IAccount.html)"); \
+				gsub(/\{IAccount\.execute\}/, "[IAccount.execute](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#execute)"); \
+				gsub(/\{IAccount\.payout\}/, "[IAccount.payout](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#payout)"); \
+				gsub(/\{IPaymaster\}/, "[IPaymaster](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html)"); \
+				gsub(/\{IPaymaster\.validatePayment\}/, "[IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment)"); \
+				gsub(/\{EntryPoint\}/, "[EntryPoint](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html)"); \
+				gsub(/\{EntryPoint\.submit\}/, "[EntryPoint.submit](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html#submit)"); \
+			} \
+			{ print }' $$file.bak > $$file; \
+	done
 
 restore-doc-links:
-	@mv $(ENTRYPOINT_SOL).bak $(ENTRYPOINT_SOL)
+	@for file in $(SOL_FILES); do \
+		if [ -f $$file.bak ]; then mv $$file.bak $$file; fi \
+	done
 
 docs: fix-doc-links
 	$(call run_forge_doc,)
