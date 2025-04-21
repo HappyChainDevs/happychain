@@ -24,9 +24,9 @@ then include somewhere in your html
 Alternatively, you can call `register` to auto-register the component on the page
 
 ```js
-import { register } from '@happy.tech/core'
+import { loadHappyWallet } from '@happy.tech/core'
 
-register()
+loadHappyWallet()
 ```
 
 ## EIP1193Provider

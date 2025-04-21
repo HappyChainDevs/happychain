@@ -7,9 +7,9 @@ import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
 /**
- * Options for the {@link register} function.
+ * Options for the {@link loadHappyWallet} function.
  */
-export type WalletRegisterOptions = {
+export type LoadHappyWalletOptions = {
     /**
      * The ID of the default chain to connect to, if it exists in the Happy Wallet.
      *
@@ -25,65 +25,65 @@ export type WalletRegisterOptions = {
 }
 
 /**
- * Registers the required components and initializes the SDK
+ * Loads the wallet into the webpage, enabling wallet actions and displaying the Happy Wallet
+ * widget.
  *
  * @example
  * Connect to HappyChain Sepolia
  * ```ts twoslash
- * import { register } from '@happy.tech/core'
+ * import { loadHappyWallet } from '@happy.tech/core'
  * // ---cut---
- * register()
+ * loadHappyWallet()
  * ```
  *
  * @example
  * Connect to a pre-defined chain
  * ```ts twoslash
- * import { register } from '@happy.tech/core'
+ * import { loadHappyWallet } from '@happy.tech/core'
  * import { happyChainSepolia } from '@happy.tech/core'
  * // ---cut---
- * register({ chainId: happyChainSepolia.id })
- * ```
- *
- * @example
- * Connect to a custom chain
- * ```ts twoslash
- * import { register } from '@happy.tech/core'
- * // ---cut---
- * register({ chainId: "0x7a69" }) // in hex format
+ * loadHappyWallet({ chainId: happyChainSepolia.id })
  * ```
  */
-export function register(opts: WalletRegisterOptions = {}) {
+export function loadHappyWallet(opts: LoadHappyWalletOptions = {}) {
     registerWallet(opts)
     registerOverlay(opts)
 }
 
-function registerWallet(opts: WalletRegisterOptions) {
-    // don't register if already exists on page
-    if (customElements.get("happy-wallet") || document.querySelector("happy-wallet")) {
-        return
+/**
+ * Unloads the wallet from the page, preventing wallet actions and hiding the Happy Wallet widget.
+ */
+export function unloadHappyWallet() {
+    const wallet = document.querySelector("happy-wallet")
+    if (wallet) wallet.remove()
+    const overlay = document.querySelector("happy-overlay")
+    if (overlay) overlay.remove()
+}
+
+function registerWallet(opts: LoadHappyWalletOptions) {
+    if (!customElements.get("happy-wallet")) {
+        define(HappyWallet, "happy-wallet", [], { shadow: true })
+        void defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
     }
 
-    define(HappyWallet, "happy-wallet", [], { shadow: true })
-    defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
+    if (document.querySelector("happy-wallet")) return // wallet already exists
 
     const chainId = (opts.chainId || defaultChain.id).toString()
-
     const iframe = createIframeSlot(chainId)
 
     const wallet = document.createElement("happy-wallet")
     wallet.setAttribute("chain-id", chainId)
     wallet.setAttribute("window-id", windowId)
     wallet.appendChild(iframe)
-
     document.body.appendChild(wallet)
 }
 
-function registerOverlay(_opts: WalletRegisterOptions) {
-    if (customElements.get("happy-overlay") || document.querySelector("happy-overlay")) {
-        return
+function registerOverlay(_opts: LoadHappyWalletOptions) {
+    if (!customElements.get("happy-wallet")) {
+        define(HappyOverlay, "happy-overlay", [], { shadow: true })
     }
 
-    define(HappyOverlay, "happy-overlay", [], { shadow: true })
+    if (document.querySelector("happy-overlay")) return // overlay already exists
 
     const overlay = document.createElement("happy-overlay")
     document.body.appendChild(overlay)

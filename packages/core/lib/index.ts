@@ -1,8 +1,8 @@
 export { happyProvider } from "./happyProvider"
 export type { HappyProvider } from "./happyProvider"
 
-export { register } from "./register"
-export type { WalletRegisterOptions } from "./register"
+export { loadHappyWallet } from "./loadHappyWallet"
+export type { LoadHappyWalletOptions } from "./loadHappyWallet"
 
 export {
     getCurrentUser,
