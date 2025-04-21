@@ -1,6 +1,12 @@
 import { Hono } from "hono"
 import type { Result } from "neverthrow"
-import type { ExecuteOutput, PendingHappyTxOutput, StateRequestOutput, SubmitOutput } from "#lib/client"
+import type {
+    EstimateGasOutput,
+    ExecuteOutput,
+    PendingHappyTxOutput,
+    StateRequestOutput,
+    SubmitOutput,
+} from "#lib/client"
 import { HappyBaseError } from "#lib/errors/happy-base-error"
 import { execute } from "#lib/handlers/submitter/execute"
 import { pendingByAccount } from "#lib/handlers/submitter/pendingByAccount"
@@ -35,7 +41,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await simulate(input)
-            return c.json(serializeBigInt(output))
+            const [response, code] = makeResponse<EstimateGasOutput>(output)
+            return c.json(response, code)
         },
     )
     .post(

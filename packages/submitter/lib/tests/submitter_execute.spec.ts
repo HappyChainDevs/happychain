@@ -101,7 +101,7 @@ describe("submitter_execute", () => {
             expect(BigInt(response.state.receipt.txReceipt.effectiveGasPrice)).toBeGreaterThan(0n)
             expect(response.state.receipt.txReceipt.from).toBeString()
             expect(BigInt(response.state.receipt.txReceipt.gasUsed)).toBeGreaterThan(0n)
-            expect(response.state.receipt.txReceipt.logs.length).toBe(2)
+            expect(response.state.receipt.txReceipt.logs.length).toBe(3)
             expect(response.state.receipt.txReceipt.logs[0]).toMatchObject({
                 address: expect.any(String),
                 blockHash: expect.any(String),

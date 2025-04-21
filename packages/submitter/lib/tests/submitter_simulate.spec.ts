@@ -110,8 +110,7 @@ describe("submitter_simulate", () => {
 
             const response = (await results.json()) as any
 
-            // TODO: this should be a more descriptive error
-            expect(results.status).toBe(200)
+            expect(results.status).toBe(422)
             expect(response.status).toBe(EntryPointStatus.UnexpectedReverted)
         })
 
