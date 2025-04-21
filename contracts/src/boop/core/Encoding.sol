@@ -151,7 +151,7 @@ library Encoding {
         }
     }
 
-    /// Decodes an encodedBoop that was encoded using {Encoding.encode}.
+    /// Decodes an encodedBoop that was encoded using {encode}.
     function decode(bytes calldata encodedBoop) internal pure returns (Boop memory result) {
         // First validate minimum length (196 bytes for the static fields)
         if (encodedBoop.length < DYNAMIC_FIELDS_OFFSET) revert MalformedBoop();
