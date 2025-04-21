@@ -7,6 +7,7 @@ export interface TransactionTable {
     from: Address
     chainId: number
     address: Address
+    value: string
     functionName: string | undefined
     args: string | undefined
     contractName: string | undefined

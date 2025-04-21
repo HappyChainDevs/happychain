@@ -122,7 +122,7 @@ export type TransactionManagerConfig = {
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
 
-    gas: {
+    gas?: {
         /** Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters. */
         eip1559?: EIP1559Parameters
         /**
@@ -179,7 +179,7 @@ export type TransactionManagerConfig = {
      * This is a record of aliases to ABIs. The aliases are used to reference the ABIs in the
      * transactions.
      */
-    abis: Record<string, Abi>
+    abis?: Record<string, Abi>
 
     /**
      * The expected interval (in seconds) for the creation of a new block on the blockchain.
@@ -402,14 +402,14 @@ export class TransactionManager {
         this.rpcLivenessMonitor = new RpcLivenessMonitor(this)
 
         this.chainId = _config.chainId
-        this.eip1559 = _config.gas.eip1559 ?? opStackDefaultEIP1559Parameters
-        this.abiManager = new ABIManager(_config.abis)
+        this.eip1559 = _config.gas?.eip1559 ?? opStackDefaultEIP1559Parameters
+        this.abiManager = new ABIManager(_config.abis ?? {})
 
-        this.baseFeeMargin = _config.gas.baseFeePercentageMargin ?? 20n
-        this.maxPriorityFeePerGas = _config.gas.maxPriorityFeePerGas
-        this.minPriorityFeePerGas = _config.gas.minPriorityFeePerGas
-        this.priorityFeeTargetPercentile = _config.gas.priorityFeeTargetPercentile ?? 50
-        this.priorityFeeAnalysisBlocks = _config.gas.priorityFeeAnalysisBlocks ?? 2
+        this.baseFeeMargin = _config.gas?.baseFeePercentageMargin ?? 20n
+        this.maxPriorityFeePerGas = _config.gas?.maxPriorityFeePerGas
+        this.minPriorityFeePerGas = _config.gas?.minPriorityFeePerGas
+        this.priorityFeeTargetPercentile = _config.gas?.priorityFeeTargetPercentile ?? 50
+        this.priorityFeeAnalysisBlocks = _config.gas?.priorityFeeAnalysisBlocks ?? 2
 
         this.rpcAllowDebug = _config.rpc.allowDebug ?? false
         this.blockTime = _config.blockTime ?? 2n

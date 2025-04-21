@@ -1,4 +1,4 @@
-import { type Hex, type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
+import { type Hex, type UUID, bigIntReplacer, bigIntReviver, bigIntToZeroPadded, createUUID } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
 import { type Address, type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
@@ -68,6 +68,11 @@ interface TransactionConstructorBaseConfig {
      */
     address: Address
     /**
+     * The value of the transaction in wei
+     * Defaults to 0n
+     */
+    value?: bigint
+    /**
      * The deadline of the transaction in seconds (optional)
      * This is used to try to cancel the transaction if it is not included in a block after the deadline to save gas
      */
@@ -110,6 +115,8 @@ export class Transaction {
     readonly contractName?: string
 
     readonly calldata: Hex
+
+    readonly value: bigint
 
     readonly deadline: number | undefined
 
@@ -158,6 +165,7 @@ export class Transaction {
         this.from = config.from
         this.chainId = config.chainId
         this.address = config.address
+        this.value = config.value ?? 0n
         this.deadline = config.deadline
         this.status = config.status ?? TransactionStatus.Pending
         this.attempts = config.attempts ?? []
@@ -270,6 +278,7 @@ export class Transaction {
             address: this.address,
             functionName: this.functionName,
             contractName: this.contractName,
+            value: bigIntToZeroPadded(this.value), // We convert the bigint value to a zero-padded string because 'value' can exceed the numeric limits of Number
             calldata: this.calldata,
             args: this.args ? JSON.stringify(this.args, bigIntReplacer) : undefined,
             deadline: this.deadline,
@@ -286,6 +295,7 @@ export class Transaction {
         return new Transaction(
             {
                 ...row,
+                value: BigInt(row.value),
                 args: row.args ? JSON.parse(row.args, bigIntReviver) : undefined,
                 attempts: JSON.parse(row.attempts, bigIntReviver),
                 collectionBlock: row.collectionBlock ? BigInt(row.collectionBlock) : undefined,
