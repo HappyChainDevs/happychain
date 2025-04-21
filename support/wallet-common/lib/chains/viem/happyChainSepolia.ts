@@ -81,6 +81,8 @@ const contracts = {
 
 /**
  * HappyChain testnet whose L1 is the Ethereum Sepolia testnet.
+ *
+ * Type: {@link Chain}
  */
 export const happyChainSepolia: Chain = {
     ...chainConfig,

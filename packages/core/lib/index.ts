@@ -15,13 +15,7 @@ export {
     onUserUpdate,
 } from "./functions.ts"
 
-export {
-    devnet,
-    happyChainSepolia,
-    defaultChain,
-    chains,
-    chainsById,
-} from "@happy.tech/wallet-common"
+export { devnet, happyChainSepolia } from "@happy.tech/wallet-common"
 
 export type {
     Chain,

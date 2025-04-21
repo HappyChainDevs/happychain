@@ -15,6 +15,7 @@ export default {
     excludePrivate: true,
     excludeProtected: true,
     excludeInternal: true,
+    excludeExternals: true,
     includeVersion: true,
     readme: "none",
 
@@ -39,7 +40,7 @@ export default {
     // ...
 
     // https://typedoc.org/options/organization
-    groupOrder: ["Functions", "Variables", "Errors", "*"],
+    groupOrder: ["Functions", "Variables", "*"],
     categoryOrder: ["Core", "Errors", "*"],
 
     // https://typedoc.org/options/validation/
@@ -53,7 +54,7 @@ export default {
     // https://typedoc-plugin-markdown.org/docs/options/display-options
     indexFormat: "list",
     parametersFormat: "list",
-    interfacePropertiesFormat: "table",
+    interfacePropertiesFormat: "list",
     classPropertiesFormat: "list",
     enumMembersFormat: "list",
     typeDeclarationFormat: "list",
@@ -63,7 +64,6 @@ export default {
     useCodeBlocks: true,
     expandObjects: true,
     expandParameters: true,
-    typeDeclarationVisibility: "compact",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
     navigationModel: {

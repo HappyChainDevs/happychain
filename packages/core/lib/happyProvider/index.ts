@@ -6,6 +6,8 @@ export const internalProvider: HappyProviderInternal = HappyProviderImplem.insta
 /**
  * HappyProvider is an [EIP1193](https://eips.ethereum.org/EIPS/eip-1193) Ethereum Provider.
  *
+ * Type: {@link HappyProvider}
+ *
  * @example
  * ### Setting up viem client
  * ```ts twoslash
@@ -17,7 +19,13 @@ export const internalProvider: HappyProviderInternal = HappyProviderImplem.insta
  * })
  * ```
  */
-export const happyProvider: HappyProvider = internalProvider
+// @ts-ignore
+export declare const happyProvider: HappyProvider
+
+/** @ignore */
+// @ts-ignore
+// biome-ignore lint/suspicious/noRedeclare: hide assignment from docs
+export const happyProvider = internalProvider
 
 export type { HappyProvider, HappyProviderInternal } from "./interface"
 
