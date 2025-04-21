@@ -10,7 +10,7 @@ import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
-
+import {console} from "forge-std/console.sol";
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
@@ -29,23 +29,28 @@ contract DeployBoopContracts is BaseDeployScript {
 
     HappyAccountUUPSProxyFactory public happyAccountUUPSProxyFactory;
 
-    function deploy() internal override {
+    bool private isLocal; // flag to indicate if the deployment is local, performs additional setup
+    bool private isUUPS; // flag to determine which proxy type to use
+    address public owner; // owner/deployer of deployed contracts
+
+    function run() public override {
         string memory config = vm.envOr("CONFIG", string(""));
-        bool isLocal = keccak256(bytes(config)) == keccak256(bytes("LOCAL"));
+        isLocal = keccak256(bytes(config)) == keccak256(bytes("LOCAL"));
 
         string memory proxyType = vm.envOr("PROXY_TYPE", string(""));
-        bool isUUPS = keccak256(bytes(proxyType)) == keccak256(bytes("UUPS"));
+        isUUPS = keccak256(bytes(proxyType)) == keccak256(bytes("UUPS"));
 
-        if (isLocal) {
-            require(
-                msg.sender == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-                "In local mode, please deploy with Anvil Account 0 to keep the deployment files deterministic."
-            );
-        }
+        // The owner is anvil address 0 in local testing and anvil deployments, and the HappyChain deployer otherwise.
+        owner = isLocal ? 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 : 0xEe3aE13ed56E877874a6C5FBe7cdA7fc8573a7bE;
 
-        // The owner is anvil address 0 in local testing, and the HappyChain deployer otherwise.
-        address owner = isLocal ? msg.sender : 0xEe3aE13ed56E877874a6C5FBe7cdA7fc8573a7bE;
+        vm.startBroadcast(owner);
+        deploy();
+        vm.stopBroadcast();
+        writeDeploymentJson();
+    }
 
+    function deploy() internal override {
+      
         // -----------------------------------------------------------------------------------------
 
         (address payable _entryPoint,) = deployDeterministic( //-
@@ -130,26 +135,19 @@ contract DeployBoopContracts is BaseDeployScript {
             // Send dust to address(0) to avoid the 25000 extra gas cost when sending to an empty account during simulation
             // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
             vm.deal(address(0), 1 wei);
-
-            vm.prank(owner);
-            _setAuthorizedFactory(isUUPS);
-        } else {
-            _setAuthorizedFactory(isUUPS);
         }
-
-        // -----------------------------------------------------------------------------------------
-    }
-
-    function _setAuthorizedFactory(bool isUUPS) internal {
+        
         if (isUUPS) {
             happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
         } else {
             happyAccountRegistry.setAuthorizedFactory(address(happyAccountBeaconProxyFactory), true);
         }
+
+        // -----------------------------------------------------------------------------------------
     }
 
-    /// @dev Deployment for tests. Avoids broadcasting transactions, allowing use of vm.prank().
+    /// @dev Deployment for tests
     function deployForTests() external {
-        deploy();
+        run();
     }
 }
