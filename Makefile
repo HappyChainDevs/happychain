@@ -107,8 +107,8 @@ clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
 build: node_modules ts.build ## Creates production builds
 .PHONY: build
 
-dev: node_modules ## Resets to dev (no-build) mode
-	$(call forall_make , $(TS_PKGS) , dev)
+reset-dev: node_modules ## Resets to dev (no-build) mode
+	$(call forall_make , $(TS_PKGS) , reset-dev)
 .PHONY: dev
 
 nuke: clean ## Removes build artifacts and dependencies 
