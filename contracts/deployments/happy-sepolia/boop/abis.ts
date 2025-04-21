@@ -202,6 +202,11 @@ const contractToAbi = ({
               "internalType": "bool"
             },
             {
+              "name": "feeTooLowDuringSimulation",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
               "name": "callStatus",
               "type": "uint8",
               "internalType": "enum CallStatus"
@@ -246,6 +251,12 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "BoopExecutionStarted",
+      "inputs": [],
+      "anonymous": false
     },
     {
       "type": "event",
@@ -469,301 +480,32 @@ const contractToAbi = ({
       "inputs": []
     }
   ],
-  "HappyAccount": [
+  "HappyAccountBeacon": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "_entrypoint",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "receive",
-      "stateMutability": "payable"
-    },
-    {
-      "type": "function",
-      "name": "ENTRYPOINT",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "UPGRADE_INTERFACE_VERSION",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "string",
-          "internalType": "string"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "addExtension",
-      "inputs": [
-        {
-          "name": "extension",
+          "name": "initialImplementation",
           "type": "address",
           "internalType": "address"
         },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "execute",
-      "inputs": [
-        {
-          "name": "boop",
-          "type": "tuple",
-          "internalType": "struct Boop",
-          "components": [
-            {
-              "name": "account",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "gasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validateGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "executeGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validatePaymentGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "dest",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "paymaster",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "value",
-              "type": "uint256",
-              "internalType": "uint256"
-            },
-            {
-              "name": "nonceTrack",
-              "type": "uint192",
-              "internalType": "uint192"
-            },
-            {
-              "name": "nonceValue",
-              "type": "uint64",
-              "internalType": "uint64"
-            },
-            {
-              "name": "maxFeePerGas",
-              "type": "uint256",
-              "internalType": "uint256"
-            },
-            {
-              "name": "submitterFee",
-              "type": "int256",
-              "internalType": "int256"
-            },
-            {
-              "name": "callData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "paymasterData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "validatorData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "extraData",
-              "type": "bytes",
-              "internalType": "bytes"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output",
-          "type": "tuple",
-          "internalType": "struct ExecutionOutput",
-          "components": [
-            {
-              "name": "status",
-              "type": "uint8",
-              "internalType": "enum CallStatus"
-            },
-            {
-              "name": "revertData",
-              "type": "bytes",
-              "internalType": "bytes"
-            }
-          ]
-        }
-      ],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "executeCallFromExecutor",
-      "inputs": [
-        {
-          "name": "info",
-          "type": "tuple",
-          "internalType": "struct CallInfo",
-          "components": [
-            {
-              "name": "dest",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "value",
-              "type": "uint256",
-              "internalType": "uint256"
-            },
-            {
-              "name": "callData",
-              "type": "bytes",
-              "internalType": "bytes"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "type": "bool",
-          "internalType": "bool"
-        },
-        {
-          "name": "returnData",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "extensions",
-      "inputs": [
-        {
-          "name": "",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        },
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "initialize",
-      "inputs": [
         {
           "name": "owner",
           "type": "address",
           "internalType": "address"
         }
       ],
-      "outputs": [],
       "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "isExtensionRegistered",
-      "inputs": [
+      "name": "implementation",
+      "inputs": [],
+      "outputs": [
         {
-          "name": "extension",
+          "name": "",
           "type": "address",
           "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "isValidSignature",
-      "inputs": [
-        {
-          "name": "hash",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "signature",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
         }
       ],
       "stateMutability": "view"
@@ -783,73 +525,10 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "payout",
-      "inputs": [
-        {
-          "name": "amount",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "proxiableUUID",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "removeExtension",
-      "inputs": [
-        {
-          "name": "extension",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
       "name": "renounceOwnership",
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "supportsInterface",
-      "inputs": [
-        {
-          "name": "interfaceId",
-          "type": "bytes4",
-          "internalType": "bytes4"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "pure"
     },
     {
       "type": "function",
@@ -866,173 +545,16 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "upgradeToAndCall",
+      "name": "upgradeTo",
       "inputs": [
         {
           "name": "newImplementation",
           "type": "address",
           "internalType": "address"
-        },
-        {
-          "name": "data",
-          "type": "bytes",
-          "internalType": "bytes"
         }
       ],
       "outputs": [],
-      "stateMutability": "payable"
-    },
-    {
-      "type": "function",
-      "name": "validate",
-      "inputs": [
-        {
-          "name": "boop",
-          "type": "tuple",
-          "internalType": "struct Boop",
-          "components": [
-            {
-              "name": "account",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "gasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validateGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "executeGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validatePaymentGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "dest",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "paymaster",
-              "type": "address",
-              "internalType": "address"
-            },
-            {
-              "name": "value",
-              "type": "uint256",
-              "internalType": "uint256"
-            },
-            {
-              "name": "nonceTrack",
-              "type": "uint192",
-              "internalType": "uint192"
-            },
-            {
-              "name": "nonceValue",
-              "type": "uint64",
-              "internalType": "uint64"
-            },
-            {
-              "name": "maxFeePerGas",
-              "type": "uint256",
-              "internalType": "uint256"
-            },
-            {
-              "name": "submitterFee",
-              "type": "int256",
-              "internalType": "int256"
-            },
-            {
-              "name": "callData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "paymasterData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "validatorData",
-              "type": "bytes",
-              "internalType": "bytes"
-            },
-            {
-              "name": "extraData",
-              "type": "bytes",
-              "internalType": "bytes"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "event",
-      "name": "ExtensionAdded",
-      "inputs": [
-        {
-          "name": "extension",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "indexed": true,
-          "internalType": "enum ExtensionType"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "ExtensionRemoved",
-      "inputs": [
-        {
-          "name": "extension",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "indexed": true,
-          "internalType": "enum ExtensionType"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "Initialized",
-      "inputs": [
-        {
-          "name": "version",
-          "type": "uint64",
-          "indexed": false,
-          "internalType": "uint64"
-        }
-      ],
-      "anonymous": false
     },
     {
       "type": "event",
@@ -1055,25 +577,6 @@ const contractToAbi = ({
     },
     {
       "type": "event",
-      "name": "Received",
-      "inputs": [
-        {
-          "name": "sender",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "amount",
-          "type": "uint256",
-          "indexed": false,
-          "internalType": "uint256"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
       "name": "Upgraded",
       "inputs": [
         {
@@ -1087,18 +590,7 @@ const contractToAbi = ({
     },
     {
       "type": "error",
-      "name": "AddressEmptyCode",
-      "inputs": [
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967InvalidImplementation",
+      "name": "BeaconInvalidImplementation",
       "inputs": [
         {
           "name": "implementation",
@@ -1106,68 +598,6 @@ const contractToAbi = ({
           "internalType": "address"
         }
       ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967NonPayable",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "ExtensionAlreadyRegistered",
-      "inputs": [
-        {
-          "name": "extension",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ExtensionNotRegistered",
-      "inputs": [
-        {
-          "name": "extension",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "extensionType",
-          "type": "uint8",
-          "internalType": "enum ExtensionType"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "FailedCall",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotFromEntryPoint",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotInitializing",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotSelfOrOwner",
-      "inputs": []
     },
     {
       "type": "error",
@@ -1190,30 +620,19 @@ const contractToAbi = ({
           "internalType": "address"
         }
       ]
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnauthorizedCallContext",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnsupportedProxiableUUID",
-      "inputs": [
-        {
-          "name": "slot",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ]
     }
   ],
-  "HappyAccountFactory": [
+  "HappyAccountBeaconProxyFactory": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "accountImplementation",
+          "name": "beacon",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "happyAccountRegistry",
           "type": "address",
           "internalType": "address"
         }
@@ -1222,13 +641,26 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "ACCOUNT_IMPLEMENTATION",
+      "name": "ACCOUNT_BEACON",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "address",
           "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "HAPPY_ACCOUNT_REGISTRY",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "contract HappyAccountRegistry"
         }
       ],
       "stateMutability": "view"
@@ -1256,6 +688,38 @@ const contractToAbi = ({
         }
       ],
       "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "getAccountImplementation",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address payable"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getAccountImplementation",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -1292,7 +756,163 @@ const contractToAbi = ({
       "inputs": []
     }
   ],
-  "HappyPaymaster": [
+  "HappyAccountImpl": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "addRegisteredAccount",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "isAuthorizedFactory",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "registeredAccounts",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "factory",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setAuthorizedFactory",
+      "inputs": [
+        {
+          "name": "factory",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "isAuthorized",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "OwnershipTransferred",
+      "inputs": [
+        {
+          "name": "previousOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "newOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "OwnableInvalidOwner",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "OwnableUnauthorizedAccount",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    }
+  ],
+  "HappyAccountRegistry": [
     {
       "type": "constructor",
       "inputs": [
@@ -1501,32 +1121,12 @@ const contractToAbi = ({
               "internalType": "address"
             },
             {
-              "name": "gasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validateGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "executeGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
-              "name": "validatePaymentGasLimit",
-              "type": "uint32",
-              "internalType": "uint32"
-            },
-            {
               "name": "dest",
               "type": "address",
               "internalType": "address"
             },
             {
-              "name": "paymaster",
+              "name": "payer",
               "type": "address",
               "internalType": "address"
             },
@@ -1556,12 +1156,27 @@ const contractToAbi = ({
               "internalType": "int256"
             },
             {
-              "name": "callData",
-              "type": "bytes",
-              "internalType": "bytes"
+              "name": "gasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
             },
             {
-              "name": "paymasterData",
+              "name": "validateGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "executeGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validatePaymentGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "callData",
               "type": "bytes",
               "internalType": "bytes"
             },
@@ -1698,22 +1313,27 @@ const contractToAbi = ({
       "name": "ReentrancyGuardReentrantCall",
       "inputs": []
     }
-  ]
+  ],
+  "HappyPaymaster": null
 }
 ) as const
 
 const aliasToContract = ({
   "EntryPoint": "EntryPoint",
-  "HappyAccount": "HappyAccount",
-  "HappyAccountFactory": "HappyAccountFactory",
+  "HappyAccountBeacon": "HappyAccountBeacon",
+  "HappyAccountBeaconProxyFactory": "HappyAccountBeaconProxyFactory",
+  "HappyAccountImpl": "HappyAccountImpl",
+  "HappyAccountRegistry": "HappyAccountRegistry",
   "HappyPaymaster": "HappyPaymaster"
 }) as const
 
 export const deployment = ({
-  "EntryPoint": "0x613607e206d6BaD562e8459bb4EbD7b60befca65",
-  "HappyAccount": "0x76A76d33402e46C3bFc6C27094C49d2F427d67a0",
-  "HappyAccountFactory": "0x9C5c416e96894603Ed136Da1b9a569C2Bc269028",
-  "HappyPaymaster": "0x410993BB786Db05ED3438aeA017A50db1BEAA796"
+  "EntryPoint": "0xD04DEB068A663e7f21DCa3839DBA8432c7d9b698",
+  "HappyAccountBeacon": "0x8d8D18A43f7fc579227Bb2Df24ea9969BA1168Fe",
+  "HappyAccountBeaconProxyFactory": "0x3B4b35448cDB4C337b86bC412481FA34601225c7",
+  "HappyAccountImpl": "0x6De89281155D7e5b5c790C4b4Df8d98f9ecfBb28",
+  "HappyAccountRegistry": "0x49F94F6A83C0a614d2cA05567D005743b5a3A7Ee",
+  "HappyPaymaster": "0xAacAe2995428Ef47E2F5f5CCb35C447432fFAb0A"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
