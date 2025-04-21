@@ -30,7 +30,6 @@ contract BatchCallExecutorTest is BoopTestUtils {
 
     address private smartAccount;
     address private batchCallExecutor;
-    uint256 private privKey;
     uint256 private sessionKey;
     address private publicKey;
     address private owner;
@@ -43,13 +42,9 @@ contract BatchCallExecutorTest is BoopTestUtils {
     // SETUP
 
     function setUp() public {
-        privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
-        owner = vm.addr(privKey);
-
-        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
         deployer = new DeployBoopContracts();
-        vm.prank(owner);
         deployer.deployForTests();
+        owner = deployer.owner();
 
         entryPoint = deployer.entryPoint();
         smartAccount = deployer.happyAccountBeaconProxyFactory().createAccount(SALT, owner);

@@ -59,9 +59,8 @@ contract HappyAccountTest is BoopTestUtils {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
+        // Set up the Deployment Script
         deployer = new DeployBoopContracts();
-        vm.prank(owner);
         deployer.deployForTests();
 
         entryPoint = deployer.entryPoint();

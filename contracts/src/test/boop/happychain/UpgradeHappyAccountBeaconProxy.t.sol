@@ -43,9 +43,6 @@ contract UpgradeHappyAccountBeaconProxyTest is Test, BoopTestUtils {
 
         // Set up the Deployment Script
         DeployBoopContracts deployer = new DeployBoopContracts();
-
-        // Deploy the boop contracts as foundry-account-0
-        vm.prank(owner);
         deployer.deployForTests();
 
         happyAccountFactory = deployer.happyAccountBeaconProxyFactory();
