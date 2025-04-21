@@ -21,13 +21,15 @@ clean: ## Removes build artifacts
 	@make setup-symlinks
 .PHONY: clean
 
-dev: node_modules ## Symlinks source code entries into 'dist'
-	@echo "$(PKG) — removing dist & installing dev symlinks"
+reset-dev:
 	@if [ ! -f node_modules/.tmp/.dev ] && [ -d dist ]; then \
   		rm -rf dist.prod; \
   		mv dist dist.prod; \
 	fi
 	@make setup-symlinks
+.PHONY: reset-dev
+
+dev: node_modules reset-dev ## Symlinks source code entries into 'dist'
 .PHONY: dev
 
 # Sets up the symlink necessary for vite dev to work across the monorepo, but only if a build is not present.
