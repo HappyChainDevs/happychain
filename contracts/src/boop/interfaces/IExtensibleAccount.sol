@@ -34,14 +34,14 @@ interface IExtensibleAccount is IAccount {
     // FUNCTIONS
 
     /**
-     * Adds an extension to the account, can revert with {ExtensionAlreadyRegistered}. If `installData` is not empty,
-     * will use that data to make a call to the extension contract.
+     * Adds an extension to the account, can revert with {interfaces/EventsAndErrors.ExtensionAlreadyRegistered}.
+     * If `installData` is not empty, will use that data to make a call to the extension contract.
      */
     function addExtension(address extension, ExtensionType extensionType, bytes calldata installData) external;
 
     /**
-     * Removes an extension from the account, can revert with {ExtensionNotRegistered}. If `uninstallData` is not empty,
-     * will use that data to make a call to the extension contract.
+     * Removes an extension from the account, can revert with {interfaces/EventsAndErrors.ExtensionNotRegistered}.
+     * If `uninstallData` is not empty, will use that data to make a call to the extension contract.
      */
     function removeExtension(address extension, ExtensionType extensionType, bytes calldata uninstallData) external;
 
@@ -53,7 +53,7 @@ interface IExtensibleAccount is IAccount {
      *
      * This must check that the call was made from a registered executor. It is recommended that the
      * account set a transient variable to the executor that was dispatched in
-     * {IAccount.execute}, and check that variable here.
+     * {interfaces/IAccount.execute}, and check that variable here.
      */
     function executeCallFromExecutor(CallInfo memory info) external returns (bool success, bytes memory returnData);
 }

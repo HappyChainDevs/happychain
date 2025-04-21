@@ -15,7 +15,7 @@ struct Boop {
     address dest;               // Destination address for the call carried by the boop
     address payer;              // Fee payer. This can be:
                                 //   1. the account (if it's a self-paying transaction)
-                                //   2. an external paymaster contract (implementing {IPaymaster})
+                                //   2. an external paymaster contract (implementing {interfaces/IPaymaster})
                                 //   3. 0x0...0: payment by a sponsoring submitter
     
     uint256 value;              // Amount of gas tokens (in wei) to transfer
@@ -32,9 +32,9 @@ struct Boop {
                                 //     lead to the submitter transferring funds to accounts.
 
     uint32 gasLimit;            // Global gas limit (maximum gas the account will pay for)
-    uint32 validateGasLimit;    // Gas limit for {IAccount.validate}
-    uint32 executeGasLimit;     // Gas limit for {IAccount.execute}
-    uint32 validatePaymentGasLimit; // Gas limit for {IPaymaster.validatePayment}
+    uint32 validateGasLimit;    // Gas limit for {interfaces/IAccount.validate}
+    uint32 executeGasLimit;     // Gas limit for {interfaces/IAccount.execute}
+    uint32 validatePaymentGasLimit; // Gas limit for {interfaces/IPaymaster.validatePayment}
 
     bytes callData;             // Call data for the call carried by the boop
     bytes validatorData;        // Extra data for validation (e.g., signatures)
@@ -61,7 +61,7 @@ enum CallStatus {
 
 /**
  * Represents the validation result from account or paymaster validation calls, used internally by
- * the {EntryPoint.validate} function.
+ * the {core/EntryPoint.validate} function.
  */
 // forgefmt: disable-next-item
 enum Validity {
@@ -81,28 +81,28 @@ enum Validity {
 }
 
 /**
- * Output structure returned by the {submit} function containing gas estimations and execution
+ * Output structure returned by the {core/EntryPoint.submit} function containing gas estimations and execution
  * results.
  */
 struct SubmitOutput {
     /**
-     * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
+     * An overestimation of the minimum gas limit necessary to successfully call {core/EntryPoint.submit}
      * at the top-level of a transaction.
      */
     uint32 gas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.validate} from {EntryPoint.submit}.
+     * {interfaces/IAccount.validate} from {core/EntryPoint.submit}.
      */
     uint32 validateGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IPaymaster.paymentValidateGas} from {EntryPoint.submit}.
+     * {interfaces/IPaymaster.validatePayment} from {core/EntryPoint.submit}.
      */
     uint32 paymentValidateGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.execute} from {EntryPoint.submit}.
+     * {interfaces/IAccount.execute} from {core/EntryPoint.submit}.
      */
     uint32 executeGas;
     /**
@@ -132,9 +132,9 @@ struct SubmitOutput {
      */
     CallStatus callStatus;
     /**
-     * Depending on {callStatus}: the revertData with which either the call or the
-     * {IAccount.execute} function reverted, or the rejection reason (encoded error) returned by
-     * {IAccount.execute}.
+     * Depending on {callstatus}: the revertData with which either the call or the
+     * {interfaces/IAccount.execute} function reverted, or the rejection reason (encoded error) returned by
+     * {interfaces/IAccount.execute}.
      */
     bytes revertData;
 }
@@ -143,13 +143,13 @@ struct SubmitOutput {
 // ACCOUNT TYPES
 
 /**
- * Output struct returned by {IAccount.execute}.
+ * Output struct returned by {interfaces/IAccount.execute}.
  */
 struct ExecutionOutput {
     CallStatus status;
     /**
      * The associated revert data if the call specified by the boop reverts (with
-     * {CallStatus.CALL_REVERTED}), or the rejection reason if {IAccount.execute} rejects the boop
+     * {CallStatus.CALL_REVERTED}), or the rejection reason if {interfaces/IAccount.execute} rejects the boop
      * (with {CallStatus.EXECUTE_REJECTED}). Otherwise, this is empty.
      */
     bytes revertData;

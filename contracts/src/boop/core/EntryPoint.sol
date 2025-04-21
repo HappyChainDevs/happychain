@@ -52,26 +52,27 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      *    nonce.
      *
      * 2. Call the account to validate the boop. 
-     *    See {IAccount.validate} for compliant behaviour.
+     *    See {interfaces/IAccount.validate} for compliant behaviour.
      *
      * 3. Call the paymaster to validate payment.
-     *    See [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment) for compliant behaviour (Markdown style).
+     *    See {interfaces/IPaymaster.validatePayment} for compliant behaviour (Markdown style).
      *
      * 4. Call the account to execute the transaction.
-     *    See {IAccount.execute} for compliant behaviour.
+     *    See {interfaces/IAccount.execute} for compliant behaviour.
      *
      * 5. Collect payment from the paymaster or account.
      *    Payment is taken from the paymaster's stake or sollicated from the account by calling
-     *    {IAccount.payout}.
+     *    {interfaces/IAccount.payout}.
      *
      * Gas estimation is possible by doing an `eth_call` on this function with `address(0)` as the
      * sender (`tx.origin`), as this scenario is impossible onchain. We call this "simulation mode".
      *
      * In simulation mode, this function must ignore rejections (but not reverts) from account and
-     * paymaster validation if their results are the encoded {UnknownDuringSimulation} errors.
+     * paymaster validation if their results are the encoded {interfaces/EventsAndErrors.UnknownDuringSimulation}
+     * errors.
      *
-     * The function returns a filled-in {SubmitOutput} structure. This is needed during simulation,
-     * as the logs are not available with `eth_call`.
+     * The function returns a filled-in {interfaces/Types.SubmitOutput} structure. This is needed during
+     * simulation, as the logs are not available with `eth_call`.
      *
      * NOTE: When `eth_simulateV1` (which does allow simple RPC log access) becomes broadly
      * available, the `SubmitOutput` structure can be removed entirely, and the function doesn't
@@ -282,9 +283,9 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
     }
 
     /**
-     * Parses the {ExecutionOutput} returned by {IAccount.execute} without reverting, which
-     * `abi.decode` can't do. A malicious input can't hurt us: at worse we'll read garbage (but the
-     * function could have returned garbage if it wanted to).
+     * Parses the {interfaces/Types.ExecutionOutput} returned by {interfaces/IAccount.execute} without
+     * reverting, which `abi.decode` can't do. A malicious input can't hurt us: at worse we'll read
+     * garbage (but the function could have returned garbage if it wanted to).
      */
     function _parseExecutionOutput(bytes memory returnData)
         internal
@@ -310,8 +311,9 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
     }
 
     /**
-     * Emits an {BoopSubmittedEvent} containing the struct. This needs assembly, as Solidity
-     * can handle max 15 arguments before running out of stack space (irrespective of context).
+     * Emits an {interfaces/EventsAndErrors.BoopSubmitted} event containing the struct. This
+     * needs assembly, as Solidity can handle max 15 arguments before running out of stack space
+     * (irrespective of context).
      */
     function _emitBoopSubmitted(Boop memory boop) internal {
         // Structs are encoded as tuples, just like events, and the signature of the event matches

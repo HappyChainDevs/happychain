@@ -7,10 +7,10 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 
 /**
- * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+ * Factory contract for deploying deterministic ERC1967 proxies for {happychain/HappyAccount}.
  */
 contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
-    /// The implementation contract that all proxies will delegate to {HappyAccount}.
+    /// The implementation contract that all proxies will delegate to {happychain/HappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
 
     // ====================================================================================================

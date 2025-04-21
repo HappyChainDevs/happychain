@@ -41,7 +41,7 @@ struct Stake {
 /**
  * This contracts maintains staking balances for accounts.
  *
- * It was written for as a part of the {HappyEntryPoint} with the purpose of holding paymasters'
+ * It was written for as a part of the {core/EntryPoint} with the purpose of holding paymasters'
  * spending balances and serve as an anti-griefing/sybil mechanism via the withdrawal delays.
  * However, the logic here is generic and can be used for other purposes.
  *

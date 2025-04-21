@@ -7,7 +7,7 @@ import {CallInfo} from "boop/interfaces/Types.sol";
 library CallInfoEncoding {
     /**
      * Decodes a CallInfo encoded tightly in `data`. The encoding packs fields to their exact byte size,
-     * and prefixes the {callData} with its length encoded over 32 bytes. No padding is added anywhere.
+     * and prefixes the callData with its length encoded over 32 bytes. No padding is added anywhere.
      */
     function decodeCallInfo(bytes memory data) internal pure returns (bool success, CallInfo memory info) {
         return decodeCallInfo(data, 0);

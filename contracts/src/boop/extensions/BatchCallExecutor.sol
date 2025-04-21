@@ -8,22 +8,22 @@ import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
- * @dev Key used in {Boop.extraData} for call information (array of {CallInfo}),
- * to be looked up by {BatchCallExecutor.execute}.
+ * @dev Key used in {interfaces/Types.Boop}.extraData for call information (array of
+ * {interfaces/Types.CallInfo}), to be looked up by {BatchCallExecutor.execute}.
  */
 bytes3 constant BATCH_CALL_INFO_KEY = 0x000100;
 
 /**
  * @dev Selector returned by {BatchCallExecutor.execute} when the call information is missing or
- * incorrectly encoded in {Boop.extraData}.
+ * incorrectly encoded in {interfaces/Types.Boop}.extraData.
  */
 error InvalidBatchCallInfo();
 
 /**
  * This executor executes multiple calls in an atomic way (either all succeed, or all revert).
  *
- * Each call specified is specified in a {CallInfo} struct, which are together stored in an
- * ABI-encoded array in {Boop.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
+ * Each call specified is specified in a {interfaces/Types.CallInfo} struct, which are together
+ * stored in an ABI-encoded array in {interfaces/Types.Boop}.extraData, keyed on {BATCH_CALL_INFO_KEY}.
  */
 contract BatchCallExecutor is ICustomExecutor {
     using CallInfoEncoding for bytes;

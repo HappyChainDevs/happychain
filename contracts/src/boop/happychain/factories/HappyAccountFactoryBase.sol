@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 
 /**
- * Base factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+ * Base factory contract for deploying deterministic ERC1967 proxies for {happychain/HappyAccount}.
  */
 abstract contract HappyAccountFactoryBase {
     HappyAccountRegistry public immutable HAPPY_ACCOUNT_REGISTRY;
@@ -32,7 +32,7 @@ abstract contract HappyAccountFactoryBase {
     // EXTERNAL FUNCTIONS
 
     /**
-     * Creates and deploys a new HappyAccount proxy contract
+     * Creates and deploys a new {happychain/HappyAccount} proxy contract
      * @param salt A unique salt for deterministic deployment
      * @param owner The address of the owner of the account
      */
@@ -57,7 +57,7 @@ abstract contract HappyAccountFactoryBase {
     }
 
     /**
-     * Predicts the address where a HappyAccount would be deployed
+     * Predicts the address where a {happychain/HappyAccount} would be deployed
      * @param salt A unique salt for deterministic deployment
      * @param owner The address of the owner of the account
      */
