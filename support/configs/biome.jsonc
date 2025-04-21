@@ -12,6 +12,7 @@
             "contracts/lib",
             "contracts/out",
             "dist",
+            "dist.prod",
             "generated.d.ts",
             "generated.ts",
             "node_modules",
