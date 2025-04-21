@@ -169,6 +169,15 @@ jobs:
           path: demos/vue/dist
           key: ${{ runner.os }}-build-demo-vue-${{ hashFiles('demos/vue/**/*', '!demos/vue/dist/**/*', '!demos/vue/node_modules/**/*') }}
 
+      - name: Cache contracts build
+        uses: actions/cache@v4
+        id: cache-contracts-build
+        with:
+          path: |
+            contracts/out
+            contracts/cache/solidity-files-cache.json
+          key: ${{ runner.os }}-build-contracts-${{ hashFiles('contracts/**/*', '!contracts/out/**/*') }}
+
       - run: make setup
 
       - name: Touch dist directories (on cache hits)
@@ -190,5 +199,6 @@ jobs:
           if [[ "${{ steps.cache-worker-support-build.outputs.cache-hit }}" == "true" ]]; then touch support/worker/dist.prod; fi
 
       - run: make check
-      - name: Build
-        run: make build
+      - run: make build
+      - name: build contracts
+        run: cd contracts && make build
