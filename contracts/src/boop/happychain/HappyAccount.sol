@@ -80,7 +80,10 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
     }
 
     /// @inheritdoc IExtensibleAccount
-    function addExtension(address extension, ExtensionType extensionType, bytes memory installData) external onlySelfOrOwner {
+    function addExtension(address extension, ExtensionType extensionType, bytes memory installData)
+        external
+        onlySelfOrOwner
+    {
         if (extensions[extensionType][extension]) {
             revert ExtensionAlreadyRegistered(extension, extensionType);
         }
@@ -98,7 +101,10 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
         }
     }
 
-    function removeExtension(address extension, ExtensionType extensionType, bytes memory uninstallData) external onlySelfOrOwner {
+    function removeExtension(address extension, ExtensionType extensionType, bytes memory uninstallData)
+        external
+        onlySelfOrOwner
+    {
         if (!extensions[extensionType][extension]) {
             revert ExtensionNotRegistered(extension, extensionType);
         }
@@ -153,7 +159,8 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
 
             bytes memory signature = boop.validatorData;
             boop.validatorData = ""; // set to "" to get the hash
-            address signer = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().recover(signature);
+            address signer =
+                keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().recover(signature);
             boop.validatorData = signature; // revert back to original value
 
             validationResult = signer == owner()

@@ -222,18 +222,20 @@ bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions
 forge-fmt-check:
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt --check src || true
-	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
+	@sed -i.bak 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@rm src/boop/happychain/HappyAccount.sol.bak
 .PHONY: forge-fmt-check
 
 forge-fmt:
 	@biome check ./scripts --write;
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@sed -i '' 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
-	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
+	@sed -i '' 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@rm src/boop/happychain/HappyAccount.sol.bak
 .PHONY: forge-fmt
 
 solhint-check:

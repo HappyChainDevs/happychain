@@ -6,7 +6,6 @@ import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFac
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 
-
 /**
  * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
  */
@@ -17,12 +16,14 @@ contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
     // ====================================================================================================
     // CONSTRUCTOR
 
-    constructor(address accountImplementation, address happyAccountRegistry) HappyAccountFactoryBase(happyAccountRegistry) {
+    constructor(address accountImplementation, address happyAccountRegistry)
+        HappyAccountFactoryBase(happyAccountRegistry)
+    {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
     function getAccountImplementation(address payable account) external view override returns (address) {
-        require(happyAccountRegistry.registeredAccounts(account)== address(this), "Not a registered account");
+        require(HAPPY_ACCOUNT_REGISTRY.registeredAccounts(account) == address(this), "Not a registered account");
         return HappyAccountUUPSProxy(account).getImplementation();
     }
 
