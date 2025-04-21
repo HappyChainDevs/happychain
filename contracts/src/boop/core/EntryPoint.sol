@@ -51,7 +51,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * 1. Validate the gas price, check the paymaster's staking balance, validate and update the
      *    nonce.
      *
-     * 2. Call the account to validate the boop. 
+     * 2. Call the account to validate the boop.
      *    See {interfaces/IAccount.validate} for compliant behaviour.
      *
      * 3. Call the paymaster to validate payment.

@@ -274,40 +274,31 @@ define run_forge_doc
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
 endef
 
-# Fix doc links in EntryPoint.sol for IAccount, IPaymaster, EntryPoint
-.PHONY: fix-doc-links restore-doc-links
-
-SOL_FILES := $(shell find src/boop -type f -name '*.sol')
+BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
 fix-doc-links:
-	@for file in $(SOL_FILES); do \
+	@for file in $(BOOP_SOL_FILES); do \
 		cp $$file $$file.bak; \
-		awk '\
-			/^[[:space:]]*\/\// || /^[[:space:]]*\*/ { \
-				gsub(/\{IAccount\}/, "[IAccount](/src/boop/interfaces/IAccount.sol/interface.IAccount.html)"); \
-				gsub(/\{IAccount\.execute\}/, "[IAccount.execute](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#execute)"); \
-				gsub(/\{IAccount\.payout\}/, "[IAccount.payout](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#payout)"); \
-				gsub(/\{IPaymaster\}/, "[IPaymaster](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html)"); \
-				gsub(/\{IPaymaster\.validatePayment\}/, "[IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment)"); \
-				gsub(/\{EntryPoint\}/, "[EntryPoint](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html)"); \
-				gsub(/\{EntryPoint\.submit\}/, "[EntryPoint.submit](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html#submit)"); \
-			} \
-			{ print }' $$file.bak > $$file; \
+		python3 scripts/fix_doc_links.py $$file.bak > $$file; \
 	done
+.PHONY: fix-doc-links
 
 restore-doc-links:
-	@for file in $(SOL_FILES); do \
+	@for file in $(BOOP_SOL_FILES); do \
 		if [ -f $$file.bak ]; then mv $$file.bak $$file; fi \
 	done
+	@make forge-fmt
+.PHONY: restore-doc-links
 
 docs: fix-doc-links
 	$(call run_forge_doc,)
-	$(MAKE) restore-doc-links
+	@make restore-doc-links
+.PHONY: docs
 
 docs-serve: fix-doc-links
 	$(call run_forge_doc,--serve --port 4000)
-	$(MAKE) restore-doc-links
-
+	@make restore-doc-links
+.PHONY: docs-serve
 
 ####################################################################################################
 ##@ Devnet
