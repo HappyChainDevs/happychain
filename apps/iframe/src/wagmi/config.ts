@@ -1,6 +1,5 @@
 import { onlyUnique } from "@happy.tech/common"
-import { chains as defaultChains } from "@happy.tech/core"
-import { convertToViemChain } from "@happy.tech/wallet-common"
+import { convertToViemChain, chains as defaultChains } from "@happy.tech/wallet-common"
 import { createConfig } from "@wagmi/core"
 import { type Chain, createClient, custom } from "viem"
 import { getCurrentChain } from "../state/chains"
