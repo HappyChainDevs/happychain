@@ -41,7 +41,154 @@ jobs:
           version: nightly
       - name: Fake contract deployment
         run: mkdir -p contracts/out && echo "{}" > contracts/out/deployment.json
+
+      - name: Cache common support build
+        uses: actions/cache@v4
+        id: cache-common-support-build
+        with:
+          path: |
+            support/common/dist
+            support/common/build
+          key: ${{ runner.os }}-build-support-common-${{ hashFiles('support/common/**/*', '!support/common/dist/**/*', '!support/node_modules/**/*') }}
+
+      - name: Cache wallet-common support build
+        uses: actions/cache@v4
+        id: cache-wallet-common-support-build
+        with:
+          path: |
+            support/wallet-common/dist
+            support/wallet-common/build
+          key: ${{ runner.os }}-build-support-wallet-common-${{ hashFiles('support/wallet-common/**/*', '!support/wallet-common/dist/**/*', '!support/wallet-common/node_modules/**/*') }}
+
+      - name: Cache worker support build
+        uses: actions/cache@v4
+        id: cache-worker-support-build
+        with:
+          path: |
+            support/worker/dist
+            support/worker/build
+          key: ${{ runner.os }}-build-support-worker-${{ hashFiles('support/worker/**/*', '!support/worker/dist/**/*', '!support/worker/node_modules/**/*') }}
+
+      - name: Cache core package build
+        uses: actions/cache@v4
+        id: cache-core-package-build
+        with:
+          path: |
+            packages/core/dist
+            packages/core/build
+          key: ${{ runner.os }}-build-core-${{ hashFiles('packages/core/**/*', '!packages/core/dist/**/*', '!packages/core/node_modules/**/*') }}
+
+      - name: Cache react package build
+        uses: actions/cache@v4
+        id: cache-react-package-build
+        with:
+          path: |
+            packages/react/dist
+            packages/react/build
+          key: ${{ runner.os }}-build-react-${{ hashFiles('packages/react/**/*', '!packages/react/dist/**/*', '!packages/react/node_modules/**/*') }}
+
+      - name: Cache vue package build
+        uses: actions/cache@v4
+        id: cache-vue-package-build
+        with:
+          path: |
+            packages/vue/dist
+            packages/vue/build
+          key: ${{ runner.os }}-build-vue-${{ hashFiles('packages/vue/**/*', '!packages/vue/dist/**/*', '!packages/vue/node_modules/**/*') }}
+
+      - name: Cache iframe app build
+        uses: actions/cache@v4
+        id: cache-iframe-app-build
+        with:
+          path: apps/iframe/dist
+          key: ${{ runner.os }}-build-iframe-${{ hashFiles('apps/iframe/**/*', '!apps/iframe/dist/**/*', '!apps/iframe/node_modules/**/*') }}
+
+      - name: Cache txm package build
+        uses: actions/cache@v4
+        id: cache-txm-package-build
+        with:
+          path: |
+            packages/txm/dist
+            packages/txm/build
+          key: ${{ runner.os }}-build-txm-${{ hashFiles('packages/txm/**/*', '!packages/txm/dist/**/*', '!packages/txm/node_modules/**/*') }}
+
+      - name: Cache randomness app build
+        uses: actions/cache@v4
+        id: cache-randomness-app-build
+        with:
+          path: |
+            apps/randomness/dist
+            apps/randomness/build
+          key: ${{ runner.os }}-build-randomness-${{ hashFiles('apps/randomness/**/*', '!apps/randomness/dist/**/*', '!apps/randomness/node_modules/**/*') }}
+
+      - name: Cache submitter package build
+        uses: actions/cache@v4
+        id: cache-submitter-package-build
+        with:
+          path: |
+            packages/submitter/dist
+            packages/submitter/build
+          key: ${{ runner.os }}-build-submitter-${{ hashFiles('packages/submitter/**/*', '!packages/submitter/dist/**/*', '!packages/submitter/node_modules/**/*') }}
+
+      - name: Cache submitter-client package build
+        uses: actions/cache@v4
+        id: cache-submitter-client-package-build
+        with:
+          path: |
+            packages/submitter-client/dist
+            packages/submitter-client/build
+          key: ${{ runner.os }}-build-submitter-client-${{ hashFiles('packages/submitter-client/**/*', '!packages/submitter-client/dist/**/*', '!packages/submitter-client/node_modules/**/*') }}
+
+      - name: Cache submitter app build
+        uses: actions/cache@v4
+        id: cache-submitter-app-build
+        with:
+          path: |
+            apps/submitter/dist
+            apps/submitter/build
+          key: ${{ runner.os }}-build-submitter-app-${{ hashFiles('apps/submitter/**/*', '!apps/submitter/dist/**/*', '!apps/submitter/node_modules/**/*') }}
+
+      - name: Cache js demo build
+        uses: actions/cache@v4
+        id: cache-js-demo-build
+        with:
+          path: demos/js/dist
+          key: ${{ runner.os }}-build-demo-js-${{ hashFiles('demos/js/**/*', '!demos/js/dist/**/*', '!demos/js/node_modules/**/*') }}
+
+      - name: Cache react demo build
+        uses: actions/cache@v4
+        id: cache-react-demo-build
+        with:
+          path: demos/react/dist
+          key: ${{ runner.os }}-build-demo-react-${{ hashFiles('demos/react/**/*', '!demos/react/dist/**/*', '!demos/react/node_modules/**/*') }}
+
+      - name: Cache vue demo build
+        uses: actions/cache@v4
+        id: cache-vue-demo-build
+        with:
+          path: demos/vue/dist
+          key: ${{ runner.os }}-build-demo-vue-${{ hashFiles('demos/vue/**/*', '!demos/vue/dist/**/*', '!demos/vue/node_modules/**/*') }}
+
       - run: make setup
+
+      - name: Touch dist directories (on cache hits)
+        run: |
+          if [[ "${{ steps.cache-core-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/core/dist.prod; fi
+          if [[ "${{ steps.cache-react-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/react/dist.prod; fi
+          if [[ "${{ steps.cache-submitter-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/submitter/dist.prod; fi
+          if [[ "${{ steps.cache-submitter-client-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/submitter-client/dist.prod; fi
+          if [[ "${{ steps.cache-txm-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/txm/dist.prod; fi
+          if [[ "${{ steps.cache-vue-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/vue/dist.prod; fi
+          if [[ "${{ steps.cache-iframe-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/iframe/dist.prod; fi
+          if [[ "${{ steps.cache-randomness-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/randomness/dist.prod; fi
+          if [[ "${{ steps.cache-submitter-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/submitter/dist.prod; fi
+          if [[ "${{ steps.cache-js-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/js/dist.prod; fi
+          if [[ "${{ steps.cache-react-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/react/dist.prod; fi
+          if [[ "${{ steps.cache-vue-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/vue/dist.prod; fi
+          if [[ "${{ steps.cache-common-support-build.outputs.cache-hit }}" == "true" ]]; then touch support/common/dist.prod; fi
+          if [[ "${{ steps.cache-wallet-common-support-build.outputs.cache-hit }}" == "true" ]]; then touch support/wallet-common/dist.prod; fi
+          if [[ "${{ steps.cache-worker-support-build.outputs.cache-hit }}" == "true" ]]; then touch support/worker/dist.prod; fi
+
       - run: make check
       - name: Build
         run: make build
