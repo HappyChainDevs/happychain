@@ -263,13 +263,48 @@ format: forge-fmt solhint ## Formats & lint (autofixes)
 ####################################################################################################
 # Docs
 
-docs:
+DOCS_OUT=docs/boop
+
+.PHONY: docs docs-serve
+
+define run_forge_doc
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@forge doc --serve --port 4000 || true
+	@forge doc --out $(DOCS_OUT) $(1)
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
-.PHONY: docs
+endef
+
+# Fix doc links in EntryPoint.sol for IAccount, IPaymaster, EntryPoint
+.PHONY: fix-doc-links restore-doc-links
+
+ENTRYPOINT_SOL := src/boop/core/EntryPoint.sol
+
+fix-doc-links:
+	@cp $(ENTRYPOINT_SOL) $(ENTRYPOINT_SOL).bak
+	@awk '\
+		/^[[:space:]]*\/\// || /^[[:space:]]*\*/ { \
+			gsub(/\{IAccount\}/, "[IAccount](/src/boop/interfaces/IAccount.sol/interface.IAccount.html)"); \
+			gsub(/\{IAccount\.execute\}/, "[IAccount.execute](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#execute)"); \
+			gsub(/\{IAccount\.payout\}/, "[IAccount.payout](/src/boop/interfaces/IAccount.sol/interface.IAccount.html#payout)"); \
+			gsub(/\{IPaymaster\}/, "[IPaymaster](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html)"); \
+			gsub(/\{IPaymaster\.validatePayment\}/, "[IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment)"); \
+			gsub(/\{EntryPoint\}/, "[EntryPoint](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html)"); \
+			gsub(/\{EntryPoint\.submit\}/, "[EntryPoint.submit](/src/boop/core/EntryPoint.sol/contract.EntryPoint.html#submit)"); \
+		} \
+		{ print }' $(ENTRYPOINT_SOL).bak > $(ENTRYPOINT_SOL)
+
+restore-doc-links:
+	@mv $(ENTRYPOINT_SOL).bak $(ENTRYPOINT_SOL)
+
+docs: fix-doc-links
+	$(call run_forge_doc,)
+	$(MAKE) restore-doc-links
+
+docs-serve: fix-doc-links
+	$(call run_forge_doc,--serve --port 4000)
+	$(MAKE) restore-doc-links
+
 
 ####################################################################################################
 ##@ Devnet

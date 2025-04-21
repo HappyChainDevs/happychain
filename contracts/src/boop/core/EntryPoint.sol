@@ -26,7 +26,7 @@ import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.so
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "openzeppelin/utils/ReentrancyGuardTransient.sol";
 
-/// @notice cf. {submit}
+/// cf. {submit}
 contract EntryPoint is Staking, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
@@ -51,14 +51,32 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * 1. Validate the gas price, check the paymaster's staking balance, validate and update the
      *    nonce.
      *
-     * 2. Call the account to validate the boop.
+     * 2. Call the account to validate the boop. 
      *    See {IAccount.validate} for compliant behaviour.
      *
      * 3. Call the paymaster to validate payment.
-     *    See {IPaymaster.validatePayment} for compliant behaviour.
+     *    See {interface IPaymaster.validatePayment} for compliant behaviour.
+     *    See {interface src/boop/interfaces/IPaymaster.validatePayment} for compliant behaviour.
+     *    See {interface IPaymaster.sol:IPaymaster.validatePayment} for compliant behaviour.
+     *    See {interface src/boop/interfaces/IPaymaster.sol:IPaymaster.validatePayment} for compliant behaviour.
+     *    See {IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
+     *    See {src/boop/interfaces/IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
+     *    See {IPaymaster.sol:IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
+     *    See {src/boop/interfaces/IPaymaster.sol:IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
+     *    [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment) for compliant behaviour (Markdown style).
+
+
+    * ! Use sed to convert all the normal .sol -> .html extensions
      *
      * 4. Call the account to execute the transaction.
      *    See {IAccount.execute} for compliant behaviour.
+     *    See {boop/interfaces/IAccount.execute} for compliant behaviour.
+     *    See {src/boop/interfaces/IAccount.execute} for compliant behaviour.
+     *    See {contracts/src/boop/interfaces/IAccount.execute} for compliant behaviour.
+     *    See {boop/interfaces/IAccount} for compliant behaviour (file only).
+     *    See {src/boop/interfaces/IAccount} for compliant behaviour (file only).
+     *    See {contracts/src/boop/interfaces/IAccount} for compliant behaviour (file only).
+     *    See {execute} for compliant behaviour (function only).
      *
      * 5. Collect payment from the paymaster or account.
      *    Payment is taken from the paymaster's stake or sollicated from the account by calling
