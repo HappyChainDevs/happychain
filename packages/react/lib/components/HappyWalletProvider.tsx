@@ -1,16 +1,5 @@
 import type { Prettify } from "@happy.tech/common"
-import {
-    type HappyUser,
-    type WalletRegisterOptions,
-    connect,
-    disconnect,
-    happyProvider,
-    loadAbi,
-    onUserUpdate,
-    register,
-    requestSessionKey,
-    showSendScreen,
-} from "@happy.tech/core"
+import { type HappyUser, type WalletRegisterOptions, onUserUpdate, register } from "@happy.tech/core"
 import { createContext, useContext, useEffect, useState } from "react"
 
 export type { WalletRegisterOptions }
@@ -53,12 +42,6 @@ export function useHappyWallet() {
 
     return {
         initialized,
-        provider: happyProvider,
-        connect,
-        disconnect,
         user,
-        showSendScreen,
-        loadAbi,
-        requestSessionKey,
     }
 }

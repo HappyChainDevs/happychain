@@ -1,5 +1,5 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
-import { happyChainSepolia } from "@happy.tech/core"
+import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { publicClient, walletClient } from "../clients"
 
 const SessionKeyDemo = () => {
-    const { user, requestSessionKey } = useHappyWallet()
+    const { user } = useHappyWallet()
     const [counter, setCounter] = useState<bigint | undefined>()
     const [loading, setLoading] = useState(false)
 

@@ -1,8 +1,9 @@
+import { connect, disconnect } from "@happy.tech/core"
 import { ConnectButton, useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 
 const ConnectionDemo = () => {
-    const { user, connect, disconnect } = useHappyWallet()
+    const { user } = useHappyWallet()
 
     async function toggleUserConnection() {
         if (user) {
