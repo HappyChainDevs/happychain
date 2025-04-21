@@ -57,6 +57,14 @@ export default defineConfig(({ command, mode }) => {
         build: {
             rollupOptions: {
                 external: [/\\.mocks$/],
+                onwarn(warning, defaultHandler) {
+                    if (
+                        warning.code === "INVALID_ANNOTATION" &&
+                        warning.message.includes("contains an annotation that Rollup cannot interpret")
+                    )
+                        return // silence pesky annotations from wevm/ox
+                    defaultHandler(warning)
+                },
             },
         },
         test: {
