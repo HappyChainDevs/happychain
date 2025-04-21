@@ -5,6 +5,7 @@ import { checksum } from "ox/Address"
 import { z } from "zod"
 import env from "#lib/env"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
+import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
 import { happyTxInputSchema } from "#lib/validation/schemas/happyTx"
@@ -43,7 +44,7 @@ const outputSchema = z.discriminatedUnion("status", [
 ])
 
 export const description = describeRoute({
-    // validateResponse: env.NODE_ENV !== "production",
+    validateResponse: !isProduction,
     description: "Estimate gas for the supplied HappyTx",
     responses: {
         200: {

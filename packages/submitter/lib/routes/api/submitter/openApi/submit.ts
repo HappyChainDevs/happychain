@@ -5,6 +5,7 @@ import { getAddress } from "viem"
 import { z } from "zod"
 import env from "#lib/env"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
+import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { happyTxInputSchema } from "#lib/validation/schemas/happyTx"
@@ -31,7 +32,7 @@ const outputSchema = z.object({
 })
 
 export const description = describeRoute({
-    validateResponse: env.NODE_ENV !== "production",
+    validateResponse: !isProduction,
     description: "Submits HappyTX",
     responses: {
         200: {

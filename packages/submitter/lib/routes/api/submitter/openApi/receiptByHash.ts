@@ -2,7 +2,7 @@ import { describeRoute } from "hono-openapi"
 import { resolver, validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { DEFAULT_RECEIPT_TIMEOUT_MS } from "#lib/data/defaults"
-import env from "#lib/env"
+import { isProduction } from "#lib/utils/isProduction"
 import { outputSchema, inputSchema as paramSchema } from "./stateByHash"
 
 const querySchema = z.object({
@@ -10,7 +10,7 @@ const querySchema = z.object({
 })
 
 export const description = describeRoute({
-    validateResponse: env.NODE_ENV !== "production",
+    validateResponse: !isProduction,
     description: "Retrieve state by HappyTxHash, waiting if necessary",
     responses: {
         200: {

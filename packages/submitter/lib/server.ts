@@ -13,6 +13,7 @@ import env from "./env"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"
+import { isProduction } from "./utils/isProduction"
 
 const app = new Hono()
     // middleware
@@ -59,10 +60,9 @@ app.onError(async (err, c) => {
     // Unhandled Exceptions - should not occur
     return c.json(
         {
-            error:
-                env.NODE_ENV === "production"
-                    ? `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`
-                    : err.message,
+            error: isProduction
+                ? `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`
+                : err.message,
             requestId: c.get("requestId"),
             url: c.req.url,
         },

@@ -2,8 +2,8 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import env from "#lib/env"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
+import { isProduction } from "#lib/utils/isProduction"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { happyTxStateSchema } from "#lib/validation/schemas/happyTxState"
 
@@ -29,7 +29,7 @@ export const outputSchema = z.object({
 // ])
 
 export const description = describeRoute({
-    validateResponse: env.NODE_ENV !== "production",
+    validateResponse: !isProduction,
     description: "Retrieve state by HappyTxHash",
     responses: {
         200: {
