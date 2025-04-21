@@ -63,9 +63,9 @@ dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@if [ -d dist.prod ]; then \
 		rm -rf dist; \
 		mv dist.prod dist; \
-		make -s dist; \
+		make -s dist || exit 1; \
 	else \
-		NODE_ENV=production happybuild --config build.config.ts; \
+		NODE_ENV=production happybuild --config build.config.ts || exit 1; \
 		touch dist; \
 	fi
 
