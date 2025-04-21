@@ -24,7 +24,7 @@ export const appSchema = z.object({
     // Defaults to first EXECUTOR_KEYS at runtime
     PRIVATE_KEY_ACCOUNT_DEPLOYER: z.string().refine(isHexString).optional(),
     APP_PORT: z.coerce.number().default(DEFAULT_APP_PORT),
-    NODE_ENV: z.enum(["production", "development", "test", "cli"]).default(DEFAULT_NODE_ENV),
+    NODE_ENV: z.enum(["production", "staging", "development", "test", "cli"]).default(DEFAULT_NODE_ENV),
     LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default(DEFAULT_LOG_LEVEL),
     DATABASE_URL: z.string(),
 })

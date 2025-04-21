@@ -3,7 +3,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
-import env from "#lib/env"
+import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
@@ -24,9 +24,9 @@ const inputSchema = z.object({
 
 export const description = describeRoute({
     // Experimental option. Disable in production, but useful in development
-    validateResponse: env.NODE_ENV !== "production",
+    validateResponse: !isProduction,
     description: "Create a new account",
-    hide: env.NODE_ENV === "production",
+    hide: isProduction,
     responses: {
         200: {
             description: "Successfully created an account",
