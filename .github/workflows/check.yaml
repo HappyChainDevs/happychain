@@ -38,7 +38,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
       - name: Fake contract deployment
         run: mkdir -p contracts/out && echo "{}" > contracts/out/deployment.json
 
