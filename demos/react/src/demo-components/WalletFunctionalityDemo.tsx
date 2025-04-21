@@ -8,21 +8,22 @@ const WalletFunctionalityDemo = () => {
     const { user } = useHappyWallet()
 
     async function addNewToken() {
-        const watchAssetCall = await walletClient.watchAsset({
-            type: "ERC20",
-            options: {
-                address: deployment.MockTokenA,
-                decimals: 18,
-                symbol: "MTA",
-            },
-        })
+        try {
+            await walletClient.watchAsset({
+                type: "ERC20",
+                options: {
+                    address: deployment.MockTokenA + "12345",
+                    decimals: 18,
+                    symbol: "MTA",
+                },
+            })
 
-        if (watchAssetCall) {
             console.log("[addNewToken]: asset being watched")
             toast.success("Asset added succesfully to watchlist!")
-        } else {
-            console.log("[addNewToken]: Error adding asset ")
+        } catch (error) {
+            // error case reached if we append a meaningless string to the token address, say `+ "12345"`
             toast.error("Error adding asset, please try again!")
+            console.log("[addNewToken]: Error adding asset.", error)
         }
     }
 
