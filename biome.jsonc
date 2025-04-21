@@ -4,8 +4,10 @@
     "files": {
         "ignore": [
             // packages will manage their own configs
+            "./apps",
+            "./demos",
             "./packages",
-            // run `make contracts.check`
+            "./support",
             "./contracts"
         ]
     }

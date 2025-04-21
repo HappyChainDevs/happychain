@@ -134,6 +134,7 @@ docs: node_modules docs.contained ## Builds latest docs and starts dev server ht
 # cf. makefiles/formatting.mk
 
 check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
+	echo "Running make check in ./"
 	biome check ./;
 .PHONY: check
 
