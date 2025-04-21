@@ -53,6 +53,7 @@ FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@NODE_ENV=production happybuild --config build.config.ts;
+	@rm -f node_modules/.tmp/.dev
 	@# force updates modified_at timestamp
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
