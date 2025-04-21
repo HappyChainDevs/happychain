@@ -3,7 +3,7 @@
 
 SRC_ROOT_DIR ?= lib
 
-setup: node_modules setup-symlinks
+setup: node_modules reset-dev
 .PHONY: setup
 
 build: node_modules dist ## Build and bundle the package
