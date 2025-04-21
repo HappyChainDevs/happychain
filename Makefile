@@ -92,8 +92,6 @@ endef
 
 setup: install-frozen enable-hooks ## To be run when first setting up the repository.
 	$(call forall_make , $(NPM_PKGS) , setup)
-	@echo "Running make setup in ./packages/bundler"
-	@cd packages/bundler && make setup
 	@echo "Running make setup in ./contracts"
 	@cd contracts && make setup
 .PHONY: setup
