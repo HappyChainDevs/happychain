@@ -20,6 +20,22 @@ ast = true
 build_info = true
 extra_output = ["storageLayout"]
 
+# Documentation generation configuration
+[doc]
+title = "Boop Documentation"
+out = "docs"
+# Ignore everything except the boop directory
+ignore = [
+    "src/deploy/**/*.sol",
+    "src/mocks/**/*.sol",
+    "src/scripts/**/*.sol",
+    "src/randomness/**/*.sol",
+    "src/test/**/*.sol",
+    "src/AddressBook.sol",
+    "src/HappyERC20.sol",
+    "src/HappyERC20Upgradeable.sol"
+]
+
 # Needed to write from the deploy scripts.
 fs_permissions = [
     { access = "read", path = "./deployments/anvil/aa/deployment.json" },
