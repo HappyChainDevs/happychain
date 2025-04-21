@@ -92,6 +92,8 @@ export { stringify } from "./utils/string"
 
 export { getUrlProtocol } from "./utils/urlProtocol"
 
+export { isAddress } from "./utils/address"
+
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
