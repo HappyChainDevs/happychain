@@ -1351,7 +1351,6 @@ export const abis = {} as StaticAbis
 
 for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
-    // @ts-ignore
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
 

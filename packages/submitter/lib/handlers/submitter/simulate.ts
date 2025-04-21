@@ -1,10 +1,11 @@
+import { type Result, err, ok } from "neverthrow"
 import env from "#lib/env"
 import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { simulateBoop } from "./simulateBoop"
 
-export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutput> {
+export async function simulate(data: EstimateGasInput): Promise<Result<EstimateGasOutput, EstimateGasOutput>> {
     const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
 
     const simulation = await simulateBoop(entryPoint, encodeBoop(data.tx))
@@ -13,7 +14,7 @@ export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutpu
     const submitterFee = 100n
 
     if (simulation.isOk()) {
-        return {
+        return ok({
             status: simulation.value.simulation.status,
             simulationResult: simulation.value.simulation,
             maxFeePerGas,
@@ -23,18 +24,18 @@ export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutpu
             validatePaymentGasLimit: BigInt(simulation.value.result.paymentValidateGas),
             executeGasLimit: BigInt(simulation.value.result.executeGas),
             gasLimit: BigInt(simulation.value.result.gas),
-        } satisfies EstimateGasOutput
+        } satisfies EstimateGasOutput)
     }
 
     if (!simulation.error.simulation || isSubmitterError(simulation.error.simulation.status)) {
-        return {
+        return err({
             status: simulation.error.simulation?.status ?? SubmitterErrorStatus.UnexpectedError,
             simulationResult: simulation.error.simulation,
-        } as EstimateGasOutput
+        } as EstimateGasOutput)
     }
 
-    return {
+    return err({
         status: simulation.error.simulation.status,
         simulationResult: simulation.error.simulation,
-    } as EstimateGasOutput
+    } as EstimateGasOutput)
 }

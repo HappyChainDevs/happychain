@@ -39,7 +39,7 @@ const outputSchema = z.discriminatedUnion("status", [
         status: z.enum([EntryPointStatus.Success]).openapi({ example: EntryPointStatus.Success }),
     }),
     z.object({
-        status: z.enum([SubmitterErrorStatus.UnexpectedError]),
+        status: z.enum([SubmitterErrorStatus.UnexpectedError, EntryPointStatus.UnexpectedReverted]),
     }),
 ])
 
