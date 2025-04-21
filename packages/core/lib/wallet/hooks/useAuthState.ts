@@ -1,9 +1,9 @@
 import { AuthState } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
-import { onAuthStateUpdate } from "../../happyProvider/initialize"
+import { internalProvider } from "../../happyProvider"
 
 export function useAuthState() {
     const [authState, setAuthState] = useState(AuthState.Initializing)
-    useEffect(() => onAuthStateUpdate(setAuthState), [])
+    useEffect(() => internalProvider.onAuthStateUpdate(setAuthState), [])
     return { authState }
 }

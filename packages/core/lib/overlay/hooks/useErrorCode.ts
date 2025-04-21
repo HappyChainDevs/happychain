@@ -1,6 +1,6 @@
 import { OverlayErrorCode } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
-import { onDisplayOverlayError } from "../../happyProvider/initialize"
+import { internalProvider } from "../../happyProvider"
 
 export function useErrorCode(initial: OverlayErrorCode = OverlayErrorCode.None) {
     const [hasError, setHasError] = useState(Boolean(initial))
@@ -8,7 +8,7 @@ export function useErrorCode(initial: OverlayErrorCode = OverlayErrorCode.None) 
 
     useEffect(
         () =>
-            onDisplayOverlayError((errorCode) => {
+            internalProvider.onDisplayOverlayError((errorCode) => {
                 setHasError(Boolean(errorCode))
                 setErrorCode(errorCode)
             }),

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "preact/hooks"
-import { connect as hcConnect, disconnect as hcDisconnect, openWallet } from "../happyProvider/initialize"
+import { connect as hcConnect, disconnect as hcDisconnect, openWallet } from "../functions"
 
 const userRejectionErrorCode = 4001
 

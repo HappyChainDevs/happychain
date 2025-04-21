@@ -17,9 +17,7 @@ import {
 } from "@happy.tech/wallet-common"
 import type { RpcBlock } from "viem"
 import { config } from "../config"
-// This must be before the HappyProvider import or there is a circular-dependency-induced error during the tests.
-import "./initialize.ts"
-import { HappyProviderImplem } from "./happyProvider"
+import { HappyProviderImplem } from "./happyProviderImplem"
 
 const emptyRpcBlock = {
     baseFeePerGas: null,

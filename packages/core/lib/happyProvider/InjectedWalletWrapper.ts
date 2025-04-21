@@ -9,7 +9,7 @@ import {
 } from "@happy.tech/wallet-common"
 import { type EIP6963ProviderDetail, createStore } from "mipd"
 import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
-import type { HappyProviderConfig } from "./interface"
+import type { HappyProviderConfig } from "./happyProviderImplem"
 
 const store = createStore()
 
