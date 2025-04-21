@@ -25,6 +25,7 @@ node_modules
 next-env.d.ts
 tsconfig.tsbuildinfo
 dist
+dist.prod
 build
 dist-ssr
 /.cache

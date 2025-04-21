@@ -16,13 +16,18 @@ build.watch: node_modules  ## Build the package in watch mode
 clean: ## Removes build artifacts
 	@rm -rf dist
 	@rm -rf build
+	@rm -rf dist.prod
 	@rm -rf node_modules/.tmp
 	@make setup-symlinks
 .PHONY: clean
 
 dev: node_modules ## Symlinks source code entries into 'dist'
 	@echo "$(PKG) — removing dist & installing dev symlinks"
-	@make clean
+	@if [ ! -f node_modules/.tmp/.dev ] && [ -d dist ]; then \
+  		rm -rf dist.prod; \
+  		mv dist dist.prod; \
+	fi
+	@make setup-symlinks
 .PHONY: dev
 
 # Sets up the symlink necessary for vite dev to work across the monorepo, but only if a build is not present.
@@ -52,10 +57,15 @@ DIST_DEPS := $(shell find . \
 FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
-	@NODE_ENV=production happybuild --config build.config.ts;
-	@rm -f node_modules/.tmp/.dev
-	@# force updates modified_at timestamp
-	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
+	@rm -f node_modules/.tmp/.dev;
+	@if [[ -d dist.prod ]]; then \
+		rm -rf dist; \
+		mv dist.prod dist; \
+		make -s dist; \
+	else \
+		NODE_ENV=production happybuild --config build.config.ts; \
+		touch dist; \
+	fi
 
 force_update:
 .PHONY: force_update
