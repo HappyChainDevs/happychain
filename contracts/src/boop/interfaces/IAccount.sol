@@ -25,7 +25,7 @@ interface IAccount {
      * with `tx.origin == 0`.
      *
      * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
-     * function should return {interfaces/EventsAndErrors.UnknownDuringSimulation}. In that case, 
+     * function should return {interfaces/EventsAndErrors.UnknownDuringSimulation}. In that case,
      * it should still consume at least as much gas as it would if the validation was successful.
      *
      * This function is called directly by {core/EntryPoint.submit} and should revert with

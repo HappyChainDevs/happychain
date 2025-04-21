@@ -37,8 +37,8 @@ interface IPaymaster {
      * (tx.origin == 0) to indicate that validity cannot be ascertained during simulation (e.g. we can't verify a
      * signature over the gas limit during simulation, as simulation is used to estimate the gas).
      *
-     * If validation fails with {interfaces/EventsAndErrors.UnknownDuringSimulation} during simulation, 
-     * the function must ensure that as much gas is consume by this function as would be in case of 
+     * If validation fails with {interfaces/EventsAndErrors.UnknownDuringSimulation} during simulation,
+     * the function must ensure that as much gas is consume by this function as would be in case of
      * successful validation.
      *
      * The function must revert with {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from
