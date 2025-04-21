@@ -34,7 +34,7 @@ dev: node_modules ## Symlinks source code entries into 'dist'
 # This is a :: rule that can be repeated to be extended with more commands.
 setup-symlinks::
 	@mkdir -p dist
-	@if ! [[ -r ./dist/index.es.js ]]; then \
+	@if ! [ -r ./dist/index.es.js ]; then \
   		ln -sf ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.js; \
   		ln -sf ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.d.ts; \
 		mkdir -p node_modules/.tmp; \
@@ -48,7 +48,7 @@ node_modules: package.json
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 DIST_DEPS := $(shell find . \
-	-type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" \) \
+	-type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -name "Makefile" \) \
 	-not -path "./dist/*")
 
 # If the `.dev` file exists, forces build to run.
@@ -58,7 +58,7 @@ FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@rm -f node_modules/.tmp/.dev;
-	@if [[ -d dist.prod ]]; then \
+	@if [ -d dist.prod ]; then \
 		rm -rf dist; \
 		mv dist.prod dist; \
 		make -s dist; \
