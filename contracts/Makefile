@@ -269,7 +269,6 @@ DOCS_OUT=docs/boop
 
 define run_forge_doc
 	@# Temp workaround for forge fmt not supporting transient variables.
-	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge doc --out $(DOCS_OUT) $(1)
 	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol

@@ -55,28 +55,10 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      *    See {IAccount.validate} for compliant behaviour.
      *
      * 3. Call the paymaster to validate payment.
-     *    See {interface IPaymaster.validatePayment} for compliant behaviour.
-     *    See {interface src/boop/interfaces/IPaymaster.validatePayment} for compliant behaviour.
-     *    See {interface IPaymaster.sol:IPaymaster.validatePayment} for compliant behaviour.
-     *    See {interface src/boop/interfaces/IPaymaster.sol:IPaymaster.validatePayment} for compliant behaviour.
-     *    See {IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
-     *    See {src/boop/interfaces/IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
-     *    See {IPaymaster.sol:IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
-     *    See {src/boop/interfaces/IPaymaster.sol:IPaymaster.validatePayment(UserOperation calldata, bytes calldata)} for compliant behaviour.
-     *    [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment) for compliant behaviour (Markdown style).
-
-
-    * ! Use sed to convert all the normal .sol -> .html extensions
+     *    See [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment) for compliant behaviour (Markdown style).
      *
      * 4. Call the account to execute the transaction.
      *    See {IAccount.execute} for compliant behaviour.
-     *    See {boop/interfaces/IAccount.execute} for compliant behaviour.
-     *    See {src/boop/interfaces/IAccount.execute} for compliant behaviour.
-     *    See {contracts/src/boop/interfaces/IAccount.execute} for compliant behaviour.
-     *    See {boop/interfaces/IAccount} for compliant behaviour (file only).
-     *    See {src/boop/interfaces/IAccount} for compliant behaviour (file only).
-     *    See {contracts/src/boop/interfaces/IAccount} for compliant behaviour (file only).
-     *    See {execute} for compliant behaviour (function only).
      *
      * 5. Collect payment from the paymaster or account.
      *    Payment is taken from the paymaster's stake or sollicated from the account by calling
@@ -254,7 +236,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
     /**
      * This function abstracts common boilerplate for calling {IAccount.validate} and
-     * {IPaymaster.validatePayment}.
+     * [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment).
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
