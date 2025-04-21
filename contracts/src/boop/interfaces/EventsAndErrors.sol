@@ -7,13 +7,13 @@ import {ExtensionType} from "boop/interfaces/Types.sol";
 // ENTRYPOINT EVENTS
 
 /**
- * This event is emitted by {EntryPoint.submit} just before executing a Boop, to delimit
+ * This event is emitted by {core/EntryPoint.submit} just before executing a Boop, to delimit
  * the Boop execution logs for easier indexing and improved visibility on block explorers.
  */
 event BoopExecutionStarted();
 
 /**
- * This event exposes a Boop as an event and is emitted by {EntryPoint.submit}, for easier
+ * This event exposes a Boop as an event and is emitted by {core/EntryPoint.submit}, for easier
  * indexing of Boops and easier visibility on block explorers.
  *
  * @dev We deliberately choose to separate all the fields into dedicated arguments instead of
@@ -39,7 +39,7 @@ event BoopSubmitted(
 );
 
 /**
- * When the {IAccount.execute} call succeeds but reports that the
+ * When the {interfaces/IAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
  * The parameter contains the revert data (truncated to 384 bytes),
@@ -48,15 +48,15 @@ event BoopSubmitted(
 event CallReverted(bytes revertData);
 
 /**
- * When the {IAccount.execute} call rejects the execution but does not revert.
+ * When the {interfaces/IAccount.execute} call rejects the execution but does not revert.
  *
  * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an
- * encoded custom error returned by {IAccount.execute}.
+ * encoded custom error returned by {interfaces/IAccount.execute}.
  */
 event ExecutionRejected(bytes reason);
 
 /**
- * When the {IAccount.execute} call reverts (in violation of the spec).
+ * When the {interfaces/IAccount.execute} call reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to 384 bytes),
  * so that it can be parsed offchain.
@@ -67,7 +67,8 @@ event ExecutionReverted(bytes revertData);
 // ENTRYPOINT ERRORS
 
 /**
- * The entrypoint reverts with this error when the gas price exceed {Boop.maxFeePerGas}.
+ * The entrypoint reverts with this error when the gas price exceeds
+ * {interfaces/Types.Boop}.maxFeePerGas.
  */
 error GasPriceTooHigh();
 
@@ -94,7 +95,7 @@ error ValidationReverted(bytes revertData);
  * When the validation of the boop fails because the account rejects it.
  *
  * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IAccount.validate}.
+ * custom error returned by {interfaces/IAccount.validate}.
  */
 error ValidationRejected(bytes reason);
 
@@ -109,12 +110,12 @@ error PaymentValidationReverted(bytes revertData);
  * When the validation of the boop fails because the paymaster rejects it.
  *
  * The parameter identifies the rejection reason (truncated to 256 bytes), which should be an
- * encoded custom error returned by {IPaymaster.validatePayment}.
+ * encoded custom error returned by {interfaces/IPaymaster.validatePayment}.
  */
 error PaymentValidationRejected(bytes reason);
 
 /**
- * When self-paying and the payment from the account fails, either because {IAccount.payout}
+ * When self-paying and the payment from the account fails, either because {interfaces/IAccount.payout}
  * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
  */
 error PayoutFailed();
@@ -131,8 +132,8 @@ event Received(address sender, uint256 amount);
 // SHARED ERRORS
 
 /**
- * Selector returned by {IAccount.validate} and
- * {IPaymaster.validatePayment} in simulation mode if the validity of
+ * Selector returned by {interfaces/IAccount.validate} and
+ * {interfaces/IPaymaster.validatePayment} in simulation mode if the validity of
  * the boop cannot be ascertained during simulation.
  *
  * e.g. we can't verify a signature over the gas limit during simulation,
@@ -147,8 +148,8 @@ error UnknownDuringSimulation();
 error NotFromEntryPoint();
 
 /**
- * Selector returned by {IAccount.validate}, {ICustomValidator.validate} or
- * {IPaymaster.validatePayment} when a signature is invalid.
+ * Selector returned by {interfaces/IAccount.validate}, {interfaces/ICustomValidator.validate} or
+ * {interfaces/IPaymaster.validatePayment} when a signature is invalid.
  */
 error InvalidSignature();
 

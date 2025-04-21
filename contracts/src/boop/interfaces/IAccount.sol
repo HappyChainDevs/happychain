@@ -6,7 +6,7 @@ import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
 /**
  * Interface to be implemented by smart contract accounts conforming to the Boop Account standard.
  *
- * Accounts should emit the {Received} event (from EventsAndErrors.sol) whenever they receive the
+ * Accounts should emit the {interfaces/EventsAndErrors.Received} whenever they receive the
  * gas token.
  *
  * The ERC-165 selector for this interface is 0x2eaf0775 and can be obtained via:
@@ -25,11 +25,11 @@ interface IAccount {
      * with `tx.origin == 0`.
      *
      * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
-     * function should return {UnknownDuringSimulation}. In that case, it should still consume
-     * at least as much gas as it would if the validation was successful.
+     * function should return {interfaces/EventsAndErrors.UnknownDuringSimulation}. In that case, 
+     * it should still consume at least as much gas as it would if the validation was successful.
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
-     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     * This function is called directly by {core/EntryPoint.submit} and should revert with
+     * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function is otherwise not allowed to revert. The EntryPoint is able to cope with that
      * scenario, but submitters will mark the account as broken or malicious in that case.
@@ -42,11 +42,11 @@ interface IAccount {
      * The account is allowed to customize the call, or to perform additional pre and post
      * operations.
      *
-     * If the call fails, this function must set {ExecutionOutput.revertData} to the call's revert
-     * data.
+     * If the call fails, this function must set {interfaces/Types.ExecutionOutput}.revertData
+     * to the call's revert data.
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
-     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     * This function is called directly by {core/EntryPoint.submit} and should revert with
+     * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function is otherwise not allowed to revert, meaning reverts of the specified call
      * should be caught using ExcessivelySafeCall or similar, and some gas should be reserved to
@@ -57,8 +57,8 @@ interface IAccount {
     /**
      * Pays out the given amount (in wei) to the submitter (tx.origin).
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
-     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     * This function is called directly by {core/EntryPoint.submit} and should revert with
+     * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function should simply be implemented as: `payable(tx.origin).call{value: amount}("");`
      * This is important as the entrypoint will rely on the estimated gas cost of this call to
