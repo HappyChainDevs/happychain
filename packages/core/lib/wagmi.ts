@@ -1,6 +1,7 @@
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import type { Chain } from "@wagmi/core/chains"
 import { happyProvider } from "./happyProvider"
+import { loadHappyWallet } from "./loadHappyWallet"
 
 /**
  * A custom wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) that is
@@ -21,10 +22,10 @@ import { happyProvider } from "./happyProvider"
  *  },
  * })
  *
- * const result = await connect(config, { connector: happyWagmiConnector() })
+ * const result = await connect(config, { connector: config.connectors[0] })
  */
 export function happyWagmiConnector(): CreateConnectorFn {
-    return injected({
+    const connectorFn = injected({
         shimDisconnect: false,
         target() {
             return {
@@ -34,6 +35,16 @@ export function happyWagmiConnector(): CreateConnectorFn {
             }
         },
     })
+
+    return (...args) => {
+        const connector = connectorFn(...args)
+        const onConnect = connector.onConnect
+        connector.onConnect = (connectInfo) => {
+            onConnect(connectInfo)
+            loadHappyWallet({ chainId: connectInfo.chainId })
+        }
+        return connector
+    }
 }
 
 /**
