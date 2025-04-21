@@ -56,8 +56,9 @@ typedoc.clean:
 typedoc-js:
 	typedoc --options ./typedoc.core.js;
 	@# Relative link inherited from Viem docs triggers a dead link
-	sed -i '' 's|/docs/glossary/terms#filter|https://viem.sh/docs/glossary/terms#filter|g' \
+	sed -i.bak 's|/docs/glossary/terms#filter|https://viem.sh/docs/glossary/terms#filter|g' \
 		./src/pages/sdk/js/api/interfaces/HappyPublicClient.mdx;
+	rm ./src/pages/sdk/js/api/interfaces/HappyPublicClient.mdx.bak
 .PHONY: typedoc-js
 
 # generate React markdown API reference

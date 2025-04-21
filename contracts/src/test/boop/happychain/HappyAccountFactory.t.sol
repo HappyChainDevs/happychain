@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
-import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
+import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {Test} from "forge-std/Test.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -40,7 +40,6 @@ contract HappyAccountFactoryTest is Test {
 
         // check present in registry
         assertEq(happyAccountRegistry.registeredAccounts(deployed), address(factory), "Account should be registered");
-        
 
         // Verify predicted and deployed addresses match
         assertEq(predicted, deployed, "Predicted address should match deployed address");

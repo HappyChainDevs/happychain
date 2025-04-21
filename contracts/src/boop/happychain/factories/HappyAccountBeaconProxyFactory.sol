@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 /**
  * Factory contract for deploying deterministic Beacon based ERC1967 proxies for {HappyAccount}.
@@ -20,11 +20,11 @@ contract HappyAccountBeaconProxyFactory is HappyAccountFactoryBase {
         ACCOUNT_BEACON = beacon;
     }
 
-    function getAccountImplementation() external view returns (address){
+    function getAccountImplementation() external view returns (address) {
         return UpgradeableBeacon(ACCOUNT_BEACON).implementation();
     }
 
-    function getAccountImplementation(address payable) external view override returns (address){
+    function getAccountImplementation(address payable) external view override returns (address) {
         return UpgradeableBeacon(ACCOUNT_BEACON).implementation();
     }
 

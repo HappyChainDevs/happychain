@@ -5,8 +5,8 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
+import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -50,7 +50,8 @@ contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
         happyAccountRegistry = new HappyAccountRegistry(owner);
         entryPoint = new EntryPoint();
         address happyAccountImplementation = address(new HappyAccountUUPSProxy(address(entryPoint)));
-        happyAccountFactory = new HappyAccountUUPSProxyFactory(happyAccountImplementation, address(happyAccountRegistry));
+        happyAccountFactory =
+            new HappyAccountUUPSProxyFactory(happyAccountImplementation, address(happyAccountRegistry));
         happyAccountRegistry.setAuthorizedFactory(address(happyAccountFactory), true);
         vm.stopPrank();
 

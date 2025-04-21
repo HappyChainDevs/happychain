@@ -5,8 +5,8 @@ import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
+import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
@@ -65,7 +65,6 @@ contract DeployBoopContracts is BaseDeployScript {
             DEPLOYMENT_SALT //-
         );
         happyAccountRegistry = HappyAccountRegistry(_registry);
-        
 
         // -----------------------------------------------------------------------------------------
 
@@ -134,7 +133,6 @@ contract DeployBoopContracts is BaseDeployScript {
 
             vm.prank(owner);
             _setAuthorizedFactory(isUUPS);
-
         } else {
             _setAuthorizedFactory(isUUPS);
         }
@@ -143,10 +141,9 @@ contract DeployBoopContracts is BaseDeployScript {
     }
 
     function _setAuthorizedFactory(bool isUUPS) internal {
-        if(isUUPS){
+        if (isUUPS) {
             happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
-        }
-        else{
+        } else {
             happyAccountRegistry.setAuthorizedFactory(address(happyAccountBeaconProxyFactory), true);
         }
     }
