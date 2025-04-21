@@ -268,10 +268,11 @@ DOCS_OUT=docs/boop
 .PHONY: docs docs-serve
 
 define run_forge_doc
-	@# Temp workaround for forge fmt not supporting transient variables.
-	@sed -i.bak 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@forge doc --out $(DOCS_OUT) $(1)
-	@mv -f src/boop/happychain/HappyAccount.sol.bak src/boop/happychain/HappyAccount.sol
+	# Temp workaround for forge fmt not supporting transient variables.
+	sed -i '' 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	forge doc --out $(DOCS_OUT) $(1)
+	sed -i '' 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	rm src/boop/happychain/HappyAccount.sol.bak
 endef
 
 BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
@@ -287,7 +288,6 @@ restore-doc-links:
 	@for file in $(BOOP_SOL_FILES); do \
 		if [ -f $$file.bak ]; then mv $$file.bak $$file; fi \
 	done
-	@make forge-fmt
 .PHONY: restore-doc-links
 
 docs: fix-doc-links
@@ -295,9 +295,22 @@ docs: fix-doc-links
 	@make restore-doc-links
 .PHONY: docs
 
-docs-serve: fix-doc-links
-	$(call run_forge_doc,--serve --port 4000)
-	@make restore-doc-links
+DOCS_PORT :=4000
+
+docs-serve:
+	@DOCS_PORT=$(DOCS_PORT); \
+	clean_up() { \
+		echo "Cleaning up..."; \
+		lsof -ti :$${DOCS_PORT} | xargs kill -9 2>/dev/null || true; \
+		make restore-doc-links; \
+		echo "Cleanup complete."; \
+	}; \
+	trap clean_up EXIT INT TERM; \
+	make fix-doc-links; \
+	echo "Starting docs server on port $${DOCS_PORT}..."; \
+	$(call run_forge_doc,--serve --port $${DOCS_PORT}) & \
+	server_pid=$$!; \
+	wait $$server_pid
 .PHONY: docs-serve
 
 ####################################################################################################
