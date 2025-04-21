@@ -18,7 +18,7 @@ clean: ## Removes build artifacts
 	@rm -rf build
 	@rm -rf dist.prod
 	@rm -rf node_modules/.tmp
-	@make setup-symlinks
+	@make reset-dev
 .PHONY: clean
 
 reset-dev:
@@ -50,7 +50,7 @@ node_modules: package.json
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 DIST_DEPS := $(shell find . \
-	-type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -name "Makefile" \) \
+	-type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "Makefile" \) \
 	-not -path "./dist/*")
 
 # If the `.dev` file exists, forces build to run.
