@@ -1,5 +1,5 @@
 import type { Optional } from "@happy.tech/common"
-import type { Boop } from "#lib/tmp/interface/Boop"
+import type { Boop } from "../tmp/interface/Boop"
 import { toBytes, toDynamicLengthBytes } from "./bytes"
 
 type OptionalBoopFields = "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee"
