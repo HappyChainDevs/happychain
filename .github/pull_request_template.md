@@ -1,7 +1,7 @@
 ### Linked Issues
 
 - closes #XXX
-- closes <linear issue URL>
+- closes HAPPY-XXX
 
 ### Description
 
