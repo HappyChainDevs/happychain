@@ -73,7 +73,7 @@ export class DefaultGasLimitEstimator implements GasEstimator {
             account: transactionManager.viemWallet.account,
             to: transaction.address,
             data: transaction.calldata,
-            value: 0n,
+            value: transaction.value,
         })
 
         if (gasResult.isErr()) {

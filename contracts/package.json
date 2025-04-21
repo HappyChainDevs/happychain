@@ -25,14 +25,14 @@
         "account-abstraction": "https://github.com/eth-infinitism/account-abstraction#v0.7.0",
         "forge-std": "https://github.com/foundry-rs/forge-std.git#v1.9.6",
         "kernel": "https://github.com/zerodevapp/kernel#v3.1",
+        "node-jq": "^6.0.1",
         "solady": "0.0.237"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
         "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.1",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "@types/node": "^22.0.2",
-        "node-jq": "^6.0.1",
         "permissionless": "^0.2.0",
         "solhint": "^5.0.5",
         "viem": "^2.21.53"

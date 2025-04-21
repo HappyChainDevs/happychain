@@ -35,6 +35,7 @@ import {
 import { deployMockContracts } from "./utils/contracts"
 import { assertIsDefined, assertIsOk, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
+import { bigIntToZeroPadded } from "@happy.tech/common"
 
 const retryManager = new TestRetryManager()
 
@@ -610,6 +611,42 @@ test("Transaction cancelled due to deadline passing", async () => {
         value: previousLivenessThreshold,
         configurable: true,
     })
+})
+
+test("Execute a transaction with value", async () => {
+    const value = BigInt(1000)
+    const transactionToSend = await txm.createTransaction({
+        address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        calldata: "0x",
+        value,
+    })
+
+    transactionQueue.push(transactionToSend)
+
+    await mineBlock(2)
+
+    const transactionExecuted = await txm.getTransaction(transactionToSend.intentId)
+
+    if (!assertIsOk(transactionExecuted)) return
+
+    const transactionExecutedValue = transactionExecuted.value
+
+    if (!assertIsDefined(transactionExecutedValue)) return
+
+    const blockchainTransaction = await directBlockchainClient.getTransaction({
+        hash: transactionExecutedValue.attempts[0].hash,
+    })
+
+    const blockchainTransactionReceipt = await directBlockchainClient.getTransactionReceipt({
+        hash: blockchainTransaction.hash,
+    })
+
+    const persistedTransaction = await getPersistedTransaction(transactionToSend.intentId)
+
+    expect(blockchainTransactionReceipt?.status).toBe("success")
+    expect(blockchainTransaction.value).toBe(value)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.value).toBe(bigIntToZeroPadded(value))
 })
 
 test("Correctly calculates baseFeePerGas after a block with high gas usage", async () => {

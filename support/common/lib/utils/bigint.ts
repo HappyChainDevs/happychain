@@ -31,9 +31,19 @@ export const bigIntReviver = (_key: string, value: unknown): unknown => {
 }
 
 /**
- * Converts a bigint to a zero-padded string
+ * The maximum number of digits in the max uint256 value
  */
-export function bigIntToZeroPadded(value: bigint, totalDigits: number): string {
+export const DIGITS_MAX_UINT256 = 78
+
+/**
+ * Converts a bigint to a zero-padded string representation
+ * @param value - The bigint value to convert
+ * @param totalDigits - The total number of digits in the resulting string (defaults to {@link DIGITS_MAX_UINT256})
+ * @returns A string representation of the bigint with leading zeros to match the specified length
+ * @example
+ * bigIntToZeroPadded(123n, 5) // returns "00123"
+ */
+export function bigIntToZeroPadded(value: bigint, totalDigits: number = DIGITS_MAX_UINT256): string {
     const str = value.toString()
     return str.padStart(totalDigits, "0")
 }

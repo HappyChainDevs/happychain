@@ -128,7 +128,7 @@ export class TransactionSubmitter {
                 from: this.txmgr.viemWallet.account.address,
                 to: transaction.address,
                 data: transaction.calldata,
-                value: 0n,
+                value: transaction.value,
                 nonce: attempt.nonce,
                 maxFeePerGas: attempt.maxFeePerGas,
                 maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,

@@ -3,6 +3,7 @@ import { migration20241111223000 } from "./Migration20241111223000"
 import { migration20241205104400 } from "./Migration20241205104400"
 import { migration20250121110600 } from "./Migration20250121110600"
 import { migration20250410123000 } from "./Migration20250410123000"
+import { migration20250421120000 } from "./Migration20250421120000"
 
 export const migrations = {
     "20241111163800": migration20241111163800,
@@ -10,4 +11,5 @@ export const migrations = {
     "20241205104400": migration20241205104400,
     "20250121110600": migration20250121110600,
     "20250410123000": migration20250410123000,
+    "20250421120000": migration20250421120000,
 }
