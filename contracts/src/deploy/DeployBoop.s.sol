@@ -10,7 +10,7 @@ import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
-import {console} from "forge-std/console.sol";
+
 contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
@@ -50,7 +50,6 @@ contract DeployBoopContracts is BaseDeployScript {
     }
 
     function deploy() internal override {
-      
         // -----------------------------------------------------------------------------------------
 
         (address payable _entryPoint,) = deployDeterministic( //-
@@ -136,7 +135,6 @@ contract DeployBoopContracts is BaseDeployScript {
             // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
             vm.deal(address(0), 1 wei);
         }
-        
         if (isUUPS) {
             happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
         } else {
