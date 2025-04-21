@@ -2,7 +2,7 @@
 import { icon64x64 } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
-import { onUserUpdate } from "../happyProvider/initialize"
+import { onUserUpdate } from "../functions"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
 import { useConnection } from "./useConnection"

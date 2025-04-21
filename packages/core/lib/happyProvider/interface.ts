@@ -1,18 +1,19 @@
 import type { EventEmitter } from "node:events"
-import type { UUID } from "@happy.tech/common"
 import type {
     EIP1193RequestMethods,
     EIP1193RequestParameters,
     EIP1193RequestResult,
-    EventBus,
-    Logger,
-    MsgsFromApp,
-    MsgsFromIframe,
-    ProviderMsgsFromApp,
-    ProviderMsgsFromIframe,
+    HappyUser,
+    OverlayErrorCode,
 } from "@happy.tech/wallet-common"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { config } from "../config"
+import type {
+    AuthStateUpdateCallback,
+    DisplayOverlayErrorCallback,
+    ListenerUnsubscribeFn,
+    UserUpdateCallback,
+    WalletVisibilityCallback,
+} from "./listeners"
 
 /**
  * HappyProvider is an EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
@@ -46,12 +47,16 @@ export interface HappyProvider extends EventEmitter {
     request: (args: any) => Promise<any>
 }
 
-/** @internal */
-export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
-    logger?: Logger
-    windowId: UUID
-    providerBus: EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>
-    msgBus: EventBus<MsgsFromIframe, MsgsFromApp>
+export interface HappyProviderInternal extends HappyProvider {
+    getCurrentUser(): HappyUser | undefined
+    displayWallet(open: boolean): void
+    showSendScreen(): void
+    displayError(code: OverlayErrorCode): void
+    onUserUpdate(callback: UserUpdateCallback): ListenerUnsubscribeFn
+    onUserUpdate(callback: UserUpdateCallback): ListenerUnsubscribeFn
+    onWalletVisibilityUpdate(callback: WalletVisibilityCallback): ListenerUnsubscribeFn
+    onAuthStateUpdate(callback: AuthStateUpdateCallback): ListenerUnsubscribeFn
+    onDisplayOverlayError(callback: DisplayOverlayErrorCallback): ListenerUnsubscribeFn
 }
 
 export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>

@@ -1,7 +1,19 @@
+export { happyProvider } from "./happyProvider"
+export type { HappyProvider } from "./happyProvider"
+
 export { register } from "./register"
 export type { WalletRegisterOptions } from "./register"
 
-export type { HappyProvider } from "./happyProvider/interface"
+export {
+    getCurrentUser,
+    connect,
+    disconnect,
+    loadAbi,
+    openWallet,
+    requestSessionKey,
+    showSendScreen,
+    onUserUpdate,
+} from "./functions.ts"
 
 export {
     devnet,
@@ -19,19 +31,6 @@ export type {
     ChainRpcUrls,
 } from "@happy.tech/wallet-common"
 
-export {
-    onWalletVisibilityUpdate,
-    onUserUpdate,
-    getCurrentUser,
-    happyProvider,
-    connect,
-    disconnect,
-    showSendScreen,
-    openWallet,
-    loadAbi,
-    requestSessionKey,
-} from "./happyProvider/initialize"
-
 export type {
     UserUpdateCallback,
     WalletVisibilityCallback,
@@ -43,6 +42,7 @@ export type {
     WalletType,
     GenericProviderRpcError,
     ProviderRpcErrorCode,
+    EIP1193ErrorCodes,
     EIP1193ErrorObject,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,

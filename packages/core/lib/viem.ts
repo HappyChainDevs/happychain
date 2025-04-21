@@ -10,7 +10,8 @@ import {
     createWalletClient,
     custom,
 } from "viem"
-import { happyProvider, onUserUpdate } from "./happyProvider/initialize"
+import { onUserUpdate } from "./functions"
+import { happyProvider } from "./happyProvider"
 
 /**
  * Return type for {@link createHappyPublicClient}.

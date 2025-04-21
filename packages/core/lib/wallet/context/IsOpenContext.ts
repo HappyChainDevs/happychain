@@ -1,6 +1,6 @@
 import { createContext } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import { emitWalletDisplayAction, onWalletVisibilityUpdate } from "../../happyProvider/initialize"
+import { internalProvider } from "../../happyProvider"
 
 export const IsOpenContext = createContext({
     isOpen: false,
@@ -13,7 +13,7 @@ export function useSetupIsOpenContext() {
     // Syncs open state with iframe.
     useEffect(
         () =>
-            onWalletVisibilityUpdate((state) => {
+            internalProvider.onWalletVisibilityUpdate((state) => {
                 internalSetIsOpen(state.isOpen)
             }),
         [],
@@ -24,7 +24,7 @@ export function useSetupIsOpenContext() {
     // however it is safe since any click inside the iframe will be captured
     // by the iframe itself and not bubble through.
     useEffect(() => {
-        const openHandler = () => isOpen && emitWalletDisplayAction(!isOpen)
+        const openHandler = () => isOpen && internalProvider.displayWallet(false)
         document.addEventListener("click", openHandler)
         return () => document.removeEventListener("click", openHandler)
     }, [isOpen])
@@ -36,7 +36,8 @@ export function useSetupIsOpenContext() {
         // and it allows us to hook into iframe-specific events, such as rejecting a handling request
         // in the happyProvider, which otherwise would not be available here
         setIsOpen: (_open: boolean | ((_b: boolean) => boolean)) => {
-            typeof _open === "boolean" ? emitWalletDisplayAction(_open) : emitWalletDisplayAction(_open(isOpen))
+            const open = typeof _open === "boolean" ? _open : _open(isOpen)
+            internalProvider.displayWallet(open)
         },
     }
 }

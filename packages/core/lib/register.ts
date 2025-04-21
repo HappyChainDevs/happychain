@@ -1,7 +1,7 @@
 import { defaultChain } from "@happy.tech/wallet-common"
 import define from "preact-custom-element"
 import { defineBadgeComponent } from "./badge/define"
-import { windowId } from "./happyProvider/initialize"
+import { windowId } from "./happyProvider"
 import { HappyOverlay } from "./overlay/HappyOverlay"
 import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
