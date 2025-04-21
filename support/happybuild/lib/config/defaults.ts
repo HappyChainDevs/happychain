@@ -103,7 +103,7 @@ export function applyDefaults(config: InputConfig, _index: number, configs: Inpu
         fullName =
             exports.length === 1
                 ? join(pkg.name, exports[0].exportName)
-                : join(pkg.name, `{${config.exports.join(", ")}`)
+                : join(pkg.name, `{${config.exports.join(", ")}}`)
     }
 
     return {
