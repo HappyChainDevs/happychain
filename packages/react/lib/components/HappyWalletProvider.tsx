@@ -1,12 +1,12 @@
 import type { Prettify } from "@happy.tech/common"
-import { type HappyUser, type WalletRegisterOptions, onUserUpdate, register } from "@happy.tech/core"
+import { type HappyUser, type LoadHappyWalletOptions, loadHappyWallet, onUserUpdate } from "@happy.tech/core"
 import { createContext, useContext, useEffect, useState } from "react"
 
-export type { WalletRegisterOptions }
+export type { LoadHappyWalletOptions }
 
 export type HappyWalletProviderProps = Prettify<
     React.PropsWithChildren & {
-        init?: WalletRegisterOptions
+        init?: LoadHappyWalletOptions
     }
 >
 
@@ -21,7 +21,7 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
     const [user, setUser] = useState<HappyUser | undefined>()
 
     // register iframe component
-    useEffect(() => register(init), [init])
+    useEffect(() => loadHappyWallet(init), [init])
 
     // subscription to user changes
     useEffect(() => {
