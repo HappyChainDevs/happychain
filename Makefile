@@ -264,7 +264,6 @@ backend.check:
 .PHONY: backend.check
 
 ts.check:
-	echo $(TS_PKGS)
 	$(call forall_make , $(TS_PKGS) , check)
 .PHONY: ts.check
 
