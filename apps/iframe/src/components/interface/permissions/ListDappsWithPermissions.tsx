@@ -1,7 +1,6 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
-import happychainLogo from "#src/assets/happychain.png"
 import type { AppPermissions } from "#src/state/permissions"
 import { getAppURL } from "#src/utils/appURL"
 
