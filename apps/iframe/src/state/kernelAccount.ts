@@ -81,8 +81,6 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
     return await createKernelAccount(wallet.account.address, user.type === WalletType.Injected)
 })
 
-export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
-
 export async function getKernelAccountAddress(owner: Address): Promise<Address> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
