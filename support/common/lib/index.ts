@@ -61,4 +61,4 @@ export { fetchWithRetry } from "./utils/fetch"
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
 
-export { icon64x64, blankIcon, happyIcon64x64 } from "./data/icons"
+export { icon64x64, blankIcon } from "./data/icons"
