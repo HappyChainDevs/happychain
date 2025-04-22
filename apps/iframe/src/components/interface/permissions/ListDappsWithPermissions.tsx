@@ -23,7 +23,7 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
                     onError={() => setIsFaviconBroken(true)}
                     src={
                         isFaviconBroken || dappUrl.includes("localhost:")
-                            ? happychainLogo
+                            ? "/images/happyIcon.png"
                             : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
                     }
                     width="16"
