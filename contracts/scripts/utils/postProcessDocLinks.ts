@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 /**
- * fix_doc_links.ts <file_path>
- * Usage: bun run scripts/fix_doc_links.ts <file_path>
+ * postProcessDocLinks.ts <file_path>
+ * Usage: bun run scripts/utils/postProcessDocLinks.ts <file_path>
  */
-
 
 // Hardcoded mappings for special types in EventsAndErrors.sol
 const EVENTS_AND_ERRORS_MAPPINGS: Record<string, "event" | "error"> = {
