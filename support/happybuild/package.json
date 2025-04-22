@@ -17,7 +17,7 @@
         "@happy.tech/configs": "workspace:0.1.0",
         "@microsoft/api-extractor": "^7.47.9",
         "@parcel/watcher": "^2.4.1",
-        "@types/bun": "latest",
+        "@types/bun": "^1.2.4",
         "@types/byte-size": "^8.1.2",
         "ajv": "^8.17.1",
         "byte-size": "^9.0.0",
