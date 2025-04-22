@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { deployment } from "#lib/env"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
 export const deploymentsSchema = z.object({

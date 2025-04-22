@@ -1,7 +1,7 @@
 import { type Result, err, ok } from "neverthrow"
 import { type WriteContractParameters, createWalletClient } from "viem"
 import { config, publicClient } from "#lib/clients"
-import { abis, deployment, env } from "#lib/env"
+import { abis, deployment } from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
 import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account"

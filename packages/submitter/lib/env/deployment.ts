@@ -17,7 +17,7 @@ export function getDeployment(env: Environment) {
                 return deploymentHappyChainSepolia
         }
     }
-    let deployment = getBaseDeployment()
+    const deployment = getBaseDeployment()
     return {
         ...deployment,
         // TODO: enable overriding the others + abstract over factory type
