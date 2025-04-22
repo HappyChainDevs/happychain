@@ -1,9 +1,42 @@
-import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient } from "viem"
+import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
 import { http, createPublicClient, createWalletClient } from "viem"
 import { happychainTestnet, localhost } from "viem/chains"
 import env from "../env"
 
-export const chain = [localhost, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID) ?? localhost
+function getChain(): Chain {
+    const chain = [localhost, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
+    if (chain)
+        return {
+            ...chain,
+            rpcUrls: {
+                ...chain.rpcUrls,
+                default: {
+                    http: env.RPC_URL ? [env.RPC_URL, ...chain.rpcUrls.default.http] : chain.rpcUrls.default.http,
+                    webSocket: "webSocket" in chain.rpcUrls.default ? chain.rpcUrls.default.webSocket : undefined,
+                },
+            },
+        }
+    if (!env.RPC_URL) {
+        throw new Error("Chain is not supported by default and the RPC_URL was not set in the env.")
+    }
+    return {
+        id: env.CHAIN_ID,
+        name: "Blockchain",
+        rpcUrls: {
+            default: {
+                http: [env.RPC_URL],
+                // TODO websocket
+            },
+        },
+        nativeCurrency: {
+            symbol: "UNKNOWN",
+            name: "UNKNOWN",
+            decimals: 18,
+        },
+    }
+}
+
+export const chain: Chain = getChain()
 
 export const config = { chain, transport: http() } as const
 
