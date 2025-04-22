@@ -36,8 +36,8 @@ import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
-import { getSessionKeyForTarget } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
+import { getSessionKeyForTarget } from "./sessionKeys"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
 /**

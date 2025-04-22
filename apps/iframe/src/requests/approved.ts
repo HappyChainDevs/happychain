@@ -23,13 +23,9 @@ import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendBoop } from "./boop"
-import {
-    checkIsSessionKeyExtensionInstalled,
-    installSessionKeyExtension,
-    registerSessionKey,
-} from "./extensions/session-keys/helpers"
-import { hasExistingSessionKeys } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
+import { checkIsSessionKeyExtensionInstalled, installSessionKeyExtension, registerSessionKey } from "./sessionKeys"
+import { hasExistingSessionKeys } from "./sessionKeys"
 import { appForSourceID } from "./utils"
 
 /**
