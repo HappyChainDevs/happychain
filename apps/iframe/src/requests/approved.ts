@@ -12,6 +12,7 @@ import {
 } from "@happy.tech/wallet-common"
 import { type Client, type Hash, type Hex, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { reqLogger } from "#src/logger"
 import { StorageKey, storage } from "#src/services/storage"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
@@ -33,6 +34,7 @@ import { appForSourceID } from "./utils"
  * running them through a series of middleware.
  */
 export async function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): Promise<void> {
+    reqLogger.trace("handle approved request", request)
     return await sendResponse(request, dispatchHandlers)
 }
 
@@ -42,7 +44,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     const user = getUser()
     if (!user) {
-        console.warn("Request approved, but no user found")
+        reqLogger.warn("Request approved, but no user found")
     }
 
     switch (request.payload.method) {
