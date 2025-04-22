@@ -8,3 +8,7 @@ include ../../makefiles/help.mk
 start: ## Starts the faucet service
 	node --env-file=.env dist/index.es.js
 .PHONY: start
+
+migrate: ## Runs pending migrations
+	node --env-file=.env dist/migrate.es.js
+PHONY: migrate

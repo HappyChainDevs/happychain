@@ -4,6 +4,7 @@ import { Tab, TabContent } from "./home/tabs/Tabs"
 import GamesView from "./home/tabs/views/GamesView"
 import ActivityView from "./home/tabs/views/activity/ActivityView"
 import TokenView from "./home/tabs/views/tokens/TokenView"
+import FaucetView from "./home/tabs/views/faucet"
 
 export const WalletContentInfo = () => {
     return (
@@ -13,6 +14,7 @@ export const WalletContentInfo = () => {
                     <Tab title={ContentType.TOKENS} />
                     {/*<Tab title={ContentType.GAMES} />*/}
                     <Tab title={ContentType.ACTIVITY} />
+                    <Tab title={ContentType.FAUCET} />
                     <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
                 </Tabs.List>
             </div>
@@ -27,6 +29,10 @@ export const WalletContentInfo = () => {
 
             <TabContent title={ContentType.ACTIVITY}>
                 <ActivityView />
+            </TabContent>
+
+            <TabContent title={ContentType.FAUCET}>
+                <FaucetView />
             </TabContent>
         </Tabs.Root>
     )

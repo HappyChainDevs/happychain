@@ -24,6 +24,12 @@ interface ImportMetaEnv {
     readonly VITE_WEB3AUTH_VERIFIER: string
 
     readonly VITE_CHAIN_ID: string
+
+    /**
+     * Faucet Setup
+     */
+    readonly VITE_TURNSTILE_SITEKEY: string
+    readonly VITE_FAUCET_ENDPOINT: string
 }
 
 interface ImportMeta {
