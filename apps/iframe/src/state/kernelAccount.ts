@@ -1,4 +1,3 @@
-import { accessorsFromAtom } from "@happy.tech/common"
 import { abis } from "@happy.tech/contracts/account-abstraction/sepolia"
 import { WalletType, convertToViemChain } from "@happy.tech/wallet-common"
 import { type Atom, atom } from "jotai"
