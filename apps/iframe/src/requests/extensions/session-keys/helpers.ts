@@ -1,14 +1,14 @@
-// @todo - maybe write a helper function to return the appropriate contracts & ABIs depending on current chain ID ?
-import { abis as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
-import { type HappyTx, computeBoopHash } from "@happy.tech/submitter-client"
+import { type Boop, computeBoopHash } from "@happy.tech/submitter-client"
 import { type Address, type Hash, type Hex, encodeFunctionData, isAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+// @todo - maybe write a helper function to return the appropriate contracts & ABIs depending on current chain ID ?
+import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { sendBoop } from "#src/requests/boop"
 import { StorageKey, storage } from "#src/services/storage"
+import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
 import { getWalletClient } from "#src/state/walletClient"
 
-export const SESSION_KEY_VALIDATOR_ADDRESS = happyAccAbsDeployment.SessionKeyValidator as Address
 const EXTENSION_TYPE_VALIDATOR = 0
 
 /**
@@ -42,9 +42,9 @@ export async function checkIsSessionKeyExtensionInstalled(accountAddress: Addres
         // Using the IExtensibleAccount interface to check if the extension is registered
         const isRegistered = await publicClient.readContract({
             address: accountAddress,
-            abi: happyAccAbsAbis.IExtensibleAccount,
+            abi: extensibleAccountAbi,
             functionName: "isExtensionRegistered",
-            args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
+            args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR],
         })
 
         return Boolean(isRegistered)
@@ -67,9 +67,9 @@ export async function installSessionKeyExtension(
 ): Promise<Hash> {
     // Prepare transaction to add the SessionKeyValidator extension
     const callData = encodeFunctionData({
-        abi: happyAccAbsAbis.IExtensibleAccount,
+        abi: extensibleAccountAbi,
         functionName: "addExtension",
-        args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
+        args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR],
     })
 
     const hash = await sendBoop({
@@ -101,7 +101,7 @@ export async function installSessionKeyExtension(
  * Register a session key for a specific target contract
  * @param sessionKeyAddress - The address of the session key to register
  * @param targetContract - The address of the contract the session key can interact with
- * @param accountAddress - Boop account address
+ * @param boopAccount - Boop account address
  * @returns Transaction hash
  */
 export async function registerSessionKey(
@@ -110,7 +110,7 @@ export async function registerSessionKey(
     boopAccount: Address,
 ): Promise<Hash> {
     const callData = encodeFunctionData({
-        abi: happyAccAbsAbis.SessionKeyValidator,
+        abi: sessionKeyValidatorAbi,
         functionName: "addSessionKey",
         args: [targetContract, sessionKeyAddress],
     })
@@ -118,7 +118,7 @@ export async function registerSessionKey(
     return await sendBoop({
         boopAccount,
         tx: {
-            to: SESSION_KEY_VALIDATOR_ADDRESS,
+            to: sessionKeyValidator,
             data: callData,
         },
         signer: async (boopHash: Hash) => {
@@ -138,19 +138,19 @@ export async function registerSessionKey(
  * @param privateKey - The private key associated to the session key
  * @param boop - The Boop transaction to sign
  */
-export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Promise<HappyTx> {
+export async function signWithSessionKey(privateKey: Address, boop: Boop): Promise<Boop> {
     const account = privateKeyToAccount(privateKey)
     const boopToSign = {
         ...boop,
         validatorData: "" as Hex, // Temporarily empty for hash calculation
     }
-    const boopHash = computeBoopHash(boopToSign)
+    const boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boopToSign)
     const signature = await account.signMessage({
         message: { raw: boopHash },
     })
 
     // Create the extraData that specifies which validator to use
-    const extraData = createValidatorExtraData(SESSION_KEY_VALIDATOR_ADDRESS)
+    const extraData = createValidatorExtraData(sessionKeyValidator)
 
     return {
         ...boop,
@@ -161,12 +161,11 @@ export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Pr
 
 /**
  * Remove a session key for a specific target contract
- * @param targetContract - Contract address to remove the session key for
  * @returns Transaction hash
  */
 export async function removeSessionKey(targetContract: Address, boopAccount: Address): Promise<Hash> {
     const callData = encodeFunctionData({
-        abi: happyAccAbsAbis.SessionKeyValidator,
+        abi: sessionKeyValidatorAbi,
         functionName: "removeSessionKey",
         args: [targetContract],
     })
@@ -174,7 +173,7 @@ export async function removeSessionKey(targetContract: Address, boopAccount: Add
     return await sendBoop({
         boopAccount,
         tx: {
-            to: SESSION_KEY_VALIDATOR_ADDRESS,
+            to: sessionKeyValidator,
             data: callData,
         },
         signer: async (boopHash: Hash) => {
@@ -196,9 +195,9 @@ export async function removeSessionKey(targetContract: Address, boopAccount: Add
  */
 export async function uninstallSessionKeyExtension(boopAccount: Address): Promise<Hash> {
     const callData = encodeFunctionData({
-        abi: happyAccAbsAbis.IExtensibleAccount,
+        abi: extensibleAccountAbi,
         functionName: "removeExtension",
-        args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
+        args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR],
     })
 
     return await sendBoop({
