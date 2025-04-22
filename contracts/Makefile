@@ -267,50 +267,20 @@ DOCS_OUT=docs/boop
 
 .PHONY: docs docs-serve
 
-define run_forge_doc
-	# Temp workaround for forge fmt not supporting transient variables.
-	sed -i '' 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	forge doc --out $(DOCS_OUT) $(1)
-	sed -i '' 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	rm src/boop/happychain/HappyAccount.sol.bak
-endef
-
 BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
-fix-doc-links:
-	@for file in $(BOOP_SOL_FILES); do \
-		cp $$file $$file.bak; \
-		python3 scripts/fix_doc_links.py $$file.bak > $$file; \
-	done
-.PHONY: fix-doc-links
-
-restore-doc-links:
-	@for file in $(BOOP_SOL_FILES); do \
-		if [ -f $$file.bak ]; then mv $$file.bak $$file; fi \
-	done
-.PHONY: restore-doc-links
-
-docs: fix-doc-links
-	$(call run_forge_doc,)
-	@make restore-doc-links
+docs:
+	@set -a; [ -f .env ] && . .env; set +a; \
+	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/fix_doc_links.ts $$file.bak > $$file; done; \
+	forge doc --out docs/boop; \
+	for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done
 .PHONY: docs
 
-DOCS_PORT :=4000
-
 docs-serve:
-	@DOCS_PORT=$(DOCS_PORT); \
-	clean_up() { \
-		echo "Cleaning up..."; \
-		lsof -ti :$${DOCS_PORT} | xargs kill -9 2>/dev/null || true; \
-		make restore-doc-links; \
-		echo "Cleanup complete."; \
-	}; \
-	trap clean_up EXIT INT TERM; \
-	make fix-doc-links; \
-	echo "Starting docs server on port $${DOCS_PORT}..."; \
-	$(call run_forge_doc,--serve --port $${DOCS_PORT}) & \
-	server_pid=$$!; \
-	wait $$server_pid
+	@set -a; [ -f .env ] && . .env; set +a; \
+	trap 'echo "Cleaning up..."; for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done; echo "Cleanup complete.";' EXIT INT TERM; \
+	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/fix_doc_links.ts $$file.bak > $$file; done; \
+	forge doc --out docs/boop --serve --port $${DOCS_PORT}
 .PHONY: docs-serve
 
 ####################################################################################################
