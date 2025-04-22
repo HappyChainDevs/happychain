@@ -12,7 +12,7 @@ const WalletFunctionalityDemo = () => {
             await walletClient.watchAsset({
                 type: "ERC20",
                 options: {
-                    address: deployment.MockTokenA + "12345",
+                    address: deployment.MockTokenA,
                     decimals: 18,
                     symbol: "MTA",
                 },
