@@ -46,13 +46,9 @@ import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
 import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
-import {
-    checkIsSessionKeyExtensionInstalled,
-    installSessionKeyExtension,
-    registerSessionKey,
-} from "./extensions/session-keys/helpers"
-import { hasExistingSessionKeys } from "./extensions/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
+import { checkIsSessionKeyExtensionInstalled, installSessionKeyExtension, registerSessionKey } from "./sessionKeys"
+import { hasExistingSessionKeys } from "./sessionKeys"
 import { appForSourceID } from "./utils"
 
 /**
