@@ -8,7 +8,7 @@
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
-        "@types/bun": "^1.1.8",
+        "@types/bun": "^1.2.4",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",
         "tailwindcss": "^3.4.10",
