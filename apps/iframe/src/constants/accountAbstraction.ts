@@ -1,1 +1,1 @@
-export const BUNDLER_RPC_URL = import.meta.env.VITE_BUNDLER_RPC_URL
+export const SUBMITTER_URL = import.meta.env.VITE_SUBMITTER_URL
