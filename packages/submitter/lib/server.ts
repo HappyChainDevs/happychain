@@ -9,7 +9,7 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import pkg from "../package.json" assert { type: "json" }
-import env from "./env"
+import { env } from "./env"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"

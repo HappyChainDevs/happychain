@@ -3,7 +3,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
-import env from "#lib/env"
+import { deployment } from "#lib/env"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
@@ -13,7 +13,7 @@ import { simulationResultSchema } from "#lib/validation/schemas/simulationResult
 
 const inputSchema = z.object({
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z.string().refine(isAddress).transform(checksum).optional().default(env.DEPLOYMENT_ENTRYPOINT),
+    entryPoint: z.string().refine(isAddress).transform(checksum).optional().default(deployment.EntryPoint),
 
     /**
      * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee

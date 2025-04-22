@@ -1,5 +1,5 @@
 import { LogLevel, Logger } from "@happy.tech/common"
-import env from "./env"
+import { env } from "./env"
 
 const logLevel: LogLevel =
     env.NODE_ENV === "test"

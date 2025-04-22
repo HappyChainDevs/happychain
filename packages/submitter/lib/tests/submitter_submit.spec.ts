@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import env from "#lib/env"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"

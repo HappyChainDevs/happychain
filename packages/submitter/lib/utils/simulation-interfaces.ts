@@ -1,7 +1,7 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
 import type { Result } from "neverthrow"
 import type { Account, SimulateContractReturnType } from "viem"
-import type { abis } from "#lib/deployments"
+import { abis } from "#lib/env"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 
 export type SubmitSimulateResults = SimulateContractReturnType<

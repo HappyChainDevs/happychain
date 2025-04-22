@@ -1,4 +1,4 @@
-import env from "./env"
+import { env } from "./env"
 import { app } from "./server"
 import type { AppType } from "./server"
 

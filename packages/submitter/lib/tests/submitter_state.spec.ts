@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
@@ -65,7 +66,7 @@ describe("submitter_state", () => {
         const nonce = nonceValue + 5n // future nonce so that is submits, but doesn't finalize
         const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
         const signedTx = await sign(unsignedTx)
-        const boopHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
         // submit transaction, but don't wait for it to complete
         client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }).then((a) => a.json())
 

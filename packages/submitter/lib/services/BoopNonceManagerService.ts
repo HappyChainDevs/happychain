@@ -2,8 +2,7 @@ import { Map2, Mutex } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
-import { abis } from "#lib/deployments"
-import env from "#lib/env"
+import { abis, env } from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
@@ -71,7 +70,7 @@ export class BoopNonceManagerService {
             )
 
             track.set(tx.nonceValue, {
-                hash: computeBoopHash(tx),
+                hash: computeBoopHash(BigInt(env.CHAIN_ID), tx),
                 resolve: (response: Result<undefined, SubmitterError>) => {
                     clearTimeout(timeout)
                     resolve(response)

@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
@@ -33,7 +34,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const boopHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
@@ -51,7 +52,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const boopHash = computeBoopHash(signedTx)
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
 
         // submit transaction but don't wait to complete
         client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
