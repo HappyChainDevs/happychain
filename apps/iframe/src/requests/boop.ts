@@ -18,6 +18,7 @@ import {
     type TransactionReceipt,
     zeroAddress,
 } from "viem"
+import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
@@ -106,7 +107,7 @@ export async function sendBoop(
             validateGasLimit: 0n,
             validatePaymentGasLimit: 0n,
             // For sponsored transactions, use default/empty values, submitter will replace them
-            payer: isSponsored ? zeroAddress : ("0x0" as Address), //@todo - replace zeroAddress with env variable ?
+            payer: happyPaymaster,
             executeGasLimit: 0n,
             gasLimit: 0n,
             // If sponsored : use minimal values
