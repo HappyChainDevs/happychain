@@ -28,6 +28,7 @@ import {
     zeroAddress,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import { happyPaymaster } from "#src/constants/contracts"
 import { boopReceiptsCache } from "#src/services/boopsReceiptsCache.ts"
 import { getBoopAccount } from "#src/state/boopAccount"
 import { getCurrentChain } from "#src/state/chains"
@@ -200,7 +201,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     nonceTrack,
                     nonceValue,
                     value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                    payer: zeroAddress as Address, ,//@todo - replace zeroAddress with env variable ?
+                    payer: happyPaymaster,
                     callData: tx.data || ("0x" as Hex),
                     validatorData: "0x" as Hex,
                     extraData: "0x" as Hex,
