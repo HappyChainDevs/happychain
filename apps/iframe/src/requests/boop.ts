@@ -1,22 +1,20 @@
-import { LogTag, Map2, Mutex } from "@happy.tech/common"
-import { abi as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
+import { Map2, Mutex } from "@happy.tech/common"
 import {
+    type Boop,
+    type BoopReceipt,
     EntryPointStatus,
-    type HappyTx,
-    type HappyTxReceipt,
     computeBoopHash,
     estimateGas,
     execute,
 } from "@happy.tech/submitter-client"
-import {
-    type Address,
-    type Hash,
-    type Hex,
-    type RpcTransactionRequest,
-    type Transaction,
-    type TransactionEIP1559,
-    type TransactionReceipt,
-    zeroAddress,
+import type {
+    Address,
+    Hash,
+    Hex,
+    RpcTransactionRequest,
+    Transaction,
+    TransactionEIP1559,
+    TransactionReceipt,
 } from "viem"
 import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
@@ -57,8 +55,8 @@ export async function getNextNonce(account: Address, nonceTrack = 0n): Promise<b
 export async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     const publicClient = getPublicClient()
     return await publicClient.readContract({
-        address: happyAccAbsDeployment.HappyEntryPoint,
-        abi: happyAccAbsAbis.HappyEntryPoint,
+        address: entryPoint,
+        abi: entryPointAbi,
         functionName: "nonceValues",
         args: [account, nonceTrack],
     })
@@ -98,7 +96,7 @@ export async function sendBoop(
         const nonceValue = await getNextNonce(boopAccount, nonceTrack)
 
         const processedCallData = tx.data
-        const boop: HappyTx = {
+        const boop: Boop = {
             account: boopAccount,
             dest: tx.to as Address,
             nonceTrack,
@@ -121,7 +119,7 @@ export async function sendBoop(
 
         if (!isSponsored) {
             const simulationResult = await estimateGas({
-                entryPoint: happyAccAbsDeployment.HappyEntryPoint as Address,
+                entryPoint,
                 tx: boop,
             })
             if (simulationResult.isErr()) {
@@ -139,9 +137,9 @@ export async function sendBoop(
             }
         }
 
-        boopHash = computeBoopHash(boop) as Hash
+        boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop) as Hash
         const signature = await signer(boopHash)
-        const signedBoop: HappyTx = {
+        const signedBoop: Boop = {
             ...boop,
             validatorData: signature as Hex,
         }
@@ -153,7 +151,7 @@ export async function sendBoop(
         addPendingBoop(boopAccount, pendingBoopDetails)
 
         const result = await execute({
-            entryPoint: happyAccAbsDeployment.HappyEntryPoint as Address,
+            entryPoint,
             tx: signedBoop,
         })
 
@@ -165,7 +163,8 @@ export async function sendBoop(
 
         return boopHash
     } catch (error) {
-        logger.error(LogTag.SUBMITTER, "Boop submission failed: ", error)
+        // TODO define a logger somewhere
+        logger.error("submitter", "Boop submission failed: ", error)
         deleteNonce(boopAccount, nonceTrack)
         if (retry > 0) {
             console.log(`Retrying Boop submission (${retry} attempts left)...`)
@@ -186,7 +185,7 @@ export async function sendBoop(
 /**
  * Format a boop receipt in a transaction receipt returned by `eth_getTransactionReceipt`
  */
-export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: HappyTxReceipt): TransactionReceipt {
+export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: BoopReceipt): TransactionReceipt {
     return {
         blockHash: receipt.txReceipt.blockHash,
         blockNumber: receipt.txReceipt.blockNumber,
@@ -198,7 +197,7 @@ export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: Happy
         logs: receipt.logs || [],
         logsBloom: receipt.txReceipt.logsBloom || "0x0",
         status: receipt.status === EntryPointStatus.Success ? "0x1" : "0x0",
-        to: receipt.dest, // @todo - dest is not defined in HappyTxReceipt ? `to` is required in a TransactionReceipt though - TBD
+        to: "0x0", // TODO include Boop inside receipt and read from there
         transactionHash: hash,
         transactionIndex: receipt.txReceipt.transactionIndex || "0x0",
         type: receipt.txReceipt.type || "eip1559",
@@ -209,7 +208,7 @@ export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: Happy
 /**
  * Format a transaction from a boop receipt returned by `eth_getTransactionByHash`.
  */
-export function formatTransaction(hash: Hash, receipt: HappyTxReceipt, originalTx?: HappyTx): Transaction {
+export function formatTransaction(hash: Hash, receipt: BoopReceipt, originalTx?: Boop): Transaction {
     const currentChain = getCurrentChain()
 
     return {

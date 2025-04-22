@@ -1,8 +1,7 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import { deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
 import {
+    type Boop,
     EntryPointStatus,
-    type HappyTx,
     StateRequestStatus,
     state as boopState,
     estimateGas,
@@ -25,10 +24,9 @@ import {
     type Transaction,
     hexToBigInt,
     isAddress,
-    zeroAddress,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { happyPaymaster } from "#src/constants/contracts"
+import { entryPoint, happyPaymaster } from "#src/constants/contracts"
 import { boopReceiptsCache } from "#src/services/boopsReceiptsCache.ts"
 import { getBoopAccount } from "#src/state/boopAccount"
 import { getCurrentChain } from "#src/state/chains"
@@ -195,7 +193,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 const nonceTrack = 0n // Default nonce track
                 const nonceValue = await getCurrentNonce(boopAccount.address, nonceTrack)
 
-                const boop: HappyTx = {
+                const boop: Boop = {
                     account: boopAccount.address,
                     dest: tx.to as Address,
                     nonceTrack,
@@ -214,7 +212,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 }
 
                 const simulateResult = await estimateGas({
-                    entryPoint: happyAccAbsDeployment.HappyEntryPoint as Address,
+                    entryPoint,
                     tx: boop,
                 })
 
@@ -222,8 +220,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     return await sendToPublicClient(app, request)
                 }
 
-                const gasLimit = simulateResult.value.executeGasLimit
-                return gasLimit
+                return simulateResult.value.executeGasLimit
             } catch (error) {
                 console.error("Encountered error while estimating gas:", error)
                 return await sendToPublicClient(app, request)

@@ -1,8 +1,7 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import { deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
 import {
+    type Boop,
     EntryPointStatus,
-    type HappyTx,
     StateRequestStatus,
     state as boopState,
     estimateGas,
@@ -21,6 +20,7 @@ import {
 } from "@happy.tech/wallet-common"
 import {
     type Address,
+    type Client,
     type Hash,
     type Hex,
     InvalidAddressError,
@@ -30,6 +30,7 @@ import {
     zeroAddress,
 } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { entryPoint } from "#src/constants/contracts"
 import { boopReceiptsCache } from "#src/services/boopsReceiptsCache.ts"
 import { StorageKey, storage } from "#src/services/storage"
 import { getBoopAccount } from "#src/state/boopAccount"
@@ -196,7 +197,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 const nonceTrack = 0n // Default nonce track
                 const nonceValue = await getCurrentNonce(boopAccount.address, nonceTrack)
 
-                const boop: HappyTx = {
+                const boop: Boop = {
                     account: boopAccount.address,
                     dest: tx.to as Address,
                     nonceTrack,
@@ -215,7 +216,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 }
 
                 const simulateResult = await estimateGas({
-                    entryPoint: happyAccAbsDeployment.HappyEntryPoint as Address,
+                    entryPoint,
                     tx: boop,
                 })
 
@@ -223,8 +224,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     return await sendToInjectedClient(app, request)
                 }
 
-                const gasLimit = simulateResult.value.executeGasLimit
-                return gasLimit
+                return simulateResult.value.executeGasLimit
             } catch (error) {
                 console.error("Error estimating gas:", error)
                 return await sendToInjectedClient(app, request)
@@ -444,7 +444,7 @@ async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPerm
     if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }
-    const client = getPublicClient()
+    const client: Client = getPublicClient()
 
     if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()
