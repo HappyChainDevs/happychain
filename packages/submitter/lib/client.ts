@@ -14,5 +14,10 @@ export type * from "./tmp/interface/status"
 export type * from "./tmp/interface/SimulationResult"
 export type { Prettify, Optional } from "@happy.tech/common"
 
+// === ENUMS =======================================================================================
+
+export { EntryPointStatus } from "./tmp/interface/status"
+export { StateRequestStatus } from "./tmp/interface/BoopState"
+
 // === UTILITIES ===================================================================================
 export { computeBoopHash } from "./utils/computeBoopHash"
