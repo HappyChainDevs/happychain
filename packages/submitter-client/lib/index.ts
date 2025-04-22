@@ -1,4 +1,3 @@
-export { computeBoopHash } from "./helpers"
 export {
     createAccount,
     submit,
@@ -25,11 +24,9 @@ export type {
     SubmitOutput,
     //
     BoopState,
-    StateRequestStatus,
     Address,
     Optional,
     SubmitterErrorSimulationUnavailable,
-    EntryPointStatus,
     SimulationResult,
     ExecuteSuccess,
     Hash,
@@ -70,4 +67,7 @@ export type {
     Receipt,
     TransactionTypeName,
 } from "@happy.tech/submitter/client"
+
+export { EntryPointStatus, StateRequestStatus, computeBoopHash } from "@happy.tech/submitter/client"
+
 export type { Result, Ok, Err } from "./utils/neverthrow"
