@@ -7,7 +7,7 @@ import type { SmartAccountActions } from "permissionless/clients"
 import { http } from "viem"
 import type { BundlerRpcSchema, Chain, Client, Transport } from "viem"
 import type { BundlerActions } from "viem/account-abstraction"
-import { BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
+import { SUBMITTER_URL } from "#src/constants/accountAbstraction"
 import { currentChainAtom } from "./chains"
 import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
 import { paymasterAtom } from "./paymaster"
@@ -30,7 +30,7 @@ export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | u
     const basicSmartAccountClient = createSmartAccountClient({
         account: smartAccount,
         chain: convertToViemChain(currentChain),
-        bundlerTransport: http(BUNDLER_RPC_URL),
+        bundlerTransport: http(SUBMITTER_URL),
         paymaster,
         userOperation: {
             estimateFeesPerGas: async () => {

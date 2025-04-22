@@ -8,7 +8,7 @@ import {
     type GetPaymasterStubDataParameters,
     entryPoint07Address,
 } from "viem/account-abstraction"
-import { BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
+import { SUBMITTER_URL } from "#src/constants/accountAbstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { currentChainAtom } from "./chains"
 
@@ -16,7 +16,7 @@ export const paymasterClientAtom: Atom<PimlicoClient> = atom((get) => {
     const currentChain = get(currentChainAtom)
     return createPimlicoClient({
         chain: convertToViemChain(currentChain),
-        transport: http(BUNDLER_RPC_URL),
+        transport: http(SUBMITTER_URL),
         entryPoint: {
             address: entryPoint07Address,
             version: "0.7",
