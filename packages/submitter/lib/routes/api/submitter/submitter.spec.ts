@@ -25,7 +25,6 @@ describe("routes: api/submitter", () => {
     })
 
     beforeEach(async () => {
-        // Run each tests in isolated nonceTrack
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
         unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)

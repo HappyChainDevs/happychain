@@ -1,0 +1,57 @@
+name: Test Submitter Package
+
+on:
+  pull_request:
+    paths:
+      - 'packages/submitter/**'
+      - 'contracts/deployments/anvil/boop/**'
+      - 'contracts/deployments/anvil/mocks/**'
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
+
+env:
+  CHAIN_ID: 1337
+  EXECUTOR_KEYS: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  PRIVATE_KEY_ACCOUNT_DEPLOYER: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  APP_PORT: 3001
+  LIMITS_EXECUTE_BUFFER_LIMIT: 50
+  LIMITS_EXECUTE_MAX_CAPACITY: 100
+
+jobs:
+  test-submitter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+        with:
+            submodules: recursive
+      
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.4'
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+            
+      - name: Install dependencies
+        run: make setup
+    
+      # This step uses the default Anvil test private key (account #0)
+      # The key is publicly known and should NEVER be used in production environments
+      - name: Create test deployer key
+        run: |
+           cast wallet import --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --unsafe-password "password" test-account-0
+           cd contracts && echo "password" > .password.local
+      
+      - name: Test Submitter package
+        run: |
+            cd packages/submitter
+            make test
