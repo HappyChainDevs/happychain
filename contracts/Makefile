@@ -277,7 +277,6 @@ docs:
 .PHONY: docs
 
 docs-serve:
-	@set -a; [ -f .env ] && . .env; set +a; \
 	trap 'echo "Cleaning up..."; for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done; echo "Cleanup complete.";' EXIT INT TERM; \
 	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/fix_doc_links.ts $$file.bak > $$file; done; \
 	forge doc --out docs/boop --serve --port $${DOCS_PORT}
