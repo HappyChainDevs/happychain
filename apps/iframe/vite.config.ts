@@ -6,7 +6,7 @@ import { defineConfig, loadEnv } from "vite"
 import z from "zod"
 
 const envConfigSchema = z.object({
-    VITE_BUNDLER_RPC_URL: z.string(),
+    VITE_SUBMITTER_URL: z.string(),
     VITE_FIREBASE_API_KEY: z.string(),
     VITE_FIREBASE_AUTH_DOMAIN: z.string(),
     VITE_FIREBASE_PROJECT_ID: z.string(),
