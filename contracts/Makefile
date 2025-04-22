@@ -232,9 +232,9 @@ forge-fmt:
 	@biome check ./scripts --write;
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i '' 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
-	@sed -i '' 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@sed -i.bak 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@rm src/boop/happychain/HappyAccount.sol.bak
 .PHONY: forge-fmt
 
