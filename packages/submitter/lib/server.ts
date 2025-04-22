@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
 import { every, except } from "hono/combine"
+import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { logger as loggerMiddleware } from "hono/logger"
 import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
@@ -17,6 +18,7 @@ import { isProduction } from "./utils/isProduction"
 
 const app = new Hono()
     // middleware
+    .use("/api/*", cors())
     .use(
         except(
             // don't run these during testing
