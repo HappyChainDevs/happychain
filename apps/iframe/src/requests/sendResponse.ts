@@ -8,6 +8,7 @@ import {
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import type { UnauthorizedProviderError } from "viem"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
+import { reqLogger } from "#src/logger"
 import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "../services/eventBus"
 import { isIframe } from "../utils/appURL"
@@ -35,7 +36,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
 ): Promise<void> {
     const app = appForSourceID(request.windowId)
     if (!app) {
-        console.warn("Unsupported source app, abandoning request", app, request)
+        reqLogger.warn("Unsupported source app, abandoning request", app, request)
         return
     }
 
@@ -60,6 +61,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             void happyProviderBus.emit(Msgs.RequestResponse, response)
         }
     } catch (e) {
+        reqLogger.info("request handling threw", e)
         const response = {
             key: request.key,
             windowId: request.windowId,
