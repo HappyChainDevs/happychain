@@ -1,4 +1,3 @@
-import { accessorsFromAtom } from "@happy.tech/common"
 import { abis } from "@happy.tech/contracts/account-abstraction/sepolia"
 import { WalletType, convertToViemChain } from "@happy.tech/wallet-common"
 import { type Atom, atom } from "jotai"
@@ -27,7 +26,7 @@ import { type AccountWalletClient, getWalletClient, walletClientAtom } from "./w
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
 
-export async function createKernelAccount(
+async function createKernelAccount(
     walletAddress: Address,
     isInjected: boolean,
 ): Promise<KernelSmartAccount | undefined> {
@@ -80,8 +79,6 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
     if (!wallet?.account || !user) return undefined
     return await createKernelAccount(wallet.account.address, user.type === WalletType.Injected)
 })
-
-export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
 
 export async function getKernelAccountAddress(owner: Address): Promise<Address> {
     const chain = getCurrentChain()
