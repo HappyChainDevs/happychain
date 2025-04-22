@@ -60,10 +60,14 @@ export function createHappyWalletClient(): HappyWalletClient {
     })
     return new Proxy<HappyWalletClient>({} as HappyWalletClient, {
         get(_target, prop, _receiver) {
-            if (!walletClient) throw new Error(`Cannot call wallet.${String(prop)}: User is not connected`)
-            return prop in walletClient && typeof prop === "string"
-                ? (walletClient as HappyWalletClient)[prop as keyof HappyWalletClient]
-                : undefined
+            if (!walletClient) {
+                throw new Error(`Cannot call wallet.${String(prop)}: User is not connected`)
+            }
+            if (!(prop in walletClient && typeof prop === "string")) {
+                throw new Error(`Cannot call wallet.${String(prop)}: Not a function`)
+            }
+
+            return (walletClient as HappyWalletClient)[prop as keyof HappyWalletClient]
         },
     })
 }
