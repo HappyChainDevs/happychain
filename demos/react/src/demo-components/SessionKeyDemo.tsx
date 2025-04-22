@@ -43,8 +43,7 @@ const SessionKeyDemo = () => {
     async function incrementCounter() {
         try {
             const hash = await submitIncrement()
-            if (!hash) return
-
+            if (!hash) throw new Error("No hash returned")
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
             if (receipt.status === "reverted") {
                 toast.error("UserOp reverted!")
@@ -55,7 +54,7 @@ const SessionKeyDemo = () => {
             setCounter(newCount)
             toast.success(`Counter incremented to ${newCount}`)
         } catch (error) {
-            console.log("[incrementCounter] error:", error)
+            console.warn("[incrementCounter] error:", error)
             toast.error("Failed to increment counter")
         }
     }

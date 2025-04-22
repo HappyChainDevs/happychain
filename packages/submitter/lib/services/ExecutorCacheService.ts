@@ -64,7 +64,6 @@ export class ExecutorCacheService {
     private createExpiry(hash: `0x${string}`, key: string): Account {
         // get the least used account
         const executor = this.heap.peek()
-        // console.log({ executor })
         if (!executor) throw new Error("No available executors")
         this.heap.increment(executor.account.address)
         const hashExpirations = new Map([

@@ -15,8 +15,6 @@ export class BoopReceiptService {
         if (!boopReceipt) return
         const transactionReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.transactionHash })
 
-        logger.warn("[BoopReceiptService.findByHash] Warning: Logs not yet implemented")
-
         if (!isValidTransactionType(transactionReceipt.type))
             throw new SubmitterError(`[${boopHash}] Invalid receipt.type`)
 

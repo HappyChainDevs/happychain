@@ -19,7 +19,7 @@ const WalletFunctionalityDemo = () => {
             })
 
             console.log("[addNewToken]: asset being watched")
-            toast.success("Asset added succesfully to watchlist!")
+            toast.success("Asset added successfully to watchlist!")
         } catch (error) {
             // error case reached if we append a meaningless string to the token address, say `+ "12345"`
             toast.error("Error adding asset, please try again!")

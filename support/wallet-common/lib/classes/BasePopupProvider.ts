@@ -73,7 +73,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
             const requiresApproval =
                 (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
-
             if (!requiresApproval) {
                 this.handlePermissionless(key, args)
                 this.trackRequest(key, { resolve, reject })

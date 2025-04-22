@@ -9,14 +9,17 @@ import {
     type ProviderEventPayload,
 } from "@happy.tech/wallet-common"
 import { SafeEventEmitter } from "@happy.tech/wallet-common"
+import { connect as connectWagmi, disconnect as disconnectWagmi } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { iframeID } from "#src/requests/utils.ts"
 import { happyProviderBus } from "#src/services/eventBus.ts"
 import { getInjectedProvider } from "#src/state/injectedProvider.ts"
+import { grantPermissions } from "#src/state/permissions.ts"
 import { getUser } from "#src/state/user.ts"
-import { isStandaloneIframe } from "#src/utils/appURL.ts"
+import { getAppURL, isStandaloneIframe } from "#src/utils/appURL.ts"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet.ts"
+import { happyConnector } from "#src/wagmi/connector.ts"
 import { iframeProvider } from "#src/wagmi/provider.ts"
 
 /**
@@ -111,14 +114,22 @@ export class InjectedProviderProxy extends SafeEventEmitter {
             // Forward the event to the front end
             this.emit("accountsChanged", accounts)
 
+            // We need to dynamically import here to avoid any circular dependencies with iframeProvider
+            const { config } = await import("#src/wagmi/config.ts")
             const user = getUser()
             if (!accounts.length) {
+                try {
+                    // if wagmi wasn't previously successfully connected, this throws
+                    await disconnectWagmi(config)
+                } catch {}
                 // Logout from the wallet when the user disconnects the injected wallet from the standalone wallet.
                 setUserWithProvider(undefined, undefined)
             } else if (user) {
                 const [address] = accounts
                 const _user = await createHappyUserFromWallet(user.provider, address)
                 setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+                grantPermissions(getAppURL(), "eth_accounts")
+                await connectWagmi(config, { connector: happyConnector })
             }
         })
     }
@@ -130,19 +141,26 @@ export class InjectedProviderProxy extends SafeEventEmitter {
     private async forwardInjectedEventRemote(req: ProviderEventPayload<{ event: string; params: unknown }>) {
         // Forward the event back to the front end
         this.emit(req.payload.event, req.payload.params)
-
         // handle any required internal changes
         switch (req.payload.event) {
             case "accountsChanged": {
+                // We need to dynamically import here to avoid any circular dependencies with iframeProvider
+                const { config } = await import("#src/wagmi/config.ts")
                 const user = getUser()
                 if (Array.isArray(req.payload.params) && !req.payload.params.length) {
                     // on disconnect, logout. alternatively could revoke permissions, but not much
                     // point in that for injected wallets
+                    try {
+                        // if wagmi wasn't previously successfully connected, this throws
+                        await disconnectWagmi(config)
+                    } catch {}
                     setUserWithProvider(undefined, undefined)
                 } else if (Array.isArray(req.payload.params) && user) {
                     const [address] = req.payload.params
                     const _user = await createHappyUserFromWallet(user.provider, address)
                     setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+                    grantPermissions(getAppURL(), "eth_accounts")
+                    await connectWagmi(config, { connector: happyConnector })
                 }
             }
         }
