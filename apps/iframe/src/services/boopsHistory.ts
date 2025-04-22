@@ -40,7 +40,7 @@ export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, 
 }
 
 export function markBoopAsConfirmed(account: Address, value: bigint, receipt: ExecuteOutput): void {
-    if (receipt.status !== EntryPointStatus.Success ) {
+    if (receipt.status !== EntryPointStatus.Success) {
         console.error("Cannot mark boop as confirmed: Boop hash is missing.")
         return
     }
