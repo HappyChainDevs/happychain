@@ -16,6 +16,8 @@ const envConfigSchema = z.object({
     VITE_WEB3AUTH_CLIENT_ID: z.string(),
     VITE_WEB3AUTH_NETWORK: z.string(),
     VITE_WEB3AUTH_VERIFIER: z.string(),
+    VITE_TURNSTILE_SITEKEY: z.string(),
+    VITE_FAUCET_ENDPOINT: z.string(),
 })
 
 // https://vitejs.dev/config/
