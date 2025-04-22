@@ -57,7 +57,7 @@ jobs:
               cp -r /tmp/happy-submitter/* /home/submitter/build
               
               cat > /home/submitter/build/.env <<-EOF
-            PRIVATE_KEY_LOCAL=${{ secrets.SUBMITTER_PRIVATE_KEY_LOCAL }}
+            EXECUTOR_KEYS=${{ secrets.SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
             ${{vars.SUBMITTER_ENV}}
             EOF
