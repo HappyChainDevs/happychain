@@ -57,7 +57,7 @@ jobs:
               cp -r /tmp/happy-staging-submitter/* /home/staging_submitter/build
               
               cat > /home/staging_submitter/build/.env <<-EOF
-            PRIVATE_KEY_LOCAL=${{ secrets.STAGING_SUBMITTER_PRIVATE_KEY_LOCAL }}
+            EXECUTOR_KEYS=${{ secrets.STAGING_SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.STAGING_SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
             ${{vars.STAGING_SUBMITTER_ENV}}
             EOF
