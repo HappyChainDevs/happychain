@@ -270,14 +270,23 @@ DOCS_OUT=docs/boop
 BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
 docs:
-	@set -a; [ -f .env ] && . .env; set +a; \
+	sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
 	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/fix_doc_links.ts $$file.bak > $$file; done; \
 	forge doc --out docs/boop; \
-	for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done
+	for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done; \
+	sed -i.bak 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
+	rm -f src/boop/happychain/HappyAccount.sol.bak
 .PHONY: docs
 
 docs-serve:
-	trap 'echo "Cleaning up..."; for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done; echo "Cleanup complete.";' EXIT INT TERM; \
+	sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
+	trap 'echo "Cleaning up..."; \
+	  for file in $(BOOP_SOL_FILES); do \
+	    if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; \
+	  done; \
+	  sed -i.bak "s/address private dispatchedExecutor;/address transient private dispatchedExecutor;/" src/boop/happychain/HappyAccount.sol; \
+	  rm -f src/boop/happychain/HappyAccount.sol.bak; \
+	  echo "Cleanup complete.";' EXIT INT TERM; \
 	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/fix_doc_links.ts $$file.bak > $$file; done; \
 	forge doc --out docs/boop --serve --port $${DOCS_PORT}
 .PHONY: docs-serve
