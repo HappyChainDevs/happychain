@@ -35,22 +35,13 @@ describe("submitter_execute", () => {
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        try {
-            nonceValue = await getNonce(smartAccount, nonceTrack)
-        } catch {
-            console.log("Error fetching nonce")
-        }
+        nonceValue = await getNonce(smartAccount, nonceTrack)
         unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        try {
-            signedTx = await sign(unsignedTx)
-        } catch {
-            console.log("Error signing transaction")
-        }
+        signedTx = await sign(unsignedTx)
     })
 
     describe("self-paying", () => {
         beforeAll(async () => {
-            // faucet for self paying
             await fundAccount(smartAccount)
         })
 

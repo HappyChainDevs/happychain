@@ -29,7 +29,7 @@ describe("submitter_simulate", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
@@ -139,7 +139,7 @@ describe("submitter_simulate", () => {
         })
 
         it("should revert on incorrect account", async () => {
-            const wrongAccount = await createMockTokenAMintHappyTx(
+            const wrongAccount = createMockTokenAMintHappyTx(
                 `0x${(BigInt(smartAccount) + 1n).toString(16).padStart(40, "0")}`,
                 0n,
             )

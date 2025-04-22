@@ -3,7 +3,7 @@ import { env } from "./env"
 
 const logLevel: LogLevel =
     env.NODE_ENV === "test"
-        ? LogLevel.OFF
+        ? LogLevel.WARN
         : {
               off: LogLevel.OFF,
               trace: LogLevel.TRACE,

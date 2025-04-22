@@ -29,7 +29,7 @@ describe("submitter_state", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
@@ -63,12 +63,12 @@ describe("submitter_state", () => {
     })
 
     it("fetches state of simulated (unconfirmed) future tx", async () => {
-        const nonce = nonceValue + 5n // future nonce so that is submits, but doesn't finalize
-        const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-        const signedTx = await sign(unsignedTx)
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
+        const nonce = nonceValue + 1n // future nonce so that is submits, but doesn't finalize
+        const futureUnsignedTx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+        const futureSignedTx = await sign(futureUnsignedTx)
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), futureSignedTx)
         // submit transaction, but don't wait for it to complete
-        client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }).then((a) => a.json())
+        const blockedTx = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(futureSignedTx) } })
 
         await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -82,5 +82,8 @@ describe("submitter_state", () => {
         expect(state.state.included).toBe(false)
         expect(state.state.receipt).toBeUndefined()
         expect(state.state.simulation).toBeDefined()
+
+        await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+        await blockedTx // wait for the transaction to complete so CI isn't grumpy
     })
 })
