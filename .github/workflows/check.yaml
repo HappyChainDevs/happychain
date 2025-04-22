@@ -42,6 +42,21 @@ jobs:
       - name: Fake contract deployment
         run: mkdir -p contracts/out && echo "{}" > contracts/out/deployment.json
 
+      # NOTE(norswap): in the caching tasks below, the `dist` and `node_modules` exclusion from the
+      # hash computation is actually not needed, as the hash is computed when the caching task runs,
+      # and not in the post-task. I'm leaving them there in case we want to split the caching into
+      # an explit restore and saving step — in which case we need to exclude these directories that
+      # don't exist at restore time but will exist at save time.
+      #
+      # The current setup is a lot less verbose, but it can be potentially annoying when changing
+      # the generated outputs without changing the tracked inputs (e.g. editing this file or the
+      # build system itself). If that happens you need to edit one of the input files or change the
+      # cache key.
+
+      # NOTE(norswap): The order of things is important here: first restore the caches, then `make
+      # setup` which will move `dist` into `dist.prod`, then touching the `dist.prod` dirs to
+      # make sure the build system picks them up as fresh, and finally building.
+
       - name: Cache common support build
         uses: actions/cache@v4
         id: cache-common-support-build

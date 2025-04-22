@@ -33,10 +33,12 @@ By default:
 
 ### Code Quality
 
-- `make lint` — lint files
-- `make format-check`- checks that the code is properly formatted, but does not modify it
-- `make format` — formats code
-- `make check` — runs `make lint` and `make format-check`
+- `make check` — checks formatting & linting, but do not change files
+- `make format` — formats code & applies lint fixes
+- `make solhint` — applies lint fixes
+- `make solhint-check` — checks linting
+- `make forge-fmt` — formats code
+- `make forge-fmt-check` — check formatting
 
 ### Deployment
 
