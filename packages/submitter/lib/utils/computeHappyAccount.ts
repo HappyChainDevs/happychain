@@ -1,6 +1,6 @@
 import type { Address, Hex } from "viem"
 import { concat, encodeDeployData, getAddress, keccak256 } from "viem"
-import env from "#lib/env"
+import { deployment } from "#lib/env"
 import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
 
 /**
@@ -9,8 +9,8 @@ import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_
  * @param owner The owner address for initialization
  */
 export function computeHappyAccount(salt: Hex, owner: Address): Address {
-    const accountImplementation = env.DEPLOYMENT_ACCOUNT_IMPLEMENTATION
-    const deployer = env.DEPLOYMENT_ACCOUNT_FACTORY
+    const accountImplementation = deployment.HappyAccountImpl
+    const deployer = deployment.HappyAccountBeaconProxyFactory
 
     // Step 1: Create initialization data for the proxy
     const initData = getInitData(owner)

@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { encodeFunctionData } from "viem/utils"
-import env from "#lib/env"
+import { deployment } from "#lib/env"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
@@ -122,7 +122,7 @@ describe("submitter_simulate", () => {
             const response = (await results.json()) as any
 
             const sim = response.simulationResult as SimulationResult // TODO: error in contract?
-            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
+            expect(sim.entryPoint).toBe(deployment.EntryPoint)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Failed)
             expect(sim.status).toBe(EntryPointStatus.PayoutFailed)
             expect(sim.revertData).toBe("0x3b1ab104")
@@ -132,7 +132,7 @@ describe("submitter_simulate", () => {
             const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(unsignedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
-            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
+            expect(sim.entryPoint).toBe(deployment.EntryPoint)
             expect(sim.revertData).toBe("0x8baa579f")
             expect(sim.status).toBe(EntryPointStatus.ValidationReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
@@ -148,7 +148,7 @@ describe("submitter_simulate", () => {
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
 
-            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
+            expect(sim.entryPoint).toBe(deployment.EntryPoint)
             expect(sim.revertData).toBe("0x") // InvalidSignature
             expect(sim.status).toBe(EntryPointStatus.ValidationReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
@@ -161,7 +161,7 @@ describe("submitter_simulate", () => {
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
 
-            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
+            expect(sim.entryPoint).toBe(deployment.EntryPoint)
             expect(sim.revertData).toBe("0x")
             expect(sim.status).toBe(EntryPointStatus.CallReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)
@@ -177,7 +177,7 @@ describe("submitter_simulate", () => {
             const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
-            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
+            expect(sim.entryPoint).toBe(deployment.EntryPoint)
             expect(sim.revertData).toBe("0x")
             expect(sim.status).toBe(EntryPointStatus.CallReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)

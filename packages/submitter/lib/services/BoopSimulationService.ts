@@ -1,4 +1,5 @@
 import type { Hex } from "viem"
+import { env } from "#lib/env"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { decodeBoop } from "#lib/utils/decodeBoop"
@@ -20,7 +21,7 @@ export class BoopSimulationService {
 
         if (!simulation) return
 
-        const boopHash = computeBoopHash(decodeBoop(request.args[0]))
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), decodeBoop(request.args[0]))
 
         this.simulationCacheService.set(boopHash, {
             entryPoint: request.address,

@@ -1,5 +1,6 @@
 import type { Account } from "viem"
 import type { Boop } from "#lib/client"
+import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import { computeBoopHash } from "./computeBoopHash"
 import { getDefaultExecutionAccount, getExecutionAccounts } from "./getExecutionAccounts"
@@ -38,6 +39,6 @@ const defaultAccount = getDefaultExecutionAccount()
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
 
-    const hash = computeBoopHash(tx)
+    const hash = computeBoopHash(BigInt(env.CHAIN_ID), tx)
     return executorService.get(hash, tx.account, tx.nonceTrack)
 }

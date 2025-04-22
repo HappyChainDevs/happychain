@@ -1,4 +1,5 @@
 import { type Result, err, ok } from "neverthrow"
+import { env } from "#lib/env"
 import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { boopReceiptService } from "#lib/services"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
@@ -7,7 +8,7 @@ import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { submit } from "./submit"
 
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
-    const boopHash = computeBoopHash(data.tx)
+    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), data.tx)
     const status = await submit(data)
 
     if (status.isErr()) {

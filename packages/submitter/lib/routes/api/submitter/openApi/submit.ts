@@ -3,7 +3,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { getAddress } from "viem"
 import { z } from "zod"
-import env from "#lib/env"
+import { deployment } from "#lib/env"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
@@ -16,7 +16,7 @@ export const inputSchema = z.object({
         .string()
         .refine(isAddress)
         .optional()
-        .default(env.DEPLOYMENT_ENTRYPOINT)
+        .default(deployment.EntryPoint)
         .transform((a) => getAddress(a)),
 
     /** HappyTx to execute. */

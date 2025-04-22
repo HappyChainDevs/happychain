@@ -1,8 +1,7 @@
 import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { publicClient } from "#lib/clients/index.ts"
-import { abis } from "#lib/deployments"
-import env from "#lib/env"
+import { abis, deployment } from "#lib/env"
 import { client } from "#lib/tests/utils/client.ts"
 import { computeHappyAccount } from "#lib/utils/computeHappyAccount"
 
@@ -31,7 +30,7 @@ describe("routes: api/accounts", () => {
             const salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
 
             const predictedAddress = await publicClient.readContract({
-                address: env.DEPLOYMENT_ACCOUNT_FACTORY,
+                address: deployment.HappyAccountBeaconProxyFactory,
                 abi: abis.HappyAccountBeaconProxyFactory,
                 functionName: "getAddress",
                 args: [salt, owner],

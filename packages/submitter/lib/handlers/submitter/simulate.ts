@@ -1,12 +1,12 @@
 import { type Result, err, ok } from "neverthrow"
-import env from "#lib/env"
+import { deployment } from "#lib/env"
 import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { simulateBoop } from "./simulateBoop"
 
 export async function simulate(data: EstimateGasInput): Promise<Result<EstimateGasOutput, EstimateGasOutput>> {
-    const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
+    const entryPoint = data.entryPoint ?? deployment.EntryPoint
 
     const simulation = await simulateBoop(entryPoint, encodeBoop(data.tx))
 

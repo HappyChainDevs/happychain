@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { migrator } from "#lib/database/utils/migrator"
 import { printMigrationResults } from "#lib/database/utils/printMigrationResults"
-import env from "#lib/env"
+import { env } from "#lib/env"
 import { type getCommand, showHelp } from "../utils"
 
 export async function migrateCommand({ positionals }: ReturnType<typeof getCommand>) {

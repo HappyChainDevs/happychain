@@ -3,9 +3,8 @@ import type { Address, PrivateKeyAccount } from "viem"
 import { zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
-import { publicClient, walletClient } from "#lib/clients/index.ts"
-import { abis } from "#lib/deployments"
-import env from "#lib/env"
+import { publicClient, walletClient } from "#lib/clients"
+import { abis, deployment, env } from "#lib/env"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
 import type { Boop } from "#lib/tmp/interface/Boop"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
@@ -26,7 +25,7 @@ export async function fundAccount(address: Address) {
  */
 export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     return await publicClient.readContract({
-        address: env.DEPLOYMENT_ENTRYPOINT,
+        address: deployment.EntryPoint,
         abi: abis.EntryPoint,
         functionName: "nonceValues",
         args: [account, nonceTrack],
@@ -75,7 +74,7 @@ export function createMockTokenAMintHappyTx(
 }
 
 export async function signTx(account: PrivateKeyAccount, happyTx: Boop): Promise<Boop> {
-    const boopHash = computeBoopHash(happyTx)
+    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return { ...happyTx, validatorData }
 }

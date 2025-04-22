@@ -1,7 +1,6 @@
 import { type Result, err, ok } from "neverthrow"
 import { walletClient } from "#lib/clients"
-import { abis } from "#lib/deployments"
-import env from "#lib/env"
+import { abis, deployment } from "#lib/env"
 import { UnknownError } from "#lib/errors/contract-errors"
 import { parseFromViemError } from "#lib/errors/utils"
 import { boopNonceManager, submitterService } from "#lib/services"
@@ -13,7 +12,7 @@ import type { SubmitParameters, SubmitRequest, SubmitSimulateResponseErr } from 
 import { simulateBoop } from "./simulateBoop"
 
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error | SubmitSimulateResponseErr>> {
-    const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
+    const entryPoint = data.entryPoint ?? deployment.EntryPoint
     // Save original tx to the database for historic purposes and data recovery
     await submitterService.initialize(entryPoint, data.tx)
 

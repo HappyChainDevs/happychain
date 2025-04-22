@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeBoopHash } from "#lib/client"
+import { env } from "#lib/env"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
 import { client } from "#lib/tests/utils/client"
 import type { Boop } from "#lib/tmp/interface/Boop"
@@ -46,12 +47,12 @@ describe("routes: api/submitter", () => {
         })
         it("should fetch state by hash", async () => {
             await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
-            const hash = computeBoopHash(unsignedTx)
+            const hash = computeBoopHash(BigInt(env.CHAIN_ID), unsignedTx)
             const result = await client.api.v1.submitter.state[":hash"].$get({ param: { hash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {
-            const hash = computeBoopHash(unsignedTx)
+            const hash = computeBoopHash(BigInt(env.CHAIN_ID), unsignedTx)
             const [result] = await Promise.all([
                 client.api.v1.submitter.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
                 // don't need results, just need it to complete

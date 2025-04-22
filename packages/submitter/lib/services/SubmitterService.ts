@@ -1,5 +1,6 @@
 import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
+import { env } from "#lib/env"
 import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
 import type { Boop } from "#lib/tmp/interface/Boop"
@@ -20,7 +21,7 @@ export class SubmitterService {
     ) {}
 
     async initialize(entryPoint: `0x${string}`, happyTx: Boop) {
-        const boopHash = computeBoopHash(happyTx)
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
         return await this.boopTransactionService.insert({ boopHash, entryPoint, ...happyTx })
     }
 
@@ -39,7 +40,7 @@ export class SubmitterService {
 
     async finalizeWhenReady(happyTx: Boop, txHash: `0x${string}`) {
         try {
-            const boopHash = computeBoopHash(happyTx)
+            const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
             if (!persisted?.id) {
                 const logData = { txHash, boopHash, happyTx }
