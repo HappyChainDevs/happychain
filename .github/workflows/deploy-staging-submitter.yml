@@ -51,6 +51,7 @@ jobs:
           script_stop: true
           script: |
             chmod -R o+rX /home/deployer/happy-staging-submitter
+            rm -rf /tmp/happy-staging-submitter
             mv /home/deployer/happy-staging-submitter /tmp
             sudo -u staging_submitter bash -c '
               rm -rf /home/staging_submitter/build
