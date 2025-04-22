@@ -9,7 +9,10 @@ include makefiles/help.mk
 # ==================================================================================================
 # Packages
 
-# packages shared between SDK & iframe (order matters)
+# Order matters in all the below, it's structured so that the same package never appears twice
+# in any variable.
+
+# packages shared between SDK & iframe
 SHARED_PKGS := support/common,support/wallet-common,support/worker
 
 # packages only used in the SDK
@@ -18,25 +21,26 @@ SDK_ONLY_PKGS := packages/core,packages/react,packages/vue
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 
+# packages needed to build the boop skd
+BOOP_SDK_PKGS := packages/submitter,packages/submitter-client
+
 # packages needed to build the iframe
-IFRAME_PKGS := $(SHARED_PKGS),apps/iframe
+IFRAME_PKGS := $(SHARED_PKGS),$(BOOP_SDK_PKGS),apps/iframe
 
 # packages needed to build the sdk and iframe
-ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),apps/iframe
+ACCOUNT_PKGS := $(IFRAME_PKGS),$(SDK_ONLY_PKGS)
 
 # demo packages (not including dependencies)
 DEMOS_PKGS := demos/js,demos/react,demos/vue
 
-# packages only used in the backend services (order matters)
+# packages only used in the backend services
 BACKEND_ONLY_PKGS := packages/txm,apps/randomness
 
-# packages needed to build the backend services (order matters)
+# packages needed to build the backend services
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
-SUBMITTER_PKGS := packages/submitter,packages/submitter-client,apps/submitter
-
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},${SUBMITTER_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/submitter
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
