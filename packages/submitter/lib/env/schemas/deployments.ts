@@ -1,10 +1,7 @@
-import { localhost } from "viem/chains"
 import { z } from "zod"
 import { deployment } from "#lib/deployments"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
-// Defaults to Anvil. Configure the chain id and deployment addresses in the .env file
-const DEFAULT_CHAIN_ID = localhost.id
 const DEPLOYMENT_ENTRYPOINT = deployment.EntryPoint
 
 /**
@@ -19,8 +16,8 @@ const DEPLOYMENT_ACCOUNT_FACTORY = deployment.HappyAccountBeaconProxyFactory
 const DEPLOYMENT_ACCOUNT_IMPLEMENTATION = deployment.HappyAccountImpl
 
 export const deploymentsSchema = z.object({
-    CHAIN_ID: z.coerce.number().default(DEFAULT_CHAIN_ID),
-
+    CHAIN_ID: z.coerce.number(),
+    RPC_URL: z.string().url().optional(),
     DEPLOYMENT_ENTRYPOINT: z.string().refine(isHexString).default(DEPLOYMENT_ENTRYPOINT),
     DEPLOYMENT_ACCOUNT_FACTORY: z.string().refine(isHexString).default(DEPLOYMENT_ACCOUNT_FACTORY),
     DEPLOYMENT_ACCOUNT_IMPLEMENTATION: z.string().refine(isHexString).default(DEPLOYMENT_ACCOUNT_IMPLEMENTATION),
