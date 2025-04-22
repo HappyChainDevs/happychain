@@ -228,13 +228,13 @@ export function formatTransaction(hash: Hash, receipt: HappyTxReceipt, originalT
         type: "0x2",
         typeHex: "0x2",
         chainId: Number(currentChain.chainId),
-        accessList: [], // @todo - should this always be empty?
-        // Default signature values (Boop doesn't expose these in the same way)
-        // @todo - Parse signature values (r, s, v) and extract proper yParity value from validatorData
-        r: "0x0", // placeholder
-        s: "0x0", // placeholder value
-        v: "0x0", // @todo - placeholder value - but is this needed ?
-        yParity: "0x0", // placeholder value
+        accessList: [],
+        // TODO Parse signature values (r, s, v) and extract proper yParity value from validatorData
+        //      https://linear.app/happychain/issue/HAPPY-490/
+        r: "0x0",
+        s: "0x0",
+        v: "0x0",
+        yParity: "0x0",
         boop: receipt,
     } as unknown as TransactionEIP1559
 }
