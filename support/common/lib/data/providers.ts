@@ -16,7 +16,7 @@ export const injectedProviderInfo = {
  * EIP-6963 provider for the happy wallet, injected into apps by the SDK.
  */
 export const happyProviderInfo = {
-    icon: icon64x64,
+    icon: icon64x64, // TODO remove this and add the iframe url path in core and iframe
     name: "HappyWallet",
     rdns: "tech.happy",
     uuid: createUUID(),

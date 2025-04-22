@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react"
 import { FirebaseErrorCode, isFirebaseError } from "#src/connections/firebase/errors.ts"
 import { iframeID } from "#src/requests/utils.ts"
 import { patchTimeoutOff, signalClosed } from "#src/utils/walletState.ts"
-import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { DotLinearMotionBlurLoader } from "./loaders/DotLinearMotionBlurLoader"
@@ -18,7 +17,7 @@ export function ConnectModal() {
             <div className="max-w-xs grid grid-rows-[auto_1fr] gap-6 px-2 p-4 w-full">
                 <div className="flex items-center justify-center">
                     <div className="flex flex-col items-center gap-2">
-                        <img alt="HappyChain Logo" src={happychainLogo} className="mx-auto size-16 drop-shadow-lg" />
+                        <img alt="HappyChain Logo" src={"happyIcon.png"} className="mx-auto size-16 drop-shadow-lg" />
                         <p className="text-xl font-bold">HappyChain</p>
                     </div>
                 </div>
@@ -140,7 +139,7 @@ const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
     return (
         <div className="grid gap-8">
             <div className="flex items-center justify-center gap-4">
-                <img alt="HappyChain Logo" src={happychainLogo} className="h-12" />
+                <img alt="HappyChain Logo" src={"happyIcon.png"} className="h-12" />
                 <DotLinearMotionBlurLoader />
                 <img className="h-8" src={provider?.icon} alt={`${provider?.name} icon`} />
             </div>
