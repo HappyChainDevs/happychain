@@ -13,7 +13,7 @@ import pkg from "../package.json" assert { type: "json" }
 import { env } from "./env"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
-import submitterApi from "./routes/api/submitter"
+import boopApi from "./routes/api/boop"
 import { isProduction } from "./utils/isProduction"
 
 const app = new Hono()
@@ -42,7 +42,7 @@ const app = new Hono()
         ),
     )
     .route("/api/v1/accounts", accountsApi)
-    .route("/api/v1/submitter", submitterApi)
+    .route("/api/v1/boop", boopApi)
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError(async (err, c) => {

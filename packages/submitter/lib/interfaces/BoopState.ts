@@ -10,7 +10,7 @@ import type {
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Describes the current state of a HappyTx that might or might not have
+ * Describes the current state of a Boop that might or might not have
  * been included onchain yet.
  */
 // biome-ignore format: readability
@@ -23,7 +23,7 @@ export type BoopStateSubmitterError = {
 export type BoopStateEntryPointError = {
     status: EntryPointStatus | SubmitterErrorSimulationMaybeAvailable
 
-    /** Whether the happyTx was included and executed onchain. */
+    /** Whether the Boop was included and executed onchain. */
     included: false
 
     receipt?: never
@@ -34,14 +34,14 @@ export type BoopStateEntryPointError = {
     simulation?: SimulationResult | undefined
 }
 
-export type HappyTxStateSuccess = {
+export type BoopStateSuccess = {
     status: EntryPointStatus.Success
     included: true
     receipt: BoopReceipt
     simulation?: never
 }
 
-export type BoopState = Prettify<BoopStateSubmitterError | BoopStateEntryPointError | HappyTxStateSuccess>
+export type BoopState = Prettify<BoopStateSubmitterError | BoopStateEntryPointError | BoopStateSuccess>
 
 // -------------------------------------------------------------------------------------------------
 
@@ -50,8 +50,8 @@ export enum StateRequestStatus {
     /** The state request succeeded — this does not mean the state is available! */
     Success = "receiptSuccess",
 
-    /** The happyTx is unknown to the submitter. */
-    UnknownHappyTx = "receiptUnknownHappyTx",
+    /** The boop is unknown to the submitter. */
+    UnknownBoop = "receiptUnknownBoop",
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ export type StateRequestOutput = {
     status: StateRequestStatus.Success
     state: BoopState
 } | {
-    status: StateRequestStatus.UnknownHappyTx
+    status: StateRequestStatus.UnknownBoop
     state?: never
 }
 

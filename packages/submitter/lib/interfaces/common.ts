@@ -1,5 +1,3 @@
-// TODO: this is from 'common' to be imported when norswaps spec pr is merged
-// support/common/lib/datatypes/chain.ts
 /**
  * Shared data types definition, compatible with Viem, but cutting our dependence on it for
  * package exports. This also solve issues with Viem's new fancy `Address` definition that
@@ -7,14 +5,7 @@
  * complain.
  */
 
-/** An EVM address (0x-prefixed string). */
-export type Address = `0x${string}`
-
-/** Hex-encoded data (0x-prefixed string). */
-export type Hex = `0x${string}`
-
-/** A hash, as hex-encoded data. (0x-prefixed string). */
-export type Hash = `0x${string}`
+import type { Address, Hash, Hex } from "@happy.tech/common"
 
 /**
  * Type of EVM logs.
@@ -125,31 +116,3 @@ export type Receipt = {
     /** Transaction type */
     type: TransactionTypeName
 }
-
-// Solidity type mappings
-
-export type UInt256 = bigint
-export type UInt192 = bigint
-export type UInt160 = bigint
-export type UInt128 = bigint
-export type UInt96 = bigint
-export type UInt64 = bigint
-export type UInt32 = bigint
-export type UInt16 = bigint
-export type UInt8 = bigint
-
-export type Int256 = bigint
-export type Int192 = bigint
-export type Int160 = bigint
-export type Int128 = bigint
-export type Int96 = bigint
-export type Int64 = bigint
-export type Int32 = bigint
-export type Int16 = bigint
-export type Int8 = bigint
-
-export type Bytes = Hex
-
-// support/common/lib/datatypes/url.ts
-/** Type of http:// and https:// prefixed strings. */
-export type HTTPString = `http://${string}` | `https://${string}`

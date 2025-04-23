@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
+import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
 import { boopReceiptSchema } from "./boopReceipt"
 import { simulationResultSchema } from "./simulationResult"
 

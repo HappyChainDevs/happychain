@@ -1,7 +1,7 @@
 import type { Address, Hex } from "viem"
 import { concat, encodeDeployData, getAddress, keccak256 } from "viem"
+import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "#lib/data/erc1967_creation_code"
 import { deployment } from "#lib/env"
-import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
 
 /**
  * Predicts the address of the HappyAccount that will be deployed by the HappyAccountFactory

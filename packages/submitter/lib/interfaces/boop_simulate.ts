@@ -1,25 +1,25 @@
 import type { Optional } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import type { Prettify } from "viem"
 import type { Boop } from "./Boop"
 import type { SimulationResult } from "./SimulationResult"
-import type { Address } from "./common_chain"
 import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
 
-export type EstimateGasInput = {
+export type SimulationInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
 
     /**
-     * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee
+     * Boop for which to simulate gas limits and fee parameters. The gas limits and fee
      * parameters are made optional.
      */
     tx: Optional<Boop, "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee">
 }
 
-export type EstimateGasStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
+export type SimulationStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
 
 // biome-ignore format: readability
-export type EstimateGasOutput = Prettify<(
+export type SimulationOutput = Prettify<(
     {
         // check with `isSubmitterError(status)`
         status: SubmitterErrorSimulationUnavailable
@@ -30,15 +30,15 @@ export type EstimateGasOutput = Prettify<(
         /** Simulation result, included only if `!isSubmitterError(status)`. */
         simulationResult: SimulationResult | undefined
 
-        /** Estimate max fee per gas (in wei) for the HappyTx. */
+        /** Estimate max fee per gas (in wei) for the Boop. */
         maxFeePerGas: bigint
 
-        /** Total fee requested by the submitter for submitting this HappyTx (in wei). */
+        /** Total fee requested by the submitter for submitting this Boop (in wei). */
         submitterFee: bigint
     }
 ) & (
     {
-        status: Exclude<EstimateGasStatus, EntryPointStatus.Success>
+        status: Exclude<SimulationStatus, EntryPointStatus.Success>
     } | {
         // check with `status === EntryPointStatus.Success`
         status: EntryPointStatus.Success
@@ -55,18 +55,18 @@ export type EstimateGasOutput = Prettify<(
 )>
 
 /**
- * POST `/submitter_simulate`
+ * POST `/api/v1/boop/simulate`
  *
- * Given a happyTx possibly missing some gas limits or gas fee parameters, returns estimates for
+ * Given a boop possibly missing some gas limits or gas fee parameters, returns estimates for
  * these limits and parameters, and the result of simulation.
  *
- * Note that the happyTx is also allowed to be different in some way than the one for which the gas
+ * Note that the boop is also allowed to be different in some way than the one for which the gas
  * values will be used, e.g. for accounts that validate a signature, the validationData could be
  * empty or include a dummy value.
  *
  * If any gas limit *is* specified, it is passed along as-is during simulation and not filled in
  * by the submitter.
  *
- * Calling this endpoint does *not* create a state for the HappyTx on the submitter.
+ * Calling this endpoint does *not* create a state for the Boop on the submitter.
  */
-export declare function submitter_estimateGas(input: EstimateGasInput): EstimateGasOutput
+export declare function submitter_simulate(input: SimulationInput): SimulationOutput

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { receiptSchema } from "./receipt"

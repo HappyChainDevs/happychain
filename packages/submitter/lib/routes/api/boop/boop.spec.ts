@@ -2,9 +2,9 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeBoopHash } from "#lib/client"
 import { env } from "#lib/env"
-import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
+import type { Boop } from "#lib/interfaces/Boop"
+import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
 import { client } from "#lib/tests/utils/client"
-import type { Boop } from "#lib/tmp/interface/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -27,41 +27,41 @@ describe("routes: api/submitter", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
     describe("200", () => {
         it("should simulate a tx", async () => {
-            const result = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should execute a tx", async () => {
-            const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should submit a tx", async () => {
-            const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should fetch state by hash", async () => {
-            await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+            await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
             const hash = computeBoopHash(BigInt(env.CHAIN_ID), unsignedTx)
-            const result = await client.api.v1.submitter.state[":hash"].$get({ param: { hash } })
+            const result = await client.api.v1.boop.state[":hash"].$get({ param: { hash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {
             const hash = computeBoopHash(BigInt(env.CHAIN_ID), unsignedTx)
             const [result] = await Promise.all([
-                client.api.v1.submitter.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
+                client.api.v1.boop.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
                 // don't need results, just need it to complete
-                client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }),
+                client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } }),
             ])
 
             expect(result.status).toBe(200)
         })
         it("should fetch pending tx's by account", async () => {
-            const result = await client.api.v1.submitter.pending[":account"].$get({ param: { account: smartAccount } })
+            const result = await client.api.v1.boop.pending[":account"].$get({ param: { account: smartAccount } })
             expect(result.status).toBe(200)
         })
     })

@@ -1,9 +1,9 @@
 import { type Result, err, ok } from "neverthrow"
 import { DEFAULT_RECEIPT_TIMEOUT_MS } from "#lib/data/defaults"
+import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
+import type { ReceiptInput } from "#lib/interfaces/boop_receipt"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { boopReceiptService, boopSimulationService } from "#lib/services"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/BoopState"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
-import type { ReceiptInput } from "#lib/tmp/interface/submitter_receipt"
 
 export async function receiptByHash({
     hash,
@@ -26,5 +26,5 @@ export async function receiptByHash({
         } satisfies StateRequestOutput)
     }
 
-    return err({ status: StateRequestStatus.UnknownHappyTx } satisfies StateRequestOutput)
+    return err({ status: StateRequestStatus.UnknownBoop } satisfies StateRequestOutput)
 }

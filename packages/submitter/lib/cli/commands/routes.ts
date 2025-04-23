@@ -1,7 +1,7 @@
 import { inspectRoutes, showRoutes } from "hono/dev"
 import { z } from "zod"
+import type { getCommand } from "#lib/cli/utils"
 import { app } from "#lib/server"
-import type { getCommand } from "../utils"
 
 export function routesCommand({ values }: ReturnType<typeof getCommand>) {
     const options = z

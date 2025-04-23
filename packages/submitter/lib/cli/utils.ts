@@ -1,6 +1,6 @@
 import { parseArgs } from "node:util"
 import { z } from "zod"
-import pkg from "../../package.json"
+import pkg from "../../package.json" assert { type: "json" }
 
 export function getCommand<TCommand extends [string, ...string[]]>(args: string[], commands: TCommand) {
     const { values, positionals } = parseArgs({ args, strict: false, allowPositionals: true })

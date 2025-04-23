@@ -1,8 +1,8 @@
 import { type Result, err, ok } from "neverthrow"
+import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
+import type { StateRequestInput } from "#lib/interfaces/boop_state"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { boopReceiptService, boopSimulationService } from "#lib/services"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/tmp/interface/BoopState"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
-import type { StateRequestInput } from "#lib/tmp/interface/submitter_state"
 
 export async function stateByHash({
     hash,
@@ -25,5 +25,5 @@ export async function stateByHash({
         })
     }
 
-    return err({ status: StateRequestStatus.UnknownHappyTx })
+    return err({ status: StateRequestStatus.UnknownBoop })
 }

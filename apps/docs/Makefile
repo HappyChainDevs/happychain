@@ -50,7 +50,7 @@ typedoc: ## Generates the markdown files from package source code
 
 typedoc.clean:
 	rm -rf src/pages/sdk/{js,react,vue}/api
-	rm -rf src/pages/submitter/boop-sdk/api
+	rm -rf src/pages/boop/{sdk}/api
 	rm -rf src/pages/txm/api
 .PHONY: typedoc
 
@@ -73,7 +73,7 @@ typedoc-vue:
 	typedoc --options ./typedoc.vue.js;
 .PHONY: typedoc-vue
 
-# generate Vue markdown API reference
+# generate Boop SDK markdown API reference
 typedoc-boop-sdk:
 	typedoc --options ./typedoc.boop-sdk.js;
 .PHONY: typedoc-boop-sdk

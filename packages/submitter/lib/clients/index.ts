@@ -1,7 +1,7 @@
 import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
 import { http, createPublicClient, createWalletClient } from "viem"
 import { happychainTestnet, localhost } from "viem/chains"
-import { env } from "../env"
+import { env } from "#lib/env"
 
 function getChain(): Chain {
     const chain = [localhost, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
@@ -25,7 +25,7 @@ function getChain(): Chain {
         rpcUrls: {
             default: {
                 http: [env.RPC_URL],
-                // TODO websocket
+                // TODO: websocket
             },
         },
         nativeCurrency: {

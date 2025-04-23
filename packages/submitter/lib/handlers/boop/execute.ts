@@ -1,9 +1,9 @@
 import { type Result, err, ok } from "neverthrow"
 import { env } from "#lib/env"
 import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
+import { type ExecuteInput, type ExecuteOutput, ExecuteSuccess } from "#lib/interfaces/boop_execute"
+import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
 import { boopReceiptService } from "#lib/services"
-import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
-import { type ExecuteInput, type ExecuteOutput, ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { submit } from "./submit"
 

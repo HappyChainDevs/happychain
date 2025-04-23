@@ -1,6 +1,6 @@
 import type { Account } from "viem"
+import { env } from "#lib/env"
 import { logger } from "#lib/logger"
-import { env } from "../env"
 import { getDefaultExecutionAccount } from "./getExecutionAccounts"
 import { privateKeyToExecutionAccount } from "./privateKeyToExecutionAccount"
 

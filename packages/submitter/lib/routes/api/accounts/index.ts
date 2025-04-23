@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { create } from "#lib/handlers/accounts/create"
-import type { CreateAccountOutput } from "#lib/tmp/interface/create_account"
+import type { CreateAccountOutput } from "#lib/interfaces/account_create"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import * as createRoute from "./openApi/create"
 

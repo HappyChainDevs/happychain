@@ -1,4 +1,4 @@
-import { EntryPointStatus } from "#lib/tmp/interface/status"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { HappyBaseError } from "./happy-base-error"
 
 export class UnknownError extends HappyBaseError {

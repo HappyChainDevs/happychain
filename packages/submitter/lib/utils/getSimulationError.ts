@@ -1,7 +1,7 @@
 import type { BaseError, ContractFunctionRevertedError } from "viem"
 import { decodeViemError } from "#lib/errors/utils"
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { EntryPointStatus, SimulatedValidationStatus, isFailure, isRevert } from "#lib/tmp/interface/status"
+import type { SimulationResult } from "#lib/interfaces/SimulationResult"
+import { EntryPointStatus, SimulatedValidationStatus, isFailure, isRevert } from "#lib/interfaces/status"
 import type { SubmitParameters } from "./simulation-interfaces"
 
 export function getSimulationError(req: SubmitParameters, err: unknown): SimulationResult | undefined {

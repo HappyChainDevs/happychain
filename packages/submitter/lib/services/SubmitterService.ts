@@ -2,11 +2,11 @@ import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
 import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
+import type { Boop } from "#lib/interfaces/Boop"
+import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
+import type { BoopState } from "#lib/interfaces/BoopState"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { logger } from "#lib/logger"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import type { BoopReceipt } from "#lib/tmp/interface/BoopReceipt"
-import type { BoopState } from "#lib/tmp/interface/BoopState"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 import type { BoopReceiptService } from "./BoopReceiptService"
@@ -20,9 +20,9 @@ export class SubmitterService {
         private boopReceiptService: BoopReceiptService,
     ) {}
 
-    async initialize(entryPoint: `0x${string}`, happyTx: Boop) {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
-        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...happyTx })
+    async initialize(entryPoint: `0x${string}`, boop: Boop) {
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
+        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop })
     }
 
     async finalize(boopTransactionId: number, state: BoopState) {
@@ -38,13 +38,13 @@ export class SubmitterService {
         })
     }
 
-    async finalizeWhenReady(happyTx: Boop, txHash: `0x${string}`) {
+    async finalizeWhenReady(boop: Boop, txHash: `0x${string}`) {
         try {
-            const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
+            const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
             if (!persisted?.id) {
-                const logData = { txHash, boopHash, happyTx }
-                logger.warn("Persisted HappyTx not found. Could not finalize.", logData)
+                const logData = { txHash, boopHash, boop }
+                logger.warn("Persisted Boop not found. Could not finalize.", logData)
                 return
             }
             const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
@@ -54,14 +54,14 @@ export class SubmitterService {
                 receipt,
             })
         } catch (err) {
-            logger.warn("Error while finalizing HappyTx", err)
+            logger.warn("Error while finalizing Boop", err)
         }
     }
 
     private async waitForSubmitReceipt(params: { txHash: Hex; boopHash: Hex }): Promise<BoopReceipt> {
         const { txHash, boopHash } = params
 
-        const happyTx = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
+        const boop = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
@@ -71,20 +71,20 @@ export class SubmitterService {
         return {
             boopHash,
 
-            /** Account that sent the HappyTx. */
-            account: happyTx.account,
+            /** Account that sent the Boop. */
+            account: boop.account,
 
-            /** The nonce of the HappyTx. */
-            nonceTrack: happyTx.nonceTrack,
-            nonceValue: happyTx.nonceValue,
+            /** The nonce of the Boop. */
+            nonceTrack: boop.nonceTrack,
+            nonceValue: boop.nonceValue,
 
-            /** EntryPoint to which the HappyTx was submitted onchain. */
+            /** EntryPoint to which the Boop was submitted onchain. */
             entryPoint: receipt.to,
 
-            /** Result of onchain submission of the HappyTx. */
+            /** Result of onchain submission of the Boop. */
             status: receipt.status === "success" ? EntryPointStatus.Success : EntryPointStatus.UnexpectedReverted,
 
-            /** Logs emitted by HappyTx. */
+            /** Logs emitted by Boop. */
             logs: receipt.logs.filter((l) => l.address === receipt.to),
 
             /**
@@ -93,16 +93,16 @@ export class SubmitterService {
              */
             revertData: "0x",
 
-            /** Gas used by the HappyTx */
+            /** Gas used by the Boop */
             gasUsed: receipt.gasUsed,
 
-            /** Total gas cost for the HappyTx in wei (inclusive submitter fee) */
+            /** Total gas cost for the Boop in wei (inclusive submitter fee) */
             gasCost: receipt.gasUsed * receipt.effectiveGasPrice,
 
             /**
-             * Receipt for the transaction that carried the HappyTx.
+             * Receipt for the transaction that carried the Boop.
              * Note that this transaction is allowed to do other things besides
-             * carrying the happyTx, and could potentially have carried multiple happyTxs.
+             * carrying the boop, and could potentially have carried multiple boops.
              */
             txReceipt: {
                 blobGasPrice: receipt.blobGasPrice,

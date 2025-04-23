@@ -1,7 +1,7 @@
-import type { Address, Bytes, Int256, UInt32, UInt256 } from "./common_chain"
+import type { Address, Bytes, Int256, UInt32, UInt256 } from "@happy.tech/common"
 
 /**
- * Typescript version of the HappyTx onchain structure.
+ * Typescript version of the Boop onchain structure.
  */
 export type Boop = {
     account: Address
