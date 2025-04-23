@@ -25,7 +25,7 @@ function isRequestParamValue(value: unknown): value is RequestParamValue {
         typeof value === "boolean" ||
         value === undefined ||
         value === null ||
-        (typeof value === "object")
+        typeof value === "object"
     )
 }
 
