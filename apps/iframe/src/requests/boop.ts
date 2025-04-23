@@ -3,24 +3,27 @@ import {
     type Boop,
     type BoopReceipt,
     EntryPointStatus,
+    type ExecuteOutput,
     computeBoopHash,
     estimateGas,
     execute,
 } from "@happy.tech/submitter-client"
+import { EIP1474InvalidInput } from "@happy.tech/wallet-common"
 import type {
     Address,
     Hash,
     Hex,
+    Log,
     RpcTransactionRequest,
     Transaction,
     TransactionEIP1559,
     TransactionReceipt,
 } from "viem"
 import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
+import { reqLogger } from "#src/logger"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
-import { logger } from "#src/utils/logger"
 
 /**
  * Local cache of nonces to avoid repeated
@@ -79,7 +82,7 @@ export async function getCurrentNonce(account: Address, nonceTrack = 0n): Promis
 
 export type BoopSigner = (hash: Hash) => Promise<Hex>
 export type SendBoopArgs = {
-    boopAccount: Address
+    account: Address
     tx: RpcTransactionRequest
     signer: BoopSigner
     isSponsored?: boolean
@@ -87,48 +90,50 @@ export type SendBoopArgs = {
 }
 
 export async function sendBoop(
-    { boopAccount, tx, signer, isSponsored, nonceTrack = 0n }: SendBoopArgs,
+    { account, tx, signer, isSponsored, nonceTrack = 0n }: SendBoopArgs,
     retry = 2,
-): Promise<Hash> {
+): Promise<ExecuteOutput> {
     let boopHash: Hash | undefined = undefined
+    const value = tx.value ? BigInt(tx.value) : 0n
 
     try {
-        const nonceValue = await getNextNonce(boopAccount, nonceTrack)
+        const nonceValue = await getNextNonce(account, nonceTrack)
 
-        const processedCallData = tx.data
+        if (!tx.to) throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
+
         const boop: Boop = {
-            account: boopAccount,
-            dest: tx.to as Address,
+            account,
+            dest: tx.to,
+            payer: happyPaymaster,
+            value,
             nonceTrack,
             nonceValue,
-            value: tx.value ? BigInt(tx.value as string) : 0n,
+
+            // For sponsored boops, gas & limits will be filled by the submitter.
+            // For self-paying boops, we will fill this after calling `simulate`.
+            maxFeePerGas: 0n,
+            submitterFee: 0n,
+            gasLimit: 0n,
             validateGasLimit: 0n,
             validatePaymentGasLimit: 0n,
-            // For sponsored transactions, use default/empty values, submitter will replace them
-            payer: happyPaymaster,
             executeGasLimit: 0n,
-            gasLimit: 0n,
-            // If sponsored : use minimal values
-            // otherwise (self paying),  will be overridden by simulation
-            maxFeePerGas: isSponsored ? 0n : 1200000000n,
-            submitterFee: isSponsored ? 0n : 100n,
-            callData: processedCallData as Hex,
-            validatorData: "0x" as Hex,
-            extraData: "0x" as Hex,
+            callData: tx.data ?? "0x",
+            validatorData: "0x", // we will fill this below
+            extraData: "0x", // TODO
         }
 
         if (!isSponsored) {
-            const simulationResult = await estimateGas({
-                entryPoint,
-                tx: boop,
-            })
-            if (simulationResult.isErr()) {
-                throw simulationResult.error
-            }
+            const simulation = (
+                await estimateGas({
+                    entryPoint,
+                    tx: boop,
+                })
+            ).unwrap()
 
-            const simulation = simulationResult.value
             if (simulation.status === EntryPointStatus.Success) {
                 boop.gasLimit = BigInt(simulation.gasLimit)
+                boop.validateGasLimit = BigInt(simulation.validateGasLimit)
+                boop.validatePaymentGasLimit = BigInt(simulation.validatePaymentGasLimit)
                 boop.executeGasLimit = BigInt(simulation.executeGasLimit)
                 boop.maxFeePerGas = BigInt(simulation.maxFeePerGas)
                 boop.submitterFee = BigInt(simulation.submitterFee)
@@ -137,46 +142,38 @@ export async function sendBoop(
             }
         }
 
-        boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop) as Hash
-        const signature = await signer(boopHash)
+        boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         const signedBoop: Boop = {
             ...boop,
-            validatorData: signature as Hex,
+            validatorData: await signer(boopHash),
         }
 
-        const pendingBoopDetails = {
+        addPendingBoop(account, {
             boopHash,
-            value: tx.value ? BigInt(tx.value as string) : 0n,
-        }
-        addPendingBoop(boopAccount, pendingBoopDetails)
-
-        const result = await execute({
-            entryPoint,
-            tx: signedBoop,
+            value,
         })
 
-        if (result.isErr()) {
-            throw result.error
-        }
+        const result = (
+            await execute({
+                entryPoint,
+                tx: signedBoop,
+            })
+        ).unwrap()
 
-        markBoopAsConfirmed(boopAccount, pendingBoopDetails.value, result.value)
+        markBoopAsConfirmed(account, value, result)
 
-        return boopHash
+        return result
     } catch (error) {
-        // TODO define a logger somewhere
-        logger.error("submitter", "Boop submission failed: ", error)
-        deleteNonce(boopAccount, nonceTrack)
-        if (retry > 0) {
-            console.log(`Retrying Boop submission (${retry} attempts left)...`)
-            return sendBoop({ boopAccount, tx, signer, isSponsored }, retry - 1)
-        }
+        reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
+        deleteNonce(account, nonceTrack)
 
-        if (boopHash) {
-            markBoopAsFailed(boopAccount, {
+        if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
+
+        if (boopHash)
+            markBoopAsFailed(account, {
                 value: tx.value ? BigInt(tx.value as string) : 0n,
                 boopHash,
             })
-        }
 
         throw error
     }
@@ -189,20 +186,20 @@ export function formatBoopReceiptToTransactionReceipt(hash: Hash, receipt: BoopR
     return {
         blockHash: receipt.txReceipt.blockHash,
         blockNumber: receipt.txReceipt.blockNumber,
-        contractAddress: receipt.txReceipt.contractAddress || null,
-        cumulativeGasUsed: receipt.txReceipt.cumulativeGasUsed || "0x0",
-        effectiveGasPrice: receipt.txReceipt.effectiveGasPrice || "0x0",
+        contractAddress: receipt.txReceipt.contractAddress,
+        cumulativeGasUsed: receipt.txReceipt.cumulativeGasUsed,
+        effectiveGasPrice: receipt.txReceipt.effectiveGasPrice,
         from: receipt.account,
-        gasUsed: receipt.gasUsed || "0x0",
-        logs: receipt.logs || [],
-        logsBloom: receipt.txReceipt.logsBloom || "0x0",
-        status: receipt.status === EntryPointStatus.Success ? "0x1" : "0x0",
+        gasUsed: receipt.gasUsed,
+        logs: receipt.logs as Log[],
+        logsBloom: receipt.txReceipt.logsBloom,
+        status: receipt.status === EntryPointStatus.Success ? "success" : "reverted",
         to: "0x0", // TODO include Boop inside receipt and read from there
         transactionHash: hash,
-        transactionIndex: receipt.txReceipt.transactionIndex || "0x0",
-        type: receipt.txReceipt.type || "eip1559",
+        transactionIndex: receipt.txReceipt.transactionIndex,
+        type: receipt.txReceipt.type,
         boop: receipt,
-    } as unknown as TransactionReceipt
+    } as TransactionReceipt
 }
 
 /**
@@ -212,20 +209,19 @@ export function formatTransaction(hash: Hash, receipt: BoopReceipt, originalTx?:
     const currentChain = getCurrentChain()
 
     return {
-        // Standard transaction fields
         hash,
         blockHash: receipt.txReceipt.blockHash,
         blockNumber: receipt.txReceipt.blockNumber,
         from: receipt.account,
         to: receipt.txReceipt.to,
         gas: originalTx?.gasLimit ?? receipt.gasUsed,
-        maxPriorityFeePerGas: "0x0",
+        maxPriorityFeePerGas: 0n,
         maxFeePerGas: originalTx?.maxFeePerGas ?? receipt.txReceipt.effectiveGasPrice,
-        nonce: receipt.nonceValue,
+        nonce: Number(receipt.nonceValue),
         input: originalTx?.callData || "0x",
-        value: originalTx?.value ?? "0x0",
+        value: originalTx?.value ?? 0n,
         transactionIndex: receipt.txReceipt.transactionIndex || null,
-        type: "0x2",
+        type: "eip1559",
         typeHex: "0x2",
         chainId: Number(currentChain.chainId),
         accessList: [],
@@ -233,8 +229,8 @@ export function formatTransaction(hash: Hash, receipt: BoopReceipt, originalTx?:
         //      https://linear.app/happychain/issue/HAPPY-490/
         r: "0x0",
         s: "0x0",
-        v: "0x0",
-        yParity: "0x0",
+        v: 0n,
+        yParity: 0,
         boop: receipt,
-    } as unknown as TransactionEIP1559
+    } as TransactionEIP1559
 }

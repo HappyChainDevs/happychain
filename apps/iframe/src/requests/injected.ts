@@ -103,7 +103,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 signer = eoaSigner(walletClient)
             }
 
-            return await sendBoop({ boopAccount: user.address, tx, signer })
+            return await sendBoop({ account: user.address, tx: tx, signer })
         }
 
         case "eth_getTransactionByHash": {
