@@ -1,30 +1,69 @@
 import { db } from "./db/driver"
 
-import { sql } from "kysely"
-
 export async function initDb() {
-    // If using in-memory DB, always initialize
-    const dbPath = process.env.SWARM_LEADERBOARD_DB_URL || ":memory:"
-    if (dbPath === ":memory:") {
-        await createPersonTable()
-        return
-    }
-    // For file-based DB, only initialize if file does not exist
-    const file = Bun.file(dbPath)
-    if (!(await file.exists())) {
-        await createPersonTable()
-    }
+    await Promise.all([
+        createUsersTable(),
+        createGuildsTable(),
+        createGamesTable(),
+        createUserGameScoresTable(),
+        createSessionsTable(),
+    ])
 }
 
-async function createPersonTable() {
+async function createUsersTable() {
     await db.schema
-        .createTable("person")
+        .createTable("users")
         .ifNotExists()
         .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-        .addColumn("first_name", "text", (col) => col.notNull())
-        .addColumn("gender", "text", (col) => col.notNull().check(sql`gender IN ('man','woman','other')`))
-        .addColumn("last_name", "text")
+        .addColumn("happy_wallet", "text", (col) => col.notNull().unique())
+        .addColumn("name", "text", (col) => col.notNull())
+        .addColumn("guild_id", "integer")
         .addColumn("created_at", "text", (col) => col.notNull())
-        .addColumn("metadata", "text", (col) => col.notNull())
+        .execute()
+}
+
+async function createGuildsTable() {
+    await db.schema
+        .createTable("guilds")
+        .ifNotExists()
+        .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+        .addColumn("name", "text", (col) => col.notNull())
+        .addColumn("code", "text", (col) => col.notNull().unique())
+        .addColumn("created_at", "text", (col) => col.notNull())
+        .execute()
+}
+
+async function createGamesTable() {
+    await db.schema
+        .createTable("games")
+        .ifNotExists()
+        .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+        .addColumn("name", "text", (col) => col.notNull())
+        .addColumn("icon_url", "text")
+        .addColumn("created_at", "text", (col) => col.notNull())
+        .execute()
+}
+
+async function createUserGameScoresTable() {
+    await db.schema
+        .createTable("user_game_scores")
+        .ifNotExists()
+        .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+        .addColumn("user_id", "integer", (col) => col.notNull())
+        .addColumn("game_id", "integer", (col) => col.notNull())
+        .addColumn("score", "integer", (col) => col.notNull())
+        .addColumn("played_at", "text", (col) => col.notNull())
+        .execute()
+}
+
+async function createSessionsTable() {
+    await db.schema
+        .createTable("sessions")
+        .ifNotExists()
+        .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+        .addColumn("user_id", "integer", (col) => col.notNull())
+        .addColumn("session_uuid", "text", (col) => col.notNull().unique())
+        .addColumn("created_at", "text", (col) => col.notNull())
+        .addColumn("expires_at", "text")
         .execute()
 }
