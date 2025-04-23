@@ -1,4 +1,4 @@
-import type { Boop } from "#lib/tmp/interface/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
 import { bytesToAddress, bytesToBigInt, getBytes, getDynamicLengthBytes } from "./bytes"
 
 export function decodeBoop(encoded: `0x${string}`): Boop {

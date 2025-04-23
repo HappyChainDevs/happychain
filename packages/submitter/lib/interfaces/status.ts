@@ -5,7 +5,7 @@
  * simulation or onchain execution).
  */
 export enum SubmitterErrorStatus {
-    /** The submitter rejected the request because of its HappyTx buffering policies. */
+    /** The submitter rejected the request because of its Boop buffering policies. */
     BufferExceeded = "submitterBufferExceeded",
 
     /** The submitter rejected the request because it is over capacity. */
@@ -48,20 +48,20 @@ export type SubmitterErrorSimulationMaybeAvailable =
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Possible outcomes of submitting the HappyTx to the onchain EntryPoint
+ * Possible outcomes of submitting the Boop to the onchain EntryPoint
  * contract, either during simulation or onchain execution.
  */
 export enum EntryPointStatus {
-    /** The HappyTx succeeded: the intended call was made without errors. */
+    /** The Boop succeeded: the intended call was made without errors. */
     Success = "entrypointSuccess",
 
     /**
-     * The account validation of the HappyTx reverted.
+     * The account validation of the Boop reverted.
      * This indicates either a dysfunctional account or a dysfunctional submitter.
      */
     ValidationReverted = "entrypointValidationReverted",
 
-    /** The account validation of the HappyTx failed. */
+    /** The account validation of the Boop failed. */
     ValidationFailed = "entrypointValidationFailed",
 
     /**
@@ -133,7 +133,7 @@ export function isFailure(
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Possible outcomes of the validation of the HappyTx by the account during simulation.
+ * Possible outcomes of the validation of the Boop by the account during simulation.
  * This is distinct from {@link EntryPointStatus} because during simulation we have "successful"
  * statuses that need further checks ({@link SimulatedValidationStatus.Unknown} and {@link SimulatedValidationStatus.FutureNonce}).
  */
@@ -155,7 +155,7 @@ export enum SimulatedValidationStatus {
 
     /**
      * Validation succeeded during simulation, but the nonce is ahead of the current nonce, and the
-     * HappyTx would thus fail if submitted onchain immediately.
+     * Boop would thus fail if submitted onchain immediately.
      */
     FutureNonce = "simulationFutureNonce",
 

@@ -13,7 +13,7 @@ import { updateGasValues } from "#lib/utils/updateGasValues"
  *
  * @param parameters { address, args, account }
  * @param parameters.address The address of the entrypoint
- * @param parameters.args The encoded happyTx
+ * @param parameters.args The encoded boop
  * @param parameters.account The execution wallet
  * @returns Result<{ request, result, simulation }, Error>
  */

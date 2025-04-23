@@ -1,4 +1,11 @@
 import { defineConfig } from "@happy.tech/happybuild"
+
 export default defineConfig({
-    bunConfig: {},
+    bunConfig: {
+        define: {
+            "process.env": JSON.stringify({
+                SUBMITTER_URL: process.env.SUBMITTER_URL,
+            }),
+        },
+    },
 })

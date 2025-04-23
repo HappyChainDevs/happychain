@@ -1,13 +1,13 @@
 import type {
     CreateAccountInput,
     CreateAccountOutput,
-    EstimateGasInput,
-    EstimateGasOutput,
     ExecuteInput,
     ExecuteOutput,
-    PendingHappyTxInput,
-    PendingHappyTxOutput,
+    PendingBoopInput,
+    PendingBoopOutput,
     ReceiptInput,
+    SimulationInput,
+    SimulationOutput,
     StateRequestInput,
     StateRequestOutput,
     SubmitInput,
@@ -45,7 +45,7 @@ export async function createAccount(data: CreateAccountInput): Promise<Result<Cr
  */
 export type { SubmitInput, SubmitOutput }
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
-    const response = await client.post("/v1/submitter/submit", serializeBigInt(data))
+    const response = await client.post("/v1/boop/submit", serializeBigInt(data))
     return response as Result<SubmitOutput, Error>
 }
 
@@ -58,7 +58,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
  */
 export type { ExecuteInput, ExecuteOutput }
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
-    const response = await client.post("/v1/submitter/execute", serializeBigInt(data))
+    const response = await client.post("/v1/boop/execute", serializeBigInt(data))
     return response as Result<ExecuteOutput, Error>
 }
 
@@ -67,10 +67,10 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
  * @param data
  * @returns
  */
-export type { EstimateGasInput, EstimateGasOutput }
-export async function estimateGas(data: EstimateGasInput): Promise<Result<EstimateGasOutput, Error>> {
-    const response = await client.post("/v1/submitter/simulate", serializeBigInt(data))
-    return response as Result<EstimateGasOutput, Error>
+export type { SimulationInput, SimulationOutput }
+export async function simulate(data: SimulationInput): Promise<Result<SimulationOutput, Error>> {
+    const response = await client.post("/v1/boop/simulate", serializeBigInt(data))
+    return response as Result<SimulationOutput, Error>
 }
 
 /**
@@ -80,7 +80,7 @@ export async function estimateGas(data: EstimateGasInput): Promise<Result<Estima
  */
 export type { StateRequestInput, StateRequestOutput }
 export async function state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/submitter/state/${hash}`)
+    const response = await client.get(`/v1/boop/state/${hash}`)
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -91,7 +91,7 @@ export async function state({ hash }: StateRequestInput): Promise<Result<StateRe
  */
 export type { ReceiptInput }
 export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/submitter/receipt/${hash}`, { timeout: timeout })
+    const response = await client.get(`/v1/boop/receipt/${hash}`, { timeout: timeout })
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -100,8 +100,8 @@ export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<S
  * @param data
  * @returns
  */
-export type { PendingHappyTxInput, PendingHappyTxOutput }
-export async function pending({ account }: PendingHappyTxInput): Promise<Result<PendingHappyTxOutput, Error>> {
-    const response = await client.get(`/v1/submitter/pending/${account}`)
-    return response as Result<PendingHappyTxOutput, Error>
+export type { PendingBoopInput, PendingBoopOutput }
+export async function pending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, Error>> {
+    const response = await client.get(`/v1/boop/pending/${account}`)
+    return response as Result<PendingBoopOutput, Error>
 }

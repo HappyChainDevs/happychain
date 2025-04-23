@@ -1,6 +1,6 @@
 import type { Hex } from "viem"
 import { env } from "#lib/env"
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
+import type { SimulationResult } from "#lib/interfaces/SimulationResult"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { decodeBoop } from "#lib/utils/decodeBoop"
 import type { SubmitSimulateResult } from "#lib/utils/simulation-interfaces"

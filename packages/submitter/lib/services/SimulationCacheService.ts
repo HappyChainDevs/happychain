@@ -1,5 +1,5 @@
 import { env } from "#lib/env"
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
+import type { SimulationResult } from "#lib/interfaces/SimulationResult"
 
 /**
  * An Auto Expiring LRU cache to store SimulationResults.

@@ -1,5 +1,5 @@
+import type { Address } from "@happy.tech/common"
 import { isAddress as viemIsAddress } from "viem"
-import type { Address } from "#lib/tmp/interface/common_chain"
 
 /**
  * Often used in conjunction with transforms/toAddress, this viem wrapper

@@ -5,8 +5,8 @@ import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
 import { publicClient, walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
-import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
-import type { Boop } from "#lib/tmp/interface/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
+import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/boop/openApi/execute"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
@@ -41,7 +41,7 @@ export async function getMockTokenABalance(account: Address) {
     })
 }
 
-export function createMockTokenAMintHappyTx(
+export function createMockTokenAMintBoop(
     account: Address,
     nonceValue: bigint,
     nonceTrack = 0n,
@@ -73,8 +73,8 @@ export function createMockTokenAMintHappyTx(
     }
 }
 
-export async function signTx(account: PrivateKeyAccount, happyTx: Boop): Promise<Boop> {
-    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), happyTx)
+export async function signTx(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
+    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
-    return { ...happyTx, validatorData }
+    return { ...boop, validatorData }
 }

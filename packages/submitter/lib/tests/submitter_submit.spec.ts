@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
+import type { Boop } from "#lib/interfaces/Boop"
+import { SubmitSuccess } from "#lib/interfaces/boop_submit"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { publicClient } from "../clients"
-import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -28,12 +28,12 @@ describe("submitter_submit", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
     it("submits 'mint token' tx successfully.", async () => {
-        const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+        const result = await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
         const response = (await result.json()) as any
         expect(result.status).toBe(200)
         expect(response.status).toBe(SubmitSuccess)
@@ -48,13 +48,13 @@ describe("submitter_submit", () => {
 
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyHappyTx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-                return await sign(dummyHappyTx)
+                const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+                return await sign(dummyBoop)
             }),
         )
 
         const results = await Promise.all(
-            transactions.map((tx) => client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } })),
+            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const rs = await Promise.all(
@@ -77,36 +77,36 @@ describe("submitter_submit", () => {
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
         expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
 
-        const tx0 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 0n, nonceTrack))
-        const tx1 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
-        const tx2 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 2n, nonceTrack))
-        const tx3 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 3n, nonceTrack))
-        const tx4 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 4n, nonceTrack))
-        const tx5 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 5n, nonceTrack))
-        const tx6 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 6n, nonceTrack))
-        const tx7 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 7n, nonceTrack))
-        const tx8 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 8n, nonceTrack))
-        const tx9 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack))
-        const tx9_2 = await sign(createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
+        const tx0 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 0n, nonceTrack))
+        const tx1 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 1n, nonceTrack))
+        const tx2 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 2n, nonceTrack))
+        const tx3 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 3n, nonceTrack))
+        const tx4 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 4n, nonceTrack))
+        const tx5 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 5n, nonceTrack))
+        const tx6 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 6n, nonceTrack))
+        const tx7 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 7n, nonceTrack))
+        const tx8 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 8n, nonceTrack))
+        const tx9 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 9n, nonceTrack))
+        const tx9_2 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
 
         // submit all transactions without waiting
-        const tx0_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx0) } })
-        const tx1_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx1) } })
-        const tx2_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx2) } })
-        const tx3_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx3) } })
-        const tx4_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx4) } })
-        const tx5_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx5) } })
-        const tx6_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx6) } })
-        const tx7_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx7) } })
-        const tx8_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx8) } })
-        const tx9_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx9) } })
+        const tx0_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx0) } })
+        const tx1_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx1) } })
+        const tx2_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx2) } })
+        const tx3_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx3) } })
+        const tx4_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx4) } })
+        const tx5_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx5) } })
+        const tx6_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx6) } })
+        const tx7_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx7) } })
+        const tx8_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx8) } })
+        const tx9_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx9) } })
 
         // wait for the first transaction to be processed
         // to be sure there is a queue
         const tx0_response = await tx0_request
 
         // Submit a replacement for tx9
-        const tx9_2_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx9_2) } })
+        const tx9_2_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx9_2) } })
 
         const [
             tx1_response,

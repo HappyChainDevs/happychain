@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/tmp/interface/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -35,17 +35,17 @@ describe("submitter_pending", () => {
 
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyHappyTx = createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-                return await sign(dummyHappyTx)
+                const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+                return await sign(dummyBoop)
             }),
         )
 
         // submit all transactions, but only wait for the first to complete
         await Promise.race(
-            transactions.map((tx) => client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } })),
+            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx) } })),
         )
 
-        const pending = (await client.api.v1.submitter.pending[":account"]
+        const pending = (await client.api.v1.boop.pending[":account"]
             .$get({ param: { account: smartAccount } })
             .then((a) => a.json())) as any
 

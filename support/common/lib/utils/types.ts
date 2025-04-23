@@ -9,6 +9,33 @@ export type Hex = `0x${string}`
 /** Type of hexadecimal wallet addresses prefixed with 0x. */
 export type Address = `0x${string}`
 
+/** A hash, as hex-encoded data. (0x-prefixed string). */
+export type Hash = `0x${string}`
+
+// === Solidity Type Mappings ================================================================================
+
+export type UInt256 = bigint
+export type UInt192 = bigint
+export type UInt160 = bigint
+export type UInt128 = bigint
+export type UInt96 = bigint
+export type UInt64 = bigint
+export type UInt32 = bigint
+export type UInt16 = bigint
+export type UInt8 = bigint
+
+export type Int256 = bigint
+export type Int192 = bigint
+export type Int160 = bigint
+export type Int128 = bigint
+export type Int96 = bigint
+export type Int64 = bigint
+export type Int32 = bigint
+export type Int16 = bigint
+export type Int8 = bigint
+
+export type Bytes = Hex
+
 // === TYPE ASSERTIONS =============================================================================
 
 /**

@@ -1,14 +1,14 @@
 import { type Result, err, ok } from "neverthrow"
 import { deployment } from "#lib/env"
 import { getSelectorFromErrorName } from "#lib/errors/parsedCodes"
+import type { Boop } from "#lib/interfaces/Boop"
+import type { SimulationInput, SimulationOutput } from "#lib/interfaces/boop_simulate"
+import { SubmitterErrorStatus, isSubmitterError } from "#lib/interfaces/status"
 import { boopNonceManager } from "#lib/services"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
-import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { simulateBoop } from "./simulateBoop"
 
-export async function simulate(data: EstimateGasInput): Promise<Result<EstimateGasOutput, EstimateGasOutput>> {
+export async function simulate(data: SimulationInput): Promise<Result<SimulationOutput, SimulationOutput>> {
     const entryPoint = data.entryPoint ?? deployment.EntryPoint
 
     const simulation = await simulateBoop(entryPoint, encodeBoop(data.tx))
@@ -27,14 +27,14 @@ export async function simulate(data: EstimateGasInput): Promise<Result<EstimateG
             validatePaymentGasLimit: BigInt(simulation.value.result.paymentValidateGas),
             executeGasLimit: BigInt(simulation.value.result.executeGas),
             gasLimit: BigInt(simulation.value.result.gas),
-        } satisfies EstimateGasOutput)
+        } satisfies SimulationOutput)
     }
 
     if (!simulation.error.simulation || isSubmitterError(simulation.error.simulation.status)) {
         return err({
             status: simulation.error.simulation?.status ?? SubmitterErrorStatus.UnexpectedError,
             simulationResult: simulation.error.simulation,
-        } as EstimateGasOutput)
+        } as SimulationOutput)
     }
 
     if (simulation.error.simulation.revertData === getSelectorFromErrorName("InvalidNonce")) {
@@ -45,5 +45,5 @@ export async function simulate(data: EstimateGasInput): Promise<Result<EstimateG
     return err({
         status: simulation.error.simulation.status,
         simulationResult: simulation.error.simulation,
-    } as EstimateGasOutput)
+    } as SimulationOutput)
 }

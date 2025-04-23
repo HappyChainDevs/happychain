@@ -4,7 +4,7 @@ import { validator as zv } from "hono-openapi/zod"
 import { getAddress } from "viem"
 import { z } from "zod"
 import { deployment } from "#lib/env"
-import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
+import { SubmitSuccess } from "#lib/interfaces/boop_submit"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
@@ -19,7 +19,7 @@ export const inputSchema = z.object({
         .default(deployment.EntryPoint)
         .transform((a) => getAddress(a)),
 
-    /** HappyTx to execute. */
+    /** Boop to execute. */
     tx: boopInputSchema,
 })
 
@@ -33,7 +33,7 @@ const outputSchema = z.object({
 
 export const description = describeRoute({
     validateResponse: !isProduction,
-    description: "Submits HappyTX",
+    description: "Submits Boop",
     responses: {
         200: {
             description: "Successful TX submission",

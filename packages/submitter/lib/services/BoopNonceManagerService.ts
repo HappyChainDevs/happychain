@@ -4,8 +4,8 @@ import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { abis, env } from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
+import type { Boop } from "#lib/interfaces/Boop"
+import type { PendingBoopInfo } from "#lib/interfaces/boop_pending"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 
 type NonceTrack = bigint
@@ -30,7 +30,7 @@ export class BoopNonceManagerService {
     /**
      * Returns all blocked (queued) Boops for a given account. These
      */
-    public getBlockedBoops(account: Address): PendingHappyTxInfo[] {
+    public getBlockedBoops(account: Address): PendingBoopInfo[] {
         const tx = this.blockedTxMap.getAll(account)
         if (!tx) return []
         return Array.from(tx.entries()).flatMap(([nonceTrack, txMap]) => {
@@ -40,7 +40,7 @@ export class BoopNonceManagerService {
                     nonceValue,
                     hash: tx.hash,
                     submitted: false,
-                } satisfies PendingHappyTxInfo
+                } satisfies PendingBoopInfo
             })
         })
     }

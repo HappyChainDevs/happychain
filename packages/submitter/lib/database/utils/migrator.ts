@@ -1,6 +1,6 @@
 import { Migrator } from "kysely"
-import { db } from ".."
-import { migrations } from "../migrations"
+import { db } from "#lib/database/db"
+import { migrations } from "#lib/database/migrations"
 import { ObjectMigrationProvider } from "./ObjectMigrationProvider"
 
 export const migrator = new Migrator({

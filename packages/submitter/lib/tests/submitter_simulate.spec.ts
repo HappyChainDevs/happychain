@@ -2,10 +2,10 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { encodeFunctionData } from "viem/utils"
 import { deployment } from "#lib/env"
-import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { EntryPointStatus, SimulatedValidationStatus } from "#lib/tmp/interface/status"
+import type { Boop } from "#lib/interfaces/Boop"
+import type { SimulationResult } from "#lib/interfaces/SimulationResult"
+import { EntryPointStatus, SimulatedValidationStatus } from "#lib/interfaces/status"
+import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { client } from "./utils/client"
 
@@ -29,7 +29,7 @@ describe("submitter_simulate", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
@@ -39,7 +39,7 @@ describe("submitter_simulate", () => {
             unsignedTx.executeGasLimit = 0n
             unsignedTx.gasLimit = 0n
             const signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
             expect(results.status).toBe(200)
             expect(response.status).toBe(EntryPointStatus.Success)
@@ -60,7 +60,7 @@ describe("submitter_simulate", () => {
             unsignedTx.executeGasLimit = 4000000000n
             unsignedTx.gasLimit = 4000000000n
             const signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
 
             expect(results.status).toBe(200)
@@ -81,7 +81,7 @@ describe("submitter_simulate", () => {
         it("should succeed with future nonce", async () => {
             unsignedTx.nonceValue += 1_000_000n
             const signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
 
             expect(results.status).toBe(200)
@@ -103,10 +103,9 @@ describe("submitter_simulate", () => {
     describe("failure", () => {
         it("can't use a too-low nonce", async () => {
             // execute so that this nonce has been used
-            await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
-            // simulate with same nonce again
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
 
             const response = (await results.json()) as any
 
@@ -120,7 +119,7 @@ describe("submitter_simulate", () => {
             unsignedTx.executeGasLimit = 0n
             unsignedTx.gasLimit = 0n
             signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
 
             const sim = response.simulationResult as SimulationResult // TODO: error in contract?
@@ -131,7 +130,7 @@ describe("submitter_simulate", () => {
         })
 
         it("should revert on invalid signature", async () => {
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(unsignedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(unsignedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
             expect(sim.entryPoint).toBe(deployment.EntryPoint)
@@ -141,12 +140,12 @@ describe("submitter_simulate", () => {
         })
 
         it("should revert on incorrect account", async () => {
-            const wrongAccount = createMockTokenAMintHappyTx(
+            const wrongAccount = createMockTokenAMintBoop(
                 `0x${(BigInt(smartAccount) + 1n).toString(16).padStart(40, "0")}`,
                 0n,
             )
             signedTx = await sign(wrongAccount)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
 
@@ -159,7 +158,7 @@ describe("submitter_simulate", () => {
         it("should revert on invalid destination account", async () => {
             unsignedTx.dest = smartAccount
             signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
 
@@ -176,7 +175,7 @@ describe("submitter_simulate", () => {
                 args: [],
             })
             signedTx = await sign(unsignedTx)
-            const results = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const results = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
             const response = (await results.json()) as any
             const sim = response.simulationResult as SimulationResult
             expect(sim.entryPoint).toBe(deployment.EntryPoint)

@@ -1,12 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/tmp/interface/Boop"
-import { StateRequestStatus } from "#lib/tmp/interface/BoopState"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
+import type { Boop } from "#lib/interfaces/Boop"
+import { StateRequestStatus } from "#lib/interfaces/BoopState"
+import { EntryPointStatus } from "#lib/interfaces/status"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -29,7 +29,7 @@ describe("submitter_receipt", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
         signedTx = await sign(unsignedTx)
     })
 
@@ -37,9 +37,9 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
 
         // submit transaction and wait to complete
-        await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+        await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
-        const state = (await client.api.v1.submitter.receipt[":hash"]
+        const state = (await client.api.v1.boop.receipt[":hash"]
             .$get({ param: { hash: boopHash }, query: { timeout: "0" } })
             .then((a) => a.json())) as any
 
@@ -55,13 +55,13 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
 
         // submit transaction but don't wait to complete
-        client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+        client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
-            client.api.v1.submitter.receipt[":hash"]
+            client.api.v1.boop.receipt[":hash"]
                 .$get({ param: { hash: boopHash }, query: { timeout: "100" } }) // return near immediately
                 .then((a) => a.json()) as any,
-            client.api.v1.submitter.receipt[":hash"]
+            client.api.v1.boop.receipt[":hash"]
                 .$get({ param: { hash: boopHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
                 .then((a) => a.json()) as any,
         ])

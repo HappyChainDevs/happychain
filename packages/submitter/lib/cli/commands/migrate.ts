@@ -1,8 +1,8 @@
 import { z } from "zod"
+import { type getCommand, showHelp } from "#lib/cli/utils"
 import { migrator } from "#lib/database/utils/migrator"
 import { printMigrationResults } from "#lib/database/utils/printMigrationResults"
 import { env } from "#lib/env"
-import { type getCommand, showHelp } from "../utils"
 
 export async function migrateCommand({ positionals }: ReturnType<typeof getCommand>) {
     const command = z.enum(["latest", "up", "down"]).safeParse(positionals[0])

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { publicClient } from "#lib/clients/index.ts"
+import { publicClient } from "#lib/clients/index"
 import { abis, deployment } from "#lib/env"
-import { client } from "#lib/tests/utils/client.ts"
+import { client } from "#lib/tests/utils/client"
 import { computeHappyAccount } from "#lib/utils/computeHappyAccount"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())

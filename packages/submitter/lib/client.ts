@@ -1,23 +1,23 @@
 // === TYPES =======================================================================================
-export type * from "./tmp/interface/create_account"
-export type * from "./tmp/interface/submitter_estimateGas"
-export type * from "./tmp/interface/submitter_execute"
-export type * from "./tmp/interface/submitter_submit"
-export type * from "./tmp/interface/submitter_state"
-export type * from "./tmp/interface/submitter_receipt"
-export type * from "./tmp/interface/submitter_pending"
-export type * from "./tmp/interface/Boop"
-export type * from "./tmp/interface/BoopReceipt"
-export type * from "./tmp/interface/BoopState"
-export type * from "./tmp/interface/common_chain"
-export type * from "./tmp/interface/status"
-export type * from "./tmp/interface/SimulationResult"
+export type * from "./interfaces/account_create"
+export type * from "./interfaces/boop_simulate"
+export type * from "./interfaces/boop_execute"
+export type * from "./interfaces/boop_submit"
+export type * from "./interfaces/boop_state"
+export type * from "./interfaces/boop_receipt"
+export type * from "./interfaces/boop_pending"
+export type * from "./interfaces/Boop"
+export type * from "./interfaces/BoopReceipt"
+export type * from "./interfaces/BoopState"
+export type * from "./interfaces/common"
+export type * from "./interfaces/status"
+export type * from "./interfaces/SimulationResult"
 export type { Prettify, Optional } from "@happy.tech/common"
 
 // === ENUMS =======================================================================================
 
-export { EntryPointStatus } from "./tmp/interface/status"
-export { StateRequestStatus } from "./tmp/interface/BoopState"
+export { EntryPointStatus } from "./interfaces/status"
+export { StateRequestStatus } from "./interfaces/BoopState"
 
 // === UTILITIES ===================================================================================
 export { computeBoopHash } from "./utils/computeBoopHash"

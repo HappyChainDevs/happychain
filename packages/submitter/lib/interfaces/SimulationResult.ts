@@ -1,8 +1,8 @@
-import type { Address, Hex } from "./common_chain"
+import type { Address, Hex } from "@happy.tech/common"
 import type { EntryPointStatus, SimulatedValidationStatus } from "./status"
 
 /**
- * The result of simulating a HappyTx.
+ * The result of simulating a Boop.
  */
 // biome-ignore format: readability
 export type SimulationResult = {
@@ -10,7 +10,7 @@ export type SimulationResult = {
     // 
     validationStatus: SimulatedValidationStatus
     /**
-     * EntryPoint to which the HappyTx was submitted onchain.
+     * EntryPoint to which the Boop was submitted onchain.
      */
     entryPoint: Address
     /**

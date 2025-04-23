@@ -1,24 +1,18 @@
 import { Hono } from "hono"
 import type { Result } from "neverthrow"
-import type {
-    EstimateGasOutput,
-    ExecuteOutput,
-    PendingHappyTxOutput,
-    StateRequestOutput,
-    SubmitOutput,
-} from "#lib/client"
+import type { ExecuteOutput, PendingBoopOutput, SimulationOutput, StateRequestOutput, SubmitOutput } from "#lib/client"
 import { HappyBaseError } from "#lib/errors/happy-base-error"
-import { execute } from "#lib/handlers/submitter/execute"
-import { pendingByAccount } from "#lib/handlers/submitter/pendingByAccount"
-import { receiptByHash } from "#lib/handlers/submitter/receiptByHash"
-import { simulate } from "#lib/handlers/submitter/simulate"
-import { stateByHash } from "#lib/handlers/submitter/stateByHash"
-import { submit } from "#lib/handlers/submitter/submit"
+import { execute } from "#lib/handlers/boop/execute"
+import { pendingByAccount } from "#lib/handlers/boop/pendingByAccount"
+import { receiptByHash } from "#lib/handlers/boop/receiptByHash"
+import { simulate } from "#lib/handlers/boop/simulate"
+import { stateByHash } from "#lib/handlers/boop/stateByHash"
+import { submit } from "#lib/handlers/boop/submit"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import * as estimateGasRoute from "./openApi/estimateGas"
 import * as executeRoute from "./openApi/execute"
 import * as pendingByAccountRoute from "./openApi/pendingByAccount"
 import * as receiptByHashRoute from "./openApi/receiptByHash"
+import * as simulationRoute from "./openApi/simulate"
 import * as stateByHashRoute from "./openApi/stateByHash"
 import * as submitRoute from "./openApi/submit"
 
@@ -36,12 +30,12 @@ function makeResponse<TOk>(output: Result<TOk, unknown>) {
 export default new Hono()
     .post(
         "/simulate", //
-        estimateGasRoute.description,
-        estimateGasRoute.validation,
+        simulationRoute.description,
+        simulationRoute.validation,
         async (c) => {
             const input = c.req.valid("json")
             const output = await simulate(input)
-            const [response, code] = makeResponse<EstimateGasOutput>(output)
+            const [response, code] = makeResponse<SimulationOutput>(output)
             return c.json(response, code)
         },
     )
@@ -93,7 +87,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await pendingByAccount(input)
-            const [response, code] = makeResponse<PendingHappyTxOutput>(output)
+            const [response, code] = makeResponse<PendingBoopOutput>(output)
             return c.json(response, code)
         },
     )

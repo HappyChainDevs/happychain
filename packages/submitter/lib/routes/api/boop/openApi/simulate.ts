@@ -4,7 +4,7 @@ import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
 import { deployment } from "#lib/env"
-import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
+import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
@@ -16,7 +16,7 @@ const inputSchema = z.object({
     entryPoint: z.string().refine(isAddress).transform(checksum).optional().default(deployment.EntryPoint),
 
     /**
-     * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee
+     * Boop for which to estimate gas limits and fee parameters. The gas limits and fee
      * parameters are made optional.
      */
     tx: boopInputSchema.merge(
@@ -45,10 +45,10 @@ const outputSchema = z.discriminatedUnion("status", [
 
 export const description = describeRoute({
     validateResponse: !isProduction,
-    description: "Estimate gas for the supplied HappyTx",
+    description: "Simulates the supplied Boop",
     responses: {
         200: {
-            description: "Successful gas estimation",
+            description: "Successful simulation",
             content: {
                 "application/json": {
                     schema: resolver(outputSchema),

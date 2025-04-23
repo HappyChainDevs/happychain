@@ -1,5 +1,5 @@
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop } from "../tmp/interface/Boop"
+import type { Boop } from "../interfaces/Boop"
 import { encodeBoop } from "./encodeBoop"
 
 // with paymaster, don't include gas values in the signature!
@@ -12,13 +12,13 @@ const paymasterGasData = {
     validatePaymentGasLimit: 0n,
 } as const
 
-export function computeBoopHash(chainId: bigint, happyTx: Boop): `0x${string}` {
+export function computeBoopHash(chainId: bigint, boop: Boop): `0x${string}` {
     // Don't include validator data in the signature so that pre & post signing are the same
-    const isSelfPaying = happyTx.payer === happyTx.account
+    const isSelfPaying = boop.payer === boop.account
 
     const hashData: Boop = isSelfPaying
-        ? { ...happyTx, validatorData: "0x" }
-        : { ...happyTx, validatorData: "0x", ...paymasterGasData }
+        ? { ...boop, validatorData: "0x" }
+        : { ...boop, validatorData: "0x", ...paymasterGasData }
 
     return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(hashData), chainId]))
 }

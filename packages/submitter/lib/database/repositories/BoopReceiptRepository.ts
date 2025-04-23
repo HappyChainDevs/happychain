@@ -1,6 +1,6 @@
+import type { Hash } from "@happy.tech/common"
 import type { Insertable, Kysely } from "kysely"
 import type { BoopReceipt, DB } from "#lib/database/generated"
-import type { Hash } from "#lib/tmp/interface/common_chain"
 
 export class BoopReceiptRepository {
     constructor(private db: Kysely<DB>) {}
