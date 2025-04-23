@@ -1,8 +1,8 @@
 import { type Hex, type UUID, createUUID } from "@happy.tech/common"
-import { AuthState, EIP1193UnauthorizedError, type HappyUser } from "@happy.tech/wallet-common"
-import type { Hash, WalletClient } from "viem"
+import { AuthState, EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
+import type { Hash } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import type { AccountWalletClient } from "#src/state/walletClient.ts"
+import { type AccountWalletClient, getWalletClient } from "#src/state/walletClient"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
 
@@ -45,12 +45,13 @@ export function checkAuthenticated() {
 /**
  * Returns a `personal_sign` signing function that uses a wallet client (EOA) to sign.
  */
-export function eoaSigner(walletClient: AccountWalletClient): (data: Hex) => Promise<Hex> {
-    return async (boopHash: Hash) =>
-        walletClient.signMessage({
-            account: walletClient.account.address,
-            message: { raw: boopHash },
-        })
+export async function eoaSigner(data: Hex): Promise<Hex> {
+    const walletClient = getWalletClient()
+    if (!walletClient) throw new EIP1193DisconnectedError()
+    return await walletClient.signMessage({
+        account: walletClient.account.address,
+        message: { raw: data },
+    })
 }
 
 /**

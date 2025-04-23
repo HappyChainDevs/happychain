@@ -90,7 +90,7 @@ export type SendBoopArgs = {
 }
 
 export async function sendBoop(
-    { account, tx, signer, isSponsored, nonceTrack = 0n }: SendBoopArgs,
+    { account, tx, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
     retry = 2,
 ): Promise<ExecuteOutput> {
     let boopHash: Hash | undefined = undefined
@@ -118,7 +118,7 @@ export async function sendBoop(
             validatePaymentGasLimit: 0n,
             executeGasLimit: 0n,
             callData: tx.data ?? "0x",
-            validatorData: "0x", // we will fill this below
+            validatorData: "0x", // we will fill after signing
             extraData: "0x", // TODO
         }
 

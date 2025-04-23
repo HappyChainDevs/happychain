@@ -48,9 +48,9 @@ import type { AppURL } from "../utils/appURL"
 import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
 import {
-    checkIsSessionKeyExtensionInstalled,
     getSessionKeyForTarget,
     installSessionKeyExtension,
+    isSessionKeyValidatorInstalled,
     registerSessionKey,
 } from "./sessionKeys"
 import { hasExistingSessionKeys } from "./sessionKeys"
@@ -98,9 +98,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 if (!sessionKey) throw new EIP1193UnauthorizedError()
                 signer = sessionKeySigner(sessionKey)
             } else {
-                const walletClient = getWalletClient()
-                if (!walletClient) throw new EIP1193DisconnectedError()
-                signer = eoaSigner(walletClient)
+                signer = eoaSigner
             }
 
             return await sendBoop({ account: user.address, tx: tx, signer })
@@ -253,25 +251,12 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             const boopAccount = await getBoopAccount()
             if (!boopAccount) throw new Error("Boop account not initialized")
 
-            // Only check extension installation if we don't have any session keys stored
-            if (!hasExistingSessionKeys(user.address)) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyExtensionInstalled(boopAccount.address)
-                if (!isSessionKeyValidatorInstalled) {
-                    // Install the SessionKeyValidator extension on the Boop account
-                    const hash = await installSessionKeyExtension(boopAccount.address)
+            const result =
+                !hasExistingSessionKeys(user.address) && !(await isSessionKeyValidatorInstalled(user.address))
+                    ? await installSessionKeyExtension(user.address, targetContract, accountSessionKey.address)
+                    : await registerSessionKey(user.address, targetContract, accountSessionKey.address)
 
-                    // Wait for the installation transaction to be confirmed
-                    const publicClient = getPublicClient()
-                    await publicClient.waitForTransactionReceipt({ hash })
-                }
-            }
-
-            // Register the session key for the target contract
-            const hash = await registerSessionKey(accountSessionKey.address, targetContract, user.address)
-
-            // Wait for the registration transaction to be confirmed
-            const publicClient = getPublicClient()
-            await publicClient.waitForTransactionReceipt({ hash })
+            // TODO check result?
 
             // Store the session key
             storage.set(StorageKey.SessionKeys, {
