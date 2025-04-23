@@ -1,8 +1,10 @@
 {
+  "BatchCallExecutor": "BatchCallExecutor",
   "EntryPoint": "EntryPoint",
   "HappyAccountBeacon": "HappyAccountBeacon",
   "HappyAccountBeaconProxyFactory": "HappyAccountBeaconProxyFactory",
-  "HappyAccountImpl": "HappyAccountImpl",
+  "HappyAccountImpl": "HappyAccount",
   "HappyAccountRegistry": "HappyAccountRegistry",
-  "HappyPaymaster": "HappyPaymaster"
+  "HappyPaymaster": "HappyPaymaster",
+  "SessionKeyValidator": "SessionKeyValidator"
 }

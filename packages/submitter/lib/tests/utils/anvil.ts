@@ -17,8 +17,8 @@ async function startAnvil() {
         .quiet()
         .then(() => {})
         .catch(() => {})
-    await waitBlocks(1)
-    console.log("Anvil Started")
+    await waitBlocks() // ensure anvil is up and running at least block 1
+    console.log("\n⚒️ Anvil Started")
 }
 
 async function stopAnvil() {
@@ -28,11 +28,10 @@ async function stopAnvil() {
             .then(() => {})
             .catch(() => {})
     } catch {}
-    console.log("Anvil Stopped")
+    console.log("\n👋 Anvil Stopped")
 }
 
 export const anvil = {
     start: startAnvil,
     stop: stopAnvil,
-    wait: waitBlocks,
 }

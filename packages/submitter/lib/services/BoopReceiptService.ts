@@ -1,7 +1,6 @@
 import { publicClient } from "#lib/clients"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { SubmitterError } from "#lib/errors/submitter-errors"
-import { logger } from "#lib/logger"
 import type { BoopReceipt } from "#lib/tmp/interface/BoopReceipt"
 import type { Hash, Receipt } from "#lib/tmp/interface/common_chain"
 import type { EntryPointStatus } from "#lib/tmp/interface/status"
