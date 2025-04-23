@@ -1,0 +1,34 @@
+name: Submitter Check Cron Job
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'       # every 30 min
+env:
+    CHAIN_ID: 216
+    SUBMITTER_URL: "https://submitter.happy.tech/api"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.4
+      - name: Build submitter & submitter client code
+        run: |
+            make submitter.build
+            cd packages/submitter-client
+            make build
+  
+      - name: Execute boop
+        run: |
+          cd packages/submitter
+          bun lib/tests/executeBoop.ts
+
