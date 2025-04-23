@@ -3,6 +3,7 @@ import { createPublicClient, http, zeroAddress } from "viem";
 import { happychainTestnet } from "viem/chains";
 import { createAccount, execute, computeBoopHash } from "@happy.tech/submitter-client"
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia";
+import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia";
 
 const testAccount = privateKeyToAccount("0x8c5a8f60027c4a4654742cca624c7370599b0699dc142d44c9759e3040e201e3")
 
@@ -23,7 +24,7 @@ async function getNonce(account: `0x${string}`, nonceTrack = 0n): Promise<bigint
 async function createAndSignMintTx(account: `0x${string}`){
     const unsignedTx = {
         account,
-        dest: "0x02206faC6469B2f59FC2Bb9d3BC181Fbe703F8B7" as `0x${string}`, // token A on testnet
+        dest: mockDeployments.MockTokenA,
         nonceTrack: 0n,
         nonceValue: await getNonce(account),
         value: 0n,
