@@ -9,9 +9,7 @@ export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
     const { data: balance, refetch } = useBalance({
         address: user?.address,
-        query: {
-            enabled: !!user?.address,
-        },
+        query: { enabled: !!user?.address },
     })
     const formattedBalance = formatUserBalance(balance?.value)
     const [walletOpenSignal, setWalletOpenSignal] = useAtom(walletOpenSignalAtom)

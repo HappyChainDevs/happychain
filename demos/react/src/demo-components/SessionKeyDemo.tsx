@@ -11,24 +11,27 @@ const SessionKeyDemo = () => {
     const [counter, setCounter] = useState<bigint | undefined>()
     const [loading, setLoading] = useState(false)
 
-    const getCounterValue = useCallback(async () => {
-        return await publicClient.readContract({
+    const updateCounterValue = useCallback(async () => {
+        if (!user?.address) {
+            setCounter(undefined)
+            return
+        }
+        const count = await publicClient.readContract({
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "getCount",
             account: user?.address,
         })
+        setCounter(count)
+        return count
     }, [user])
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: missing counter by design
     useEffect(() => {
-        if (!user) return
         setLoading(true)
-        getCounterValue().then((value) => {
-            if (!counter) setCounter(value)
+        updateCounterValue().then(() => {
             setLoading(false)
         })
-    }, [user, getCounterValue])
+    }, [updateCounterValue])
 
     async function submitIncrement() {
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
@@ -50,8 +53,7 @@ const SessionKeyDemo = () => {
                 return
             }
 
-            const newCount = await getCounterValue()
-            setCounter(newCount)
+            const newCount = await updateCounterValue()
             toast.success(`Counter incremented to ${newCount}`)
         } catch (error) {
             console.warn("[incrementCounter] error:", error)
