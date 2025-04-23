@@ -2,6 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {BatchCallExecutor} from "boop/extensions/BatchCallExecutor.sol";
+import {BatchCallExecutor} from "boop/extensions/BatchCallExecutor.sol";
+import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
 import {HappyAccountUUPSProxyFactory} from "boop/happychain/factories/HappyAccountUUPSProxyFactory.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
@@ -19,15 +22,13 @@ contract DeployBoopContracts is BaseDeployScript {
 
     EntryPoint public entryPoint;
     HappyAccount public happyAccountImpl;
-
     HappyPaymaster public happyPaymaster;
-
     HappyAccountRegistry public happyAccountRegistry;
-
-    HappyAccountBeaconProxyFactory public happyAccountBeaconProxyFactory;
     HappyAccountBeacon public happyAccountBeacon;
-
+    HappyAccountBeaconProxyFactory public happyAccountBeaconProxyFactory;
     HappyAccountUUPSProxyFactory public happyAccountUUPSProxyFactory;
+    SessionKeyValidator public sessionKeyValidator;
+    BatchCallExecutor public batchCallExecutor;
 
     bool private isLocal; // flag to indicate if the deployment is local, performs additional setup
     bool private isUUPS; // flag to determine which proxy type to use
@@ -74,6 +75,7 @@ contract DeployBoopContracts is BaseDeployScript {
 
         (address payable _happyAccountImpl,) = deployDeterministic( //-
             "HappyAccountImpl",
+            "HappyAccount",
             type(HappyAccount).creationCode,
             abi.encode(_entryPoint),
             DEPLOYMENT_SALT //-
@@ -96,6 +98,7 @@ contract DeployBoopContracts is BaseDeployScript {
                 DEPLOYMENT_SALT //-
             );
             happyAccountUUPSProxyFactory = HappyAccountUUPSProxyFactory(_happyAccountProxyFactory);
+            happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
         } else {
             // default to beacon proxies
             (address payable _happyAccountBeacon,) = deployDeterministic( //-
@@ -113,6 +116,7 @@ contract DeployBoopContracts is BaseDeployScript {
                 DEPLOYMENT_SALT //-
             );
             happyAccountBeaconProxyFactory = HappyAccountBeaconProxyFactory(_happyAccountBeaconFactory);
+            happyAccountRegistry.setAuthorizedFactory(address(happyAccountBeaconProxyFactory), true);
         }
 
         // -----------------------------------------------------------------------------------------
@@ -127,6 +131,26 @@ contract DeployBoopContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
 
+        (address payable _sessionKeyValidator,) = deployDeterministic( //-
+            "SessionKeyValidator",
+            type(SessionKeyValidator).creationCode,
+            "",
+            DEPLOYMENT_SALT //-
+        );
+        sessionKeyValidator = SessionKeyValidator(_sessionKeyValidator);
+
+        // -----------------------------------------------------------------------------------------
+
+        (address payable _batchCallExecutor,) = deployDeterministic( //-
+            "BatchCallExecutor",
+            type(BatchCallExecutor).creationCode,
+            "",
+            DEPLOYMENT_SALT //-
+        );
+        batchCallExecutor = BatchCallExecutor(_batchCallExecutor);
+
+        // -----------------------------------------------------------------------------------------
+
         if (isLocal) {
             // In local mode, fund the paymaster with some gas tokens.
             vm.deal(_happyPaymaster, PM_DEPOSIT);
@@ -134,11 +158,6 @@ contract DeployBoopContracts is BaseDeployScript {
             // Send dust to address(0) to avoid the 25000 extra gas cost when sending to an empty account during simulation
             // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
             vm.deal(address(0), 1 wei);
-        }
-        if (isUUPS) {
-            happyAccountRegistry.setAuthorizedFactory(address(happyAccountUUPSProxyFactory), true);
-        } else {
-            happyAccountRegistry.setAuthorizedFactory(address(happyAccountBeaconProxyFactory), true);
         }
 
         // -----------------------------------------------------------------------------------------
