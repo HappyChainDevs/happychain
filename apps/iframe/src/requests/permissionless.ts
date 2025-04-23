@@ -76,8 +76,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             if (!sessionKey) throw new EIP1193UnauthorizedError()
 
             return await sendBoop({
-                boopAccount: user.address,
-                tx,
+                account: user.address,
+                tx: tx,
                 signer: sessionKeySigner(sessionKey),
             })
         }
