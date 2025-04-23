@@ -80,6 +80,8 @@ jobs:
             export ${{vars.FAUCET_ENV}}
             EOF
 
+              dos2unix .env
+
               npm rebuild
             
               pm2 delete ${{ env.PM2_PROCESS_NAME }}
