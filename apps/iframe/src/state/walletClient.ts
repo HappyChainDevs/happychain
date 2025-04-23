@@ -1,4 +1,4 @@
-import { accessorsFromAtom } from "@happy.tech/common"
+import { type Address, accessorsFromAtom } from "@happy.tech/common"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
 import { type PublicRpcSchema, type WalletRpcSchema, createWalletClient } from "viem"
@@ -9,7 +9,7 @@ import { userAtom } from "./user"
 export type AccountWalletClient = WalletClient<
     CustomTransport,
     undefined,
-    ParseAccount<`0x${string}`>,
+    ParseAccount<Address>,
     [...WalletRpcSchema, ...PublicRpcSchema]
 >
 

@@ -1,5 +1,4 @@
-import type { Hex } from "@happy.tech/common"
-import { createUUID } from "@happy.tech/common"
+import { type Hex, createUUID } from "@happy.tech/common"
 import type {
     ConnectionProvider,
     EIP6963ProviderDetail,
