@@ -20,3 +20,5 @@ export { EIP1193ErrorCodes } from "./eip-1193-codes"
 export type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interfaces"
 
 export { LoginRequiredError } from "./happy-provider-errors"
+
+export { EIP1474ErrorCodes, GenericEthereumRpcError, EIP1474InvalidInput } from "./eip-1474-errors"
