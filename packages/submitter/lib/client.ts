@@ -21,3 +21,4 @@ export { StateRequestStatus } from "./tmp/interface/BoopState"
 
 // === UTILITIES ===================================================================================
 export { computeBoopHash } from "./utils/computeBoopHash"
+export { serializeBigInt } from "./utils/serializeBigInt"
