@@ -1,4 +1,5 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
+import type { ExecuteOutput } from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -10,7 +11,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, type Hash, InvalidAddressError, isAddress } from "viem"
+import { type Client, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { reqLogger } from "#src/logger"
 import { StorageKey, storage } from "#src/services/storage"
@@ -18,14 +19,13 @@ import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
-import { checkIsSessionKeyExtensionInstalled, installSessionKeyExtension, registerSessionKey } from "./sessionKeys"
+import { installSessionKeyExtension, isSessionKeyValidatorInstalled, registerSessionKey } from "./sessionKeys"
 import { hasExistingSessionKeys } from "./sessionKeys"
 import { appForSourceID, eoaSigner } from "./utils"
 
@@ -50,14 +50,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             if (!user) throw new EIP1193DisconnectedError()
-            const walletClient = getWalletClient()
-            if (!walletClient) throw new EIP1193DisconnectedError()
 
             const tx = request.payload.params[0]
             return await sendBoop({
                 account: user.address,
                 tx: tx,
-                signer: eoaSigner(walletClient),
+                signer: eoaSigner,
             })
         }
 
@@ -129,25 +127,16 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 throw new InvalidAddressError({ address: targetContract })
             }
 
-            const publicClient = getPublicClient()
-            // Generate a new session key
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
 
-            let hash: Hash
-            // Only check extension installation if we don't have any session keys stored
-            if (!hasExistingSessionKeys(user.address)) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyExtensionInstalled(user.address)
-                if (!isSessionKeyValidatorInstalled) {
-                    // Install the SessionKeyValidator AND register session key
-                    hash = await installSessionKeyExtension(user.address, accountSessionKey.address, targetContract)
-                }
-            } else {
-                hash = await registerSessionKey(accountSessionKey.address, targetContract, user.address)
-            }
+            const result =
+                !hasExistingSessionKeys(user.address) && !(await isSessionKeyValidatorInstalled(user.address))
+                    ? await installSessionKeyExtension(user.address, targetContract, accountSessionKey.address)
+                    : await registerSessionKey(user.address, targetContract, accountSessionKey.address)
 
-            await publicClient.waitForTransactionReceipt({ hash: hash! })
+            // TODO check result?
 
             // Grant permissions for the app to use this session key
             grantPermissions(app, {

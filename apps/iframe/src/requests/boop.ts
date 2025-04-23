@@ -118,7 +118,7 @@ export async function sendBoop(
             validatePaymentGasLimit: 0n,
             executeGasLimit: 0n,
             callData: tx.data ?? "0x",
-            validatorData: "0x", // we will fill this below
+            validatorData: "0x", // we will fill after signing
             extraData: "0x", // TODO
         }
 
