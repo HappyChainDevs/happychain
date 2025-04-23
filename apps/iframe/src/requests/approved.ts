@@ -10,7 +10,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, type Hash, type Hex, InvalidAddressError, isAddress } from "viem"
+import { type Client, type Hash, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { reqLogger } from "#src/logger"
 import { StorageKey, storage } from "#src/services/storage"
@@ -27,7 +27,7 @@ import { sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
 import { checkIsSessionKeyExtensionInstalled, installSessionKeyExtension, registerSessionKey } from "./sessionKeys"
 import { hasExistingSessionKeys } from "./sessionKeys"
-import { appForSourceID } from "./utils"
+import { appForSourceID, eoaSigner } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -49,26 +49,16 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            try {
-                if (!user) throw new EIP1193UnauthorizedError()
-                const tx = request.payload.params[0]
-                return await sendBoop({
-                    boopAccount: user.address,
-                    tx,
-                    signer: async (boopHash: Hash) => {
-                        const walletClient = getWalletClient()
-                        if (!walletClient) throw new Error("Wallet client not initialized")
+            if (!user) throw new EIP1193DisconnectedError()
+            const walletClient = getWalletClient()
+            if (!walletClient) throw new EIP1193DisconnectedError()
 
-                        return (await walletClient.signMessage({
-                            account: walletClient.account!,
-                            message: { raw: boopHash },
-                        })) as Hex
-                    },
-                })
-            } catch (error) {
-                console.error("Error processing transaction:", error)
-                throw error
-            }
+            const tx = request.payload.params[0]
+            return await sendBoop({
+                boopAccount: user.address,
+                tx,
+                signer: eoaSigner(walletClient),
+            })
         }
 
         case "eth_requestAccounts": {

@@ -1,5 +1,8 @@
-import { type UUID, createUUID } from "@happy.tech/common"
-import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
+import { type Hex, type UUID, createUUID } from "@happy.tech/common"
+import { AuthState, EIP1193UnauthorizedError, type HappyUser } from "@happy.tech/wallet-common"
+import type { Hash, WalletClient } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import type { AccountWalletClient } from "#src/state/walletClient.ts"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
 
@@ -36,5 +39,28 @@ export function appForSourceID(sourceId: UUID): AppURL | undefined {
 export function checkAuthenticated() {
     if (getAuthState() !== AuthState.Connected) {
         throw new EIP1193UnauthorizedError()
+    }
+}
+
+/**
+ * Returns a `personal_sign` signing function that uses a wallet client (EOA) to sign.
+ */
+export function eoaSigner(walletClient: AccountWalletClient): (data: Hex) => Promise<Hex> {
+    return async (boopHash: Hash) =>
+        walletClient.signMessage({
+            account: walletClient.account.address,
+            message: { raw: boopHash },
+        })
+}
+
+/**
+ * Returns a `personal_sign` signing function that uses a session key to sign.
+ */
+export function sessionKeySigner(sessionKey: Hex): (data: Hex) => Promise<Hex> {
+    return async (boopHash: Hash) => {
+        const account = privateKeyToAccount(sessionKey)
+        return await account.signMessage({
+            message: { raw: boopHash },
+        })
     }
 }
