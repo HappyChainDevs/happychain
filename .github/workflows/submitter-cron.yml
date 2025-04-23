@@ -23,11 +23,11 @@ jobs:
           bun-version: 1.2.4
       - name: Build submitter & submitter client code
         run: |
-            make submitter.build
-            cd packages/submitter-client
             make build
   
       - name: Execute boop
+        env:
+            SUBMITTER_CRON_PK: ${{ secrets.SUBMITTER_CRON_PK }}
         run: |
           cd packages/submitter
           bun lib/tests/executeBoop.ts
