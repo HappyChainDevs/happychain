@@ -1,0 +1,93 @@
+name: Deploy Faucet
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+env:
+  REGISTRY: ghcr.io
+  ORGANIZATION: happychaindevs
+  PM2_PROCESS_NAME: faucet
+  FAUCET_DB_PATH: /home/faucet/faucet.sqlite
+  TXM_DB_PATH: /home/faucet/txm.sqlite
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+      
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      
+      - name: Build code
+        run: |
+          make faucet.build
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "apps/faucet/build/*,node_modules/better-sqlite3,node_modules/bindings,node_modules/file-uri-to-path"
+          target: /home/deployer/faucet
+          strip_components: 1   
+          rm: true
+
+      - name: Deploy faucet to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          # We copy better-sqlite3, bindings, and file-uri-to-path separately because the bundled file does not include
+          # better-sqlite3 and its dependencies
+          script: |
+            chmod -R o+rX /home/deployer/faucet
+            mv /home/deployer/faucet /tmp
+            sudo -u faucet bash -c '
+              rm -rf /home/faucet/build
+              rm -rf /home/faucet/node_modules
+              cp -r /tmp/faucet/faucet/build /home/faucet/build
+
+              mkdir -p /home/faucet/node_modules
+              cp -r /tmp/faucet/better-sqlite3 /home/faucet/node_modules/better-sqlite3
+              cp -r /tmp/faucet/bindings /home/faucet/node_modules/bindings
+              cp -r /tmp/faucet/file-uri-to-path /home/faucet/node_modules/file-uri-to-path
+          
+              cd /home/faucet
+    
+              rm -f .env
+
+              cat > .env <<-EOF
+            export PRIVATE_KEY=${{ secrets.FAUCET_PRIVATE_KEY }}
+            export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
+            export FAUCET_DB_PATH=${{ env.FAUCET_DB_PATH }}
+            export TURNSTILE_SECRET=${{ secrets.FAUCET_TURNSTILE_SECRET }}
+            export ${{vars.FAUCET_ENV}}
+            EOF
+
+              npm rebuild
+            
+              pm2 delete ${{ env.PM2_PROCESS_NAME }}
+        
+              source .env && node ./build/migrate.es.js
+
+              source .env && pm2 start ./build/index.es.js \
+                    --name ${{ env.PM2_PROCESS_NAME }}
+              pm2 save
+            '
+            rm -rf /tmp/faucet
