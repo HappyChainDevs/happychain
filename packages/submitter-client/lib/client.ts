@@ -13,6 +13,7 @@ import type {
     SubmitInput,
     SubmitOutput,
 } from "@happy.tech/submitter/client"
+import { serializeBigInt } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
 import type { Result } from "./utils/neverthrow"
@@ -44,7 +45,7 @@ export async function createAccount(data: CreateAccountInput): Promise<Result<Cr
  */
 export type { SubmitInput, SubmitOutput }
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
-    const response = await client.post("/v1/submitter/submit", data)
+    const response = await client.post("/v1/submitter/submit", serializeBigInt(data))
     return response as Result<SubmitOutput, Error>
 }
 
@@ -57,7 +58,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
  */
 export type { ExecuteInput, ExecuteOutput }
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
-    const response = await client.post("/v1/submitter/execute", data)
+    const response = await client.post("/v1/submitter/execute", serializeBigInt(data))
     return response as Result<ExecuteOutput, Error>
 }
 
@@ -68,7 +69,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
  */
 export type { EstimateGasInput, EstimateGasOutput }
 export async function estimateGas(data: EstimateGasInput): Promise<Result<EstimateGasOutput, Error>> {
-    const response = await client.post("/v1/submitter/simulate", data)
+    const response = await client.post("/v1/submitter/simulate", serializeBigInt(data))
     return response as Result<EstimateGasOutput, Error>
 }
 
