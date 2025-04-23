@@ -55,8 +55,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             const tx = request.payload.params[0]
             return await sendBoop({
-                boopAccount: user.address,
-                tx,
+                account: user.address,
+                tx: tx,
                 signer: eoaSigner(walletClient),
             })
         }
