@@ -96,4 +96,4 @@ export { getUrlProtocol } from "./utils/urlProtocol"
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
 
-export { icon64x64, blankIcon } from "./data/icons"
+export { icon64x64, blankIcon, happyIcon128x128, happyLogo128x128 } from "./data/icons"

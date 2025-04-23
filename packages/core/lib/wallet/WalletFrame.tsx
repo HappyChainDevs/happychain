@@ -1,10 +1,12 @@
 /** @jsxImportSource preact */
 import { AuthState } from "@happy.tech/wallet-common"
-import { config } from "../config"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
 import { useHappyUser } from "./hooks/useHappyUser"
 import { useWalletActions } from "./hooks/useWalletActions"
+
+// biome-ignore format: pragma must stay at the top
+import { happyIcon128x128 } from "@happy.tech/common"
 
 export interface WalletFrameProps {
     dragging: boolean
@@ -41,12 +43,7 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
         >
             {showSpinner && <LoadingSpinner />}
             {/* Base64 to avoid any bundle issues and network requests */}
-            <img
-                src={`${config.iframePath}/images/happyIcon.png`}
-                alt="HappyChain Logo"
-                className="wallet-logo"
-                inert={true}
-            />
+            <img src={happyIcon128x128} alt="HappyChain Logo" className="wallet-logo" inert={true} />
 
             <div className="wallet-iframe-wrapper" inert={!isOpen}>
                 <div ref={iframe} style="width: 100%; height: 100%;">

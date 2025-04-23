@@ -1,5 +1,5 @@
 import { createUUID } from "../utils/uuid"
-import { icon64x64, walletIcon } from "./icons"
+import { happyLogo128x128, walletIcon } from "./icons"
 
 /**
  * Stub EIP-6963 provider info for use with window.ethereum injected provider which
@@ -16,7 +16,7 @@ export const injectedProviderInfo = {
  * EIP-6963 provider for the happy wallet, injected into apps by the SDK.
  */
 export const happyProviderInfo = {
-    icon: icon64x64, // TODO remove this and add the iframe url path in core and iframe
+    icon: happyLogo128x128,
     name: "HappyWallet",
     rdns: "tech.happy",
     uuid: createUUID(),
