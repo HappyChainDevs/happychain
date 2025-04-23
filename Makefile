@@ -22,7 +22,7 @@ SDK_ONLY_PKGS := packages/core,packages/react,packages/vue
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 
 # packages needed to build the boop skd
-BOOP_SDK_PKGS := packages/submitter,packages/submitter-client
+BOOP_SDK_PKGS := packages/submitter,packages/boop-sdk
 
 # packages needed to build the iframe
 IFRAME_PKGS := $(SHARED_PKGS),$(BOOP_SDK_PKGS),apps/iframe
@@ -161,7 +161,7 @@ submitter.dev: setup.ts shared.dev
 
 submitter.build: shared.build
 	cd packages/submitter && make build;
-	cd packages/submitter-client && make build;
+	cd packages/boop-sdk && make build;
 	cd apps/submitter && make build;
 .PHONY: submitter.build
 

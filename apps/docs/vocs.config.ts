@@ -92,11 +92,11 @@ export default defineConfig({
                     items: [
                         {
                             text: "Getting Started",
-                            link: "/submitter/client/getting-started",
+                            link: "/boop/sdk/getting-started",
                         },
                         {
                             text: "API Reference",
-                            link: "/submitter/client/api",
+                            link: "/boop/sdk/api",
                         },
                     ],
                 },

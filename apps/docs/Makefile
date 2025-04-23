@@ -40,17 +40,17 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc: ## Generates the markdown files from package source code
-	concurrently --names "js,react,vue,submitter-client,txm"\
+	concurrently --names "js,react,vue,boop-sdk,txm"\
 		'make typedoc-js'\
 		'make typedoc-react'\
 		'make typedoc-vue'\
-		'make typedoc-submitter-client'\
+		'make typedoc-boop-sdk'\
 		'make typedoc-txm';
 .PHONY: typedoc
 
 typedoc.clean:
 	rm -rf src/pages/sdk/{js,react,vue}/api
-	rm -rf src/pages/submitter-client/api
+	rm -rf src/pages/submitter/boop-sdk/api
 	rm -rf src/pages/txm/api
 .PHONY: typedoc
 
@@ -74,9 +74,9 @@ typedoc-vue:
 .PHONY: typedoc-vue
 
 # generate Vue markdown API reference
-typedoc-submitter-client:
-	typedoc --options ./typedoc.submitter-client.js;
-.PHONY: typedoc-submitter-client
+typedoc-boop-sdk:
+	typedoc --options ./typedoc.boop-sdk.js;
+.PHONY: typedoc-boop-sdk
 
 # generate Transaction Manager markdown API reference
 typedoc-txm:

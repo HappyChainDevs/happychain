@@ -1,0 +1,11 @@
+{
+    "extends": [
+        "@happy.tech/configs/tsconfig.base.json"
+    ],
+    "files": [],
+    "references": [
+        {
+            "path": "../../packages/boop-sdk/tsconfig.json"
+        }
+    ]
+}
