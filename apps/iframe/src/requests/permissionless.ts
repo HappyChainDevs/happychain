@@ -7,10 +7,12 @@ import {
     estimateGas,
 } from "@happy.tech/submitter-client"
 import {
+    EIP1193DisconnectedError,
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
+    EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
@@ -18,7 +20,6 @@ import {
 import {
     type Address,
     type Client,
-    type Hash,
     type Hex,
     InvalidAddressError,
     type Transaction,
@@ -38,7 +39,7 @@ import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestReq
 import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
 import { getSessionKeyForTarget } from "./sessionKeys"
-import { appForSourceID, checkAuthenticated } from "./utils"
+import { appForSourceID, checkAuthenticated, sessionKeySigner } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -59,29 +60,25 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_sendTransaction": {
+            // A permissionless transaction is always a session key transaction!
+
             const user = getUser()
-            if (!user) throw new EIP1193UnauthorizedError()
+            if (!user) throw new EIP1193DisconnectedError()
             const tx = request.payload.params[0]
             const target = request.payload.params[0].to
-            if (!tx || !target) return false
+            if (!target) throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
 
             const permissions = getPermissions(app, {
                 [PermissionNames.SESSION_KEY]: { target },
             })
             if (permissions.length === 0) throw new EIP1193UnauthorizedError()
-
             const sessionKey = getSessionKeyForTarget(user.address, target)
-
             if (!sessionKey) throw new EIP1193UnauthorizedError()
+
             return await sendBoop({
                 boopAccount: user.address,
                 tx,
-                signer: async (boopHash: Hash) => {
-                    const account = privateKeyToAccount(sessionKey)
-                    return (await account.signMessage({
-                        message: { raw: boopHash },
-                    })) as Hex
-                },
+                signer: sessionKeySigner(sessionKey),
             })
         }
 

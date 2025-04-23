@@ -13,6 +13,7 @@ import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
+    EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
     getEIP1193ErrorObjectFromCode,
@@ -21,7 +22,6 @@ import {
 import {
     type Address,
     type Client,
-    type Hash,
     type Hex,
     InvalidAddressError,
     type Transaction,
@@ -47,9 +47,14 @@ import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
 import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
-import { checkIsSessionKeyExtensionInstalled, installSessionKeyExtension, registerSessionKey } from "./sessionKeys"
+import {
+    checkIsSessionKeyExtensionInstalled,
+    getSessionKeyForTarget,
+    installSessionKeyExtension,
+    registerSessionKey,
+} from "./sessionKeys"
 import { hasExistingSessionKeys } from "./sessionKeys"
-import { appForSourceID } from "./utils"
+import { appForSourceID, eoaSigner, sessionKeySigner } from "./utils"
 
 /**
  * Processes requests using the connected 'injected wallet' such as metamask. This will be the
@@ -76,29 +81,29 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return await sendToPublicClient(app, request)
         }
 
-        // This is the same as approved.ts ;
-        // @todo - move common handlers to requests/shared.ts
         case "eth_sendTransaction": {
-            try {
-                if (!user) throw new EIP1193UnauthorizedError()
-                const tx = request.payload.params[0]
-                return await sendBoop({
-                    boopAccount: user.address,
-                    tx,
-                    signer: async (boopHash: Hash) => {
-                        const walletClient = getWalletClient()
-                        if (!walletClient) throw new Error("Wallet client not initialized")
+            if (!user) throw new EIP1193DisconnectedError()
 
-                        return (await walletClient.signMessage({
-                            account: walletClient.account!,
-                            message: { raw: boopHash },
-                        })) as Hex
-                    },
-                })
-            } catch (error) {
-                console.error("Error processing transaction:", error)
-                throw error
+            const tx = request.payload.params[0]
+            const target = request.payload.params[0].to
+            if (!target) throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
+
+            const permissions = getPermissions(app, {
+                [PermissionNames.SESSION_KEY]: { target },
+            })
+            let signer: (data: Hex) => Promise<Hex>
+
+            if (permissions.length > 0) {
+                const sessionKey = getSessionKeyForTarget(user.address, target)
+                if (!sessionKey) throw new EIP1193UnauthorizedError()
+                signer = sessionKeySigner(sessionKey)
+            } else {
+                const walletClient = getWalletClient()
+                if (!walletClient) throw new EIP1193DisconnectedError()
+                signer = eoaSigner(walletClient)
             }
+
+            return await sendBoop({ boopAccount: user.address, tx, signer })
         }
 
         case "eth_getTransactionByHash": {
