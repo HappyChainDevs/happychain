@@ -40,7 +40,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/swarm-leaderboard
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
@@ -168,6 +168,20 @@ submitter.prod: submitter.build
 	cd apps/submitter && make migrate;
 	cd apps/submitter && make prod;
 .PHONY: submitter.prod
+
+swarm-leaderboard.dev: setup.ts shared.dev
+	cd apps/swarm-leaderboard && make migrate;
+	cd apps/swarm-leaderboard && make dev;
+.PHONY: swarm-leaderboard.dev
+
+swarm-leaderboard.build: shared.build
+	cd apps/swarm-leaderboard && make build;
+.PHONY: swarm-leaderboard.build
+
+swarm-leaderboard.prod: swarm-leaderboard.build
+	cd apps/swarm-leaderboard && make migrate;
+	cd apps/swarm-leaderboard && make prod;
+.PHONY: swarm-leaderboard.prod
 
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
