@@ -4,6 +4,151 @@ import type { Address } from "viem"
 
 
 const contractToAbi = ({
+  "BatchCallExecutor": [
+    {
+      "type": "function",
+      "name": "_executeBatch",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "calls",
+          "type": "tuple[]",
+          "internalType": "struct CallInfo[]",
+          "components": [
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "execute",
+      "inputs": [
+        {
+          "name": "boop",
+          "type": "tuple",
+          "internalType": "struct Boop",
+          "components": [
+            {
+              "name": "account",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "payer",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "maxFeePerGas",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "submitterFee",
+              "type": "int256",
+              "internalType": "int256"
+            },
+            {
+              "name": "gasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validateGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "executeGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validatePaymentGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "validatorData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "extraData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "tuple",
+          "internalType": "struct ExecutionOutput",
+          "components": [
+            {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum CallStatus"
+            },
+            {
+              "name": "revertData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "nonpayable"
+    }
+  ],
   "EntryPoint": [
     {
       "type": "function",
@@ -480,6 +625,640 @@ const contractToAbi = ({
       "inputs": []
     }
   ],
+  "HappyAccount": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "_entrypoint",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "receive",
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "ENTRYPOINT",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "addExtension",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        },
+        {
+          "name": "installData",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "execute",
+      "inputs": [
+        {
+          "name": "boop",
+          "type": "tuple",
+          "internalType": "struct Boop",
+          "components": [
+            {
+              "name": "account",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "payer",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "maxFeePerGas",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "submitterFee",
+              "type": "int256",
+              "internalType": "int256"
+            },
+            {
+              "name": "gasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validateGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "executeGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validatePaymentGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "validatorData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "extraData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "tuple",
+          "internalType": "struct ExecutionOutput",
+          "components": [
+            {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum CallStatus"
+            },
+            {
+              "name": "revertData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "executeCallFromExecutor",
+      "inputs": [
+        {
+          "name": "info",
+          "type": "tuple",
+          "internalType": "struct CallInfo",
+          "components": [
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool",
+          "internalType": "bool"
+        },
+        {
+          "name": "returnData",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "extensions",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "isExtensionRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "isValidSignature",
+      "inputs": [
+        {
+          "name": "hash",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes4",
+          "internalType": "bytes4"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "payout",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "removeExtension",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        },
+        {
+          "name": "uninstallData",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "inputs": [
+        {
+          "name": "interfaceId",
+          "type": "bytes4",
+          "internalType": "bytes4"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "validate",
+      "inputs": [
+        {
+          "name": "boop",
+          "type": "tuple",
+          "internalType": "struct Boop",
+          "components": [
+            {
+              "name": "account",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "payer",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "maxFeePerGas",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "submitterFee",
+              "type": "int256",
+              "internalType": "int256"
+            },
+            {
+              "name": "gasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validateGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "executeGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validatePaymentGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "validatorData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "extraData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "ExtensionAdded",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "indexed": true,
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "ExtensionRemoved",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "indexed": true,
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Initialized",
+      "inputs": [
+        {
+          "name": "version",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "OwnershipTransferred",
+      "inputs": [
+        {
+          "name": "previousOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "newOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Received",
+      "inputs": [
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "ExtensionAlreadyRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ExtensionNotRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "InvalidInitialization",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotFromEntryPoint",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSelfOrOwner",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "OwnableInvalidOwner",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "OwnableUnauthorizedAccount",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    }
+  ],
   "HappyAccountBeacon": [
     {
       "type": "constructor",
@@ -756,7 +1535,7 @@ const contractToAbi = ({
       "inputs": []
     }
   ],
-  "HappyAccountImpl": [
+  "HappyAccountRegistry": [
     {
       "type": "constructor",
       "inputs": [
@@ -912,7 +1691,7 @@ const contractToAbi = ({
       ]
     }
   ],
-  "HappyAccountRegistry": [
+  "HappyPaymaster": [
     {
       "type": "constructor",
       "inputs": [
@@ -1314,26 +2093,272 @@ const contractToAbi = ({
       "inputs": []
     }
   ],
-  "HappyPaymaster": null
+  "SessionKeyValidator": [
+    {
+      "type": "function",
+      "name": "addSessionKey",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "addSessionKeys",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "removeSessionKey",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "removeSessionKeys",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "sessionKeys",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "validate",
+      "inputs": [
+        {
+          "name": "boop",
+          "type": "tuple",
+          "internalType": "struct Boop",
+          "components": [
+            {
+              "name": "account",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "payer",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
+            },
+            {
+              "name": "maxFeePerGas",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "submitterFee",
+              "type": "int256",
+              "internalType": "int256"
+            },
+            {
+              "name": "gasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validateGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "executeGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "validatePaymentGasLimit",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "validatorData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "extraData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "SessionKeyAdded",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SessionKeyRemoved",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AccountPaidSessionKeyBoop",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "CannotRegisterSessionKeyForAccount",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "CannotRegisterSessionKeyForValidator",
+      "inputs": []
+    }
+  ]
 }
 ) as const
 
 const aliasToContract = ({
+  "BatchCallExecutor": "BatchCallExecutor",
   "EntryPoint": "EntryPoint",
   "HappyAccountBeacon": "HappyAccountBeacon",
   "HappyAccountBeaconProxyFactory": "HappyAccountBeaconProxyFactory",
-  "HappyAccountImpl": "HappyAccountImpl",
+  "HappyAccountImpl": "HappyAccount",
   "HappyAccountRegistry": "HappyAccountRegistry",
-  "HappyPaymaster": "HappyPaymaster"
+  "HappyPaymaster": "HappyPaymaster",
+  "SessionKeyValidator": "SessionKeyValidator"
 }) as const
 
 export const deployment = ({
-  "EntryPoint": "0xD04DEB068A663e7f21DCa3839DBA8432c7d9b698",
-  "HappyAccountBeacon": "0x8d8D18A43f7fc579227Bb2Df24ea9969BA1168Fe",
-  "HappyAccountBeaconProxyFactory": "0x3B4b35448cDB4C337b86bC412481FA34601225c7",
-  "HappyAccountImpl": "0x6De89281155D7e5b5c790C4b4Df8d98f9ecfBb28",
-  "HappyAccountRegistry": "0x49F94F6A83C0a614d2cA05567D005743b5a3A7Ee",
-  "HappyPaymaster": "0xAacAe2995428Ef47E2F5f5CCb35C447432fFAb0A"
+  "BatchCallExecutor": "0x263A8E028b57b1C7F0d0786FA7163c2182eF5e53",
+  "EntryPoint": "0x47C2388fB87E25d287b868D976F8d2C1ce70F353",
+  "HappyAccountBeacon": "0xe708367be18762Cc24aF0e309EfE6F26Cbc7C480",
+  "HappyAccountBeaconProxyFactory": "0x704a55E1a66D9acC05E20851224d8d9566E7279a",
+  "HappyAccountImpl": "0xF03c3c8eC0a3744C8395353124c1D87255878ab1",
+  "HappyAccountRegistry": "0x1017A20321215ef5fAeAf4c8241075da3d881a15",
+  "HappyPaymaster": "0x428ED2B5D9002868faBb559cBe7058c1aEB02200",
+  "SessionKeyValidator": "0xB3e12069BE0aE1967129079445F9397A2810757a"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
