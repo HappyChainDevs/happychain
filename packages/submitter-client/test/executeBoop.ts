@@ -1,6 +1,6 @@
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
-import { computeBoopHash, createAccount, execute } from "@happy.tech/submitter-client"
+import { computeBoopHash, createAccount, execute } from "../lib/index"
 import { http, createPublicClient, zeroAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
@@ -57,17 +57,19 @@ async function run() {
         owner: testAccount.address,
         salt: "0x01",
     })
-    if (createAccountResult.isOk()) {
-        const tx = await createAndSignMintTx(createAccountResult.value.address)
-        const executeRes = await execute({
-            tx,
-        })
-        if (executeRes.isOk()) {
-            console.log("txHash", executeRes.value)
-        } else {
-            throw new Error(executeRes.error.message)
-        }
+
+    if (!createAccountResult.isOk()) {
+        throw new Error(createAccountResult.error.message)
     }
+
+    const tx = await createAndSignMintTx(createAccountResult.value.address)
+    const executeRes = await execute({ tx })
+
+    if (!executeRes.isOk()) {
+        throw new Error(executeRes.error.message)
+    }
+
+    console.log("tx status", executeRes.value.status)
 }
 
 run().then(() => {
