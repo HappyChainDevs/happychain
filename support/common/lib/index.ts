@@ -10,6 +10,8 @@ export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBi
 
 export type {
     HTTPString,
+    Hex,
+    Address,
     AssertAssignableTo,
     AssertCompatible,
     Optional,
@@ -18,7 +20,6 @@ export type {
     UnionToTuple,
     MapTuple,
     ObjectFromTuples,
-    Hex,
 } from "./utils/types"
 
 export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded } from "./utils/bigint"

@@ -1,8 +1,13 @@
 // === COMMON TYPES ================================================================================
 
+/** Type of http or https strings, starting with the proper protocol. */
 export type HTTPString = `http://${string}` | `https://${string}`
 
+/** Type of hexadecimal strings prefixed with 0x. */
 export type Hex = `0x${string}`
+
+/** Type of hexadecimal wallet addresses prefixed with 0x. */
+export type Address = `0x${string}`
 
 // === TYPE ASSERTIONS =============================================================================
 
