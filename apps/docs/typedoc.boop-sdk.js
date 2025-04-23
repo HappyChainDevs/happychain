@@ -4,14 +4,14 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.submitter-client.json",
+    tsconfig: "./tsconfig.typedoc.boop-sdk.json",
     // https://typedoc.org/options/input/
-    name: "@happy.tech/submitter-client",
-    entryPoints: ["../../packages/submitter-client/lib/index.ts"],
+    name: "@happy.tech/boop-sdk",
+    entryPoints: ["../../packages/boop-sdk/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "src/pages/submitter/client/api",
+    out: "src/pages/boop/sdk/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/submitter/client/api/",
+    publicPath: "/boop/sdk/api/",
 }

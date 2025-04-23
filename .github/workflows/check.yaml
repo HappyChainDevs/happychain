@@ -145,14 +145,14 @@ jobs:
             packages/submitter/build
           key: ${{ runner.os }}-build-submitter-${{ hashFiles('packages/submitter/**/*', '!packages/submitter/dist/**/*', '!packages/submitter/node_modules/**/*') }}
 
-      - name: Cache submitter-client package build
+      - name: Cache boop-sdk package build
         uses: actions/cache@v4
-        id: cache-submitter-client-package-build
+        id: cache-boop-sdk-package-build
         with:
           path: |
-            packages/submitter-client/dist
-            packages/submitter-client/build
-          key: ${{ runner.os }}-build-submitter-client-${{ hashFiles('packages/submitter-client/**/*', '!packages/submitter-client/dist/**/*', '!packages/submitter-client/node_modules/**/*') }}
+            packages/boop-sdk/dist
+            packages/boop-sdk/build
+          key: ${{ runner.os }}-build-boop-sdk-${{ hashFiles('packages/boop-sdk/**/*', '!packages/boop-sdk/dist/**/*', '!packages/boop-sdk/node_modules/**/*') }}
 
       - name: Cache submitter app build
         uses: actions/cache@v4
@@ -200,7 +200,7 @@ jobs:
           if [[ "${{ steps.cache-core-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/core/dist.prod; fi
           if [[ "${{ steps.cache-react-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/react/dist.prod; fi
           if [[ "${{ steps.cache-submitter-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/submitter/dist.prod; fi
-          if [[ "${{ steps.cache-submitter-client-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/submitter-client/dist.prod; fi
+          if [[ "${{ steps.cache-boop-sdk-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/boop-sdk/dist.prod; fi
           if [[ "${{ steps.cache-txm-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/txm/dist.prod; fi
           if [[ "${{ steps.cache-vue-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/vue/dist.prod; fi
           if [[ "${{ steps.cache-iframe-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/iframe/dist.prod; fi
