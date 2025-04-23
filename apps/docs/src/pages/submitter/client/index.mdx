@@ -1,0 +1,52 @@
+# Boop SDK
+
+The **Boop SDK** is an account abstraction toolkit built for speed, efficiency, and simplicity. 
+It's an alternative to the 4337 spec, optimized for seamless transaction simulation and submission. 
+While it thrives on HappyChain, it's fully chain-agnostic and ready to plug into any EVM-compatible 
+network where the Boop Contracts are deployed.
+
+## Installation
+
+To install the Boop SDK in your project, use your preferred package manager:
+
+:::code-group
+
+```bash [npm]
+npm install @happy.tech/boop-sdk
+```
+
+```bash [pnpm]
+pnpm add @happy.tech/boop-sdk
+```
+
+```bash [yarn]
+yarn add @happy.tech/boop-sdk
+```
+
+```bash [bun]
+bun add @happy.tech/boop-sdk
+```
+
+:::
+
+## Usage
+
+Here's a basic example of how to use the Boop SDK:
+
+```ts
+import { simulate, submit } from "@happy.tech/boop-sdk"
+
+// Simulate a transaction
+const simulationResult = await simulate({/* Boop */})
+console.log("Simulation Result:", simulationResult.unwrap())
+
+// Submit the transaction
+const txHash = await submit(simulationResult.unwrap())
+console.log("Transaction Hash:", txHash.unwrap())
+const boopReceipt = await receipt({ hash: txHash })
+console.log("Boop Receipt:", boopReceipt.unwrap())
+
+// or alternatively
+const boopReceipt = await execute({/* Boop */})
+console.log("Boop Receipt:", boopReceipt.unwrap())
+```
