@@ -1,4 +1,4 @@
-import { isAddress as viemIsAddress, type Address } from "viem"
+import { type Address, isAddress as viemIsAddress } from "viem"
 
 /**
  * Often used in conjunction with transforms/toAddress, this viem wrapper
