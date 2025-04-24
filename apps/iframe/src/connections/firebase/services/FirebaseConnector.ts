@@ -39,7 +39,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     public readonly name: string
     public readonly icon: string
 
-    constructor(opts: { name: string; icon: string }) {
+    protected constructor(opts: { name: string; icon: string }) {
         this.type = WalletType.Social
         this.id = `${this.type}:firebase:${opts.name}`.toLowerCase()
         this.name = opts.name

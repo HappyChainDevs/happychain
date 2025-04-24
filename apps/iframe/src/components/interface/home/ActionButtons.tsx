@@ -1,13 +1,11 @@
-import { CreditCard, PaperPlaneTilt, Swap } from "@phosphor-icons/react"
+import { CreditCard, type Icon, PaperPlaneTilt, Swap } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import type { PropsWithChildren } from "react"
-
-type IconComponent = typeof PaperPlaneTilt | typeof Swap | typeof CreditCard
 
 interface BaseAction {
     key: string
     label: React.ReactNode
-    icon: IconComponent
+    icon: Icon
     enabled: boolean
 }
 
@@ -53,7 +51,7 @@ const baseClassName =
     "aspect-square text-[0.8725rem] focus:outline-none focus:[&_span:first-of-type]:bg-primary/20 flex flex-col gap-[1ex] items-center justify-center"
 
 interface ActionButtonContentProps extends PropsWithChildren {
-    icon: IconComponent
+    icon: Icon
 }
 
 const ActionButtonContent = ({ icon: Icon, children }: ActionButtonContentProps) => (
