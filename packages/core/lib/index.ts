@@ -34,7 +34,7 @@ export type {
 export type {
     HappyUser,
     WalletType,
-    GenericProviderRpcError,
+    ProviderRpcError,
     ProviderRpcErrorCode,
     EIP1193ErrorCodes,
     EIP1193ErrorObject,

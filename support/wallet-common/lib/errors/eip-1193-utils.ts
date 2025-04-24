@@ -6,7 +6,7 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
-    GenericProviderRpcError,
+    ProviderRpcError,
 } from "./eip-1193-errors"
 import type { EIP1193ErrorObject } from "./eip-1193-interfaces"
 
@@ -110,6 +110,6 @@ export function convertEIP1193ErrorObjectToErrorInstance(error: EIP1193ErrorObje
         case EIP1193ErrorCodes.SwitchChainError:
             return new EIP1193ChainNotRecognizedError(error as EIP1193ErrorObject)
         default:
-            return new GenericProviderRpcError(error)
+            return new ProviderRpcError(error)
     }
 }
