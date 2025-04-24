@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, Guild, GuildUpdate, NewGuild } from "../db/types"
+import type { Database, Guild, UpdateGuild, NewGuild } from "../db/types"
 
 export class GuildRepository {
     constructor(private db: Kysely<Database>) {}
@@ -21,7 +21,7 @@ export class GuildRepository {
         return await this.db.insertInto("guilds").values(guild).returningAll().executeTakeFirstOrThrow()
     }
 
-    async update(id: number, updateWith: GuildUpdate) {
+    async update(id: number, updateWith: UpdateGuild) {
         return await this.db.updateTable("guilds").set(updateWith).where("id", "=", id).executeTakeFirst()
     }
 
