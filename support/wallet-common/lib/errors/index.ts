@@ -6,19 +6,17 @@ export {
 } from "./eip-1193-utils"
 
 export {
-    GenericProviderRpcError,
+    ProviderRpcError,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
+    EIP1193ErrorCodes,
+    type EIP1193ErrorObject,
 } from "./eip-1193-errors"
-
-export { EIP1193ErrorCodes } from "./eip-1193-codes"
-
-export type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interfaces"
 
 export { LoginRequiredError } from "./happy-provider-errors"
 
-export { EIP1474ErrorCodes, GenericEthereumRpcError, EIP1474InvalidInput } from "./eip-1474-errors"
+export { EIP1474ErrorCodes, EthereumRpcError, EIP1474InvalidInput, EIP1474InternalError } from "./eip-1474-errors"

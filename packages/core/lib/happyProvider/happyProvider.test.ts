@@ -7,12 +7,12 @@ import {
     EventBus,
     EventBusMode,
     type EventBusOptions,
-    GenericProviderRpcError,
     Msgs,
     type MsgsFromApp,
     type MsgsFromIframe,
     type ProviderMsgsFromApp,
     type ProviderMsgsFromIframe,
+    ProviderRpcError,
     getEIP1193ErrorObjectFromCode,
 } from "@happy.tech/wallet-common"
 import type { RpcBlock } from "viem"
@@ -203,7 +203,7 @@ describe("HappyProvider", () => {
             method: "eth_getBlockByNumber",
             params: ["latest", false],
         })
-        expect(request).rejects.toThrowError(GenericProviderRpcError)
+        expect(request).rejects.toThrowError(ProviderRpcError)
     })
 
     it("subscribes and unsubscribes to native eip1193 events", async () => {

@@ -1,96 +1,101 @@
-import { EIP1193ErrorCodes } from "./eip-1193-codes"
-import type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interfaces"
+import { hasKey } from "@happy.tech/common"
+
+// === EIP1193 ERROR CODES =============================================================================================
 
 /**
- * General Purpose Provider RPC error.
- * Can be instantiated from the deserialized ErrorObject
+ * Standard Provider Error Codes ({@link https://eips.ethereum.org/EIPS/eip-1193#provider-errors})
+ *
+ * Non-Standard error codes from {@link https://github.com/wevm/viem/blob/9dc0724ae09827bd12c612df1d73b50fadf3c982/src/errors/rpc.ts#L64},
+ * -1 for unknown errors.
+ *
+ * See also {@link EIP474ErrorCodes}
  */
-export class GenericProviderRpcError extends Error {
-    code: ProviderRpcErrorCode
+export enum EIP1193ErrorCodes {
+    /** User Rejected Request, standard EIP1193 error */
+    UserRejectedRequest = 4001,
+    /** Unauthorized, standard EIP1193 error */
+    Unauthorized = 4100,
+    /** Unsupported Method, standard EIP1193 error */
+    UnsupportedMethod = 4200,
+    /** Disconnected, standard EIP1193 error */
+    Disconnected = 4900,
+    /** Chain Disconnected, standard EIP1193 error */
+    ChainDisconnected = 4901,
+    /** Chain Not Recognized, non-standard EIP1193-like error, supported by viem and others */
+    SwitchChainError = 4902,
+    /** Invalid Method Parameters, standard EIP1474 error */
+    InvalidMethodParameters = -32602,
+    /** Unknown */
+    Unknown = -1,
+}
+
+// === EIP1193 ERROR OBJECT ============================================================================================
+
+/**
+ * Error Object is used to transmit error messages
+ * across MessageChannel and BroadcastChannels.
+ * This requires the data to be JSON serializable
+ * so we can't send the raw Error class
+ */
+export type EIP1193ErrorObject = {
+    code: EIP1193ErrorCodes
+    message: string
     data?: unknown
-    constructor(errObj: EIP1193ErrorObject) {
-        super(errObj.message)
-        this.code = errObj.code
-        this.data = errObj.data
+}
+
+// === EIP1193 ERROR CLASSES ===========================================================================================
+
+/** Generic provider RPC error, parent class of specialized classes (one per error code). */
+export class ProviderRpcError extends Error {
+    code: EIP1193ErrorCodes
+    label: string
+    data?: unknown
+    constructor(code: EIP1193ErrorCodes, err: EIP1193ErrorObject | string) {
+        super(hasKey(err, "message") ? err.message : err)
+        this.code = code
+        this.label = EIP1193ErrorCodes[code]
+        this.data = hasKey(err, "data") ? err.data : err
     }
 }
 
-// === EIP1193 Specific Errors =========================================================================
-
-/**
- * Error: 4001 User Rejected Request
- */
-export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.UserRejectedRequest,
-            message: errObj?.message || "User Rejected Request",
-            data: errObj?.data || "User Rejected Request",
-        })
+/** Provider RPC error code 4001 */
+export class EIP1193UserRejectedRequestError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "User Rejected Request") {
+        super(EIP1193ErrorCodes.UserRejectedRequest, err)
     }
 }
 
-/**
- * Error: 4100 Unauthorized
- */
-export class EIP1193UnauthorizedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.Unauthorized,
-            message: errObj?.message || "Unauthorized",
-            data: errObj?.data || "Unauthorized",
-        })
+/** Provider RPC error code 4100 */
+export class EIP1193UnauthorizedError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "Unauthorized") {
+        super(EIP1193ErrorCodes.Unauthorized, err)
     }
 }
 
-/**
- * Error: 4200 Unsupported Method
- */
-export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.UnsupportedMethod,
-            message: errObj?.message || "Unsupported Method",
-            data: errObj?.data || "Unsupported Method",
-        })
+/** Provider RPC error code 4200 */
+export class EIP1193UnsupportedMethodError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "Unsupported Method") {
+        super(EIP1193ErrorCodes.UnsupportedMethod, err)
     }
 }
 
-/**
- * Error: 4900 Provider Disconnected
- */
-export class EIP1193DisconnectedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.Disconnected,
-            message: errObj?.message || "Disconnected",
-            data: errObj?.data || "Disconnected",
-        })
+/** Provider RPC error code 4900 */
+export class EIP1193DisconnectedError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "Disconnected") {
+        super(EIP1193ErrorCodes.Disconnected, err)
     }
 }
 
-/**
- * Error: 4901 Chain Disconnected
- */
-export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.ChainDisconnected,
-            message: errObj?.message || "Chain Disconnected",
-            data: errObj?.data || "Chain Disconnected",
-        })
+/** Provider RPC error code 4901 */
+export class EIP1193ChainDisconnectedError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "Chain Disconnected") {
+        super(EIP1193ErrorCodes.ChainDisconnected, err)
     }
 }
 
-/**
- * Error: 4902 Chain Not Recognized
- */
-export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.SwitchChainError,
-            message: errObj?.message || "Chain Not Recognized",
-            data: errObj?.data || "Chain Not Recognized",
-        })
+/** Provider RPC error code 4902 */
+export class EIP1193ChainNotRecognizedError extends ProviderRpcError {
+    constructor(err: EIP1193ErrorObject | string = "Chain Not Recognized") {
+        super(EIP1193ErrorCodes.SwitchChainError, err)
     }
 }
