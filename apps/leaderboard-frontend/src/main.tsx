@@ -1,6 +1,5 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
-import { Toaster } from "sonner"
 
 import { happyChainSepolia, happyProvider } from "@happy.tech/core"
 import { HappyWalletProvider } from "@happy.tech/react"
@@ -22,7 +21,6 @@ import App from "./App.tsx"
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <HappyWalletProvider init={{ chainId: happyChainSepolia.id }}>
-            <Toaster theme="system" richColors={true} />
             <App />
         </HappyWalletProvider>
     </React.StrictMode>,

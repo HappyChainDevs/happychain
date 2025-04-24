@@ -6,8 +6,8 @@ function App() {
     useHappyWallet()
 
     return (
-        <main className='flex min-h-dvh w-full flex-col items-center gap-4 bg-[url("/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg")] bg-cover p-4'>
-            <h1 className="p-16 text-4xl font-bold text-white">HappyChain + TS + React + Viem</h1>
+        <main className='flex min-h-dvh w-full flex-col items-center gap-4 bg-[url("/cat-frolicking.jpeg")] bg-center bg-no-repeat bg-contain p-4'>
+            <h1 className="p-16 text-4xl font-bold text-white">Leaderboard</h1>
 
             <div className="flex flex-col justify-center items-center w-full">
                 <ConnectionDemo />
