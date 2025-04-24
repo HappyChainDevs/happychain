@@ -1,7 +1,20 @@
+import type { ContentfulStatusCode } from "hono/utils/http-status"
 import type { Result } from "neverthrow"
-import { HappyFaucetError } from "./errors"
+import { FaucetFetchError, HappyFaucetError } from "./errors"
 
-export function makeResponse<TOk>(output: Result<TOk, unknown>) {
+type ResponseBodySuccess<TOk> = {
+    success: true
+    message?: string
+} & TOk
+
+type ResponseBodyError = {
+    success: false
+    message: string
+}
+
+type ResponseBody<TOk> = ResponseBodySuccess<TOk> | ResponseBodyError
+
+export function makeResponse<TOk>(output: Result<TOk, unknown>): [ResponseBody<TOk>, ContentfulStatusCode] {
     if (output.isOk())
         return [
             {
@@ -17,7 +30,7 @@ export function makeResponse<TOk>(output: Result<TOk, unknown>) {
                 success: false,
                 message: output.error.message,
             },
-            output.error.getStatusCode(),
+            output.error.statusCode,
         ] as const
     }
 
@@ -28,4 +41,22 @@ export function makeResponse<TOk>(output: Result<TOk, unknown>) {
         },
         500,
     ] as const
+}
+
+export function mapFetchError(error: unknown): FaucetFetchError {
+    if (error instanceof DOMException) {
+        if (error.name === "AbortError") {
+            return new FaucetFetchError("Request aborted")
+        }
+        if (error.name === "NotAllowedError") {
+            return new FaucetFetchError("Network error")
+        }
+    }
+    if (error instanceof TypeError) {
+        return new FaucetFetchError("Request bad constructed")
+    }
+    if (error instanceof Error) {
+        return new FaucetFetchError(error.message)
+    }
+    return new FaucetFetchError()
 }

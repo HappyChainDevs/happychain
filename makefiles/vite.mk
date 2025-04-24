@@ -64,7 +64,7 @@ dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	fi
 
 node_modules: package.json
-	@# bun install
+	@ bun install
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 

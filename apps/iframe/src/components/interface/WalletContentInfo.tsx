@@ -3,8 +3,8 @@ import { ContentType } from "#src/state/interfaceState"
 import { Tab, TabContent } from "./home/tabs/Tabs"
 import GamesView from "./home/tabs/views/GamesView"
 import ActivityView from "./home/tabs/views/activity/ActivityView"
-import TokenView from "./home/tabs/views/tokens/TokenView"
 import FaucetView from "./home/tabs/views/faucet"
+import TokenView from "./home/tabs/views/tokens/TokenView"
 
 export const WalletContentInfo = () => {
     return (

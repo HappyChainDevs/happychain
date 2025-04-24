@@ -12,8 +12,8 @@ import pkg from "../package.json" assert { type: "json" }
 import { env } from "./env"
 import { FaucetUsageRepository } from "./faucet-usage.repository"
 import { setupFaucetRoutes } from "./faucet.route"
-import { CloudflareService } from "./services/cloudflare.service"
-import { FaucetService } from "./services/faucet.service"
+import { CloudflareService } from "./services/cloudflare"
+import { FaucetService } from "./services/faucet"
 
 export class Server {
     private app: Hono
@@ -28,7 +28,8 @@ export class Server {
         this.cloudflareService = new CloudflareService(env.TURNSTILE_SECRET)
     }
 
-    async initialize() {
+
+    async start() {
         this.app.use(
             "*",
             cors({
@@ -44,6 +45,8 @@ export class Server {
         await this.faucetService.start()
 
         this.setupRoutes()
+
+        serve({ fetch: this.app.fetch, port: env.APP_PORT })
     }
 
     private setupRoutes() {
@@ -81,8 +84,4 @@ export class Server {
         )
     }
 
-    async start() {
-        await this.initialize()
-        serve({ fetch: this.app.fetch, port: env.APP_PORT })
-    }
 }
