@@ -28,10 +28,10 @@ export function parseBlockParam(block: BlockParam | undefined): {
     blockTag?: BlockTag
 } {
     if (typeof block === "string") {
-        if (BLOCK_TAGS.includes(block)) return {blockTag: block as BlockTag}
+        if (BLOCK_TAGS.includes(block)) return { blockTag: block as BlockTag }
         const blockNumber = parseBigInt(block)
         if (!blockNumber) throw new EIP1474InvalidInput(`invalid block number: ${block}`)
-        return {blockNumber}
+        return { blockNumber }
     }
     if (typeof block === "object") {
         if ("requireCanonical" in block || "blockHash" in block) {
@@ -40,7 +40,7 @@ export function parseBlockParam(block: BlockParam | undefined): {
         }
         if ("blockNumber" in block) {
             const blockNumber = parseBigInt(block.blockNumber)
-            if (blockNumber) return {blockNumber}
+            if (blockNumber) return { blockNumber }
         }
         throw new EIP1474InvalidInput(`invalid RpcBlockIdentifier: ${JSON.stringify(block)}`)
     }

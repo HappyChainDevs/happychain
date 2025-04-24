@@ -1,21 +1,21 @@
+import { HappyMethodNames } from "@happy.tech/common"
+import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
+import { isAddress } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { sendToPublicClient } from "#src/requests/utils/sendToClient"
 import {
-    eth_estimateGas,
     FORWARD,
+    eth_estimateGas,
     getTransactionByHash,
     getTransactionCount,
     getTransactionReceipt,
 } from "#src/requests/utils/shared"
-import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
-import { sendToPublicClient } from "#src/requests/utils/sendToClient"
 import { sessionKeySigner } from "#src/requests/utils/signers"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getCheckedUser, getUser } from "#src/state/user"
 import { appForSourceID } from "#src/utils/appURL"
-import { HappyMethodNames } from "@happy.tech/common"
-import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
-import { isAddress } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
 import { sendBoop } from "../utils/boop"
 import { checkSessionKeyAuthorized, getSessionKey } from "../utils/sessionKeys"
 

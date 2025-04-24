@@ -1,4 +1,3 @@
-import { Map2, Mutex } from "@happy.tech/common"
 import {
     type Boop,
     type BoopReceipt,
@@ -8,14 +7,15 @@ import {
     type ExecuteOutput,
     type Log,
     type Receipt,
+    type SimulationOutput,
     type SubmitStatus,
     SubmitterErrorStatus,
     computeBoopHash,
     estimateGas,
     execute,
-} from "@happy.tech/submitter-client"
-import { EIP1474InvalidInput } from "@happy.tech/wallet-common/lib"
-import { type Address, type Hash, type Hex, type TransactionEIP1559 } from "viem"
+} from "@happy.tech/boop-sdk"
+import { Map2, Mutex } from "@happy.tech/common"
+import type { Address, Hash, Hex, TransactionEIP1559 } from "viem"
 import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
 import { reqLogger } from "#src/logger"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"

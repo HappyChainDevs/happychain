@@ -2,13 +2,13 @@
  * Utilities to work with the session key boop extension.
  */
 
-import { eoaSigner } from "#src/requests/utils/signers"
 import { type Address, PermissionNames } from "@happy.tech/common"
 import { EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { type Hex, encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { sendBoop } from "#src/requests/utils/boop"
+import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
 import { getPermissions, grantPermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"

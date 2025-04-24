@@ -1,4 +1,4 @@
-import { LogLevel, Logger, logLevel } from "@happy.tech/common"
+import { Logger, logLevel } from "@happy.tech/common"
 
 /**
  * Default at which all logger's log level are set by default if not changed programmatically.

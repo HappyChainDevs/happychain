@@ -1,5 +1,5 @@
+import type { ExecuteOutput } from "@happy.tech/boop-sdk"
 import { createBigIntStorage } from "@happy.tech/common"
-import type { ExecuteOutput } from "@happy.tech/submitter-client"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash } from "viem"
