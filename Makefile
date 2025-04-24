@@ -34,7 +34,7 @@ ACCOUNT_PKGS := $(IFRAME_PKGS),$(SDK_ONLY_PKGS)
 DEMOS_PKGS := demos/js,demos/react,demos/vue
 
 # packages only used in the backend services
-BACKEND_ONLY_PKGS := packages/txm,apps/randomness
+BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 
 # packages needed to build the backend services
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
@@ -372,6 +372,11 @@ randomness-monitor.build: setup.ts shared.build
 txm.build: setup.ts shared.build
 	cd packages/txm && make build
 .PHONY: txm.build
+
+faucet.build: setup.ts shared.build
+	cd packages/txm && make build
+	cd apps/faucet && make build
+.PHONY: faucet.build
 
 # ==================================================================================================
 ##@ Docs

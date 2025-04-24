@@ -53,7 +53,7 @@ const FaucetView = () => {
 
     return (
         <div className="p-4 max-w-md mx-auto w-full overflow-hidden">
-            <form onSubmit={handleSubmit} className="space-y-4 w-full">
+            <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
                 <div ref={widgetRef} />
                 {status !== "idle" && (
                     <p
