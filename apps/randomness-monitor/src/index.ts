@@ -12,7 +12,8 @@ import { getUrlProtocol } from "./utils/getUrlProtocol"
  */
 export class MonitoringService {
     private readonly monitoringRepository: MonitoringRepository
-    private viemClient!: PublicClient
+    private readonly viemClient: PublicClient
+    private readonly protocol: "http" | "websocket"
 
     private latestBlockchainBlockNumber: bigint | undefined
     private latestMonitoringBlockNumber: bigint | undefined
@@ -20,28 +21,17 @@ export class MonitoringService {
 
     constructor() {
         this.monitoringRepository = new MonitoringRepository()
-    }
 
-    /**
-     * Initialize and start the monitoring service
-     */
-    async start(): Promise<void> {
-        await this.initializeClient()
-        await this.initializeMonitoring()
-    }
+        const protocolResult = getUrlProtocol(env.RPC_URL)
 
-    /**
-     * Initialize the blockchain client
-     */
-    private async initializeClient(): Promise<void> {
-        const protocol = getUrlProtocol(env.RPC_URL)
-
-        if (protocol.isErr()) {
-            throw protocol.error
+        if (protocolResult.isErr()) {
+            throw protocolResult.error
         }
 
+        this.protocol = protocolResult.value
+
         let transport: Transport
-        if (protocol.value === "http") {
+        if (this.protocol === "http") {
             transport = http(env.RPC_URL)
         } else {
             transport = webSocket(env.RPC_URL)
@@ -57,8 +47,8 @@ export class MonitoringService {
             name: "Unknown",
             rpcUrls: {
                 default: {
-                    http: protocol.value === "http" ? [env.RPC_URL] : [],
-                    webSocket: protocol.value === "websocket" ? [env.RPC_URL] : [],
+                    http: this.protocol === "http" ? [env.RPC_URL] : [],
+                    webSocket: this.protocol === "websocket" ? [env.RPC_URL] : [],
                 },
             },
             nativeCurrency: {
@@ -72,10 +62,23 @@ export class MonitoringService {
             transport,
             chain,
         })
+    }
 
+    /**
+     * Initialize and start the monitoring service
+     */
+    async start(): Promise<void> {
+        await this.initializeClient()
+        await this.initializeMonitoring()
+    }
+
+    /**
+     * Initialize the blockchain client
+     */
+    private async initializeClient(): Promise<void> {
         await this.viemClient.watchBlocks({
             onBlock: this.onBlock.bind(this),
-            ...(protocol.value === "http" ? { pollingInterval: 250 } : {}),
+            ...(this.protocol === "http" ? { pollingInterval: 250 } : {}),
             onError: (error) => {
                 console.error("Error in watching blocks:", error)
                 process.exit(1)
@@ -181,11 +184,13 @@ export class MonitoringService {
                 functionName: "random",
                 blockNumber,
             })
-            await this.monitoringRepository.saveMonitoring(
-                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random),
-            ).catch((error) => {
-                console.error("Error in saving monitoring:", error)
-            })
+            await this.monitoringRepository
+                .saveMonitoring(
+                    new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random),
+                )
+                .catch((error) => {
+                    console.error("Error in saving monitoring:", error)
+                })
         } catch (err: unknown) {
             let errorMessage: string | undefined
 
@@ -195,11 +200,11 @@ export class MonitoringService {
                 errorMessage = JSON.stringify(err, bigIntReplacer)
             }
 
-            await this.monitoringRepository.saveMonitoring(
-                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage),
-            ).catch((error) => {
-                console.error("Error in saving monitoring:", error)
-            })
+            await this.monitoringRepository
+                .saveMonitoring(new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage))
+                .catch((error) => {
+                    console.error("Error in saving monitoring:", error)
+                })
         }
 
         return ok(undefined)
