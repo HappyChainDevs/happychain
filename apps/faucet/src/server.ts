@@ -33,7 +33,7 @@ export class Server {
         this.app.use(
             "*",
             cors({
-                origin: env.CORS_ORIGIN,
+                origin: "*",
             }),
         )
         this.app.use("*", timingMiddleware())
