@@ -2,11 +2,11 @@
  * Functions used for signing boops.
  */
 
-import { getWalletClient } from "#src/state/walletClient"
 import type { Hex } from "@happy.tech/common"
 import { EIP1193DisconnectedError } from "@happy.tech/wallet-common"
 import type { Hash } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import { getWalletClient } from "#src/state/walletClient"
 
 /**
  * Returns a `personal_sign` signing function that uses a wallet client (EOA) to sign.

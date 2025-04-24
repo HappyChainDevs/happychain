@@ -1,11 +1,19 @@
+import { HappyMethodNames } from "@happy.tech/common"
 import {
-    eth_estimateGas,
+    EIP1193ErrorCodes,
+    type Msgs,
+    type ProviderMsgsFromApp,
+    getEIP1193ErrorObjectFromCode,
+} from "@happy.tech/wallet-common"
+import { privateKeyToAccount } from "viem/accounts"
+import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import {
     FORWARD,
+    eth_estimateGas,
     getTransactionByHash,
     getTransactionCount,
     getTransactionReceipt,
 } from "#src/requests/utils/shared"
-import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
 import { eoaSigner, sessionKeySigner } from "#src/requests/utils/signers"
 import { getChains, setChains, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
@@ -14,17 +22,9 @@ import { checkUser, getUser } from "#src/state/user"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import { HappyMethodNames } from "@happy.tech/common"
-import {
-    EIP1193ErrorCodes,
-    getEIP1193ErrorObjectFromCode,
-    type Msgs,
-    type ProviderMsgsFromApp,
-} from "@happy.tech/wallet-common"
-import { privateKeyToAccount } from "viem/accounts"
 import { sendBoop } from "../utils/boop"
-import { getSessionKey, installNewSessionKey, isSessionKeyAuthorized } from "../utils/sessionKeys"
 import { sendToInjectedClient, sendToPublicClient } from "../utils/sendToClient"
+import { getSessionKey, installNewSessionKey, isSessionKeyAuthorized } from "../utils/sessionKeys"
 
 export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
