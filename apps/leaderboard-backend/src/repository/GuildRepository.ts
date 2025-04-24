@@ -12,7 +12,7 @@ export class GuildRepository {
         let query = this.db.selectFrom("guilds")
         if (criteria.id) query = query.where("id", "=", criteria.id)
         if (criteria.name) query = query.where("name", "=", criteria.name)
-        if (criteria.code) query = query.where("code", "=", criteria.code)
+        if (criteria.admin_id) query = query.where("admin_id", "=", criteria.admin_id)
         if (criteria.created_at) query = query.where("created_at", "=", criteria.created_at)
         return await query.selectAll().execute()
     }

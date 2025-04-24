@@ -14,7 +14,6 @@ export class SessionRepository {
         if (criteria.user_id) query = query.where("user_id", "=", criteria.user_id)
         if (criteria.session_uuid) query = query.where("session_uuid", "=", criteria.session_uuid)
         if (criteria.created_at) query = query.where("created_at", "=", criteria.created_at)
-        if (criteria.expires_at) query = query.where("expires_at", "=", criteria.expires_at)
         return await query.selectAll().execute()
     }
 
