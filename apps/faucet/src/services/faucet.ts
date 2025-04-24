@@ -42,7 +42,7 @@ export class FaucetService {
             calldata: "0x",
         })
 
-        await this.txm.collectTransactions([tx])
+        await this.txm.sendTransactions([tx])
 
         return ok(undefined)
     }

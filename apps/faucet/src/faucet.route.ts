@@ -1,12 +1,14 @@
 import { isAddress } from "@happy.tech/common"
-import type { Hono } from "hono"
+import type { Handler, Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator } from "hono-openapi/zod"
+import { err } from "neverthrow"
 import { z } from "zod"
-import type { CloudflareService } from "./services/cloudflare.service"
-import type { FaucetService } from "./services/faucet.service"
+import type { CloudflareService } from "./services/cloudflare"
+import type { FaucetService } from "./services/faucet"
 import { makeResponse } from "./utils"
+import { env } from "./env"
 
 export const inputSchema = z.object({
     address: z.string().refine(isAddress),
@@ -39,21 +41,27 @@ export const setupFaucetRoutes = (app: Hono, faucetService: FaucetService, cloud
                 content: { "application/json": { schema: resolver(outputSchema) } },
             },
         },
+        validateResponse: env.NODE_ENV !== "production",
     })
 
     app.post("/faucet", validation, description, async (c) => {
-        const { address, cfToken } = c.req.valid("json")
+        try {
+            const { address, cfToken } = c.req.valid("json")
 
-        const captchaResult = await cloudflareService.verifyTurnstile(cfToken)
+            const captchaResult = await cloudflareService.verifyTurnstile(cfToken)
 
-        if (captchaResult.isErr()) {
-            const response = makeResponse(captchaResult)
+            if (captchaResult.isErr()) {
+                const response = makeResponse(captchaResult)
+                return c.json(response[0], response[1])
+            }
+
+            const result = await faucetService.sendTokens(address)
+
+            const response = makeResponse(result)
+            return c.json(response[0], response[1])
+        } catch (error) {
+            const response = makeResponse(err(error))
             return c.json(response[0], response[1])
         }
-
-        const result = await faucetService.sendTokens(address)
-
-        const response = makeResponse(result)
-        return c.json(response[0], response[1])
     })
 }
