@@ -25,7 +25,7 @@ contract CoreLibsTest is Test {
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
             validatePaymentGasLimit: 800002, // 0xC3502
-            callData: hex"",
+            callData: "",
             validatorData: "",
             extraData: ""
         });
