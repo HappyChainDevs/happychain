@@ -80,7 +80,7 @@ function Embed() {
                     </section>
                 )}
                 <BannerList />
-                <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto auto-rows-[1fr]">
+                <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto scrollbar-stable scrollbar-hidden auto-rows-[1fr]">
                     <Outlet />
                     {!location.pathname.includes("permissions") && (
                         <>

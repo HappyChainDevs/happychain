@@ -24,7 +24,6 @@ export default {
                     from: { opacity: "1", overflow: "hidden" },
                     to: { opacity: "0", overflow: "hidden" },
                 },
-
                 collapseDown: {
                     from: {
                         opacity: "0.01",
@@ -119,15 +118,27 @@ export default {
             addVariant("input-invalid", ["&:user-invalid", "&:has(:user-invalid)"])
             addVariant("click-disabled", ["&[aria-disabled=true]", "&:disabled"])
             addVariant("input-disabled", [
-                // Only target input/textarea that are readonly/disabled
                 "&:is(input, textarea):read-only",
                 "&:is(input, textarea):disabled",
                 "&[aria-disabled=true]:is(input, textarea)",
-                // Target readonly/disabled inputs/textareas within the element
                 "&:has(:is(input, textarea):read-only)",
                 "&:has(:is(input, textarea):disabled)",
                 "&:has([aria-disabled=true]:is(input, textarea))",
             ])
+        }),
+        plugin(({ addUtilities }) => {
+            addUtilities({
+                ".scrollbar-stable": {
+                    scrollbarGutter: "stable",
+                },
+                ".scrollbar-hidden": {
+                    scrollbarWidth: "none", // Firefox
+                    "-ms-overflow-style": "none", // IE 10+
+                },
+                ".scrollbar-hidden::-webkit-scrollbar": {
+                    display: "none", // Chrome/Safari
+                },
+            })
         }),
     ],
     darkMode: ["selector", '[data-theme="night"]'],
