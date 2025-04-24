@@ -142,7 +142,7 @@
     }
 
     @media (prefers-reduced-motion) {
-        transition-duration: 0;
+        transition-duration: 0s;
     }
 
     &[data-auth-state="initializing"][data-has-user="true"],
@@ -176,7 +176,7 @@
     transition-duration: 0.15s;
 
     @media (prefers-reduced-motion) {
-        transition-duration: 0;
+        transition-duration: 0s;
     }
 
     &[data-open-state="true"] {

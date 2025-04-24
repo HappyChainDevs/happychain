@@ -79,7 +79,7 @@ export class InjectedWalletWrapper {
     /**
      * This will actually execute the request using the users chosen injected wallet EIP1193 provider.
      */
-    private async executeRequest(args: EIP1193RequestParameters): Promise<EIP1193RequestResult<EIP1193RequestMethods>> {
+    private async executeRequest(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         if (!this.provider) throw new Error("Failed to resolve local provider")
         // biome-ignore lint/suspicious/noExplicitAny: we support custom request types
         return await this.provider.request(args as any)

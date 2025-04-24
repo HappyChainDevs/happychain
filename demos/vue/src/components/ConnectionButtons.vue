@@ -22,7 +22,7 @@ const { disconnect } = useDisconnect()
 
             <!-- Only visible if { multiInjectedProviderDiscovery: true } in wagmi config  -->
             <Button v-if="connectors.length > 1"
-                v-for="connector in connectors.filter((a: Connector) => a.id !== 'happyProvider')"
+                v-for="connector in connectors.filter((a: Connector) => a.uid !== 'happyProvider')"
                 @click="connect({ connector })">
                 {{ connector.name }}
             </Button>

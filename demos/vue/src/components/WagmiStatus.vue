@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAccount, useConnections } from "@wagmi/vue"
+import { type Connection, useAccount, useConnections } from "@wagmi/vue"
 import BooleanDisplay from "./Boolean.vue"
 import Container from "./Container.vue"
 
@@ -11,7 +11,7 @@ const connections = useConnections()
     <Container title="Wagmi Status">
         <!-- Connected Providers -->
         <ul>
-            <li v-for="connection in connections" :key="connection.connector.name">
+            <li v-for="connection in connections as Connection[]" :key="connection.connector.name">
                 Connected: {{ connection.connector.name }}
             </li>
 
