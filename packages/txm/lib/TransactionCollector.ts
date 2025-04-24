@@ -50,11 +50,11 @@ export class TransactionCollector {
             })
         }
 
-        await this.collectTransactions(transactionsBatch)
+        await this.sendTransactions(transactionsBatch)
     }
 
     @TraceMethod("txm.transaction-collector.collect-transactions")
-    public async collectTransactions(transactionsBatch: Transaction[]) {
+    public async sendTransactions(transactionsBatch: Transaction[]) {
         const span = trace.getSpan(context.active())!
         const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
 

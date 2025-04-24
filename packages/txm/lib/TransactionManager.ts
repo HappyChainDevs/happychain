@@ -467,8 +467,8 @@ export class TransactionManager {
      * Ideal for time-sensitive transactions that don't depend on block context for their execution.
      * @param transactionsBatch - An array of Transaction to be submitted
      */
-    public async collectTransactions(transactionsBatch: Transaction[]): Promise<void> {
-        await this.transactionCollector.collectTransactions(transactionsBatch)
+    public async sendTransactions(transactionsBatch: Transaction[]): Promise<void> {
+        await this.transactionCollector.sendTransactions(transactionsBatch)
     }
 
     public async start(): Promise<void> {
