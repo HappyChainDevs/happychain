@@ -129,14 +129,27 @@ export default {
         plugin(({ addUtilities }) => {
             addUtilities({
                 ".scrollbar-stable": {
-                    scrollbarGutter: "stable",
+                    scrollbarGutter: "stable both-edges",
                 },
                 ".scrollbar-hidden": {
                     scrollbarWidth: "none", // Firefox
                     "-ms-overflow-style": "none", // IE 10+
                 },
                 ".scrollbar-hidden::-webkit-scrollbar": {
-                    display: "none", // Chrome/Safari
+                    display: "none", // Chrome / Safari
+                },
+                ".scrollbar-thin": {
+                    // Firefox
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "rgba(100, 100, 100, 0.5) transparent",
+                },
+                ".scrollbar-thin::-webkit-scrollbar": {
+                    width: "6px",
+                    height: "6px",
+                },
+                ".scrollbar-thin::-webkit-scrollbar-thumb": {
+                    backgroundColor: "rgba(100, 100, 100, 0.5)",
+                    borderRadius: "6px",
                 },
             })
         }),
