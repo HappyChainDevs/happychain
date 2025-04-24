@@ -22,7 +22,6 @@ const envSchema = z.object({
     APP_PORT: z.string().transform((s) => Number(s)),
     TURNSTILE_SECRET: z.string().trim(),
     TOKEN_AMOUNT: z.string().transform((s) => BigInt(s)),
-    CORS_ORIGIN: z.string().trim(),
     FAUCET_DB_PATH: z.string().trim(),
     FAUCET_RATE_LIMIT_WINDOW_SECONDS: z.string().transform((s) => Number(s)),
     FAUCET_RATE_LIMIT_MAX_REQUESTS: z.string().transform((s) => Number(s)),
