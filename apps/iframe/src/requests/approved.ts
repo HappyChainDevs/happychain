@@ -83,6 +83,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
 
+            if (import.meta.env.PROD) {
+                throw new Error("Adding chains is not supported in production")
+            }
+
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
 
@@ -99,6 +103,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const chains = getChains()
             const chainId = request.payload.params[0].chainId
 
+            if (import.meta.env.PROD) {
+                throw new Error("Switching chain is not supported in production")
+            }
+
             // ensure chain has already been added
             if (!(chainId in chains)) {
                 throw getEIP1193ErrorObjectFromCode(
@@ -108,13 +116,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             }
 
             if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
-
-            if (import.meta.env.PROD) {
-                throw getEIP1193ErrorObjectFromCode(
-                    EIP1193ErrorCodes.UnsupportedMethod,
-                    "Switching chain is not supported in production",
-                )
-            }
 
             const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Currently this fails: web3Auth is hardcoded to the default intial chain.

@@ -424,6 +424,11 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         case "wallet_addEthereumChain": {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
+
+            if (import.meta.env.PROD) {
+                throw new Error("Adding chains is not supported in production")
+            }
+
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
 
@@ -459,6 +464,10 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         case "wallet_switchEthereumChain": {
             const chains = getChains()
             const chainId = request.payload.params[0].chainId
+
+            if (import.meta.env.PROD) {
+                throw new Error("Switching chain is not supported in production")
+            }
 
             // ensure chain has already been added
             if (!(chainId in chains)) {
