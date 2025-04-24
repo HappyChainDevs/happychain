@@ -42,7 +42,14 @@ export type {
     ObjectFromTuples,
 } from "./utils/types"
 
-export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded, serializeBigInt } from "./utils/bigint"
+export {
+    bigIntMax,
+    bigIntReplacer,
+    bigIntReviver,
+    bigIntToZeroPadded,
+    serializeBigInt,
+    parseBigInt,
+} from "./utils/bigint"
 
 export { validateNumericInput } from "./utils/regexChecks"
 
@@ -77,6 +84,10 @@ export { Map2 } from "./collections/map2"
 export { FIFOCache } from "./collections/fifo-cache"
 
 export { fetchWithRetry } from "./utils/fetch"
+
+export { hasKey, hasDefinedKey, getProp } from "./utils/objects"
+
+export { stringify } from "./utils/string"
 
 // === DATA ========================================================================================
 
