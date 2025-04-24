@@ -4,16 +4,16 @@ import {
     type ProviderEventPayload,
     WalletType,
     getEIP1193ErrorObjectFromUnknown,
+    EIP1474InternalError,
 } from "@happy.tech/wallet-common"
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import type { UnauthorizedProviderError } from "viem"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { reqLogger } from "#src/logger"
 import { getUser } from "#src/state/user.ts"
-import { happyProviderBus } from "../services/eventBus"
-import { isIframe } from "../utils/appURL"
-import { iframeProvider } from "../wagmi/provider"
-import { appForSourceID } from "./utils"
+import { happyProviderBus } from "#src/services/eventBus"
+import { appForSourceID, isIframe } from "#src/utils/appURL"
+import { iframeProvider } from "#src/wagmi/provider"
 
 /**
  * Runs the supplied dispatch function on the supplied request, sending the response back to the app
@@ -36,8 +36,8 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
 ): Promise<void> {
     const app = appForSourceID(request.windowId)
     if (!app) {
-        reqLogger.warn("Unsupported source app, abandoning request", app, request)
-        return
+        reqLogger.error("Unsupported source app, abandoning request", app, request)
+        throw new EIP1474InternalError(`Unsupported source app: ${app}`)
     }
 
     try {

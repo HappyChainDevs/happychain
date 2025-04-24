@@ -3,20 +3,19 @@ import {
     type EIP1193ErrorObject,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
-    GenericProviderRpcError,
     Msgs,
     type ProviderEventError,
     type ProviderEventPayload,
+    ProviderRpcError,
 } from "@happy.tech/wallet-common"
 import { SafeEventEmitter } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
-import { iframeID } from "#src/requests/utils.ts"
 import { happyProviderBus } from "#src/services/eventBus.ts"
 import { getInjectedProvider } from "#src/state/injectedProvider.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getUser } from "#src/state/user.ts"
-import { getAppURL, isStandaloneIframe } from "#src/utils/appURL.ts"
+import { getAppURL, iframeID, isStandaloneIframe } from "#src/utils/appURL.ts"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet.ts"
 import { iframeProvider } from "#src/wagmi/provider.ts"
 
@@ -99,7 +98,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
         const iframeRequest = resp.windowId === iframeID()
         const pending = this.inFlight.get(resp.key)
         if (!pending && iframeRequest) iframeProvider.handleRequestResolution(resp)
-        else if (pending?.reject && resp.error) pending.reject(new GenericProviderRpcError(resp.error))
+        else if (pending?.reject && resp.error) pending.reject(new ProviderRpcError(resp.error))
         else if (pending?.resolve) pending.resolve(resp.payload)
     }
 

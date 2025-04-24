@@ -7,13 +7,13 @@ import {
 } from "@happy.tech/wallet-common"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { getUser } from "#src/state/user.ts"
-import { happyProviderBus } from "../services/eventBus"
-import { isIframe } from "../utils/appURL"
-import { iframeProvider } from "../wagmi/provider"
-import { appForSourceID } from "./utils"
+import { happyProviderBus } from "#src/services/eventBus"
+import { appForSourceID, isIframe } from "#src/utils/appURL"
+import { iframeProvider } from "#src/wagmi/provider"
 
 /**
- * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.
+ * Handles requests rejected by the user in the pop-up, forwarding the rejection to the app, whether connected to
+ * a social or injected wallet.
  */
 export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): Promise<void> {
     const error = data.error || getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest)
