@@ -56,7 +56,7 @@ dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@if [ -d dist.prod ]; then \
 		rm -rf dist; \
 		mv dist.prod dist; \
-		make -s dist || exit 1; \
+		make dist || exit 1; \
 	else \
 		$(TSC_BIN) --build || exit 1; \
 		NODE_ENV=production bunx --bun vite build || exit 1; \
