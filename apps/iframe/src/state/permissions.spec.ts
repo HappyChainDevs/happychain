@@ -11,11 +11,10 @@ import {
 } from "#src/state/permissions.ts"
 import { setUser } from "../state/user"
 
-const { appURL, iframeURL, appURLMock, requestUtilsMock } = await vi //
+const { appURL, iframeURL, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
-vi.mock(import("#src/requests/utils"), requestUtilsMock)
 
 describe("PermissionsService", () => {
     describe("hasPermissions", () => {

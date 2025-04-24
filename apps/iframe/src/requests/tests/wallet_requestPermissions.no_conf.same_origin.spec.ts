@@ -3,17 +3,16 @@ import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
+import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissionless"
+import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
-import { setAuthState } from "../../state/authState"
-import { setUser } from "../../state/user"
-import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
-import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
+import { setUser } from "#src/state/user"
+import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
-const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi //
+const { appURL, iframeID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
-vi.mock(import("#src/requests/utils"), requestUtilsMock)
 
 describe("#publicClient #wallet_requestPermissions #same_origin", () => {
     describe("disconnected user", () => {

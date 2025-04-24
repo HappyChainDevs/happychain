@@ -9,11 +9,10 @@ import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 
-const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi //
+const { appURL, iframeID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
-vi.mock(import("#src/requests/utils"), requestUtilsMock)
 
 describe("#publicClient #eth_requestAccounts #same_origin", () => {
     describe("disconnected user", () => {
