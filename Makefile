@@ -40,7 +40,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/leaderboard-backend,apps/leaderboard-frontend
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
@@ -169,6 +169,37 @@ submitter.prod: submitter.build
 	cd apps/submitter && make prod;
 .PHONY: submitter.prod
 
+<<<<<<< HEAD
+=======
+leaderboard-backend.dev: setup.ts shared.dev
+	cd apps/leaderboard-backend && make migrate;
+	cd apps/leaderboard-backend && make dev;
+.PHONY: leaderboard-backend.dev
+
+leaderboard-backend.build: shared.build
+	cd apps/leaderboard-backend && make build;
+.PHONY: leaderboard-backend.build
+
+leaderboard-backend.prod: leaderboard-backend.build
+	cd apps/leaderboard-backend && make migrate;
+	cd apps/leaderboard-backend && make prod;
+.PHONY: leaderboard-backend.prod
+
+leaderboard-frontend.dev: setup.ts shared.dev sdk.dev
+	$(call with_optional_iframe, 'leaderboard-frontend', 'apps/leaderboard-frontend', 'dev')
+.PHONY: leaderboard-frontend.dev
+
+leaderboard-frontend.build: setup.ts shared.build
+	cd packages/core && make build
+	cd packages/react && make build
+	cd apps/leaderboard-frontend && make build
+.PHONY: leaderboard-frontend.build
+
+leaderboard-frontend.prod:
+	$(call with_optional_iframe, 'leaderboard-frontend', 'apps/leaderboard-frontend', 'preview')
+.PHONY: leaderboard-frontend.prod
+
+>>>>>>> 026344e35 (update app names for frontend and backend [skip ci])
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
 .PHONY: iframe.dev

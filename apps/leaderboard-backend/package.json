@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    "name": "@happy.tech/swarm-leaderboard",
+    "name": "@happy.tech/leaderboard-backend",
     "private": true,
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
