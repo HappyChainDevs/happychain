@@ -1,0 +1,128 @@
+/**
+ * Core request handler logic shared between two or more handlers.
+ */
+
+import { entryPoint } from "#src/constants/contracts"
+import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
+import type { BlockParam } from "#src/requests/utils/eip1474"
+import type { Hex } from "@happy.tech/common"
+import {
+    type Hash,
+    StateRequestStatus,
+    state as boopState,
+    type Receipt,
+    EntryPointStatus,
+    estimateGas,
+} from "@happy.tech/submitter-client" // TODO Hash import from common instead
+import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
+import { type Address, toHex, type Transaction } from "viem"
+import {
+    boopFromTransaction,
+    formatTransaction,
+    formatTransactionReceipt,
+    getCurrentNonce,
+    getOnchainNonce,
+} from "#src/requests/utils/boop"
+import { boopCache } from "#src/requests/utils/boopCache"
+
+export const FORWARD = Symbol("FORWARD")
+export type Forward = typeof FORWARD
+
+/**
+ * Returns an Ethereum RPC-style transaction object for the given hash. This first assumes the hash is a boop hash and
+ * tries to fetch it. If the hash is not found, the function returns {@link FORWARD} to signal that the request should
+ * be passed to the public client to find an actual Ethereum transaction.
+ */
+export async function getTransactionByHash(hash: Hash): Promise<Transaction | Forward> {
+    const cached = boopCache.get(hash)
+
+    // If the receipt is present, the entry is final. If not, try to fetch a more up-to-date state.
+    if (cached?.receipt) return formatTransaction(hash, cached.boop, cached.receipt)
+
+    try {
+        const output = (await boopState({ hash })).unwrap()
+
+        // Unknown boop: this might be an EVM tx hash instead, signal caller to forward to the public client.
+        if (output.status === StateRequestStatus.UnknownHappyTx) return FORWARD
+
+        const receipt = output.state?.receipt
+        const boop = undefined
+        // const { receipt, boop } = output.state // TODO
+
+        boopCache.put(hash, { boop, receipt })
+        return formatTransaction(hash, boop, receipt)
+        //
+    } catch (err) {
+        // We had a cache hit without receipt, so this is a boop, just use that.
+        if (cached) return formatTransaction(hash, cached.boop, cached.receipt)
+
+        // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
+        // in which case things are pretty fucked anyway, so might as well bail out.
+        throw new EIP1474InternalError("failed to fetch boop state", err)
+    }
+}
+
+/**
+ * Returns an Ethereum-style transaction receipt for the given hash. This first assumes the hash is a boop hash and
+ * tries to fetch it. If the hash is not found, the function returns {@link FORWARD} to signal that the request should
+ * be passed to the public client to find an actual Ethereum transaction receipt.
+ */
+export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forward | null> {
+    // TODO fill cache from sending side
+    const cached = boopCache.get(hash)
+    if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
+
+    try {
+        const { status, state } = (await boopState({ hash })).unwrap()
+
+        if (!state?.receipt)
+            // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
+            return cached || status === StateRequestStatus.Success ? null : FORWARD
+
+        boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
+        return formatTransactionReceipt(hash, state.receipt)
+        //
+    } catch (err) {
+        // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
+        // in which case things are pretty fucked anyway, so might as well bail out.
+        throw new EIP1474InternalError("failed to fetch boop state", err)
+    }
+}
+
+/**
+ * If the address is the local account's address, return its boop nonce. If the block tag is
+ * "pending", use the local nonce view for this. We *do not* do this for other boop accounts, at
+ * least at the moment. This returns {@link FORWARD} to signify that the transaction count query
+ * should be made with a public client (because the queries address is not the local address).
+ */
+export async function getTransactionCount(
+    user: HappyUser | undefined,
+    [address, block]: [Address, BlockParam],
+): Promise<Hex | Forward> {
+    return user && address.toLowerCase() === user.address.toLowerCase()
+        ? block === "pending"
+            ? toHex(await getCurrentNonce(address as Address))
+            : toHex(await getOnchainNonce(address as Address, 0n, block))
+        : FORWARD
+    // NOTE: We could lookup to see if the address is that of another boop account. Not worth the hassle for now.
+}
+
+/**
+ * Attempts to estimate the gas by interpreting the tx as a book from the local account. If the tx is not originating
+ * from the local account, returns {@link FORWARD} to indicate the request should be directed at a public client instead.
+ * We currently can't simulate gas for other boop accounts.
+ */
+export async function eth_estimateGas(
+    user: HappyUser | undefined,
+    tx: ValidRpcTransactionRequest,
+): Promise<Hex | Forward> {
+    if (user?.address !== tx.from) return FORWARD
+
+    const boop = await boopFromTransaction(user?.address, tx)
+    const output = (await estimateGas({ entryPoint, tx: boop })).unwrap()
+
+    // TODO need robust error handling
+    if (output.status !== EntryPointStatus.Success) throw new Error("can't simulate lol")
+
+    return toHex(output.executeGasLimit)
+}

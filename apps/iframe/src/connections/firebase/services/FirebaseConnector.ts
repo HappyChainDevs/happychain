@@ -17,7 +17,7 @@ import {
 } from "firebase/auth"
 import { AccountNotFoundError } from "permissionless"
 import type { EIP1193Provider } from "viem"
-import { getBoopAccountAddress } from "#src/state/boopAccount"
+import { getBoopAccountAddress } from "#src/connections/boopAccount"
 import { getPermissions } from "#src/state/permissions"
 import { getAppURL } from "#src/utils/appURL"
 import { firebaseAuth } from "../services/firebase"

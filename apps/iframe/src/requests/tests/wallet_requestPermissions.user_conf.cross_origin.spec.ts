@@ -6,7 +6,7 @@ import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
-import { dispatchHandlers } from "../approved"
+import { dispatchApprovedRequest } from "../handlers/approved"
 
 const { appURL, iframeURL, parentID, appURLMock, requestUtilsMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
@@ -28,7 +28,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-        const response = await dispatchHandlers(request)
+        const response = await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         expect(getAllPermissions(appURL)).toStrictEqual(response)
@@ -55,7 +55,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
                 },
             ],
         })
-        const response = await dispatchHandlers(request)
+        const response = await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(response).toStrictEqual([
             {
@@ -77,10 +77,10 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
+        await dispatchApprovedRequest(request)
+        await dispatchApprovedRequest(request)
+        await dispatchApprovedRequest(request)
+        await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(getAllPermissions(iframeURL).length).toBe(1)
     })
