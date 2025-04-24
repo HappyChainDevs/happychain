@@ -1,5 +1,5 @@
+import type { ExecuteOutput } from "@happy.tech/boop-sdk"
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import type { ExecuteOutput } from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -105,6 +105,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Currently this fails: web3Auth is hardcoded to the default intial chain.
+
             setCurrentChain(chains[chainId])
             return response
         }

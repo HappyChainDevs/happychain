@@ -1,4 +1,3 @@
-import { Map2, Mutex } from "@happy.tech/common"
 import {
     type Boop,
     type BoopReceipt,
@@ -7,17 +6,21 @@ import {
     computeBoopHash,
     estimateGas,
     execute,
-} from "@happy.tech/submitter-client"
+    receipt,
+    submit,
+} from "@happy.tech/boop-sdk"
+import { Map2, Mutex } from "@happy.tech/common"
 import { EIP1474InvalidInput } from "@happy.tech/wallet-common"
-import type {
-    Address,
-    Hash,
-    Hex,
-    Log,
-    RpcTransactionRequest,
-    Transaction,
-    TransactionEIP1559,
-    TransactionReceipt,
+import {
+    type Address,
+    type Hash,
+    type Hex,
+    type Log,
+    type RpcTransactionRequest,
+    type Transaction,
+    type TransactionEIP1559,
+    type TransactionReceipt,
+    zeroAddress,
 } from "viem"
 import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
 import { reqLogger } from "#src/logger"
@@ -98,72 +101,98 @@ export async function sendBoop(
 
     try {
         const nonceValue = await getNextNonce(account, nonceTrack)
-
+        console.log({ nonceValue, nonceTrack, value })
         if (!tx.to) throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
 
         const boop: Boop = {
             account,
             dest: tx.to,
-            payer: happyPaymaster,
+            payer: zeroAddress, // TODO: it errors when paymaster is used
             value,
             nonceTrack,
             nonceValue,
 
             // For sponsored boops, gas & limits will be filled by the submitter.
             // For self-paying boops, we will fill this after calling `simulate`.
-            maxFeePerGas: 0n,
-            submitterFee: 0n,
             gasLimit: 0n,
-            validateGasLimit: 0n,
-            validatePaymentGasLimit: 0n,
+            maxFeePerGas: 1200000000n,
+            submitterFee: 100n,
+            validateGasLimit: 4000000000n,
+            validatePaymentGasLimit: 4000000000n,
             executeGasLimit: 0n,
+
             callData: tx.data ?? "0x",
             validatorData: "0x", // we will fill after signing
             extraData: "0x", // TODO
         }
 
-        if (!isSponsored) {
-            const simulation = (
-                await estimateGas({
-                    entryPoint,
-                    tx: boop,
-                })
-            ).unwrap()
+        // const signature = await signer()
+        // console.log({ boop })
 
-            if (simulation.status === EntryPointStatus.Success) {
-                boop.gasLimit = BigInt(simulation.gasLimit)
-                boop.validateGasLimit = BigInt(simulation.validateGasLimit)
-                boop.validatePaymentGasLimit = BigInt(simulation.validatePaymentGasLimit)
-                boop.executeGasLimit = BigInt(simulation.executeGasLimit)
-                boop.maxFeePerGas = BigInt(simulation.maxFeePerGas)
-                boop.submitterFee = BigInt(simulation.submitterFee)
-            } else {
-                throw new Error(`Simulation failed with status: ${simulation.status}`)
-            }
-        }
+        // if (!isSponsored) {
+        //     console.log("NOT SPONSERED*********************************************")
+        //     const simulation = (
+        //         await estimateGas({
+        //             // Omit here, and use default value according to currently deployed submitter
+        //             // entryPoint,
+        //             tx: boop,
+        //         })
+        //     ).unwrap()
 
+        //     if (simulation.status === EntryPointStatus.Success) {
+        //         boop.gasLimit = BigInt(simulation.gasLimit)
+        //         boop.validateGasLimit = BigInt(simulation.validateGasLimit)
+        //         boop.validatePaymentGasLimit = BigInt(simulation.validatePaymentGasLimit)
+        //         boop.executeGasLimit = BigInt(simulation.executeGasLimit)
+        //         boop.maxFeePerGas = BigInt(simulation.maxFeePerGas)
+        //         boop.submitterFee = BigInt(simulation.submitterFee)
+        //     } else {
+        //         throw new Error(`Simulation failed with status: ${simulation.status}`)
+        //     }
+        // }
+
+        console.log({ Chain: BigInt(getCurrentChain().chainId) })
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
+        console.log({ boopHash })
         const signedBoop: Boop = {
             ...boop,
             validatorData: await signer(boopHash),
         }
 
-        addPendingBoop(account, {
-            boopHash,
-            value,
+        try {
+            addPendingBoop(account, {
+                boopHash,
+                value,
+            })
+        } catch (error) {
+            console.log("error adding pending boop", error)
+        }
+
+        console.log("pending boop added")
+
+        const result1 = await submit({
+            entryPoint,
+            tx: signedBoop,
         })
 
-        const result = (
-            await execute({
-                entryPoint,
-                tx: signedBoop,
-            })
-        ).unwrap()
+        try {
+            const result = await receipt({ hash: boopHash, timeout: 2100 })
 
-        markBoopAsConfirmed(account, value, result)
+            console.log({ result1, result })
 
-        return result
+            // const result = result1.unwrap()
+            try {
+                markBoopAsConfirmed(account, value, result.unwrap() as unknown as ExecuteOutput) // TODO: don't cast, just testing
+            } catch (error) {
+                console.log("error as confirmed", error)
+            }
+
+            return result.unwrap() as unknown as ExecuteOutput
+        } catch (error) {
+            console.log("error in receipt", error)
+        }
     } catch (error) {
+        console.log({ error })
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
 

@@ -1,5 +1,5 @@
+import { createAccount } from "@happy.tech/boop-sdk"
 import { accessorsFromAtom } from "@happy.tech/common"
-import { createAccount } from "@happy.tech/submitter-client"
 import { type Atom, atom } from "jotai"
 import type { Address } from "viem"
 import { userAtom } from "./user"

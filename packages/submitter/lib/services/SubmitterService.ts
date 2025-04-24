@@ -54,7 +54,7 @@ export class SubmitterService {
 
         const boop = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
 
-        // TODO this needs a timeout / cancellation policy
+        // TODO: this needs a timeout / cancellation policy
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
         if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)

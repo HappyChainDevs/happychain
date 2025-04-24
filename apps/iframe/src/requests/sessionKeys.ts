@@ -1,5 +1,5 @@
+import type { ExecuteOutput } from "@happy.tech/boop-sdk"
 import type { Address } from "@happy.tech/common"
-import type { ExecuteOutput } from "@happy.tech/submitter-client"
 import { type Hex, encodeFunctionData } from "viem"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { sendBoop } from "#src/requests/boop"

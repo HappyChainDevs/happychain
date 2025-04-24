@@ -1,11 +1,11 @@
-import { happyChainSepolia } from "@happy.tech/core"
+import { devnet, happyChainSepolia } from "@happy.tech/core"
 import { toast } from "sonner"
 import { gnosis } from "viem/chains"
 import { walletClient } from "../clients"
 
 const ChainSwitchingDemo = () => {
     async function addChain() {
-        await walletClient.addChain({ chain: gnosis })
+        await walletClient.addChain({ chain: devnet })
         toast.success(`Chain details added: ${gnosis.id}.`)
     }
     async function addConflictedChain() {

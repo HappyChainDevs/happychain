@@ -1,11 +1,5 @@
+import { type Boop, EntryPointStatus, StateRequestStatus, state as boopState, estimateGas } from "@happy.tech/boop-sdk"
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import {
-    type Boop,
-    EntryPointStatus,
-    StateRequestStatus,
-    state as boopState,
-    estimateGas,
-} from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,

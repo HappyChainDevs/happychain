@@ -1,5 +1,5 @@
-import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
-import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
+import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
+import { devnet, happyChainSepolia, loadAbi, requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
@@ -34,13 +34,31 @@ const SessionKeyDemo = () => {
     }, [updateCounterValue])
 
     async function submitIncrement() {
+        console.log("INCREMENTING")
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
         return await walletClient.writeContract({
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "increment",
-            chain: happyChainSepolia,
+            chain: devnet,
         })
+    }
+    async function resetCounter() {
+        console.log("RESETIING")
+        if (!walletClient || !user?.address) throw new Error("Wallet not connected")
+        return await walletClient.writeContract({
+            address: deployment.HappyCounter,
+            abi: abis.HappyCounter,
+            functionName: "reset",
+            chain: devnet,
+        })
+    }
+
+    async function loadAbiStub() {
+        await loadAbi(deployment.HappyCounter, abis.HappyCounter)
+        toast.success(
+            `ABI loaded for ${deployment.HappyCounter}! Click on the Counter buttons to see the ABI in use within the request popup.`,
+        )
     }
 
     async function incrementCounter() {
@@ -82,6 +100,14 @@ const SessionKeyDemo = () => {
 
             <button type="button" onClick={incrementCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Counter ++
+            </button>
+
+            <button type="button" onClick={resetCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Reset
+            </button>
+
+            <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Load ABI
             </button>
 
             <div className="col-span-2 text-center mt-2">
