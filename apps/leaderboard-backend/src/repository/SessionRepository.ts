@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, NewSession, Session, SessionUpdate } from "../db/types"
+import type { Database, NewSession, Session, UpdateSession } from "../db/types"
 
 export class SessionRepository {
     constructor(private db: Kysely<Database>) {}
@@ -22,7 +22,7 @@ export class SessionRepository {
         return await this.db.insertInto("sessions").values(session).returningAll().executeTakeFirstOrThrow()
     }
 
-    async update(id: number, updateWith: SessionUpdate) {
+    async update(id: number, updateWith: UpdateSession) {
         return await this.db.updateTable("sessions").set(updateWith).where("id", "=", id).executeTakeFirst()
     }
 

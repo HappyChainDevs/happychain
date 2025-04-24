@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, NewUser, User, UserUpdate } from "../db/types"
+import type { Database, NewUser, User, UpdateUser } from "../db/types"
 
 export class UserRepository {
     constructor(private db: Kysely<Database>) {}
@@ -23,7 +23,7 @@ export class UserRepository {
         return await this.db.insertInto("users").values(user).returningAll().executeTakeFirstOrThrow()
     }
 
-    async update(id: number, updateWith: UserUpdate) {
+    async update(id: number, updateWith: UpdateUser) {
         return await this.db.updateTable("users").set(updateWith).where("id", "=", id).executeTakeFirst()
     }
 

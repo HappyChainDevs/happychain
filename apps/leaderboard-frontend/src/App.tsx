@@ -2,7 +2,6 @@ import { useHappyWallet } from "@happy.tech/react"
 import ConnectionDemo from "./components/ConnectionDemo"
 
 function App() {
-    // const { user } = useHappyWallet()
     useHappyWallet()
 
     return (

@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, NewUserGameScore, UserGameScore, UserGameScoreUpdate } from "../db/types"
+import type { Database, NewUserGameScore, UserGameScore, UpdateUserGameScore } from "../db/types"
 
 export class UserGameScoreRepository {
     constructor(private db: Kysely<Database>) {}
@@ -22,7 +22,7 @@ export class UserGameScoreRepository {
         return await this.db.insertInto("user_game_scores").values(score).returningAll().executeTakeFirstOrThrow()
     }
 
-    async update(id: number, updateWith: UserGameScoreUpdate) {
+    async update(id: number, updateWith: UpdateUserGameScore) {
         return await this.db.updateTable("user_game_scores").set(updateWith).where("id", "=", id).executeTakeFirst()
     }
 

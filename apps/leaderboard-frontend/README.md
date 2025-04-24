@@ -13,4 +13,3 @@ To run the frontend (with iframe support, if needed), from the repo root:
 
 - `make leaderboard-frontend.dev` — Dev mode (hot reload, with iframe)
 - `make leaderboard-frontend.prod` — Production mode (with iframe)
-
