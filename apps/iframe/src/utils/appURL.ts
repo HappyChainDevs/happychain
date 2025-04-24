@@ -1,4 +1,4 @@
-import { createUUID, type HTTPString, type UUID } from "@happy.tech/common"
+import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
 
 export type AppURL = HTTPString & { _brand: "AppHTTPString" }
 

@@ -1,6 +1,5 @@
 import { createUUID, injectedProviderInfo } from "@happy.tech/common"
 import {
-    type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     Msgs,

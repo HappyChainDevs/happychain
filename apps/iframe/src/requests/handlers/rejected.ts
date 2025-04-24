@@ -6,8 +6,8 @@ import {
     getEIP1193ErrorObjectFromCode,
 } from "@happy.tech/wallet-common"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
-import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "#src/services/eventBus"
+import { getUser } from "#src/state/user.ts"
 import { appForSourceID, isIframe } from "#src/utils/appURL"
 import { iframeProvider } from "#src/wagmi/provider"
 

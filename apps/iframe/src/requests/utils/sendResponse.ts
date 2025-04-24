@@ -1,17 +1,17 @@
 import {
     type EIP1193RequestParameters,
+    EIP1474InternalError,
     Msgs,
     type ProviderEventPayload,
     WalletType,
     getEIP1193ErrorObjectFromUnknown,
-    EIP1474InternalError,
 } from "@happy.tech/wallet-common"
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import type { UnauthorizedProviderError } from "viem"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { reqLogger } from "#src/logger"
-import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "#src/services/eventBus"
+import { getUser } from "#src/state/user.ts"
 import { appForSourceID, isIframe } from "#src/utils/appURL"
 import { iframeProvider } from "#src/wagmi/provider"
 

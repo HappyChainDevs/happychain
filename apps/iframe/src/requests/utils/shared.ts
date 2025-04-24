@@ -2,20 +2,18 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { entryPoint } from "#src/constants/contracts"
-import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
-import type { BlockParam } from "#src/requests/utils/eip1474"
-import type { Hex } from "@happy.tech/common"
 import {
+    EntryPointStatus,
     type Hash,
+    type Receipt,
     StateRequestStatus,
     state as boopState,
-    type Receipt,
-    EntryPointStatus,
     estimateGas,
-} from "@happy.tech/submitter-client" // TODO Hash import from common instead
+} from "@happy.tech/boop-sdk" // TODO Hash import from common instead
+import type { Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
-import { type Address, toHex, type Transaction } from "viem"
+import { type Address, type Transaction, toHex } from "viem"
+import { entryPoint } from "#src/constants/contracts"
 import {
     boopFromTransaction,
     formatTransaction,
@@ -24,6 +22,8 @@ import {
     getOnchainNonce,
 } from "#src/requests/utils/boop"
 import { boopCache } from "#src/requests/utils/boopCache"
+import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
+import type { BlockParam } from "#src/requests/utils/eip1474"
 
 export const FORWARD = Symbol("FORWARD")
 export type Forward = typeof FORWARD

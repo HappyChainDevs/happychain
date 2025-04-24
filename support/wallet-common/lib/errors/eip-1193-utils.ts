@@ -3,6 +3,8 @@ import {
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
+    EIP1193ErrorCodes,
+    type EIP1193ErrorObject,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,

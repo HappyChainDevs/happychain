@@ -1,5 +1,5 @@
+import type { Boop, BoopReceipt } from "@happy.tech/boop-sdk"
 import { FIFOCache } from "@happy.tech/common"
-import type { Boop, BoopReceipt } from "@happy.tech/submitter-client"
 import type { Hash } from "viem"
 
 export type BoopCacheEntry = {
