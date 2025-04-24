@@ -32,7 +32,7 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="View on explorer"
-                className="absolute size-full z-10 inset opacity-0"
+                className="absolute size-full inset opacity-0"
             >
                 {shortenAddress(tx)}
             </a>
