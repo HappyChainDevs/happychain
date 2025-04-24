@@ -41,19 +41,26 @@ export enum EIP1474ErrorCodes {
 /**
  * General Purpose Ethereum RPC error.
  */
-export class GenericEthereumRpcError extends Error {
-    code: EIP1474ErrorCodes
-    constructor(code: EIP1474ErrorCodes, message: string) {
+export class EthereumRpcError extends Error {
+    readonly code: EIP1474ErrorCodes
+    readonly cause?: unknown
+    constructor(code: EIP1474ErrorCodes, message: string, cause?: unknown) {
         super(message)
         this.code = code
+        this.cause = cause
     }
 }
 
-/**
- * Error: -32000 Invalid Input
- */
-export class EIP1474InvalidInput extends GenericEthereumRpcError {
-    constructor(message: string) {
-        super(EIP1474ErrorCodes.InvalidInput, message)
+/** Ethereum RPC error code -32000 */
+export class EIP1474InvalidInput extends EthereumRpcError {
+    constructor(message = "Invalid Input", cause?: unknown) {
+        super(EIP1474ErrorCodes.InvalidInput, message, cause)
+    }
+}
+
+/** Ethereum RPC error code -32603 */
+export class EIP1474InternalError extends EthereumRpcError {
+    constructor(message = "Internal Error", cause?: unknown) {
+        super(EIP1474ErrorCodes.InternalError, message, cause)
     }
 }
