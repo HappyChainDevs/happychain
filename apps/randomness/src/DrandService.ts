@@ -178,11 +178,11 @@ export class DrandService {
                     return
                 }
 
-                await this.txm.collectTransactions([postDrandTransaction])
+                await this.txm.sendTransactions([postDrandTransaction])
 
                 drand.transactionSubmitted()
 
-                this.drandRepository.updateDrand(drand).catch((error) => {
+                await this.drandRepository.updateDrand(drand).catch((error) => {
                     logger.error("Failed to update drand", error)
                 })
             }),
