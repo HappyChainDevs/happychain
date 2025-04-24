@@ -53,4 +53,4 @@ export const useTurnstile = (sitekey: string) => {
     }, [renderCaptcha])
 
     return { token, widgetRef, renderCaptcha }
-} 
+}
