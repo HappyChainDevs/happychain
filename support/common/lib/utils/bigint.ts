@@ -74,3 +74,12 @@ export function serializeBigInt<T>(obj: T): ReplaceBigIntWithString<T> {
     }
     return obj as ReplaceBigIntWithString<T>
 }
+
+/** Returns a parsed bigint from the input, or undefined if unable to parse. */
+export function parseBigInt(input: string | undefined): bigint | undefined {
+    try {
+        return input ? BigInt(input) : undefined
+    } catch {
+        return undefined
+    }
+}
