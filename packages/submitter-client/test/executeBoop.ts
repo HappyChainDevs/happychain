@@ -1,9 +1,9 @@
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
-import { computeBoopHash, createAccount, execute } from "../lib/index"
 import { http, createPublicClient, zeroAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
+import { computeBoopHash, createAccount, execute } from "../lib/index"
 
 const pk = process.env.SUBMITTER_CRON_PK
 
