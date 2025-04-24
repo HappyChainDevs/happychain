@@ -6,7 +6,7 @@ import { getWatchedAssets } from "#src/state/watchedAssets.ts"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
-import { dispatchHandlers } from "../approved"
+import { dispatchApprovedRequest } from "../handlers/approved"
 
 const { iframeID, appURLMock, requestUtilsMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
@@ -36,7 +36,7 @@ describe("walletClient wallet_watchAsset", () => {
                 },
             },
         })
-        await dispatchHandlers(request)
+        await dispatchApprovedRequest(request)
 
         const userAssets = getWatchedAssets()
         const assetsForAddress = userAssets[user.address]
@@ -44,7 +44,7 @@ describe("walletClient wallet_watchAsset", () => {
 
         // add the same token a second time, shouldn't add a new token but also returns true
         // since this isn't an error case
-        const reAddTokenReq = await dispatchHandlers(request)
+        const reAddTokenReq = await dispatchApprovedRequest(request)
         expect(assetsForAddress.length).toBe(1)
         expect(reAddTokenReq).toBe(true)
     })

@@ -7,7 +7,7 @@ import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
-import { dispatchHandlers } from "../permissionless"
+import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 
 const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
@@ -30,7 +30,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
-            await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
+            await expect(dispatchedPermissionlessRequest(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
 
@@ -49,10 +49,10 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
+            await dispatchedPermissionlessRequest(request)
+            await dispatchedPermissionlessRequest(request)
+            await dispatchedPermissionlessRequest(request)
+            await dispatchedPermissionlessRequest(request)
             expect(getAllPermissions(appURL).length).toBe(1)
         })
     })

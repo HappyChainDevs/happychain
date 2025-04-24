@@ -1,6 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
-import { handleInjectedRequest } from "#src/requests/injected"
-import { handlePermissionlessRequest } from "../requests"
+import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { happyProviderBus } from "../services/eventBus"
 import { getAppURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequiresConfirmation"

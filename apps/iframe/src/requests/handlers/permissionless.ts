@@ -1,0 +1,106 @@
+import {
+    eth_estimateGas,
+    FORWARD,
+    getTransactionByHash,
+    getTransactionCount,
+    getTransactionReceipt,
+} from "#src/requests/utils/shared"
+import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { sendToPublicClient } from "#src/requests/utils/sendToClient"
+import { sessionKeySigner } from "#src/requests/utils/signers"
+import { getCurrentChain } from "#src/state/chains"
+import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
+import { getCheckedUser, getUser } from "#src/state/user"
+import { appForSourceID } from "#src/utils/appURL"
+import { HappyMethodNames } from "@happy.tech/common"
+import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
+import { isAddress } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { sendBoop } from "../utils/boop"
+import { checkSessionKeyAuthorized, getSessionKey } from "../utils/sessionKeys"
+
+export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
+    const app = appForSourceID(request.windowId)! // checked in sendResponse
+    const user = getUser()
+
+    switch (request.payload.method) {
+        case "eth_chainId": {
+            return getCurrentChain().chainId
+        }
+
+        case "eth_sendTransaction": {
+            // A permissionless transaction is always a session key transaction!
+            const tx = checkedTx(request.payload.params[0])
+            const account = getCheckedUser().address
+            checkSessionKeyAuthorized(app, tx.to)
+            return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) })
+        }
+
+        case "eth_accounts": {
+            return user && hasPermissions(app, "eth_accounts") ? [user.address] : []
+        }
+
+        case HappyMethodNames.USER: {
+            return user && hasPermissions(app, "eth_accounts") ? getUser() : undefined
+        }
+
+        case "eth_requestAccounts":
+            checkAuthenticated()
+            if (!hasPermissions(app, "eth_accounts")) throw new EIP1193UserRejectedRequestError()
+            return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
+
+        case "eth_getTransactionByHash": {
+            const tx = await getTransactionByHash(request.payload.params[0])
+            return tx !== FORWARD ? tx : await sendToPublicClient(app, request.payload)
+        }
+
+        case "eth_getTransactionReceipt": {
+            const receipt = await getTransactionReceipt(request.payload.params[0])
+            return receipt !== FORWARD ? receipt : await sendToPublicClient(app, request.payload)
+        }
+
+        case "eth_getTransactionCount": {
+            const count = await getTransactionCount(user, request.payload.params)
+            return count !== FORWARD ? count : await sendToPublicClient(app, request.payload)
+        }
+
+        case "eth_estimateGas": {
+            const tx = checkedTx(request.payload.params[0])
+            const gasLimit = await eth_estimateGas(user, tx)
+            return gasLimit !== FORWARD ? gasLimit : await sendToPublicClient(app, request.payload)
+        }
+
+        case "wallet_getPermissions":
+            return getAllPermissions(app)
+
+        case "wallet_requestPermissions": {
+            checkAuthenticated()
+            const permissions = request.payload.params[0]
+            return hasPermissions(app, permissions) ? getPermissions(app, permissions) : []
+        }
+
+        case "wallet_revokePermissions":
+            checkAuthenticated()
+            revokePermissions(app, request.payload.params[0])
+            return []
+
+        case "wallet_addEthereumChain":
+            // If this is permissionless, the chain already exists, so we simply succeed.
+            return null
+
+        case "wallet_switchEthereumChain":
+            // If this is permissionless, we're already on the right chain so we simply succeed.
+            return null
+
+        case HappyMethodNames.REQUEST_SESSION_KEY: {
+            const user = getCheckedUser()
+            const target = checkedAddress(request.payload.params[0])
+            checkSessionKeyAuthorized(app, target)
+            const sessionKey = getSessionKey(user.address, target)
+            return privateKeyToAccount(sessionKey).address
+        }
+
+        default:
+            return await sendToPublicClient(app, request.payload)
+    }
+}

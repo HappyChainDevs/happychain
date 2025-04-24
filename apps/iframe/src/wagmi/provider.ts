@@ -8,13 +8,11 @@ import {
     waitForCondition,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
-import { handleInjectedRequest } from "#src/requests/injected.ts"
 import { addBanner } from "#src/state/banner.ts"
 import { getUser } from "#src/state/user.ts"
-import { handlePermissionlessRequest } from "../requests"
-import { iframeID } from "../requests/utils"
+import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
-import { getIframeURL } from "../utils/appURL"
+import { getIframeURL, iframeID } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequiresConfirmation"
 
 /**
