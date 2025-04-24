@@ -85,11 +85,23 @@ fields specifically tailored for the transaction manager.
 
 You can see all the fields that our `Transaction` class has [here](/txm/api/classes/Transaction#properties).
 
-To create a transaction, you will have to use its constructor. You can see all the fields that you can provide to the constructor [here](/txm/api/interfaces/TransactionConstructorConfig).
+To create a transaction, you will have to use its constructor. You can see all the fields that you can provide to the constructor [here](/txm/api/type-aliases/TransactionConstructorConfig).
 
 
 ```tsx twoslash
 import { Transaction } from '@happy.tech/txm'
+import { TransactionManager } from '@happy.tech/txm'
+import { abis } from "./abis"
+
+const txm = new TransactionManager({
+    privateKey: "0x...",
+    chainId: 31337,
+    abis: abis,
+    rpc: {
+        url: 'http://localhost:8545',
+    },
+    gas: {}
+})
 
 const tx = new Transaction({
     address: "0x...",
@@ -99,7 +111,7 @@ const tx = new Transaction({
     deadline: Math.floor(Date.now() / 1000) + 60,
     from: '0x...',
     chainId: 216,
-})
+}, txm.abiManager)
 ```
 
 A very important field to understand is the `intentId`. This is a unique identifier for your transaction within the transaction manager.
@@ -169,5 +181,5 @@ const hookHandler: TxmHookHandler = (tx: Transaction) => {
     console.log("Transaction status changed to", tx.status)
 }
 
-txm.addHook({ type: TxmHookType.OnStatusChange, handler: hookHandler })
+txm.addHook(TxmHookType.OnStatusChange, hookHandler)
 ```
