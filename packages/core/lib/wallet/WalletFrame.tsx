@@ -1,12 +1,11 @@
 /** @jsxImportSource preact */
+
+import { happyIcon128x128 } from "@happy.tech/common"
 import { AuthState } from "@happy.tech/wallet-common"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
 import { useHappyUser } from "./hooks/useHappyUser"
 import { useWalletActions } from "./hooks/useWalletActions"
-
-// biome-ignore format: pragma must stay at the top
-import { happyIcon128x128 } from "@happy.tech/common"
 
 export interface WalletFrameProps {
     dragging: boolean
