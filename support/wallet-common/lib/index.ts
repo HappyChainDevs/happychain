@@ -19,7 +19,6 @@ export { EventBus, EventBusMode } from "./services/eventBus"
 export { logger } from "./services/logger"
 
 // utils
-export { requestPayloadIsHappyMethod } from "./utils/requestPayloadIsHappyMethod"
 export { waitForCondition } from "./utils/waitForCondition"
 export { shortenAddress } from "./utils/shortenAddress"
 
