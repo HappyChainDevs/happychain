@@ -1,14 +1,14 @@
 import type { Address } from "@happy.tech/common"
 
 import { Hono } from "hono"
-import { cors } from 'hono/cors'
-import { prettyJSON } from 'hono/pretty-json'
-import { sessionMiddleware } from 'hono-sessions'
-import { BunSqliteStore } from 'hono-sessions/bun-sqlite-store'
+import { sessionMiddleware } from "hono-sessions"
+import { BunSqliteStore } from "hono-sessions/bun-sqlite-store"
+import { cors } from "hono/cors"
+import { prettyJSON } from "hono/pretty-json"
 
-import { initDb } from "./initDB"
 import { db } from "./db/driver"
 import type { User } from "./db/types"
+import { initDb } from "./initDB"
 import { UserRepository } from "./repository/UserRepository"
 
 const userRepo = new UserRepository(db)
@@ -16,12 +16,14 @@ const app = new Hono()
 
 app.use(cors())
 app.use(prettyJSON())
-app.use(sessionMiddleware({
-    store: new BunSqliteStore(db)
-}))
+app.use(
+    sessionMiddleware({
+        store: new BunSqliteStore(db),
+    }),
+)
 
-app.get('/', (c) => c.text('Leaderboard API'))
-app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404))
+app.get("/", (c) => c.text("Leaderboard API"))
+app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 // GET /users
 app.get("/users", async (c) => {
@@ -29,7 +31,7 @@ app.get("/users", async (c) => {
         const query = c.req.query()
         const criteria: Partial<User> = {}
         if (query.id !== undefined) criteria.id = Number(query.id)
-        if (query.happy_wallet !== undefined) criteria.happy_wallet = (query.happy_wallet as Address)
+        if (query.happy_wallet !== undefined) criteria.happy_wallet = query.happy_wallet as Address
         if (query.name !== undefined) criteria.name = String(query.name)
         if (query.guild_id !== undefined) criteria.guild_id = Number(query.guild_id)
         if (query.created_at !== undefined) criteria.created_at = new Date(String(query.created_at))

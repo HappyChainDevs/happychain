@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, Guild, UpdateGuild, NewGuild } from "../db/types"
+import type { Database, Guild, NewGuild, UpdateGuild } from "../db/types"
 
 export class GuildRepository {
     constructor(private db: Kysely<Database>) {}

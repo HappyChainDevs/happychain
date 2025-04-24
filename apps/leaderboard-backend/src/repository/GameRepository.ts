@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database, Game, UpdateGame, NewGame } from "../db/types"
+import type { Database, Game, NewGame, UpdateGame } from "../db/types"
 
 export class GameRepository {
     constructor(private db: Kysely<Database>) {}
