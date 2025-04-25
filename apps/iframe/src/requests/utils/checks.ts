@@ -40,10 +40,10 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
     if (!isAddress(tx.to)) /****/ throw new EIP1474InvalidInput(`not an address: ${tx.to}`)
     if (!isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
 
-    if (!parseBigInt(tx.value)) throw new EIP1474InvalidInput(`value is not a number: ${tx.value}`)
-    if (!parseBigInt(tx.nonce)) throw new EIP1474InvalidInput(`nonce is not a number: ${tx.nonce}`)
+    if (tx.value && !parseBigInt(tx.value)) throw new EIP1474InvalidInput(`value is not a number: ${tx.value}`)
+    if (tx.nonce && !parseBigInt(tx.nonce)) throw new EIP1474InvalidInput(`nonce is not a number: ${tx.nonce}`)
 
-    if (!isHex(tx.data)) return tx as ValidRpcTransactionRequest
+    if (tx.data && !isHex(tx.data)) return tx as ValidRpcTransactionRequest
 
     // TODO more
 
