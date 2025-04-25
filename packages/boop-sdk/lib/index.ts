@@ -1,12 +1,5 @@
-export {
-    createAccount,
-    submit,
-    execute,
-    simulate as estimateGas,
-    state,
-    receipt,
-    pending,
-} from "./client"
+export { BoopClient } from "./client"
+export type { BoopClientConfig } from "./client"
 
 export type {
     CreateAccountInput,
@@ -17,7 +10,8 @@ export type {
     ExecuteOutput,
     PendingBoopInput,
     PendingBoopOutput,
-    ReceiptInput,
+    ReceiptRequestInput,
+    ReceiptRequestOutput,
     StateRequestInput,
     StateRequestOutput,
     SubmitInput,

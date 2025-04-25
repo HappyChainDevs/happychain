@@ -1,7 +1,7 @@
 import type { Hash } from "@happy.tech/common"
 import type { StateRequestOutput } from "./BoopState"
 
-export type ReceiptInput = {
+export type ReceiptRequestInput = {
     /** Hash of the Boop whose receipt is requested. */
     hash: Hash
 
@@ -17,6 +17,8 @@ export type ReceiptInput = {
     timeout?: number | undefined
 }
 
+export type ReceiptRequestOutput = StateRequestOutput
+
 /**
  * GET `/api/v1/boop/receipt/{hash}`
  * GET `/api/v1/boop/receipt/{hash}?timeout={timeout}`
@@ -27,4 +29,4 @@ export type ReceiptInput = {
  *
  * The submitter can return without a receipt if the Boop submission failed for other reasons.
  */
-export declare function submitter_receipt(input: ReceiptInput): StateRequestOutput
+export declare function submitter_receipt(input: ReceiptRequestInput): ReceiptRequestOutput

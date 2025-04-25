@@ -5,7 +5,8 @@ import type {
     ExecuteOutput,
     PendingBoopInput,
     PendingBoopOutput,
-    ReceiptInput,
+    ReceiptRequestInput,
+    ReceiptRequestOutput,
     SimulationInput,
     SimulationOutput,
     StateRequestInput,
@@ -18,90 +19,98 @@ import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
 import type { Result } from "./utils/neverthrow"
 
-const client = new ApiClient({ baseUrl: env.SUBMITTER_URL })
-
-// == Account API Routes ===========================================================================
-
-export type { CreateAccountInput, CreateAccountOutput }
-/**
- * Create a new HappyAccount. If the account already exists, it will be returned.
- * @param data User Creation Options
- * @param data.owner User EOA address
- * @param data.salt Salt for the account creation
- */
-export async function createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
-    const response = await client.post("/api/v1/accounts/create", data)
-    return response as Result<CreateAccountOutput, Error>
+export type BoopClientConfig = {
+    baseUrl: string
 }
 
-// == Submit API Routes ============================================================================
+export class BoopClient {
+    private client: ApiClient
+    constructor(config?: Partial<BoopClientConfig>) {
+        const { baseUrl } = this.#applyDefaults(config)
+        this.client = new ApiClient({ baseUrl })
+    }
 
-/**
- * Submits a Boop to the network
- * @param data
- * @param data.entryPoint EntryPoint address
- * @param data.tx Boop to be submitted
- * @return transaction hash
- */
-export type { SubmitInput, SubmitOutput }
-export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
-    const response = await client.post("/api/v1/boop/submit", serializeBigInt(data))
-    return response as Result<SubmitOutput, Error>
-}
+    #applyDefaults(config?: Partial<BoopClientConfig>): BoopClientConfig {
+        return {
+            baseUrl: config?.baseUrl ?? env.SUBMITTER_URL,
+        }
+    }
 
-/**
- * Submits a Boop to the network
- * @param data
- * @param data.entryPoint EntryPoint address
- * @param data.tx Boop to be submitted
- * @return receipt
- */
-export type { ExecuteInput, ExecuteOutput }
-export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
-    const response = await client.post("/api/v1/boop/execute", serializeBigInt(data))
-    return response as Result<ExecuteOutput, Error>
-}
+    // == Account API Routes ===========================================================================
+    /**
+     * Create a new HappyAccount. If the account already exists, it will be returned.
+     * @param data User Creation Options
+     * @param data.owner User EOA address
+     * @param data.salt Salt for the account creation
+     */
+    async createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
+        const response = await this.client.post("/api/v1/accounts/create", data)
+        return response as Result<CreateAccountOutput, Error>
+    }
 
-/**
- * Estimates the gas for a Boop
- * @param data
- * @returns
- */
-export type { SimulationInput, SimulationOutput }
-export async function simulate(data: SimulationInput): Promise<Result<SimulationOutput, Error>> {
-    const response = await client.post("/api/v1/boop/simulate", serializeBigInt(data))
-    return response as Result<SimulationOutput, Error>
-}
+    // == Submit API Routes ============================================================================
 
-/**
- * Get the receipt of a Boop
- * @param data
- * @returns
- */
-export type { StateRequestInput, StateRequestOutput }
-export async function state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/api/v1/boop/state/${hash}`)
-    return response as Result<StateRequestOutput, Error>
-}
+    /**
+     * Submits a Boop to the network
+     * @param data
+     * @param data.entryPoint EntryPoint address
+     * @param data.tx Boop to be submitted
+     * @return transaction hash
+     */
+    async submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
+        const response = await this.client.post("/api/v1/boop/submit", serializeBigInt(data))
+        return response as Result<SubmitOutput, Error>
+    }
 
-/**
- * Get the receipt of a Boop, waiting if needed
- * @param data
- * @returns
- */
-export type { ReceiptInput }
-export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
-    return response as Result<StateRequestOutput, Error>
-}
+    /**
+     * Submits a Boop to the network
+     * @param data
+     * @param data.entryPoint EntryPoint address
+     * @param data.tx Boop to be submitted
+     * @return receipt
+     */
+    async execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
+        const response = await this.client.post("/api/v1/boop/execute", serializeBigInt(data))
+        return response as Result<ExecuteOutput, Error>
+    }
 
-/**
- * Get the pending Boops of an account
- * @param data
- * @returns
- */
-export type { PendingBoopInput, PendingBoopOutput }
-export async function pending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, Error>> {
-    const response = await client.get(`/api/v1/boop/pending/${account}`)
-    return response as Result<PendingBoopOutput, Error>
+    /**
+     * Estimates the gas for a Boop
+     * @param data
+     * @returns
+     */
+    async simulate(data: SimulationInput): Promise<Result<SimulationOutput, Error>> {
+        const response = await this.client.post("/api/v1/boop/simulate", serializeBigInt(data))
+        return response as Result<SimulationOutput, Error>
+    }
+
+    /**
+     * Get the receipt of a Boop
+     * @param data
+     * @returns
+     */
+    async state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
+        const response = await this.client.get(`/api/v1/boop/state/${hash}`)
+        return response as Result<StateRequestOutput, Error>
+    }
+
+    /**
+     * Get the receipt of a Boop, waiting if needed
+     * @param data
+     * @returns
+     */
+    async receipt({ hash, timeout }: ReceiptRequestInput): Promise<Result<ReceiptRequestOutput, Error>> {
+        const response = await this.client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
+        return response as Result<ReceiptRequestOutput, Error>
+    }
+
+    /**
+     * Get the pending Boops of an account
+     * @param data
+     * @returns
+     */
+    async pending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, Error>> {
+        const response = await this.client.get(`/api/v1/boop/pending/${account}`)
+        return response as Result<PendingBoopOutput, Error>
+    }
 }
