@@ -42,7 +42,7 @@ export type {
     ObjectFromTuples,
 } from "./utils/types"
 
-export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded } from "./utils/bigint"
+export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded, serializeBigInt } from "./utils/bigint"
 
 export { validateNumericInput } from "./utils/regexChecks"
 

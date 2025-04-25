@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { StateRequestStatus } from "#lib/interfaces/BoopState"
 import { EntryPointStatus } from "#lib/interfaces/status"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client } from "./utils/client"
 

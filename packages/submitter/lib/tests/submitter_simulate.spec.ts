@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { encodeFunctionData } from "viem/utils"
 import { deployment } from "#lib/env"
@@ -6,7 +7,6 @@ import type { Boop } from "#lib/interfaces/Boop"
 import type { SimulationResult } from "#lib/interfaces/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus } from "#lib/interfaces/status"
 import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
-import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { client } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())

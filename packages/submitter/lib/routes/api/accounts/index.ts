@@ -1,7 +1,7 @@
+import { serializeBigInt } from "@happy.tech/common"
 import { Hono } from "hono"
 import { create } from "#lib/handlers/accounts/create"
 import type { CreateAccountOutput } from "#lib/interfaces/account_create"
-import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import * as createRoute from "./openApi/create"
 
 export default new Hono().post("/create", createRoute.description, createRoute.validation, async (c) => {
