@@ -13,6 +13,25 @@ export const WalletSwitchEthereumChain = ({
     const currentChain = useAtomValue(currentChainAtom)
     const chain = chains[params[0].chainId]
 
+    if (import.meta.env.PROD) {
+        return (
+            <Layout
+                headline="Switch chain"
+                description="This feature is not available in production."
+                actions={{
+                    accept: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                    reject: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                }}
+            />
+        )
+    }
+
     return (
         <Layout
             headline="Switch chain"
