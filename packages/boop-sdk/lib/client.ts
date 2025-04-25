@@ -30,7 +30,7 @@ export type { CreateAccountInput, CreateAccountOutput }
  * @param data.salt Salt for the account creation
  */
 export async function createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
-    const response = await client.post("/v1/accounts/create", data)
+    const response = await client.post("/api/v1/accounts/create", data)
     return response as Result<CreateAccountOutput, Error>
 }
 
@@ -45,7 +45,7 @@ export async function createAccount(data: CreateAccountInput): Promise<Result<Cr
  */
 export type { SubmitInput, SubmitOutput }
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
-    const response = await client.post("/v1/boop/submit", serializeBigInt(data))
+    const response = await client.post("/api/v1/boop/submit", serializeBigInt(data))
     return response as Result<SubmitOutput, Error>
 }
 
@@ -58,7 +58,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
  */
 export type { ExecuteInput, ExecuteOutput }
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
-    const response = await client.post("/v1/boop/execute", serializeBigInt(data))
+    const response = await client.post("/api/v1/boop/execute", serializeBigInt(data))
     return response as Result<ExecuteOutput, Error>
 }
 
@@ -69,7 +69,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
  */
 export type { SimulationInput, SimulationOutput }
 export async function simulate(data: SimulationInput): Promise<Result<SimulationOutput, Error>> {
-    const response = await client.post("/v1/boop/simulate", serializeBigInt(data))
+    const response = await client.post("/api/v1/boop/simulate", serializeBigInt(data))
     return response as Result<SimulationOutput, Error>
 }
 
@@ -80,7 +80,7 @@ export async function simulate(data: SimulationInput): Promise<Result<Simulation
  */
 export type { StateRequestInput, StateRequestOutput }
 export async function state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/boop/state/${hash}`)
+    const response = await client.get(`/api/v1/boop/state/${hash}`)
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -91,7 +91,7 @@ export async function state({ hash }: StateRequestInput): Promise<Result<StateRe
  */
 export type { ReceiptInput }
 export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/boop/receipt/${hash}`, { timeout: timeout })
+    const response = await client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -102,6 +102,6 @@ export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<S
  */
 export type { PendingBoopInput, PendingBoopOutput }
 export async function pending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, Error>> {
-    const response = await client.get(`/v1/boop/pending/${account}`)
+    const response = await client.get(`/api/v1/boop/pending/${account}`)
     return response as Result<PendingBoopOutput, Error>
 }
