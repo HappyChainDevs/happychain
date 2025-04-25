@@ -4,7 +4,12 @@ import { Hono } from "hono"
 import { db } from "../../db/driver"
 import type { GuildTableId, User } from "../../db/types"
 import { UserRepository } from "../../repositories/UsersRepository"
-import { UserCreateRequestSchema, UserQuerySchema, UserUpdateRequestSchema } from "../../validation/schema/userSchema"
+import {
+    UserCreateRequestSchema,
+    UserDeleteRequestSchema,
+    UserQuerySchema,
+    UserUpdateRequestSchema,
+} from "../../validation/schema/userSchema"
 
 const userRepo = new UserRepository(db)
 const usersApi = new Hono()
@@ -60,16 +65,15 @@ usersApi.patch("/:happy_wallet", zValidator("json", UserUpdateRequestSchema), as
 })
 
 // DELETE /users/:happy_wallet
-usersApi.delete("/:happy_wallet", async (c) => {
-    // TODO: Add authentication/authorization here in the future
+usersApi.delete("/:happy_wallet", zValidator("param", UserDeleteRequestSchema), async (c) => {
     try {
-        const { happy_wallet } = c.req.param()
+        const { happy_wallet } = c.req.valid("param")
         const user = await userRepo.findByHappyWallet(happy_wallet as Address)
         if (!user) {
             return c.json({ error: "User not found" }, 404)
         }
-        await userRepo.delete(user.id)
-        return c.json({ success: true, deleted_user_id: user.id })
+        const deletedUser = await userRepo.delete(user.id)
+        return c.json({ success: true, deleted_user: deletedUser })
     } catch (err) {
         console.error(err)
         return c.json({ error: "Internal Server Error" }, 500)

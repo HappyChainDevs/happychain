@@ -2,6 +2,18 @@ import { z } from "@hono/zod-openapi"
 import { isHex } from "viem"
 import type { GuildTableId } from "../../db/types"
 
+// User delete request schema (for DELETE /users/:happy_wallet)
+export const UserDeleteRequestSchema = z
+    .object({
+        happy_wallet: z.string().refine(isHex).openapi({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" }),
+    })
+    .strict()
+    .openapi({
+        example: {
+            happy_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+        },
+    })
+
 // User API response schema (for GET, POST responses)
 export const UserResponseSchema = z
     .object({
