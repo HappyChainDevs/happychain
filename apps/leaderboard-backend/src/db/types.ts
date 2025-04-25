@@ -1,59 +1,42 @@
-import type { Address, UUID } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
+
+// --- Branded ID types for strong nominal typing ---
+export type UserTableId = number & { _brand: "users_id" }
+export type GuildTableId = number & { _brand: "guilds_id" }
+export type GameTableId = number & { _brand: "games_id" }
 
 // Main Kysely database schema definition
 export interface Database {
     users: UserTable
     guilds: GuildTable
     games: GameTable
-    user_game_scores: UserGameScoreTable
-    sessions: SessionTable
 }
 
 // Registered users
 export interface UserTable {
-    id: Generated<number>
+    id: Generated<UserTableId>
     happy_wallet: Address // primary login wallet
     username: string
-    guild_id: number | null // FK to guilds
+    guild_id: ColumnType<GuildTableId | null, null, GuildTableId | null> // FK to guilds, nullable, null at creation
     created_at: ColumnType<Date, string, never>
 }
 
 // Guilds (groups of users, managed by an admin)
 export interface GuildTable {
-    id: Generated<number>
+    id: Generated<GuildTableId>
     name: string
-    admin_id: ColumnType<number, number, number> // FK to users, creator/admin of the guild
+    admin_id: UserTableId // FK to users, creator/admin of the guild
     created_at: ColumnType<Date, string, never>
 }
 
-// Games available on the platform
 // Games available on the platform
 export interface GameTable {
-    id: Generated<number>
+    id: Generated<GameTableId>
     name: string
     icon_url: string | null
-    admin_id: ColumnType<number, number, number> // FK to users, creator/admin of the game
-    created_at: ColumnType<Date, string | undefined, never>
-    last_updated_at: ColumnType<Date, string, never> // set by system, not user input
-}
-
-// Scores for each user per game
-export interface UserGameScoreTable {
-    id: Generated<number>
-    user_id: number // FK to users
-    game_id: number // FK to games
-    score: number
-    last_updated_at: ColumnType<Date, string, never> // set by system, not user input
-}
-
-// User login sessions, authenticated by wallet signature
-export interface SessionTable {
-    id: Generated<number>
-    user_id: number // FK to users
-    session_uuid: UUID
+    admin_id: UserTableId // FK to users, creator/admin of the game
     created_at: ColumnType<Date, string, never>
-    // No expires_at, sessions do not expire by default
 }
 
 // Kysely helper types
@@ -68,11 +51,3 @@ export type UpdateGuild = Updateable<GuildTable>
 export type Game = Selectable<GameTable>
 export type NewGame = Insertable<GameTable>
 export type UpdateGame = Updateable<GameTable>
-
-export type UserGameScore = Selectable<UserGameScoreTable>
-export type NewUserGameScore = Insertable<UserGameScoreTable>
-export type UpdateUserGameScore = Updateable<UserGameScoreTable>
-
-export type Session = Selectable<SessionTable>
-export type NewSession = Insertable<SessionTable>
-export type UpdateSession = Updateable<SessionTable>

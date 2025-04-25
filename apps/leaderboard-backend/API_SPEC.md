@@ -10,11 +10,12 @@ This document details the REST API for the Leaderboard backend. It describes end
 
 ### User
 
-- `id`: integer
-- `happy_wallet`: string (hex address)
-- `username`: string
-- `guild_id`: integer | null
-- `created_at`: ISO8601 string
+| Field         | Type    | Required on Create | Updatable | Nullable | Description                      |
+|---------------|---------|-------------------|-----------|-----------|----------------------------------|
+| happy_wallet  | string  | Yes               | No        | No        | User's wallet address (ID)       |
+| username      | string  | Yes               | Yes       | No        | User's display name              |
+| guild_id      | number  | No                | Yes       | Yes       | Guild the user belongs to        |
+| created_at    | string  | No (set by DB)    | No        | No        | User creation timestamp          |
 
 ### Guild
 
@@ -42,37 +43,91 @@ This document details the REST API for the Leaderboard backend. It describes end
 
 ---
 
-## Endpoints
-
 ### Users
 
-#### `GET /users`
+#### Endpoints
 
-Query users by `happy_wallet`, `username`, or `guild_id` (all optional).
+##### Create User
 
-- **Query Params:**
-  - `happy_wallet`: string (hex)
-  - `username`: string
-  - `guild_id`: integer
-- **Response:** `200 OK`
-  - Array of User objects
-
-#### `POST /users`
-
-Create a new user.
-
+- **POST /users**
 - **Body:**
 
-  ```json
-  {
-    "happy_wallet": "0x...", // required, hex string
-    "username": "string",    // required
-    "guild_id": 1             // optional
-  }
-  ```
+```json
+{
+  "happy_wallet": "0x...",
+  "username": "alice"
+}
+```
 
-- **Response:** `201 Created`
-  - User object
+- **Response:** 201 Created
+
+```json
+{
+  "id": 1,
+  "happy_wallet": "0x...",
+  "username": "alice",
+  "guild_id": null,
+  "created_at": "2025-04-25T18:00:00.000Z"
+}
+```
+
+##### Get User(s)
+
+- **GET /users?happy_wallet=0x...**
+- **GET /users?username=alice**
+- **GET /users?guild_id=1**
+- At least one filter is required.
+- **Response:** 200 OK
+
+```json
+[
+  {
+    "id": 1,
+    "happy_wallet": "0x...",
+    "username": "alice",
+    "guild_id": 1,
+    "created_at": "2025-04-25T18:00:00.000Z"
+  }
+]
+```
+
+##### Update User
+
+- **PATCH /users/:happy_wallet**
+- **Body:** (at least one field required)
+
+```json
+{
+  "username": "newname",
+  "guild_id": 2
+}
+```
+
+- **Response:** 200 OK
+
+```json
+{
+  "id": 1,
+  "happy_wallet": "0x...",
+  "username": "newname",
+  "guild_id": 2,
+  "created_at": "2025-04-25T18:00:00.000Z"
+}
+```
+
+##### Get All Users of a Guild
+
+- **GET /users?guild_id=1**
+- **Response:** 200 OK (array of users in the guild)
+
+##### Notes
+
+- `happy_wallet` is the user's unique identifier and must be present on creation. It is never updatable.
+- `guild_id` is not settable at creation, but can be updated (added/removed) via PATCH.
+- `created_at` is always set by the database and cannot be set or updated by the client.
+- PATCH/PUT endpoints identify the user by `happy_wallet` in the URL, not in the body.
+- GET /users requires at least one filter (happy_wallet, username, or guild_id).
+- GET /users?guild_id=ID is used to fetch all users of a guild.
 
 ### Guilds
 

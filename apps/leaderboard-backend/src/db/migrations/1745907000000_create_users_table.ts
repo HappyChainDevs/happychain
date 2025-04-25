@@ -8,7 +8,8 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
         .addColumn("happy_wallet", "text", (col) => col.notNull().unique())
         .addColumn("username", "text", (col) => col.notNull().unique())
-        .addColumn("guild_id", "integer", (col) => col) // FK if you want, or nullable
+        .addColumn("guild_id", "integer", (col) => col)
+        .addForeignKeyConstraint("users_guild_id_fk", ["guild_id"], "guilds", ["id"]) // FK to guilds, nullable
         .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
         .execute()
 }

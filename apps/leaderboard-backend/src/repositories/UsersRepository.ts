@@ -1,12 +1,12 @@
 import type { Address } from "@happy.tech/common"
 import type { Kysely } from "kysely"
-import type { Database, NewUser, UpdateUser, User } from "../db/types"
+import type { Database, GuildTableId, NewUser, UpdateUser, User, UserTableId } from "../db/types"
 
 export class UserRepository {
     constructor(private db: Kysely<Database>) {}
 
     /// Find a user by their numeric ID.
-    async findById(id: number): Promise<User | undefined> {
+    async findById(id: UserTableId): Promise<User | undefined> {
         return await this.db.selectFrom("users").where("id", "=", id).selectAll().executeTakeFirst()
     }
 
@@ -21,7 +21,7 @@ export class UserRepository {
     }
 
     /// Find all users in a given guild (by guild_id).
-    async findByGuildId(guild_id: number): Promise<User[]> {
+    async findByGuildId(guild_id: GuildTableId): Promise<User[]> {
         return await this.db.selectFrom("users").where("guild_id", "=", guild_id).selectAll().execute()
     }
 
@@ -42,17 +42,19 @@ export class UserRepository {
 
     /// Create a new user.
     async create(user: NewUser): Promise<User> {
-        return await this.db.insertInto("users").values(user).returningAll().executeTakeFirstOrThrow()
+        // Always set guild_id to null on user creation
+        const userWithNoGuild = { ...user, guild_id: null }
+        return await this.db.insertInto("users").values(userWithNoGuild).returningAll().executeTakeFirstOrThrow()
     }
 
     /// Update a user by ID.
-    async update(id: number, updateWith: UpdateUser): Promise<User | undefined> {
+    async update(id: UserTableId, updateWith: UpdateUser): Promise<User | undefined> {
         await this.db.updateTable("users").set(updateWith).where("id", "=", id).executeTakeFirst()
         return this.findById(id)
     }
 
     /// Delete a user by ID.
-    async delete(id: number): Promise<User | undefined> {
+    async delete(id: UserTableId): Promise<User | undefined> {
         return await this.db.deleteFrom("users").where("id", "=", id).returningAll().executeTakeFirst()
     }
 }
