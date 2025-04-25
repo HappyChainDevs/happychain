@@ -23,6 +23,9 @@ export PROXY_TYPE ?= BEACON
 # Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
 export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
 
+# Port at which Anvil will be running
+export ANVIL_PORT ?= 8545
+
 # Deployment mode:
 # - "deploy" — deploy contracts normally
 # - "dry" — for a dry-run that doesn't send transactions
@@ -78,7 +81,7 @@ nuke: clean ## Removes build output and dependencies
 .PHONY: nuke
 
 ####################################################################################################
-# Testing
+##@ Testing
 
 test: ## Runs tests
 	forge test -vv
@@ -169,14 +172,16 @@ gas-logging-off:
 	@echo "Gas logging turned OFF"
 .PHONY: gas-logging-off
 
-paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
+# Generates a flamechart for the gas usage of the Paymaster contract.
+paymaster-flamechart:
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
 
 ####################################################################################################
 # Demos
 
-aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract deployments.
+# All-in-one run of the AA demo script, including Anvil & contract deployments.
+aa-demo:
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
@@ -192,11 +197,13 @@ aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract dep
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 .PHONY: aa-demo-auto
 
-aa-demo-only: ## Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
+# Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
+aa-demo-only:
 	@bun run ./scripts/aa_demo.ts;
 .PHONY: aa-demo
 
-bundler-gas: ## All-in-one generation of the gas breakdown for bundler transaction, including Anvil & contract deployments.
+# All-in-one generation of the gas breakdown for bundler transaction, including Anvil & contract deployments.
+bundler-gas:
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
@@ -211,13 +218,14 @@ bundler-gas: ## All-in-one generation of the gas breakdown for bundler transacti
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 .PHONY: gas-bundler-auto
 
-bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions (requires Anvil & contract deployments).
+# Generates a gas report (breakdown) for bundler transactions (requires Anvil & contract deployments).
+bundler-gas-only:
 	@echo "Generating the bundler gas report — this takes a while..."
 	@bun run ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
 .PHONY: gas-bundler
 
 ####################################################################################################
-# Code Quality
+##@ Code Quality
 
 forge-fmt-check:
 	@# Temp workaround for forge fmt not supporting transient variables.
@@ -246,10 +254,10 @@ solhint:
 	solhint --config ./.solhint.json "src/**/*.sol" --fix;
 .PHONY: solhint
 
-check: forge-fmt-check solhint-check
+check: forge-fmt-check solhint-check ## Checks formatting & linting (no files touched)
 .PHONY: check
 
-format: forge-fmt solhint
+format: forge-fmt solhint ## Formats & lint (autofixes)
 .PHONY: format
 
 ####################################################################################################
@@ -264,16 +272,25 @@ docs:
 .PHONY: docs
 
 ####################################################################################################
-# Devnet
+##@ Devnet
 
 # The 1337 chain id matches "localhost" in Wagmi & "Localhost 8545" in MetaMask.
 # (Unfortunately some tools will mistakenly report this as not having the Shangai fork activated.)
-anvil:
-	anvil --chain-id 1337 --block-time 2
+anvil: ## Runs anvil at $ANVIL_PORT (blocking)
+	anvil --chain-id 1337 --port $(ANVIL_PORT) --block-time 2
 .PHONY: anvil
 
+anvil-background: ## Runs anvil at in the background at $ANVIL_PORT, logging to anvil.log
+	@make anvil --chain-id 1337 --port $(ANVIL_PORT) --block-time 2 > anvil.log 2>&1 &
+	@echo "Running Anvil at {http,ws}://localhost:$(ANVIL_PORT)"
+.PHONY: anvil-background
+
+kill-anvil: ## Kill an existing Anvil process running at $ANVIL_PORT
+	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
+.PHONY: kill-anvil
+
 ####################################################################################################
-# Deployment
+##@ Deployment
 
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
