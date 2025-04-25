@@ -2,10 +2,9 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { prettyJSON } from "hono/pretty-json"
 
-import { type Repositories, repositories } from "./repositories"
-import { gamesApi } from "./routes/api/gamesRoutes"
-import { leaderboardApi } from "./routes/api/leaderboardRoutes"
 import { usersApi } from "./routes/api/usersRoutes"
+import { guildsApi } from "./routes/api/guildsRoutes"
+import { type Repositories, repositories } from "./repositories"
 
 declare module "hono" {
     interface ContextVariableMap {
@@ -26,8 +25,7 @@ app.use("*", async (c, next) => {
 
 app.get("/", (c) => c.text("Leaderboard API"))
 app.route("/users", usersApi)
-app.route("/games", gamesApi)
-app.route("/leaderboard", leaderboardApi)
+app.route("/guilds", guildsApi)
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 export type AppType = typeof app
