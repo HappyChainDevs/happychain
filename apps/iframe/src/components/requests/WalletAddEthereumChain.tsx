@@ -18,6 +18,26 @@ export const WalletAddEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
+
+    if (import.meta.env.PROD) {
+        return (
+            <Layout
+                headline="Add new chain"
+                description="This feature is not available in production."
+                actions={{
+                    accept: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                    reject: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                }}
+            />
+        )
+    }
+
     return (
         <Layout
             headline="Add new chain"
