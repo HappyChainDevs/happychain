@@ -39,6 +39,8 @@ contracts/broadcast/
 contracts/docs/
 # Local deployments
 contracts/deployments/LOCAL/
+# Logs
+anvil.log
 
 # Typedoc generated api reference.
 # Ignored to discourage manual editing

@@ -501,6 +501,76 @@ pack: build ## Packs the tarbal, ready to publish manually
 .PHONY: pack
 
 # ==================================================================================================
+# ENV CONFIG
+
+define update_env
+	@awk -v var="$(2)" -v val="$(3)" -v delim="### AUTOGEN" ' \
+		BEGIN {found_delim=0; found_var=0;} \
+		$$0 == delim {found_delim=1; print; next} \
+		found_delim && $$0 ~ "^"var"=" {print var"="val; found_var=1; next} \
+		{print} \
+		END { \
+			if (!found_delim) { \
+				print ""; print delim; print var"="val; \
+			} else if (!found_var) { \
+				print var"="val; \
+			} \
+		}' $(1) > $(1).tmp && mv $(1).tmp $(1)
+endef
+
+select-submitter-local:
+	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,http://localhost:3001)
+.PHONY: select-submitter-local
+
+select-submitter-staging:
+	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,https://submitter-staging.happy.tech)
+.PHONY: select-submitter-staging
+
+select-submitter-prod:
+	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,https://submitter.happy.tech)
+.PHONY: select-submitter-prod
+
+select-iframe-local:
+	$(call update_env,packages/core/.env,IFRAME_URL,http://localhost:4160)
+.PHONY: select-iframe-local
+
+select-iframe-testnet:
+	$(call update_env,packages/core/.env,IFRAME_URL,https://iframe.happy.tech)
+.PHONY: select-iframe-local
+
+select-chain-local:
+	$(call update_env,apps/submitter/.env,CHAIN_ID,1337)
+	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
+
+	$(call update_env,apps/randomness/.env,CHAIN_ID,1337)
+	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
+
+	$(call update_env,demos/js/.env,VITE_CHAIN_ID,1337)
+	$(call update_env,demos/react/.env,VITE_CHAIN_ID,1337)
+	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,1337)
+.PHONY: select-chain-local
+
+select-chain-testnet:
+	$(call update_env,apps/submitter/.env,CHAIN_ID,216)
+	$(call update_env,apps/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
+
+	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
+	$(call update_env,apps/randomness/.env,RPC_URL,wss://rpc.testnet.happy.tech/ws)
+
+	$(call update_env,demos/js/.env,VITE_CHAIN_ID,216)
+	$(call update_env,demos/react/.env,VITE_CHAIN_ID,216)
+	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,216)
+.PHONY: select-chain-testnet
+
+setup-local-chain: select-chain-local
+	@cd contracts && make anvil-background
+	@sleep 5
+	@CONFIG=LOCAL cd contracts && make deploy-boop
+	@CONFIG=LOCAL cd contracts && make deploy-mocks
+	@CONFIG=LOCAL cd contracts && make deploy-random
+.PHONY: setup-local-chain
+
+# ==================================================================================================
 # EXTRAS
 
 # install this to run github workflows locally
