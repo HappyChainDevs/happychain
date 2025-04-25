@@ -1,3 +1,4 @@
+import { serializeBigInt } from "@happy.tech/common"
 import type {
     CreateAccountInput,
     CreateAccountOutput,
@@ -14,7 +15,6 @@ import type {
     SubmitInput,
     SubmitOutput,
 } from "@happy.tech/submitter/client"
-import { serializeBigInt } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
 import type { Result } from "./utils/neverthrow"

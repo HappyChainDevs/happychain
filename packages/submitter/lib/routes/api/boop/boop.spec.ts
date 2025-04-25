@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeBoopHash } from "#lib/client"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
 import { client } from "#lib/tests/utils/client"
-import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
