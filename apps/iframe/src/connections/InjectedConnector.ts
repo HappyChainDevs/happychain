@@ -1,3 +1,4 @@
+import type { Hex } from "@happy.tech/common"
 import { createUUID } from "@happy.tech/common"
 import type {
     ConnectionProvider,
@@ -161,7 +162,7 @@ export class InjectedConnector implements ConnectionProvider {
             // get user accounts
             const [address] =
                 request.payload.method === "eth_requestAccounts"
-                    ? (response as `0x${string}`[])
+                    ? (response as Hex[])
                     : await this.detail.provider.request({ method: "eth_accounts" })
 
             const user = await createHappyUserFromWallet(this.id, address)

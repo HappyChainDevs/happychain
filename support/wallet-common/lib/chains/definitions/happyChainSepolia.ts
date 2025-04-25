@@ -7,4 +7,4 @@ export const happyChainSepoliaDefinition = {
     chainId: "0xd8",
     blockExplorerUrls: ["https://explorer.testnet.happy.tech"],
     opStack: true,
-} satisfies ChainParameters
+} as const satisfies ChainParameters

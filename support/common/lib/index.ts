@@ -4,7 +4,7 @@ export { createStorage } from "./services/storage"
 
 // === UTILS =======================================================================================
 
-export { type TaggedLogger, Logger, type LogTag, LogLevel } from "./utils/logger"
+export { type TaggedLogger, Logger, type LogTag, LogLevel, logLevel } from "./utils/logger"
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
 
