@@ -59,7 +59,7 @@ export const HappyRequestSessionKey = ({
             actions={{
                 accept: {
                     children: "Approve",
-                    onClick: () => accept({ method, params }),
+                    onClick: () => accept({ eip1193RequestParams: { method, params } }),
                 },
                 reject: {
                     children: "Go back",

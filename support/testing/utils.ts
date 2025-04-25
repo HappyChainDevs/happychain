@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto"
 import { type UUID, createUUID } from "@happy.tech/common"
 import {
+    type ApprovedRequestPayload,
     type EIP1193RequestParameters,
     type HappyUser,
     type ProviderEventPayload,
@@ -14,15 +15,18 @@ import { getAddress } from "viem"
 export const addressFactory = () => getAddress(`0x${randomBytes(20).toString("hex")}`)
 
 /**
- * Creates a formatted ProviderEventPayload
+ * Creates a formatted `ProviderEventPayload`
  */
-export function makePayload(windowId: UUID, payload: EIP1193RequestParameters) {
+export function makePayload<T extends EIP1193RequestParameters | ApprovedRequestPayload>(
+    windowId: UUID,
+    payload: T,
+): ProviderEventPayload<T> {
     return {
         key: createUUID(),
         windowId,
         error: null,
         payload,
-    } as ProviderEventPayload<EIP1193RequestParameters>
+    }
 }
 
 export function generateTestUser(): HappyUser {

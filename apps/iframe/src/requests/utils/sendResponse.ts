@@ -1,5 +1,6 @@
 import { getProp, stringify } from "@happy.tech/common"
 import {
+    type ApprovedRequestPayload,
     type EIP1193RequestParameters,
     EIP1474InternalError,
     Msgs,
@@ -32,10 +33,10 @@ import { iframeProvider } from "#src/wagmi/provider"
  *                            the appropriate channel (parent window - message bus, or iframe).
  * @throws {UnauthorizedProviderError} - If the user is not authenticated when the request is dispatched.
  */
-export async function sendResponse<Request extends ProviderEventPayload<EIP1193RequestParameters>, T>(
-    request: Request,
-    dispatch: (request: Request) => Promise<T>,
-): Promise<void> {
+export async function sendResponse<
+    Request extends ProviderEventPayload<EIP1193RequestParameters | ApprovedRequestPayload>,
+    T,
+>(request: Request, dispatch: (request: Request) => Promise<T>): Promise<void> {
     const app = appForSourceID(request.windowId)
     if (!app) {
         reqLogger.error("Unsupported source app, abandoning request", app, request)
