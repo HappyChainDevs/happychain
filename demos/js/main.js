@@ -1,13 +1,5 @@
 // register web-component & import useful functions
-import {
-    connect,
-    disconnect,
-    getCurrentUser,
-    happyChainSepolia,
-    happyProvider,
-    loadHappyWallet,
-    onUserUpdate,
-} from "@happy.tech/core"
+import { connect, disconnect, getCurrentUser, happyProvider, loadHappyWallet, onUserUpdate } from "@happy.tech/core"
 import { BrowserProvider } from "ethers"
 
 // If included via a script tag through a CDN, then exports will be made available
@@ -17,7 +9,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-loadHappyWallet({ chainId: happyChainSepolia.id, overrideBadgeStyles: true })
+loadHappyWallet({ chainId: import.meta.env.VITE_CHAIN_ID, overrideBadgeStyles: true })
 
 const ethersProvider = new BrowserProvider(happyProvider)
 

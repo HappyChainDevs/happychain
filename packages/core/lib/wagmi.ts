@@ -1,5 +1,5 @@
 import type { Chain } from "@happy.tech/wallet-common"
-import { type Config, createConfig, type CreateConnectorFn, custom, injected } from "@wagmi/core"
+import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import { happyProvider } from "./happyProvider"
 import { loadHappyWallet } from "./loadHappyWallet"
 
