@@ -251,7 +251,7 @@ solhint-check:
 .PHONY: solhint-check
 
 solhint:
-	solhint --config ./.solhint.json "src/**/*.sol" --fix;
+	solhint --config ./.solhint.json "src/**/*.sol" --fix --noPrompt;
 .PHONY: solhint
 
 check: forge-fmt-check solhint-check ## Checks formatting & linting (no files touched)
