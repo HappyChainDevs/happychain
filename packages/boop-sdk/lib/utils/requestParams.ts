@@ -18,23 +18,10 @@ export function processRequestParams(params: RawRequestParams): ProcessedRequest
     }
 }
 
-function isRequestParamValue(value: unknown): value is RequestParamValue {
-    return (
-        typeof value === "string" ||
-        typeof value === "number" ||
-        typeof value === "boolean" ||
-        value === undefined ||
-        value === null
-    )
-}
-
-function toRequestParams(input: unknown): RequestParams {
-    if (typeof input !== "object" || input === null) {
-        return {}
+function toRequestParams(input: unknown): RequestParams | undefined {
+    if (typeof input !== "object" || input === null || !Object.keys(input).length) {
+        return
     }
 
-    return Object.entries(input).reduce<RequestParams>((acc, [key, value]) => {
-        if (isRequestParamValue(value)) acc[key] = value
-        return acc
-    }, {})
+    return input as RequestParams
 }
