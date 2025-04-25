@@ -2,9 +2,9 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { prettyJSON } from "hono/pretty-json"
 
-import { gamesApi } from "./routes/api/games"
-import { leaderboardApi } from "./routes/api/leaderboard"
-import { usersApi } from "./routes/api/users"
+import { gamesApi } from "./routes/api/gamesRoutes"
+import { leaderboardApi } from "./routes/api/leaderboardRoutes"
+import { usersApi } from "./routes/api/usersRoutes"
 
 const app = new Hono()
 

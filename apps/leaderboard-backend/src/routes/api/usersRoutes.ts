@@ -4,7 +4,7 @@ import { Hono } from "hono"
 import { db } from "../../db/driver"
 import type { GuildTableId, User } from "../../db/types"
 import { UserRepository } from "../../repositories/UsersRepository"
-import { UserCreateRequestSchema, UserQuerySchema, UserUpdateRequestSchema } from "../../validation/schema/user"
+import { UserCreateRequestSchema, UserQuerySchema, UserUpdateRequestSchema } from "../../validation/schema/userSchema"
 
 const userRepo = new UserRepository(db)
 const usersApi = new Hono()
@@ -53,6 +53,23 @@ usersApi.patch("/:happy_wallet", zValidator("json", UserUpdateRequestSchema), as
         }
         const updatedUser = await userRepo.update(user.id, patch)
         return c.json(updatedUser)
+    } catch (err) {
+        console.error(err)
+        return c.json({ error: "Internal Server Error" }, 500)
+    }
+})
+
+// DELETE /users/:happy_wallet
+usersApi.delete("/:happy_wallet", async (c) => {
+    // TODO: Add authentication/authorization here in the future
+    try {
+        const { happy_wallet } = c.req.param()
+        const user = await userRepo.findByHappyWallet(happy_wallet as Address)
+        if (!user) {
+            return c.json({ error: "User not found" }, 404)
+        }
+        await userRepo.delete(user.id)
+        return c.json({ success: true, deleted_user_id: user.id })
     } catch (err) {
         console.error(err)
         return c.json({ error: "Internal Server Error" }, 500)
