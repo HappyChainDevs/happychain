@@ -46,6 +46,8 @@ export type {
     PopupMsgs,
     ProviderMsgsFromIframe,
     ProviderMsgsFromApp,
+    ApprovedRequestPayload,
+    RequestExtraData,
 } from "./interfaces/events"
 export type { ProviderEventPayload, ProviderEventError } from "./interfaces/payloads"
 
