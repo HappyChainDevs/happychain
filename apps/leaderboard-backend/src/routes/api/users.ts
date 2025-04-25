@@ -1,4 +1,3 @@
-import type { Address } from "@happy.tech/common"
 import { Hono } from "hono"
 
 import { db } from "../../db/driver"
@@ -8,16 +7,18 @@ import { UserRepository } from "../../repository/UserRepository"
 const userRepo = new UserRepository(db)
 const usersApi = new Hono()
 
+import { zValidator } from "@hono/zod-validator"
+import { UserCreateRequestSchema, UserQuerySchema } from "../../validation/schema/user"
+
 // GET /users
-usersApi.get("/", async (c) => {
+usersApi.get("/", zValidator("query", UserQuerySchema), async (c) => {
     try {
-        const query = c.req.query()
+        const query = c.req.valid("query")
+        // Convert types as needed for repository
         const criteria: Partial<User> = {}
-        if (query.id !== undefined) criteria.id = Number(query.id)
-        if (query.happy_wallet !== undefined) criteria.happy_wallet = query.happy_wallet as Address
-        if (query.username !== undefined) criteria.username = String(query.username)
-        if (query.guild_id !== undefined) criteria.guild_id = Number(query.guild_id)
-        if (query.created_at !== undefined) criteria.created_at = new Date(String(query.created_at))
+        if (query.happy_wallet) criteria.happy_wallet = query.happy_wallet
+        if (query.username) criteria.username = query.username
+        if (query.guild_id) criteria.guild_id = Number(query.guild_id)
         const users = await userRepo.find(criteria)
         return c.json(users)
     } catch (err) {
@@ -27,18 +28,15 @@ usersApi.get("/", async (c) => {
 })
 
 // POST /users
-usersApi.post("/", async (c) => {
+usersApi.post("/", zValidator("json", UserCreateRequestSchema), async (c) => {
     try {
-        const body = await c.req.json()
-        const { happy_wallet, username, guild_id, created_at } = body
-        if (!happy_wallet || !username || !created_at) {
-            return c.json({ error: "Missing required fields" }, 400)
-        }
+        const body = c.req.valid("json")
+        const { happy_wallet, username, guild_id } = body
         const newUser = await userRepo.create({
             happy_wallet,
             username,
-            guild_id: guild_id === undefined ? null : guild_id,
-            created_at,
+            guild_id: guild_id === undefined ? null : Number(guild_id),
+            created_at: new Date().toISOString(),
         })
         return c.json(newUser, 201)
     } catch (err) {

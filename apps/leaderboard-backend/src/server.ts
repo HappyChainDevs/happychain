@@ -12,11 +12,10 @@ app.use(cors())
 app.use(prettyJSON())
 
 app.get("/", (c) => c.text("Leaderboard API"))
-app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
-
 app.route("/users", usersApi)
 app.route("/games", gamesApi)
 app.route("/leaderboard", leaderboardApi)
+app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 export type AppType = typeof app
 export { app }

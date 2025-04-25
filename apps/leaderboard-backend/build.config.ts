@@ -1,10 +1,8 @@
 import { defineConfig } from "@happy.tech/happybuild"
 
 export default defineConfig({
-    exports: ["."],
     bunConfig: {
+        target: "bun",
         minify: false,
-        target: "node",
-        external: ["better-sqlite3"],
     },
 })

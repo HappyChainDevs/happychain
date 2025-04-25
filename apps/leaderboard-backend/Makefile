@@ -15,15 +15,20 @@ prod: build ## Start the local dev server for development
 	@NODE_ENV=production bun --bun run build/index.es.js;
 .PHONY: prod
 
+# Migration targets for leaderboard-backend (using Bun)
+
 migrate: ## Runs latest migrations
-	@echo "TODO: Run your migration tool here, e.g. kysely migrate up"
+	@echo "Running latest migrations..."
+	@bun run src/db/migrate.ts
 .PHONY: migrate
 
 migrate-fresh: ## Deletes database and starts fresh
-	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
-	@echo "TODO: Run your migration tool here, e.g. kysely migrate up"
+	@if [ -f ${LEADERBOARD_DB_URL} ]; then rm ${LEADERBOARD_DB_URL}; fi;
+	@echo "Running latest migrations on fresh DB..."
+	@bun run src/db/migrate.ts
 .PHONY: migrate-fresh
 
-migrate-rollback: ## Rollsback latest migrations
-	@echo "TODO: Run your migration tool here, e.g. kysely migrate down"
+# NOTE: migrate-rollback is not implemented in migrate.ts; add support if needed
+migrate-rollback: ## Rollsback latest migrations (not implemented)
+	@echo "Rollback not implemented in migrate.ts. Implement if needed."
 .PHONY: migrate-rollback
