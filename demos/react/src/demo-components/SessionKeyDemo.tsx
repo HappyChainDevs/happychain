@@ -1,10 +1,10 @@
-import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
-import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
+import { requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { publicClient, walletClient } from "../clients"
+import { abis, deployment } from "../deployments"
 
 const SessionKeyDemo = () => {
     const { user } = useHappyWallet()
@@ -33,19 +33,13 @@ const SessionKeyDemo = () => {
         })
     }, [updateCounterValue])
 
-    async function submitIncrement() {
-        if (!walletClient || !user?.address) throw new Error("Wallet not connected")
-        return await walletClient.writeContract({
-            address: deployment.HappyCounter,
-            abi: abis.HappyCounter,
-            functionName: "increment",
-            chain: happyChainSepolia,
-        })
-    }
-
     async function incrementCounter() {
         try {
-            const hash = await submitIncrement()
+            const hash = await walletClient.writeContract({
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
+                functionName: "increment",
+            })
             if (!hash) throw new Error("No hash returned")
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
             if (receipt.status === "reverted") {

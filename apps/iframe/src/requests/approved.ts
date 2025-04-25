@@ -1,5 +1,4 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -13,24 +12,24 @@ import {
 } from "@happy.tech/wallet-common"
 import { type Client, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import {
-    checkIsSessionKeyModuleInstalled,
-    installSessionKeyModule,
-    registerSessionKey,
-} from "#src/requests/modules/session-keys/helpers"
-import { sendUserOp } from "#src/requests/userOps"
 import { StorageKey, storage } from "#src/services/storage"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
+import { sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID } from "./utils"
+import {
+    hasExistingSessionKeys,
+    installSessionKeyExtension,
+    isSessionKeyValidatorInstalled,
+    registerSessionKey,
+} from "./sessionKeys"
+import { appForSourceID, eoaSigner } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -56,12 +55,11 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()
-                return await sendUserOp({
-                    user,
+                return await sendBoop({
+                    account: user.address,
+                    isSponsored: true, // TODO: this breaks with paymaster
                     tx: request.payload.params[0],
-                    validator: contractAddresses.ECDSAValidator,
-                    signer: async (userOp, smartAccountClient) =>
-                        await smartAccountClient.account.signUserOperation(userOp),
+                    signer: eoaSigner,
                 })
             } catch (error) {
                 console.error(error)
@@ -128,6 +126,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
+            if (!user) throw new EIP1193UnauthorizedError()
+
             // address of contract the session key will be authorized to interact with
             const targetContract = request.payload.params[0]
 
@@ -135,34 +135,17 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 throw new InvalidAddressError({ address: targetContract })
             }
 
-            // Generate a new session key
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
 
-            // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-            const hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
-
-            const smartAccountClient = (await getSmartAccountClient())!
-            let keyRegistered = false
-
-            // Only check module installation if we don't have any session keys stored
-            if (!hasExistingSessionKeys) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
-                if (!isSessionKeyValidatorInstalled) {
-                    await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
-                    keyRegistered = true
-                }
-            }
-
-            // It's theoreticaly possible to have the validator uninstalled when there are local
-            // session keys, but if you're doing that you're looking for trouble.
-
-            if (!keyRegistered) {
-                const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
-                await smartAccountClient.waitForUserOperationReceipt({ hash })
-                keyRegistered = true
-            }
+            const result =
+                !hasExistingSessionKeys(user.address) && !(await isSessionKeyValidatorInstalled(user.address))
+                    ? await installSessionKeyExtension(user.address, targetContract, accountSessionKey.address)
+                    : await registerSessionKey(user.address, targetContract, accountSessionKey.address)
+            console.log({ result })
+            JSON.stringify(result)
+            // TODO: check result?
 
             grantPermissions(app, {
                 [PermissionNames.SESSION_KEY]: {
@@ -172,8 +155,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
-                [user!.address]: {
-                    ...(storedSessionKeys[user!.address] || {}),
+                [user.address]: {
+                    ...(storedSessionKeys[user.address] || {}),
                     [targetContract]: sessionKey,
                 },
             })

@@ -23,13 +23,21 @@ interface ImportMetaEnv {
     readonly VITE_WEB3AUTH_NETWORK: "sapphire_mainnet" | "sapphire_devnet"
     readonly VITE_WEB3AUTH_VERIFIER: string
 
+    /**
+     * Account Abstraction
+     */
     readonly VITE_CHAIN_ID: string
+<<<<<<< HEAD
 
     /**
      * Faucet Setup
      */
     readonly VITE_TURNSTILE_SITEKEY: string
     readonly VITE_FAUCET_ENDPOINT: string
+||||||| parent of 0b47781bf (Replace BUNDLER_RPC_URL with SUBMITTER_URL and implement Boop SDK)
+=======
+    readonly VITE_SUBMITTER_URL: string
+>>>>>>> 0b47781bf (Replace BUNDLER_RPC_URL with SUBMITTER_URL and implement Boop SDK)
 }
 
 interface ImportMeta {

@@ -1,6 +1,7 @@
-import { type UUID, createUUID } from "@happy.tech/common"
-import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
-import type { EstimateUserOperationGasReturnType } from "viem/account-abstraction"
+import { type Hash, type Hex, type UUID, createUUID } from "@happy.tech/common"
+import { AuthState, EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
+import { privateKeyToAccount } from "viem/accounts"
+import { getWalletClient } from "#src/state/walletClient.ts"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
 
@@ -41,56 +42,25 @@ export function checkAuthenticated() {
 }
 
 /**
- * Gas cost for deploying a smart account (Kernel).
- * Based on our observations: a single UserOperation in a bundle had a deployment overhead of 187K gas.
- * The value is adjusted to a safe upper limit to account for potential variations.
+ * Returns a `personal_sign` signing function that uses a wallet client (EOA) to sign.
  */
-export const ACCOUNT_DEPLOYMENT_COST = 190_000n
+export async function eoaSigner(data: Hex): Promise<Hex> {
+    const walletClient = getWalletClient()
+    if (!walletClient) throw new EIP1193DisconnectedError()
+    return await walletClient.signMessage({
+        account: walletClient.account.address,
+        message: { raw: data },
+    })
+}
 
 /**
- * Calculates the complete gas breakdown  for a userop.
- *
- * In account abstraction, gas estimation includes multiple components :
- *
- * 1. `preVerificationGas` (PVG): Static overhead for the bundler to process the operation
- *    - Always charged, not a limit
- *    - Covers the cost of the bundler to submit the UserOp to `EntryPoint`
- *
- * 2. `verificationGasLimit` (VGL): The maximum gas for validation phase
- *    - Account and signature validation
- *    - Smart account deployment (first transaction)
- *    - Paymaster validation (if used)
- *
- * 3. `callGasLimit` (CGL): The maximum gas for the actual transaction execution
- *    - Like regular EOA transaction gas
- *    - Used for the main operation (transfer, contract call, etc.)
- *
- * 4. `additionalDeploymentCost`: For first-time smart account deployment
- *    - Only added if account is not yet deployed
- *
- * Sidenote about total gas calculation :
- * - Without paymaster: PVG + VGL + CGL
- * - With paymaster: PVG + (3 * VGL) + CGL
- *   (`verificationGasLimit` is multiplied by 3 for initial validation, postOp, and potential postOp revert)
- *
- * @see {@link https://happychain.notion.site/4337-gas}
- * @see {@link https://docs.stackup.sh/docs/useroperation-gas-values}
- * @see {@link https://docs.stackup.sh/docs/erc-4337-bundler-rpc-methods#eth_estimateuseroperationgas}
+ * Returns a `personal_sign` signing function that uses a session key to sign.
  */
-export async function calculateUserOpGasBreakdown(
-    userOpGasEstimate: EstimateUserOperationGasReturnType,
-    isAccountDeployed: boolean,
-) {
-    const additionalDeploymentCost = isAccountDeployed ? 0n : ACCOUNT_DEPLOYMENT_COST
-    const totalGasLimit =
-        userOpGasEstimate.callGasLimit + userOpGasEstimate.preVerificationGas + additionalDeploymentCost
-
-    return {
-        totalGasLimit,
-        breakdown: {
-            callGasLimit: userOpGasEstimate.callGasLimit,
-            preVerificationGas: userOpGasEstimate.preVerificationGas,
-            additionalDeploymentCost,
-        },
+export function sessionKeySigner(sessionKey: Hex): (data: Hex) => Promise<Hex> {
+    return async (boopHash: Hash) => {
+        const account = privateKeyToAccount(sessionKey)
+        return await account.signMessage({
+            message: { raw: boopHash },
+        })
     }
 }

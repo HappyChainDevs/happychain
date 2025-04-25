@@ -125,6 +125,7 @@ export class BoopClient {
      * {@link StateRequestStatus.UnknownBoop}.
      */
     async state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
+        console.log({ hash })
         const response = await this.client.get(`/api/v1/boop/state/${hash}`)
         return response as Result<StateRequestOutput, Error>
     }

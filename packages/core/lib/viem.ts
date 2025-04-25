@@ -1,5 +1,6 @@
-import { type Chain, type HappyUser, defaultChain } from "@happy.tech/wallet-common"
+import { type HappyUser, defaultChain } from "@happy.tech/wallet-common"
 import {
+    type Chain,
     type CustomTransport,
     type ParseAccount,
     type PublicClient,
@@ -60,8 +61,11 @@ export function createHappyWalletClient(): HappyWalletClient {
         happyProvider
             .request({ method: "eth_chainId" })
             .then((id: `0x${string}`) => {
-                const chain = getChain(Number(id))
-                walletClient = createWalletClient({ account: user.address, transport: custom(happyProvider), chain })
+                walletClient = createWalletClient({
+                    account: user.address,
+                    transport: custom(happyProvider),
+                    chain: getChain(Number(id)),
+                })
             })
             .catch((error) => {
                 console.warn(`Failed to fetch chain ID. Defaulting to ${defaultChain.name} (${defaultChain.id})`, error)

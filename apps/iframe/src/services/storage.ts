@@ -2,6 +2,7 @@ import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address } from "abitype"
 import type { Hex } from "viem"
+import type { BoopEntry } from "./boopsHistory"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -11,6 +12,7 @@ export enum StorageKey {
     WatchedAssets = "happychain:watched_assets:v1",
     LoadedAbis = "happychain:loaded_abis:v1",
     SessionKeys = "happychain:session_keys:v1",
+    Boops = "happychain:boops:v1",
 }
 
 export type SessionKeysByTargetContract = Record<Address, Hex>
@@ -20,6 +22,7 @@ type StorageSchema = {
     // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
+    [StorageKey.Boops]: Record<Address, Array<BoopEntry>> | undefined
 }
 
 export const storage = createStorage<StorageSchema>()

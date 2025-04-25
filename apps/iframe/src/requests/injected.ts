@@ -1,5 +1,5 @@
-import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
-import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
+import { type Boop, EntryPointStatus, StateRequestStatus } from "@happy.tech/boop-sdk"
+import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -7,48 +7,48 @@ import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
+    EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { decodeNonce } from "permissionless"
 import {
+    type Address,
     type Client,
-    type Hash,
     type Hex,
     InvalidAddressError,
     type Transaction,
-    type TransactionReceipt,
     hexToBigInt,
     isAddress,
-    parseSignature,
+    zeroAddress,
 } from "viem"
-import { entryPoint07Address } from "viem/account-abstraction"
-import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import {
-    checkIsSessionKeyModuleInstalled,
-    installSessionKeyModule,
-    registerSessionKey,
-} from "#src/requests/modules/session-keys/helpers"
-import { StorageKey, storage } from "#src/services/storage.ts"
-import { addPendingUserOp } from "#src/services/userOpsHistory.ts"
-import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/state/chains.ts"
-import { getInjectedClient } from "#src/state/injectedClient.ts"
-import { loadAbiForUser } from "#src/state/loadedAbis.ts"
-import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions.ts"
-import { getPublicClient } from "#src/state/publicClient.ts"
-import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient.ts"
-import { addWatchedAsset } from "#src/state/watchedAssets.ts"
-import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation.ts"
-import { isAddChainParams } from "#src/utils/isAddChainParam.ts"
+import { entryPoint } from "#src/constants/contracts"
+import { boopReceiptsCache } from "#src/services/boopsReceiptsCache.ts"
+import { StorageKey, storage } from "#src/services/storage"
+import { getBoopAccount } from "#src/state/boopAccount"
+import { boopClient } from "#src/state/boopClient.ts"
+import { getChains, setChains, setCurrentChain } from "#src/state/chains"
+import { getInjectedClient } from "#src/state/injectedClient"
+import { loadAbiForUser } from "#src/state/loadedAbis"
+import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
+import { getPublicClient } from "#src/state/publicClient"
+import { addWatchedAsset } from "#src/state/watchedAssets"
+import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
+import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
-import { receiptCache } from "./permissionless"
+import { formatBoopReceiptToTransactionReceipt, formatTransaction, getCurrentNonce, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
-import { parseUserOpCalldata, sendUserOp } from "./userOps"
-import { appForSourceID } from "./utils"
+import {
+    getSessionKeyForTarget,
+    installSessionKeyExtension,
+    isSessionKeyValidatorInstalled,
+    registerSessionKey,
+} from "./sessionKeys"
+import { hasExistingSessionKeys } from "./sessionKeys"
+import { appForSourceID, eoaSigner, sessionKeySigner } from "./utils"
 
 /**
  * Processes requests using the connected 'injected wallet' such as metamask. This will be the
@@ -75,165 +75,101 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return await sendToPublicClient(app, request)
         }
 
-        // This is the same as approved.ts
         case "eth_sendTransaction": {
-            if (!user) return false
-            const target = request.payload.params[0].to
+            if (!user) throw new EIP1193DisconnectedError()
 
-            const hasSession = getPermissions(app, { [PermissionNames.SESSION_KEY]: { target } }).length > 0
+            const tx = request.payload.params[0]
+            if (!tx.to) throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
 
-            if (hasSession) {
-                const user = getUser()
-                if (!user) throw new EIP1193UnauthorizedError()
-                const tx = request.payload.params[0]
-                const target = request.payload.params[0].to
-                if (!tx || !target) return false
+            const permissions = getPermissions(app, {
+                [PermissionNames.SESSION_KEY]: { target: tx.to },
+            })
+            let signer: (data: Hex) => Promise<Hex>
 
-                const permissions = getPermissions(app, {
-                    [PermissionNames.SESSION_KEY]: { target },
-                })
-                if (permissions.length === 0) throw new EIP1193UnauthorizedError()
-
-                const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
+            if (permissions.length > 0) {
+                const sessionKey = getSessionKeyForTarget(user.address, tx.to)
                 if (!sessionKey) throw new EIP1193UnauthorizedError()
-                return await sendUserOp({
-                    user,
-                    tx,
-                    validator: contractAddresses.SessionKeyValidator,
-                    signer: async (userOp, smartAccountClient) => {
-                        const hash = getUserOperationHash({
-                            userOperation: {
-                                ...userOp,
-                                sender: smartAccountClient.account.address,
-                                signature: "0x",
-                            } as UserOperation<"0.7">,
-                            entryPointAddress: entryPoint07Address,
-                            entryPointVersion: "0.7",
-                            chainId: Number(getCurrentChain().chainId),
-                        })
-                        return await getInjectedClient()!.signMessage({
-                            account: privateKeyToAccount(sessionKey),
-                            message: { raw: hash },
-                        })
-                    },
-                })
+                signer = sessionKeySigner(sessionKey)
+            } else {
+                signer = eoaSigner
             }
 
-            // TODO This try statement should go away, it's only here to surface errors
-            //      that occured in the old convertToUserOp call and were being swallowed.
-            //      We need to make sure all errors are correctly surfaced!
-            try {
-                const smartAccountClient = (await getSmartAccountClient())!
-                const tx = request.payload.params[0]
-                const preparedUserOp = await smartAccountClient.prepareUserOperation({
-                    account: smartAccountClient.account,
-                    calls: [
-                        {
-                            to: tx.to,
-                            data: tx.data,
-                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                        },
-                    ],
-                })
-                // need to manually call signUserOp here since the permissionless.js and Web3Auth combination
-                // doesn't support automatic signing
-                const userOpSignature = await smartAccountClient.account.signUserOperation(preparedUserOp)
-                const userOpWithSig = { ...preparedUserOp, signature: userOpSignature }
-                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-
-                addPendingUserOp(user.address, {
-                    userOpHash: userOpHash as Hash,
-                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                })
-                return userOpHash
-            } catch (error) {
-                console.error("Sending UserOp errored", error)
-                throw error
-            }
+            return await sendBoop({
+                account: user.address,
+                isSponsored: true, // TODO: this breaks with paymaster
+                tx,
+                signer,
+            })
         }
 
         case "eth_getTransactionByHash": {
             const [hash] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient())!
+            const cachedTx = boopReceiptsCache.get(hash)
+            if (cachedTx) {
+                const receipt = cachedTx.receipt
+                const tx = cachedTx.tx
+                return formatTransaction(hash, receipt, tx)
+            }
 
-            // Attempt to retrieve UserOperation details first.
-            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
-                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
-                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
-                const { v, r, s, yParity } = parseSignature(userOpInfo.userOperation.signature)
+                const stateResult = await boopClient.state({ hash })
+                if (stateResult.isErr() || stateResult.value.status !== StateRequestStatus.Success) {
+                    // If we can't get the status or it's not successful, fall back to injected client
+                    return await sendToInjectedClient(app, request)
+                }
 
-                return {
-                    // Standard transaction fields
-                    blockHash: userOpInfo.blockHash,
-                    blockNumber: userOpInfo.blockNumber,
-                    from: userOpInfo.userOperation.sender,
-                    gas: userOpInfo.userOperation.callGasLimit,
-                    maxFeePerGas: userOpInfo.userOperation.maxFeePerGas,
-                    maxPriorityFeePerGas: userOpInfo.userOperation.maxPriorityFeePerGas,
-                    nonce: Number(userOpInfo.userOperation.nonce),
-                    to,
-                    hash, // hash of the userop
-                    value,
-                    // Normally this is the tx index for regular transactions that have been
-                    // included, but is allowed to be null for pending transactions. Since we don't
-                    // get the userOp index, and returning the bundler tx index (1) wouldn't be
-                    // meaningfully useful and (2) would require an extra call to try to get the
-                    // userOp receipt, we always return null here.
-                    // If truly required, use `eth_getTransactionReceipt`.
-                    transactionIndex: null,
-                    accessList: [],
-                    type: "eip1559",
-                    typeHex: TransactionType.EIP1559,
-                    v: v!, // We're always under EIP-155
-                    r,
-                    s,
-                    yParity,
-                    chainId: Number(getCurrentChain().chainId),
-                    // Weird non-standard Viem extension: "Contract code or a hashed method call"
-                    // We just leave this empty.
-                    input: "0x",
-                    // Extra field for HappyWallet-aware users
-                    userOp: userOpInfo.userOperation,
-                } as Transaction // performs type-check, but allows extra fields
+                const state = stateResult.value.state
+
+                if (!state.included || !state.receipt) {
+                    // Handle pending transaction (not yet included in a block)
+                    const boopAccount = await getBoopAccount()
+                    if (!boopAccount) return await sendToInjectedClient(app, request)
+
+                    return {
+                        hash,
+                        from: boopAccount.address,
+                        nonce: 0x0,
+                        blockHash: null,
+                        blockNumber: null,
+                        transactionIndex: null,
+                        input: "0x",
+                    } as Partial<Transaction>
+                }
+
+                boopReceiptsCache.put(hash, { receipt: state.receipt })
+                const receipt = state.receipt
+
+                return formatTransaction(hash, receipt)
             } catch (_err) {
-                // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+                // Fallback to regular transaction lookup if anything fails
                 return await sendToInjectedClient(app, request)
             }
         }
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-            // Attempt to retrieve UserOperation details first.
-            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            const cachedTx = boopReceiptsCache.get(hash)
+            if (cachedTx) {
+                return formatBoopReceiptToTransactionReceipt(hash, cachedTx.receipt)
+            }
             try {
-                const [userOpReceipt, userOpInfo] =
-                    receiptCache.get(hash) ??
-                    (await Promise.all([
-                        smartAccountClient.getUserOperationReceipt({ hash }),
-                        smartAccountClient.getUserOperation({ hash }),
-                    ]))
-                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
-                return {
-                    // Standard transaction receipt fields
-                    blockHash: userOpInfo.blockHash,
-                    blockNumber: userOpInfo.blockNumber,
-                    contractAddress: userOpReceipt.receipt.contractAddress,
-                    cumulativeGasUsed: userOpReceipt.receipt.cumulativeGasUsed,
-                    effectiveGasPrice: userOpReceipt.receipt.effectiveGasPrice,
-                    from: userOpInfo.userOperation.sender,
-                    gasUsed: userOpReceipt.receipt.gasUsed,
-                    logs: userOpReceipt.receipt.logs,
-                    logsBloom: userOpReceipt.receipt.logsBloom,
-                    status: userOpReceipt.success ? "success" : "reverted",
-                    to,
-                    transactionHash: hash, // userop hash
-                    transactionIndex: userOpReceipt.receipt.transactionIndex,
-                    type: userOpReceipt.receipt.type,
-                    userOpReceipt, // Extra field for HappyWallet-aware users
-                    value, // Extra field because why not?
-                } as TransactionReceipt // performs type-check, but allows extra fields
+                const stateResult = await boopClient.state({ hash })
+                if (stateResult.isErr() || stateResult.value.status !== StateRequestStatus.Success) {
+                    return await sendToPublicClient(app, request)
+                }
+
+                const state = stateResult.value.state
+                if (!state.included || !state.receipt) {
+                    // Transaction is not yet included, return null (according to Ethereum JSON-RPC specs)
+                    return null
+                }
+
+                const receipt = state.receipt
+
+                boopReceiptsCache.put(hash, {
+                    receipt,
+                })
+                return formatBoopReceiptToTransactionReceipt(hash, receipt)
             } catch (_err) {
                 return sendToInjectedClient(app, request)
             }
@@ -241,45 +177,60 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-
-            if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
-                /**
-                 * For smart accounts, nonces combine :
-                 * - A key (upper 192 bits) for custom wallet logic
-                 * - A sequence number (lower 64 bits) for maintaining uniqueness
-                 *
-                 * @see {@link https://docs.stackup.sh/docs/useroperation-nonce} for detailed explanation
-                 * @see {@link https://github.com/pimlicolabs/entrypoint-estimations/blob/main/lib/account-abstraction/contracts/interfaces/INonceManager.sol}
-                 *
-                 * `eth_getTransactionCount` should only return the sequence number to match
-                 * traditional account behavior and maintain compatibility with existing tools.
-                 */
-                const fullNonce = await smartAccountClient.account.getNonce()
-                const { sequence } = decodeNonce(fullNonce)
-                return sequence
+            const boopAccount = await getBoopAccount()
+            if (boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
+                const nonceTrack = 0n
+                return await getCurrentNonce(address as Address, nonceTrack)
             }
-
             throw new InvalidAddressError({ address })
         }
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
-            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-            const gasEstimation = await smartAccountClient.estimateUserOperationGas({
-                calls: [
-                    {
-                        to: tx.to as `0x${string}`,
-                        data: tx.data || "0x",
-                        value: tx.value ? hexToBigInt(tx.value) : 0n,
-                    },
-                ],
-            })
+            const boopAccount = await getBoopAccount()
 
-            return gasEstimation.callGasLimit
+            try {
+                if (!boopAccount) throw new Error("Boop account not initialized")
+                const nonceTrack = 0n // Default nonce track
+                const nonceValue = await getCurrentNonce(boopAccount.address, nonceTrack)
+
+                const boop: Boop = {
+                    account: boopAccount.address,
+                    dest: tx.to as Address,
+                    nonceTrack,
+                    nonceValue,
+                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    payer: zeroAddress as Address, //@todo - replace zeroAddress with env variable ?
+                    callData: tx.data || ("0x" as Hex),
+                    validatorData: "0x" as Hex,
+                    extraData: "0x" as Hex,
+                    gasLimit: 0n,
+                    validateGasLimit: 0n,
+                    executeGasLimit: 0n,
+                    validatePaymentGasLimit: 0n,
+                    maxFeePerGas: 0n,
+                    submitterFee: 0n,
+                }
+
+                const simulateResult = await boopClient.simulate({
+                    entryPoint,
+                    tx: boop,
+                })
+
+                if (simulateResult.isErr() || simulateResult.value.status !== EntryPointStatus.Success) {
+                    return await sendToInjectedClient(app, request)
+                }
+
+                return simulateResult.value.executeGasLimit
+            } catch (error) {
+                console.error("Error estimating gas:", error)
+                return await sendToInjectedClient(app, request)
+            }
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
+            if (!user) throw new EIP1193UnauthorizedError()
+
             // address of contract the session key will be authorized to interact with
             const targetContract = request.payload.params[0]
 
@@ -293,40 +244,32 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-            const hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
 
-            const smartAccountClient = (await getSmartAccountClient())!
-            let keyRegistered = false
+            // Get the Boop account address
+            const boopAccount = await getBoopAccount()
+            if (!boopAccount) throw new Error("Boop account not initialized")
 
-            // Only check module installation if we don't have any session keys stored
-            if (!hasExistingSessionKeys) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
-                if (!isSessionKeyValidatorInstalled) {
-                    await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
-                    keyRegistered = true
-                }
-            }
+            const result =
+                !hasExistingSessionKeys(user.address) && !(await isSessionKeyValidatorInstalled(user.address))
+                    ? await installSessionKeyExtension(user.address, targetContract, accountSessionKey.address)
+                    : await registerSessionKey(user.address, targetContract, accountSessionKey.address)
 
-            // It's theoreticaly possible to have the validator uninstalled when there are local
-            // session keys, but if you're doing that you're looking for trouble.
+            console.log({ sessionKeyResult: result })
+            // TODO: check result?
 
-            if (!keyRegistered) {
-                const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
-                await smartAccountClient.waitForUserOperationReceipt({ hash })
-                keyRegistered = true
-            }
-
-            grantPermissions(app, {
-                [PermissionNames.SESSION_KEY]: {
-                    target: targetContract,
+            // Store the session key
+            storage.set(StorageKey.SessionKeys, {
+                ...storedSessionKeys,
+                [user.address]: {
+                    ...(storedSessionKeys[user.address] || {}),
+                    [targetContract]: sessionKey,
                 },
             })
 
-            storage.set(StorageKey.SessionKeys, {
-                ...storedSessionKeys,
-                [user!.address]: {
-                    ...(storedSessionKeys[user!.address] || {}),
-                    [targetContract]: sessionKey,
+            // Grant permissions
+            grantPermissions(app, {
+                [PermissionNames.SESSION_KEY]: {
+                    target: targetContract,
                 },
             })
 
@@ -357,17 +300,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             grantPermissions(app, "eth_accounts")
 
-            // substitute smartAccount
             return [user.address]
         }
 
-        // different from approved.ts and permissionless as we don't checkAuthenticated here,
-        // instead relying on the extension wallet to handle the permission access.
-        // If the call is successful, we will grant (mirror) permissions here, otherwise we
-        // can safely assume it failed, and ignore. We can assume the user is logged in here, as
-        // we handle logging-in elsewhere (InjectedConnector) so a logged out user will not be
-        // calling this method directly. It is first called in response to the Connect/Reconnect on
-        // page load by the iframes wagmi connector
         case "eth_requestAccounts": {
             if (!user) return []
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
@@ -382,22 +317,13 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             // since the injected wallet itself also has the permissions granted
             grantPermissions(app, "eth_accounts")
 
-            // substitute smartAccount
             return [user.address]
         }
 
-        // same explanation as 'eth_requestAccounts' above, we won't do any checks ourselves
-        // and instead rely on success/fail of the extension wallet call
         case "wallet_requestPermissions": {
-            // By default we will simply grant permissions here
-            // Cases which require injected wallet interactions
-            // such as eth_accounts must be special-cased and
-            // forwarded to the injected wallet for confirmation
-            // before proceeding
             const [{ eth_accounts, ...rest }] = request.payload.params
 
             if (eth_accounts) {
-                // 'eth_accounts' must be forwarded to the injected wallet to function
                 const injectedResponse = await sendToInjectedClient(app, {
                     ...request,
                     payload: { method: request.payload.method, params: [{ eth_accounts }] },
@@ -409,18 +335,12 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return getPermissions(app, request.payload.params[0])
         }
 
-        // same as above, however, 'wallet_revokePermissions' is only in permissionless.ts, not
-        // on approved.ts
         case "wallet_revokePermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             revokePermissions(app, request.payload.params[0])
             return resp
         }
 
-        // We can reduce the number of checks here compared to approved.ts and permissionless.ts
-        // as we can rely on the extension wallet response to determine how we should mirror
-        // accordingly. Some extensions automatically switch chain after adding, so we enforce this
-        // behavior to have a more standard experience regardless of the connecting wallet.
         case "wallet_addEthereumChain": {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
@@ -434,20 +354,11 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
 
-            // the response is null if chain is added https://eips.ethereum.org/EIPS/eip-3085
-            // we can't detect if user changed details in metamask UI for example
-            // so this will be unreliable. We do have the initially requested params though
-            // so we cache this
-            // https://linear.app/happychain/issue/HAPPY-211/wallet-addethereumchain-issues-with-injected-wallets
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
 
-            // Rabby and metamask both auto switch to a newly added chain
-            // but its not strictly required. this will normalize the behavior,
-            // as well as allowing us to properly detect if the secondary chain switch was
-            // successful for not.
-            // Note: this will _not_ prompt for a second confirmation unless the original chain
-            // switch was declined
-
+            // Some wallets (Metamask, Rabby, ...) automatically switch to the newly-added chain.
+            // Normalize behavior by always switching.
+            // This usually does not result in an additional prompt in auto-switching wallets.
             await sendToInjectedClient(app, {
                 ...request,
                 payload: {
@@ -482,12 +393,10 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return resp
         }
 
-        // same as approved.ts
         case "wallet_watchAsset": {
             return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
-        // same as approved.ts
         case HappyMethodNames.LOAD_ABI: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
@@ -502,7 +411,7 @@ async function sendToInjectedClient<T extends ProviderMsgsFromApp[Msgs.RequestIn
     _app: AppURL,
     request: T,
 ): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
-    const client: Client | undefined = getInjectedClient()
+    const client = getInjectedClient()
 
     if (!client) throw new EIP1193DisconnectedError()
 
