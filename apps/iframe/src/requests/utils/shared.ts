@@ -2,15 +2,9 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import {
-    EntryPointStatus,
-    type Hash,
-    type Receipt,
-    StateRequestStatus,
-    state as boopState,
-    estimateGas,
-} from "@happy.tech/boop-sdk" // TODO Hash import from common instead
-import type { Hex } from "@happy.tech/common"
+import { boopClient } from "#src/state/boopClient"
+import { EntryPointStatus, type Receipt, StateRequestStatus } from "@happy.tech/boop-sdk"
+import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
 import { type Address, type Transaction, toHex } from "viem"
 import { entryPoint } from "#src/constants/contracts"
@@ -40,7 +34,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
     if (cached?.receipt) return formatTransaction(hash, cached.boop, cached.receipt)
 
     try {
-        const output = (await boopState({ hash })).unwrap()
+        const output = (await boopClient.state({ hash })).unwrap()
 
         // Unknown boop: this might be an EVM tx hash instead, signal caller to forward to the public client.
         if (output.status === StateRequestStatus.UnknownHappyTx) return FORWARD
@@ -73,7 +67,7 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
 
     try {
-        const { status, state } = (await boopState({ hash })).unwrap()
+        const { status, state } = (await boopClient.state({ hash })).unwrap()
 
         if (!state?.receipt)
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
@@ -119,7 +113,7 @@ export async function eth_estimateGas(
     if (user?.address !== tx.from) return FORWARD
 
     const boop = await boopFromTransaction(user?.address, tx)
-    const output = (await estimateGas({ entryPoint, tx: boop })).unwrap()
+    const output = (await boopClient.simulate({ entryPoint, tx: boop })).unwrap()
 
     // TODO need robust error handling
     if (output.status !== EntryPointStatus.Success) throw new Error("can't simulate lol")

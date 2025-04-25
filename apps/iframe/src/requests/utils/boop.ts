@@ -1,3 +1,4 @@
+import { boopClient } from "#src/state/boopClient"
 import {
     type Boop,
     type BoopReceipt,
@@ -11,8 +12,6 @@ import {
     type SubmitStatus,
     SubmitterErrorStatus,
     computeBoopHash,
-    estimateGas,
-    execute,
 } from "@happy.tech/boop-sdk"
 import { Map2, Mutex } from "@happy.tech/common"
 import type { Address, Hash, Hex, TransactionEIP1559 } from "viem"
@@ -100,7 +99,7 @@ export async function sendBoop(
         const boop = await boopFromTransaction(account, tx)
 
         if (!isSponsored) {
-            const output = (await estimateGas({ entryPoint, tx: boop })).unwrap()
+            const output = (await boopClient.simulate({ entryPoint, tx: boop })).unwrap()
 
             if (output.status === EntryPointStatus.Success) {
                 boop.gasLimit = BigInt(output.gasLimit)
@@ -118,7 +117,7 @@ export async function sendBoop(
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop(account, { boopHash, value })
-        const output = (await execute({ entryPoint, tx: signedBoop })).unwrap()
+        const output = (await boopClient.execute({ entryPoint, tx: signedBoop })).unwrap()
 
         if (output.status === EXECUTE_SUCCESS) {
             markBoopAsConfirmed(account, value, output)
