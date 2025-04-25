@@ -47,15 +47,8 @@ function classifyTxType(tx: RpcTransactionRequest) {
         case TransactionType.EIP7702:
             return "EIP-7702 (unsupported)"
         default:
-            // these fields will be set by the wagmi hook if not
-            // already present in the tx object
-            if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
-                return "EIP-1559"
-            }
-
-            if (tx.gasPrice) {
-                return "EIP-1559 (converted from legacy)"
-            }
+            // what we really (only) support
+            return "UserOp"
     }
 }
 
@@ -146,7 +139,10 @@ export const EthSendTransaction = ({
                         "aria-disabled": status === "pending",
                         onClick: () => {
                             if (status === "pending") return
-                            accept({ method, params })
+                            accept({
+                                eip1193RequestParams: { method, params },
+                                extraData: {},
+                            })
                             void queryClient.invalidateQueries({ queryKey })
                         },
                     },

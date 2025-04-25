@@ -1,6 +1,6 @@
 import type { EIP1193ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
-import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
+import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads"
@@ -216,6 +216,40 @@ export type ProviderMsgsFromIframe = {
 // =================================================================================================
 // === POPUP BUS EVENTS ============================================================================
 
+
+
+// =================================================================================================
+// === POPUP BUS EVENTS ============================================================================
+
+/**
+ * Maps EIP1193 method names to their corresponding return type definitions.
+ */
+
+type RequestExtraDataTypeMap = {
+    eth_sendTransaction: Record<string, never>
+}
+
+/**
+ * Provides type-safe method-specific extra data for EIP1193 requests.
+ * Returns {@link RequestExtraDataTypeMap} type if method exists, otherwise empty record.
+ * @template Method - EIP1193 method name
+ */
+export type RequestExtraData<Method extends EIP1193RequestMethods> = Method extends keyof RequestExtraDataTypeMap
+    ? RequestExtraDataTypeMap[Method]
+    : Record<string, never>
+
+/**
+ * Payload structure for approved EIP1193 requests.
+ * Combines required EIP1193 parameters with optional method-specific extra data.
+ * @template Method - EIP1193 method name
+ * @property eip1193RequestParams - Required EIP1193 request parameters
+ * @property extraData - Optional method-specific additional data
+ */
+export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
+    eip1193RequestParams: EIP1193RequestParameters<Method>
+    extraData?: RequestExtraData<Method>
+}
+
 /**
  * Schema for messages that can be sent from the popup to the iframe.
  *
@@ -223,6 +257,6 @@ export type ProviderMsgsFromIframe = {
  * simpler if all event definitions live in the same place.
  */
 export type PopupMsgs = {
-    [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }

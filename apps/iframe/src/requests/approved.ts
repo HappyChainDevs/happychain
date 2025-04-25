@@ -1,9 +1,9 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
+    type ApprovedRequestPayload,
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
-    type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     type Msgs,
@@ -48,8 +48,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     if (!user) {
         console.warn("Request approved, but no user found")
     }
+    const { method: requestMethod, params: requestParams } = request.payload.eip1193RequestParams
 
-    switch (request.payload.method) {
+    switch (requestMethod) {
         // This functionality is same as in injected.ts
         // TODO: refactor once we have a better plan on how to maintain separation while reducing
         // code duplication here
@@ -58,7 +59,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 if (!user) throw new EIP1193UnauthorizedError()
                 return await sendUserOp({
                     user,
-                    tx: request.payload.params[0],
+                    tx: requestParams[0],
                     validator: contractAddresses.ECDSAValidator,
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
@@ -76,11 +77,11 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "wallet_requestPermissions":
-            return grantPermissions(app, request.payload.params[0])
+            return grantPermissions(app, requestParams[0])
 
         case "wallet_addEthereumChain": {
             const chains = getChains()
-            const params = Array.isArray(request.payload.params) && request.payload.params[0]
+            const params = Array.isArray(requestParams) && requestParams[0]
             const isValid = isAddChainParams(params)
 
             if (!isValid)
@@ -89,7 +90,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             if (params.chainId in chains)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Chain already exists")
 
-            const response = await sendToWalletClient({ ...request, payload: request.payload })
+            const response = await sendToWalletClient({
+                ...request,
+                eip1193RequestParams: request.payload.eip1193RequestParams,
+            })
             // Only add chain if the request is successful.
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
             return response
@@ -97,7 +101,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         case "wallet_switchEthereumChain": {
             const chains = getChains()
-            const chainId = request.payload.params[0].chainId
+            const chainId = requestParams[0].chainId
 
             if (import.meta.env.PROD) {
                 throw new Error("Switching chain is not supported in production")
@@ -113,23 +117,26 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
 
-            const response = await sendToWalletClient({ ...request, payload: request.payload })
-            // Currently this fails: web3Auth is hardcoded to the default intial chain.
+            const response = await sendToWalletClient({
+                ...request,
+                eip1193RequestParams: request.payload.eip1193RequestParams,
+            })
+            // Currently this fails: web3Auth is hardcoded to the default initial chain.
             setCurrentChain(chains[chainId])
             return response
         }
 
         case "wallet_watchAsset": {
-            return user ? addWatchedAsset(user.address, request.payload.params) : false
+            return user ? addWatchedAsset(user.address, requestParams) : false
         }
 
         case HappyMethodNames.LOAD_ABI: {
-            return user ? loadAbiForUser(user.address, request.payload.params) : false
+            return user ? loadAbiForUser(user.address, requestParams) : false
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // address of contract the session key will be authorized to interact with
-            const targetContract = request.payload.params[0]
+            const targetContract = requestParams[0]
 
             if (!isAddress(targetContract)) {
                 throw new InvalidAddressError({ address: targetContract })
@@ -182,19 +189,19 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         default:
-            return await sendToWalletClient(request)
+            return await sendToWalletClient(request.payload)
     }
 }
 
-async function sendToWalletClient<T extends PopupMsgs[Msgs.PopupApprove]>(
+async function sendToWalletClient<T extends PopupMsgs[Msgs.PopupApprove]["payload"]>(
     request: T,
-): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
+): Promise<ApprovedRequestPayload<T["eip1193RequestParams"]["method"]>> {
     const client: Client | undefined = getWalletClient()
     if (!client) throw new EIP1193DisconnectedError()
 
-    if (requestPayloadIsHappyMethod(request.payload)) {
+    if (requestPayloadIsHappyMethod(request.eip1193RequestParams)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request.payload)
+    return await client.request(request.eip1193RequestParams)
 }

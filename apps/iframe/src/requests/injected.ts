@@ -3,7 +3,6 @@ import { deployment as contractAddresses } from "@happy.tech/contracts/account-a
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
-    type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
@@ -52,7 +51,7 @@ import { appForSourceID } from "./utils"
 
 /**
  * Processes requests using the connected 'injected wallet' such as metamask. This will be the
- * locally injected wallet when in standalone-mode, or be the dapps injected wallet when embedded
+ * locally injected wallet when in standalone-mode, or be the dapp's injected wallet when embedded
  * into another application.
  */
 export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
@@ -347,7 +346,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     payload: {
                         method: "eth_requestAccounts",
                         params: undefined,
-                    } as EIP1193RequestParameters<"eth_requestAccounts">,
+                    },
                 })
                 if (!resp.length) return []
             }
@@ -492,9 +491,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
-        default: {
+        default:
             return await sendToInjectedClient(app, request)
-        }
     }
 }
 
