@@ -27,14 +27,17 @@ export class UserRepository {
 
     /// Generic find method (for internal/admin use).
     async find(criteria: Partial<User>): Promise<User[]> {
-        let query = this.db.selectFrom("users")
-        if (criteria.id) query = query.where("id", "=", criteria.id)
-        if (criteria.happy_wallet) query = query.where("happy_wallet", "=", criteria.happy_wallet)
-        if (criteria.username) query = query.where("username", "=", criteria.username)
-        if (criteria.guild_id !== undefined)
-            query = query.where("guild_id", criteria.guild_id === null ? "is" : "=", criteria.guild_id)
-        if (criteria.created_at) query = query.where("created_at", "=", criteria.created_at)
-        return await query.selectAll().execute()
+        return await this.db
+            .selectFrom("users")
+            .$if(criteria.happy_wallet !== undefined, (qb) => qb.where("happy_wallet", "=", criteria.happy_wallet!))
+            .$if(criteria.username !== undefined, (qb) => qb.where("username", "=", criteria.username!))
+            .$if(criteria.guild_id !== undefined, (qb) =>
+                criteria.guild_id === null
+                    ? qb.where("guild_id", "is", null)
+                    : qb.where("guild_id", "=", criteria.guild_id!),
+            )
+            .selectAll()
+            .execute()
     }
 
     /// Create a new user.

@@ -2,7 +2,7 @@ import { Hono } from "hono"
 
 import { db } from "../../db/driver"
 import type { User } from "../../db/types"
-import { UserRepository } from "../../repository/UserRepository"
+import { UserRepository } from "../../repositories/UsersRepository"
 
 const userRepo = new UserRepository(db)
 const usersApi = new Hono()
