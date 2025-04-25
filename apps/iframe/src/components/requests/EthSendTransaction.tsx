@@ -10,7 +10,7 @@ import {
     formatGwei,
     isAddress,
 } from "viem"
-import { useEstimateFeesPerGas } from "wagmi"
+import { useBalance, useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
@@ -73,10 +73,17 @@ export const EthSendTransaction = ({
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
 
+    const { data: balanceData, isPending: isBalanceDataPending } = useBalance({
+        address: user?.address,
+        query: {
+            enabled: user?.address && isAddress(user?.address),
+        },
+    })
+
     const {
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
         isError,
-        status,
+        isPending: isEstimateDataPending,
         queryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
 
@@ -142,10 +149,11 @@ export const EthSendTransaction = ({
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
-                        children: "Confirm",
-                        "aria-disabled": status === "pending",
+                        children:
+                            balanceData?.value && balanceData.value !== 0n ? "Confirm" : "Not enough funds present!",
+                        "aria-disabled": isEstimateDataPending || balanceData?.value === 0n,
                         onClick: () => {
-                            if (status === "pending") return
+                            if (isEstimateDataPending || isBalanceDataPending) return
                             accept({ method, params })
                             void queryClient.invalidateQueries({ queryKey })
                         },
