@@ -1,3 +1,4 @@
+import type { Address } from "@happy.tech/common"
 import {
     type ConnectionProvider,
     type HappyUser,
@@ -118,11 +119,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         } satisfies HappyUserDetails
     }
 
-    private static async makeHappyUser(
-        user: HappyUserDetails,
-        addresses: `0x${string}`[],
-        smartAccountAddress: `0x${string}`,
-    ) {
+    private static async makeHappyUser(user: HappyUserDetails, addresses: Address[], smartAccountAddress: Address) {
         return {
             ...user,
             // web3 details

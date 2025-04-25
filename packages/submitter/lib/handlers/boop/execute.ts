@@ -27,7 +27,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
         return err({ status: SubmitterErrorStatus.UnexpectedError })
     }
 
-    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, 60_000)
+    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, 10_000)
 
     if (!receipt || receipt.txReceipt.status !== "success") return err({ status: SubmitterErrorStatus.UnexpectedError })
 

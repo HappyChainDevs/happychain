@@ -1,4 +1,5 @@
 import "./web3auth.polyfill"
+import type { Address } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
 import { worker } from "@happy.tech/worker/runtime"
 import { tssLib } from "@toruslabs/tss-dkls-lib"
@@ -53,7 +54,7 @@ ethereumSigningProvider.setupProvider(makeEthereumSigner(web3Auth))
  *  Global mutable variables/state
  */
 let state: "connecting" | "connected" | "disconnected" | "disconnecting" = "disconnected"
-let _addresses: `0x${string}`[] = []
+let _addresses: Address[] = []
 
 /**
  * Proxy all provider events to iframe provider

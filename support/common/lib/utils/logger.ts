@@ -16,6 +16,14 @@ export enum LogLevel {
 }
 
 /**
+ * Returns the {@link LogLevel} whose name matches the string, or the default level
+ * ({@link LogLevel.WARN}) if the passed string does not denote a LogLevel or is undefined.
+ */
+export function logLevel(logLevelName: string | undefined): LogLevel {
+    return LogLevel[logLevelName as keyof typeof LogLevel] ?? LogLevel.WARN
+}
+
+/**
  * Tags that categorize log messages by subsystem or feature area.
  */
 export type LogTag = string

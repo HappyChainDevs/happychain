@@ -84,7 +84,7 @@ const contracts = {
  *
  * Type: {@link Chain}
  */
-export const happyChainSepolia: Chain = {
+export const happyChainSepolia = {
     ...chainConfig,
     id: Number(addChainDefinition.chainId),
     name: addChainDefinition.chainName,
@@ -129,4 +129,4 @@ export const happyChainSepolia: Chain = {
         },
     },
     sourceId,
-}
+} as const satisfies Chain

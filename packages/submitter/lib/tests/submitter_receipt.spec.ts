@@ -55,7 +55,7 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
 
         // submit transaction but don't wait to complete
-        client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+        client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.boop.receipt[":hash"]

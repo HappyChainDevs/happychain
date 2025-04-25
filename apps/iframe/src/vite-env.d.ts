@@ -1,6 +1,11 @@
 /// <reference types="vite/client" />
 
-type ImportMetaEnv = {
+interface ImportMetaEnv {
+    /**
+     * App Config
+     */
+    readonly VITE_LOG_LEVEL: string
+
     /**
      * Firebase Setup
      */
@@ -17,6 +22,8 @@ type ImportMetaEnv = {
     readonly VITE_WEB3AUTH_CLIENT_ID: string
     readonly VITE_WEB3AUTH_NETWORK: "sapphire_mainnet" | "sapphire_devnet"
     readonly VITE_WEB3AUTH_VERIFIER: string
+
+    readonly VITE_CHAIN_ID: string
 }
 
 interface ImportMeta {
