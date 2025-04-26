@@ -2,6 +2,8 @@ import { abis as boopAnvilAbis, deployment as boopAnvilDeployment } from "@happy
 import { abis as boopSepoliaAbis, deployment as boopSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
 import { devnet, happyChainSepolia } from "@happy.tech/wallet-common"
 
+// Default chain ID, used for deployment addresses and ABIs — however the iframe is still able to work with
+// other chains as long as they feature the same addresses and ABIs.
 const chainId = Number(import.meta.env.VITE_CHAIN_ID)
 
 //== Utils==========================================================================================

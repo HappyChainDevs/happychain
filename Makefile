@@ -545,6 +545,7 @@ select-chain-local:
 	$(call update_env,apps/randomness/.env,CHAIN_ID,1337)
 	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
 
+	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,1337)
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,1337)
 	$(call update_env,demos/react/.env,VITE_CHAIN_ID,1337)
 	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,1337)
@@ -557,6 +558,7 @@ select-chain-testnet:
 	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
 	$(call update_env,apps/randomness/.env,RPC_URL,wss://rpc.testnet.happy.tech/ws)
 
+	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,216)
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,216)
 	$(call update_env,demos/react/.env,VITE_CHAIN_ID,216)
 	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,216)
