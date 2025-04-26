@@ -1,7 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { EIP1193ErrorCodes, LoginRequiredError, ProviderRpcError } from "../errors"
-import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193-utils"
+import { LoginRequiredError, parseRpcError, standardizeRpcError } from "../errors"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
@@ -88,16 +87,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             // forward login required errors to be handled elsewhere
             if (e instanceof LoginRequiredError) throw e
 
-            // all other errors must be some form of the standard eip1193 error...
-            // This normalizes for use with libraries such as viem & ethers
-            if (e instanceof ProviderRpcError) throw e
-
-            const code =
-                (e as ProviderRpcError)?.code in EIP1193ErrorCodes
-                    ? (e as ProviderRpcError).code
-                    : EIP1193ErrorCodes.Unknown
-            const message: string = (e as Error)?.message || "An unknown error occurred"
-            throw new ProviderRpcError({ code, message, data: message })
+            throw standardizeRpcError(e)
         }
     }
 
@@ -113,7 +103,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         this.inFlightRequests.delete(data.key)
         popup?.close()
 
-        if (data.error) reject(convertEIP1193ErrorObjectToErrorInstance(data.error))
+        if (data.error) reject(parseRpcError(data.error))
         else resolve(data.payload)
     }
 

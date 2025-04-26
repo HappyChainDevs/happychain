@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, mock } from "bun:test"
 import { type UUID, createUUID } from "@happy.tech/common"
 import {
     AuthState,
-    EIP1193ErrorCodes,
     type EIP1193RequestParameters,
+    EIP1193UserRejectedRequestError,
     EventBus,
     EventBusMode,
     type EventBusOptions,
@@ -13,7 +13,7 @@ import {
     type ProviderMsgsFromApp,
     type ProviderMsgsFromIframe,
     ProviderRpcError,
-    getEIP1193ErrorObjectFromCode,
+    serializeRpcError,
 } from "@happy.tech/wallet-common"
 import type { RpcBlock } from "viem"
 import { config } from "../config"
@@ -193,7 +193,7 @@ describe("HappyProvider", () => {
             iframeProviderBus.emit(Msgs.RequestResponse, {
                 key,
                 windowId: uuid,
-                error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
+                error: serializeRpcError(new EIP1193UserRejectedRequestError()),
                 payload: null,
             })
         })
