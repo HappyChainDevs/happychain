@@ -1,5 +1,4 @@
-import type { EIP1193ErrorObject } from "../errors"
-import type { OverlayErrorCode } from "../errors/overlay-errors"
+import type { OverlayErrorCode, SerializedRpcError } from "../errors"
 import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
@@ -194,7 +193,7 @@ export type ProviderMsgsFromApp = {
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+    [Msgs.ExecuteInjectedResponse]: ProviderEventError<SerializedRpcError> | ProviderEventPayload<EIP1193RequestResult>
 }
 
 // =================================================================================================
@@ -203,7 +202,7 @@ export type ProviderMsgsFromApp = {
 /**
  * Schema for messages that can be sent from the iframe to the app.
  */
-export type ProviderEvent = ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+export type ProviderEvent = ProviderEventError<SerializedRpcError> | ProviderEventPayload<EIP1193RequestResult>
 export type ProviderMsgsFromIframe = {
     [Msgs.RequestResponse]: ProviderEvent
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
@@ -224,5 +223,5 @@ export type ProviderMsgsFromIframe = {
  */
 export type PopupMsgs = {
     [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
+    [Msgs.PopupReject]: ProviderEventError<SerializedRpcError>
 }

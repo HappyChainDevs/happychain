@@ -4,7 +4,7 @@ import {
     type EIP1193RequestResult,
     Msgs,
     type MsgsFromApp,
-    getEIP1193ErrorObjectFromUnknown,
+    serializeRpcError,
 } from "@happy.tech/wallet-common"
 import { type EIP6963ProviderDetail, createStore } from "mipd"
 import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
@@ -68,7 +68,7 @@ export class InjectedWalletWrapper {
                 config.providerBus.emit(Msgs.ExecuteInjectedResponse, {
                     key: request.key,
                     windowId: request.windowId,
-                    error: getEIP1193ErrorObjectFromUnknown(e),
+                    error: serializeRpcError(e),
                     payload: null,
                 })
             }
