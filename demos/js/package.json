@@ -4,7 +4,8 @@
     "version": "0.1.2",
     "type": "module",
     "dependencies": {
-        "@happy.tech/core": "workspace:0.2.1"
+        "@happy.tech/core": "workspace:0.2.1",
+        "ethers": "^6.13.7"
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
