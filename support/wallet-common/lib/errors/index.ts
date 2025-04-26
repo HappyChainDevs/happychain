@@ -1,22 +1,25 @@
-export { OverlayErrorCode } from "./overlay-errors"
+export { HappyRpcError } from "./HappyRpcError"
 
 export {
-    getEIP1193ErrorObjectFromCode,
-    getEIP1193ErrorObjectFromUnknown,
-} from "./eip-1193-utils"
+    serializeRpcError,
+    parseRpcError,
+    standardizeRpcError,
+    type SerializedRpcError,
+} from "./serialize"
 
 export {
     ProviderRpcError,
     EIP1193ChainDisconnectedError,
-    EIP1193ChainNotRecognizedError,
+    EIP1193SwitchChainError,
     EIP1193DisconnectedError,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
     EIP1193ErrorCodes,
-    type EIP1193ErrorObject,
-} from "./eip-1193-errors"
+} from "./eip1193Errors"
 
-export { LoginRequiredError } from "./happy-provider-errors"
+export { EIP1474ErrorCodes, EthereumRpcError, EIP1474InvalidInput, EIP1474InternalError } from "./eip1474Errors"
 
-export { EIP1474ErrorCodes, EthereumRpcError, EIP1474InvalidInput, EIP1474InternalError } from "./eip-1474-errors"
+export { LoginRequiredError } from "./internalErrors"
+
+export { OverlayErrorCode } from "./overlayErrors"
