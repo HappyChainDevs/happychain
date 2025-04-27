@@ -36,7 +36,7 @@ describe("submitter_state", () => {
     it("fetches state of recent tx", async () => {
         // submit all transactions, but only wait for the first to complete
         const response = (await client.api.v1.boop.execute
-            .$post({ json: { tx: serializeBigInt(signedTx) } })
+            .$post({ json: { boop: serializeBigInt(signedTx) } })
             .then((a) => a.json())) as any
 
         const state = (await client.api.v1.boop.state[":hash"]
@@ -68,7 +68,7 @@ describe("submitter_state", () => {
         const futureSignedTx = await sign(futureUnsignedTx)
         const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), futureSignedTx)
         // submit transaction, but don't wait for it to complete
-        const blockedTx = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(futureSignedTx) } })
+        const blockedTx = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
 
         await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -83,7 +83,7 @@ describe("submitter_state", () => {
         expect(state.state.receipt).toBeUndefined()
         expect(state.state.simulation).toBeDefined()
 
-        await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+        await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         await blockedTx // wait for the transaction to complete so CI isn't grumpy
     })
 })

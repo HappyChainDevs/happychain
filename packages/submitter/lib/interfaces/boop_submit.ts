@@ -1,5 +1,5 @@
 import type { Address, Hash } from "@happy.tech/common"
-import type { Boop } from "./Boop"
+import type { Boop, PartialBoop } from "./Boop"
 import type { SubmitterErrorStatus } from "./status"
 
 export type SubmitSuccess = "submitSuccess"
@@ -16,7 +16,7 @@ export type SubmitInput = {
     entryPoint?: Address | undefined
 
     /** Boop to execute. */
-    tx: Boop
+    boop: PartialBoop
 }
 
 export type SubmitOutput =

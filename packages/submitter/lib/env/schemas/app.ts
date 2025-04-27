@@ -27,4 +27,5 @@ export const appSchema = z.object({
     NODE_ENV: z.enum(["production", "development", "staging", "test", "cli"]).default(DEFAULT_NODE_ENV),
     LOG_LEVEL: z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default(DEFAULT_LOG_LEVEL),
     DATABASE_URL: z.string(),
+    GAS_SAFETY_MARGIN: z.coerce.number().gt(100).lt(10000).default(120),
 })

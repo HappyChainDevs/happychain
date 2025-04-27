@@ -42,7 +42,7 @@ describe("submitter_pending", () => {
 
         // submit all transactions, but only wait for the first to complete
         await Promise.race(
-            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx) } })),
+            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
         const pending = (await client.api.v1.boop.pending[":account"]

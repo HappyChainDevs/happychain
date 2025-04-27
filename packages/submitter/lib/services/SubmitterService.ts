@@ -2,7 +2,7 @@ import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
 import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
-import type { Boop } from "#lib/interfaces/Boop"
+import type { PartialBoop } from "#lib/interfaces/Boop"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
 import type { BoopState } from "#lib/interfaces/BoopState"
 import { EntryPointStatus } from "#lib/interfaces/status"
@@ -20,9 +20,11 @@ export class SubmitterService {
         private boopReceiptService: BoopReceiptService,
     ) {}
 
-    async initialize(entryPoint: `0x${string}`, boop: Boop) {
+    async initialize(entryPoint: `0x${string}`, boop: PartialBoop) {
         const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
-        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop })
+        // TODO yolo db is broken
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
     }
 
     async finalize(boopTransactionId: number, state: BoopState) {
@@ -38,7 +40,7 @@ export class SubmitterService {
         })
     }
 
-    async finalizeWhenReady(boop: Boop, txHash: `0x${string}`) {
+    async finalizeWhenReady(boop: PartialBoop, txHash: `0x${string}`) {
         try {
             const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)

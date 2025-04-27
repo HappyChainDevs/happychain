@@ -41,11 +41,11 @@ describe("submitter_execute", () => {
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             // be your own payer! define your own gas!
-            unsignedTx.gasLimit = 2000000n
-            unsignedTx.executeGasLimit = 1000000n
+            unsignedTx.gasLimit = 2000000
+            unsignedTx.executeGasLimit = 1000000
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -59,7 +59,7 @@ describe("submitter_execute", () => {
 
     describe("payer", () => {
         it("proper response structure (mint tokens success)", async () => {
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
@@ -111,7 +111,7 @@ describe("submitter_execute", () => {
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
 
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
 
             const afterBalance = await getMockTokenABalance(smartAccount)
@@ -122,10 +122,10 @@ describe("submitter_execute", () => {
 
         it("executes with 0n gas", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            unsignedTx.executeGasLimit = 0n
-            unsignedTx.gasLimit = 0n
+            unsignedTx.executeGasLimit = 0
+            unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -135,10 +135,10 @@ describe("submitter_execute", () => {
 
         it("executes with 4000000000n gas", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            unsignedTx.executeGasLimit = 4000000000n
-            unsignedTx.gasLimit = 4000000000n
+            unsignedTx.executeGasLimit = 4000000000
+            unsignedTx.gasLimit = 4000000000
             signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -154,10 +154,10 @@ describe("submitter_execute", () => {
             const tx2 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 1n, nonceTrack))
             await Promise.all([
                 client.api.v1.boop.execute.$post({
-                    json: { tx: serializeBigInt(tx1) },
+                    json: { boop: serializeBigInt(tx1) },
                 }),
                 client.api.v1.boop.execute.$post({
-                    json: { tx: serializeBigInt(tx2) },
+                    json: { boop: serializeBigInt(tx2) },
                 }),
             ])
 
@@ -165,7 +165,7 @@ describe("submitter_execute", () => {
                 // mints a different amount of tokens, computes a difference hash, same nonce though
                 createMockTokenAMintBoop(smartAccount, nonceValue + 1n, nonceTrack, 5n * 10n ** 18n),
             )
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
             expect(response.error).toBeUndefined()
@@ -178,9 +178,9 @@ describe("submitter_execute", () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
             const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonce, nonceTrack))
 
-            const result1 = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result1 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             // again with same nonce, will fail
-            const result2 = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result2 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
             expect(response1.error).toBeUndefined()
             expect(response2.error).toBeUndefined()
@@ -193,7 +193,7 @@ describe("submitter_execute", () => {
         it("should fail with out of range future nonce", async () => {
             unsignedTx.nonceValue = 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000))
             const jsonTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
             expect(response.status).toBe("submitterUnexpectedError")
             expect(result.status).toBe(422)
@@ -207,7 +207,7 @@ describe("submitter_execute", () => {
             tx.payer = mockDeployments.MockTokenA
 
             const jsonTx = await sign(tx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
             expect(response.status).toBe(EntryPointStatus.PaymentValidationReverted)
@@ -225,7 +225,7 @@ describe("submitter_execute", () => {
             })
 
             const jsonTx = await sign(tx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
             expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
@@ -241,7 +241,7 @@ describe("submitter_execute", () => {
             )
 
             const jsonTx = await sign(tx)
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(422)

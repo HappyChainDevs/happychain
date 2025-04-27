@@ -8,8 +8,8 @@ import type {
     PendingBoopOutput,
     ReceiptRequestInput,
     ReceiptRequestOutput,
-    SimulationInput,
-    SimulationOutput,
+    SimulateInput,
+    SimulateOutput,
     StateRequestInput,
     StateRequestOutput,
     SubmitInput,
@@ -79,9 +79,9 @@ export class BoopClient {
      * @param data
      * @returns
      */
-    async simulate(data: SimulationInput): Promise<Result<SimulationOutput, Error>> {
+    async simulate(data: SimulateInput): Promise<Result<SimulateOutput, Error>> {
         const response = await this.client.post("/api/v1/boop/simulate", serializeBigInt(data))
-        return response as Result<SimulationOutput, Error>
+        return response as Result<SimulateOutput, Error>
     }
 
     /**

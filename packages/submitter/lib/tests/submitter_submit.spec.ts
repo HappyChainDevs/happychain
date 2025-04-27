@@ -33,7 +33,7 @@ describe("submitter_submit", () => {
     })
 
     it("submits 'mint token' tx successfully.", async () => {
-        const result = await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+        const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         const response = (await result.json()) as any
         expect(result.status).toBe(200)
         expect(response.status).toBe(SubmitSuccess)
@@ -54,7 +54,7 @@ describe("submitter_submit", () => {
         )
 
         const results = await Promise.all(
-            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx) } })),
+            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const rs = await Promise.all(
@@ -90,23 +90,23 @@ describe("submitter_submit", () => {
         const tx9_2 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
 
         // submit all transactions without waiting
-        const tx0_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx0) } })
-        const tx1_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx1) } })
-        const tx2_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx2) } })
-        const tx3_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx3) } })
-        const tx4_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx4) } })
-        const tx5_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx5) } })
-        const tx6_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx6) } })
-        const tx7_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx7) } })
-        const tx8_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx8) } })
-        const tx9_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx9) } })
+        const tx0_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx0) } })
+        const tx1_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx1) } })
+        const tx2_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx2) } })
+        const tx3_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx3) } })
+        const tx4_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx4) } })
+        const tx5_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx5) } })
+        const tx6_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx6) } })
+        const tx7_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx7) } })
+        const tx8_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx8) } })
+        const tx9_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx9) } })
 
         // wait for the first transaction to be processed
         // to be sure there is a queue
         const tx0_response = await tx0_request
 
         // Submit a replacement for tx9
-        const tx9_2_request = client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(tx9_2) } })
+        const tx9_2_request = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx9_2) } })
 
         const [
             tx1_response,

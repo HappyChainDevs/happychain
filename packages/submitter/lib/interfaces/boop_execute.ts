@@ -1,5 +1,5 @@
 import type { Address } from "@happy.tech/common"
-import type { Boop } from "./Boop"
+import type { PartialBoop } from "./Boop"
 import type { BoopState } from "./BoopState"
 import { type SubmitStatus, SubmitSuccess } from "./boop_submit"
 import type { EntryPointStatus } from "./status"
@@ -12,7 +12,7 @@ export type ExecuteInput = {
     entryPoint?: Address | undefined
 
     /** Boop to execute. */
-    tx: Boop
+    boop: PartialBoop
 }
 
 export type ExecuteOutput =

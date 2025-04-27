@@ -33,19 +33,19 @@ describe("routes: api/submitter", () => {
 
     describe("200", () => {
         it("should simulate a tx", async () => {
-            const result = await client.api.v1.boop.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.simulate.$post({ json: { boop: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should execute a tx", async () => {
-            const result = await client.api.v1.boop.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should submit a tx", async () => {
-            const result = await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+            const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
         })
         it("should fetch state by hash", async () => {
-            await client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
+            await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
             const hash = computeBoopHash(BigInt(env.CHAIN_ID), unsignedTx)
             const result = await client.api.v1.boop.state[":hash"].$get({ param: { hash } })
             expect(result.status).toBe(200)
@@ -55,7 +55,7 @@ describe("routes: api/submitter", () => {
             const [result] = await Promise.all([
                 client.api.v1.boop.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
                 // don't need results, just need it to complete
-                client.api.v1.boop.submit.$post({ json: { tx: serializeBigInt(signedTx) } }),
+                client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } }),
             ])
 
             expect(result.status).toBe(200)

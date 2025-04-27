@@ -1,27 +1,11 @@
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
-import { getAddress } from "viem"
 import { z } from "zod"
-import { deployment } from "#lib/env"
-import { SubmitSuccess } from "#lib/interfaces/boop_submit"
+import { SUBMIT_SUCCESS } from "#lib/interfaces/boop_submit"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { boopInputSchema } from "#lib/validation/schemas/boop"
-
-export const inputSchema = z.object({
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z
-        .string()
-        .refine(isAddress)
-        .optional()
-        .default(deployment.EntryPoint)
-        .transform((a) => getAddress(a)),
-
-    /** Boop to execute. */
-    tx: boopInputSchema,
-})
+import { inputSchema } from "#lib/validation/schemas/boop"
 
 const outputSchema = z.object({
     status: z.string().openapi({ example: SubmitSuccess }),

@@ -1,28 +1,30 @@
-import type { Optional } from "@happy.tech/common"
-import type { Boop } from "../interfaces/Boop"
+import type { Hex } from "@happy.tech/common"
+import type { PartialBoop } from "#lib/interfaces/Boop"
 import { toBytes, toDynamicLengthBytes } from "./bytes"
 
-type OptionalBoopFields = "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee"
-export function encodeBoop(tx: Optional<Boop, OptionalBoopFields>): `0x${string}` {
+/**
+ * Encodes a Boop to encoded form for onchain submission.
+ */
+export function encodeBoop(boop: PartialBoop): Hex {
     // Static fields
-    const accountHex = tx.account.slice(2)
-    const destHex = tx.dest.slice(2)
-    const payerHex = tx.payer.slice(2)
+    const accountHex = boop.account.slice(2)
+    const destHex = boop.dest.slice(2)
+    const payerHex = boop.payer.slice(2)
 
-    const valueHex = toBytes(tx.value, 32)
-    const nonceTrackHex = toBytes(tx.nonceTrack, 24)
-    const nonceValueHex = toBytes(tx.nonceValue, 8)
-    const maxFeePerGasHex = toBytes(tx.maxFeePerGas, 32)
-    const submitterFeeHex = toBytes(tx.submitterFee, 32)
-    const gasLimitHex = toBytes(tx.gasLimit, 4)
-    const validateGasLimitHex = toBytes(tx.validateGasLimit, 4)
-    const executeGasLimitHex = toBytes(tx.executeGasLimit, 4)
-    const validatePaymentGasLimitHex = toBytes(tx.validatePaymentGasLimit, 4)
+    const valueHex = toBytes(boop.value, 32)
+    const nonceTrackHex = toBytes(boop.nonceTrack, 24)
+    const nonceValueHex = toBytes(boop.nonceValue, 8)
+    const maxFeePerGasHex = toBytes(boop.maxFeePerGas, 32)
+    const submitterFeeHex = toBytes(boop.submitterFee, 32)
+    const gasLimitHex = toBytes(boop.gasLimit, 4)
+    const validateGasLimitHex = toBytes(boop.validateGasLimit, 4)
+    const executeGasLimitHex = toBytes(boop.executeGasLimit, 4)
+    const validatePaymentGasLimitHex = toBytes(boop.validatePaymentGasLimit, 4)
 
     // Dynamic fields with their 4-byte length prefixes
-    const callDataHex = toDynamicLengthBytes(tx.callData.slice(2))
-    const validatorDataHex = toDynamicLengthBytes(tx.validatorData.slice(2))
-    const extraDataHex = toDynamicLengthBytes(tx.extraData.slice(2))
+    const callDataHex = toDynamicLengthBytes(boop.callData.slice(2))
+    const validatorDataHex = toDynamicLengthBytes(boop.validatorData.slice(2))
+    const extraDataHex = toDynamicLengthBytes(boop.extraData.slice(2))
 
     // Concatenate all fields in order
     const encodedHex =

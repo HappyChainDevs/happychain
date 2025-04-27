@@ -6,9 +6,9 @@ import type { z } from "zod"
 import { publicClient, walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
-import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/boop/openApi/execute"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
+import type { inputSchema as ExecuteInputSchema } from "#lib/validation/schemas/boop"
 
 export { mockDeployments, mockAbis }
 
@@ -56,10 +56,10 @@ export function createMockTokenAMintBoop(
 
         // payer is default
         payer: zeroAddress,
-        executeGasLimit: 0n,
-        gasLimit: 0n,
-        validatePaymentGasLimit: 4000000000n,
-        validateGasLimit: 4000000000n,
+        executeGasLimit: 0,
+        gasLimit: 0,
+        validatePaymentGasLimit: 4000000000,
+        validateGasLimit: 4000000000,
         maxFeePerGas: 1200000000n,
         submitterFee: 100n,
 

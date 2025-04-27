@@ -1,72 +1,70 @@
-import type { Optional } from "@happy.tech/common"
+import type { Bytes } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
-import type { Prettify } from "viem"
-import type { Boop } from "./Boop"
-import type { SimulationResult } from "./SimulationResult"
+import type { EntryPointSubmitOutput } from "#lib/interfaces/contracts"
+import type { PartialBoop } from "./Boop"
 import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
 
-export type SimulationInput = {
+/**
+ * Input for a `simulate` call.
+ */
+export type SimulateInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
 
-    /**
-     * Boop for which to simulate gas limits and fee parameters. The gas limits and fee
-     * parameters are made optional.
-     */
-    tx: Optional<Boop, "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee">
+    /** Boop for which to simulate gas limits and fee parameters. The gas limits and fee parameters are made optional. */
+    boop: PartialBoop
 }
 
-export type SimulationStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
-
-// biome-ignore format: readability
-export type SimulationOutput = Prettify<(
-    {
-        // check with `isSubmitterError(status)`
-        status: SubmitterErrorSimulationUnavailable
-    } | {
-        // check with `isEntryPointStatus(status)`
-        status: EntryPointStatus
-
-        /** Simulation result, included only if `!isSubmitterError(status)`. */
-        simulationResult: SimulationResult | undefined
-
-        /** Estimate max fee per gas (in wei) for the Boop. */
-        maxFeePerGas: bigint
-
-        /** Total fee requested by the submitter for submitting this Boop (in wei). */
-        submitterFee: bigint
-    }
-) & (
-    {
-        status: Exclude<SimulationStatus, EntryPointStatus.Success>
-    } | {
-        // check with `status === EntryPointStatus.Success`
-        status: EntryPointStatus.Success
-
-        /** Gas limit for the transaction made by the submitter */
-        gasLimit: bigint
-        /** Gas limit for IHappyAccount.execute */
-        executeGasLimit: bigint
-        /** Gas limit for IHappyAccount.validate */
-        validateGasLimit: bigint
-        /** Gas limit for IHappyPaymaster.validatePayment */
-        validatePaymentGasLimit: bigint
-    }
-)>
+/**
+ * Output of a `simulate` call: either a successful simulation, or a failed simulation (validation & checks failed),
+ * or a validation that could not be carried out successfully for operational reasons.
+ */
+export type SimulateOutput = SimulateOutputSuccess | SimulateOutputFailed | SimulateOutputError
 
 /**
- * POST `/api/v1/boop/simulate`
- *
- * Given a boop possibly missing some gas limits or gas fee parameters, returns estimates for
- * these limits and parameters, and the result of simulation.
- *
- * Note that the boop is also allowed to be different in some way than the one for which the gas
- * values will be used, e.g. for accounts that validate a signature, the validationData could be
- * empty or include a dummy value.
- *
- * If any gas limit *is* specified, it is passed along as-is during simulation and not filled in
- * by the submitter.
- *
- * Calling this endpoint does *not* create a state for the Boop on the submitter.
+ * Possible result of a `simulate` call: either the status from a successfully attempted
+ * simulation ({@link EntryPointStatus}), which may be either successful or unsuccessful, or an error status indicating
+ * the simulation could not be carried out ({@link SubmitterErrorSimulationUnavailable}.
  */
-export declare function submitter_simulate(input: SimulationInput): SimulationOutput
+export type SimulateStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
+
+/**
+ * Output of a successful simulation.
+ */
+export type SimulateOutputSuccess = EntryPointSubmitOutput & {
+    status: EntryPointStatus.Success
+
+    /** Estimated max fee per gas (in wei) for the Boop. */
+    maxFeePerGas: bigint
+
+    /** Total fee requested by the submitter for submitting this Boop (in wei). */
+    submitterFee: bigint
+}
+
+/**
+ * Output of a simulation that was attempted, but failed onchain, most likely due validation or checks.
+ */
+export type SimulateOutputFailed = {
+    status: Exclude<EntryPointStatus, EntryPointStatus.Success>
+
+    /**
+     * Depending on the status, either empty, or the revert data matching an EntryPointIllegalRevert
+     * status, or the the returned encoded error matching an EntryPointRejection status.
+     */
+    revertData: Bytes
+
+    /** Description of the problem. */
+    description?: string
+}
+
+/**
+ * Output of a simulation that failed to be carried out for offchain operational
+ * reasons (communication with the node, submitter capacity, etc...).
+ */
+export type SimulateOutputError = {
+    // check with `isSubmitterError(status)`
+    status: SubmitterErrorSimulationUnavailable
+
+    /** Description of the problem. */
+    description?: string
+}
