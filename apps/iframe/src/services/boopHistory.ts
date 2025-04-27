@@ -35,7 +35,9 @@ export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, 
 
     const savedBoops = storage.get(StorageKey.Boops) || {}
     const accountBoops = savedBoops[account] || []
-    savedBoops[account] = [...accountBoops, entry]
+    const existing = accountBoops.find((boop) => boop.boopHash === entry.boopHash)
+    if (existing) existing.createdAt = Date.now()
+    else savedBoops[account] = [...accountBoops, entry]
     storage.set(StorageKey.Boops, savedBoops)
 }
 
@@ -72,13 +74,18 @@ export function markBoopAsFailed(
 function updateBoopStatus(account: Address, boopHash: Hash, update: Partial<BoopEntry>): void {
     const savedBoops = storage.get(StorageKey.Boops) || {}
     const accountBoops = savedBoops[account] || []
-    const updatedBoops = accountBoops.map((boop: BoopEntry) => {
-        if (boop.boopHash === boopHash) {
-            return { ...boop, ...update }
-        }
-        return boop
-    })
+    const existing = accountBoops.find((boop) => boop.boopHash === boopHash)
+    // TODO check this works
+    if (existing) {
+        Object.assign(existing, update)
+        storage.set(StorageKey.Boops, savedBoops)
+    }
 
-    savedBoops[account] = updatedBoops
-    storage.set(StorageKey.Boops, savedBoops)
+    // savedBoops[account] = accountBoops.map((boop: BoopEntry) => {
+    //     if (boop.boopHash === boopHash) {
+    //         return { ...boop, ...update }
+    //     }
+    //     return boop
+    // })
+    // storage.set(StorageKey.Boops, savedBoops)
 }

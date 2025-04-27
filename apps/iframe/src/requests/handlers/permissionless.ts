@@ -100,6 +100,21 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             return privateKeyToAccount(sessionKey).address
         }
 
+        /* // FOR TESTING
+           // eth_getBlockByNumber does not need handling, it gets forwarded to the public client by default.
+           // But uncommenting this block is helpful in testing error propagation behaviour in three scenarios:
+           // - arbirary errors
+           // - our own standard JSON-RPC errors
+           // - Viem's own JSON-RPC errors
+        case "eth_getBlockByNumber":
+            // throw new Error("please display me senpai")
+            // throw new EIP1474InvalidInput("wrong syntax kid")
+            return await sendToPublicClient(app, {
+                method: "eth_getBlockByNumber",
+                params: ["yippee kay yay", "motherfucker"],
+            })
+        //*/
+
         default:
             return await sendToPublicClient(app, request.payload)
     }

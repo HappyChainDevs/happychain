@@ -1,14 +1,14 @@
 import { createUUID, promiseWithResolvers } from "@happy.tech/common"
+import type { SerializedRpcError } from "@happy.tech/wallet-common"
 import {
-    type EIP1193ErrorObject,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     Msgs,
     type ProviderEventError,
     type ProviderEventPayload,
-    ProviderRpcError,
+    SafeEventEmitter,
+    standardizeRpcError,
 } from "@happy.tech/wallet-common"
-import { SafeEventEmitter } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { happyProviderBus } from "#src/services/eventBus.ts"
@@ -93,12 +93,12 @@ export class InjectedProviderProxy extends SafeEventEmitter {
      * in direct (non-embedded) mode.
      */
     public handleRequestResolution(
-        resp: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>,
+        resp: ProviderEventError<SerializedRpcError> | ProviderEventPayload<EIP1193RequestResult>,
     ): void {
         const iframeRequest = resp.windowId === iframeID()
         const pending = this.inFlight.get(resp.key)
         if (!pending && iframeRequest) iframeProvider.handleRequestResolution(resp)
-        else if (pending?.reject && resp.error) pending.reject(new ProviderRpcError(resp.error))
+        else if (pending?.reject && resp.error) pending.reject(standardizeRpcError(resp.error))
         else if (pending?.resolve) pending.resolve(resp.payload)
     }
 

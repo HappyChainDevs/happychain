@@ -2,7 +2,6 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { boopClient } from "#src/state/boopClient"
 import { EntryPointStatus, type Receipt, StateRequestStatus } from "@happy.tech/boop-sdk"
 import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
@@ -18,6 +17,7 @@ import {
 import { boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import type { BlockParam } from "#src/requests/utils/eip1474"
+import { boopClient } from "#src/state/boopClient"
 
 export const FORWARD = Symbol("FORWARD")
 export type Forward = typeof FORWARD
@@ -46,13 +46,13 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
         boopCache.put(hash, { boop, receipt })
         return formatTransaction(hash, boop, receipt)
         //
-    } catch (err) {
+    } catch (_err) {
         // We had a cache hit without receipt, so this is a boop, just use that.
         if (cached) return formatTransaction(hash, cached.boop, cached.receipt)
 
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.
-        throw new EIP1474InternalError("failed to fetch boop state", err)
+        throw new EIP1474InternalError("failed to fetch boop state") // TODO pass cause once output format cleaned up
     }
 }
 
@@ -76,10 +76,10 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
         boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
         return formatTransactionReceipt(hash, state.receipt)
         //
-    } catch (err) {
+    } catch (_err) {
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.
-        throw new EIP1474InternalError("failed to fetch boop state", err)
+        throw new EIP1474InternalError("failed to fetch boop state") // TODO pass cause once output format cleaned up
     }
 }
 

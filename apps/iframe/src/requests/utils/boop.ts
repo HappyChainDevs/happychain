@@ -1,4 +1,3 @@
-import { boopClient } from "#src/state/boopClient"
 import {
     type Boop,
     type BoopReceipt,
@@ -8,18 +7,19 @@ import {
     type ExecuteOutput,
     type Log,
     type Receipt,
-    type SimulationOutput,
+    type SimulateOutput,
     type SubmitStatus,
     SubmitterErrorStatus,
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
 import { Map2, Mutex } from "@happy.tech/common"
-import type { Address, Hash, Hex, TransactionEIP1559 } from "viem"
-import { entryPoint, entryPointAbi, happyPaymaster } from "#src/constants/contracts"
+import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress } from "viem"
+import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import { reqLogger } from "#src/logger"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
-import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
+import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopHistory"
+import { boopClient } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
 
@@ -90,7 +90,7 @@ export type SendBoopArgs = {
 
 export async function sendBoop(
     { account, tx, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
-    retry = 2,
+    retry = 0, // TODO temp 0, should be 2
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
     const value = tx.value ? BigInt(tx.value) : 0n
@@ -140,7 +140,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
     return {
         account: tx.from,
         dest: tx.to,
-        payer: happyPaymaster,
+        payer: zeroAddress, // happyPaymaster, // TODO need to fund paymaster
         value: tx.value ? BigInt(tx.value) : 0n,
         nonceTrack: 0n,
         nonceValue: tx.nonce ? BigInt(tx.nonce) : await getNextNonce(account),
@@ -279,7 +279,7 @@ export class BoopExecutionError extends Error {
 }
 
 export class BoopSimulationError extends Error {
-    constructor(public readonly output: EstimateGasOutput) {
+    constructor(public readonly output: SimulateOutput) {
         super(boopErrorMessages[output.status])
     }
 }
