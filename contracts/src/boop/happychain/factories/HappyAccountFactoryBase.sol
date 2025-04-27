@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyAccountRegistry} from "../HappyAccountRegistry.sol";
+import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 
 /**
  * Base factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
@@ -10,13 +10,19 @@ abstract contract HappyAccountFactoryBase {
     HappyAccountRegistry public immutable HAPPY_ACCOUNT_REGISTRY;
 
     // ====================================================================================================
-    // ERRORS
+    // ERRORS & EVENTS
 
     /// Error thrown when account initialization fails
     error InitializeError();
 
     /// Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
+
+    /// Emitted when deploying an account.
+    event Deployed(address account, address owner);
+
+    // ====================================================================================================
+    // CONSTRUCTOR
 
     constructor(address happyAccountRegistryAddress) {
         HAPPY_ACCOUNT_REGISTRY = HappyAccountRegistry(happyAccountRegistryAddress);
@@ -46,7 +52,7 @@ abstract contract HappyAccountFactoryBase {
         if (proxy == address(0)) revert InitializeError();
 
         HAPPY_ACCOUNT_REGISTRY.addRegisteredAccount(proxy);
-
+        emit Deployed(proxy, owner);
         return proxy;
     }
 

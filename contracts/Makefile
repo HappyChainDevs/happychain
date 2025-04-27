@@ -84,7 +84,7 @@ nuke: clean ## Removes build output and dependencies
 ##@ Testing
 
 test: ## Runs tests
-	forge test -vv
+	forge test -vvv
 .PHONY: test
 
 testv: ## Runs test with max verbosity

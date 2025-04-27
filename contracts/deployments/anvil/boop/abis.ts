@@ -1525,6 +1525,25 @@ const contractToAbi = ({
       "stateMutability": "view"
     },
     {
+      "type": "event",
+      "name": "Deployed",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "owner",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
       "type": "error",
       "name": "AlreadyDeployed",
       "inputs": []
@@ -2354,7 +2373,7 @@ export const deployment = ({
   "BatchCallExecutor": "0x263A8E028b57b1C7F0d0786FA7163c2182eF5e53",
   "EntryPoint": "0x47C2388fB87E25d287b868D976F8d2C1ce70F353",
   "HappyAccountBeacon": "0x9F17397594667B07dF87ec9913e5855241edB5B2",
-  "HappyAccountBeaconProxyFactory": "0xd455B0396f2295EBa3644FD1d28FF6D8218F862C",
+  "HappyAccountBeaconProxyFactory": "0xEe41Dd20f5B7315D721E530506Ae890C92ab6D97",
   "HappyAccountImpl": "0xF03c3c8eC0a3744C8395353124c1D87255878ab1",
   "HappyAccountRegistry": "0xD170D0f841D1bb6BE34cb134fC0a35A1df434A5D",
   "HappyPaymaster": "0x6Abf07c2dbd9771E10BEf0a28943a61c617B9D19",
