@@ -9,3 +9,7 @@ setup-symlinks::
   		ln -sf ../lib/txm.ts ./dist/txm.es.d.ts; \
 	fi
 .PHONY: setup-symlinks
+
+test:
+	@bun test --bail
+.PHONY: test
