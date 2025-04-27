@@ -2,7 +2,7 @@ import { type Result, err, ok } from "neverthrow"
 import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
 import type { StateRequestInput } from "#lib/interfaces/boop_state"
 import { EntryPointStatus } from "#lib/interfaces/status"
-import { boopReceiptService, boopSimulationService } from "#lib/services"
+import { boopReceiptService, simulationCache } from "#lib/services"
 
 export async function stateByHash({
     hash,
@@ -16,12 +16,13 @@ export async function stateByHash({
         })
     }
 
-    const simulation = await boopSimulationService.findResultByBoopHash(hash)
+    const simulation = await simulationCache.findSimulation(hash)
 
     if (simulation?.status) {
         return ok({
             status: StateRequestStatus.Success,
-            state: { status: simulation.status, included: false, simulation },
+            // TODO big hack cast for compile
+            state: { status: simulation.status as EntryPointStatus.Success, included: false, simulation },
         })
     }
 

@@ -1,7 +1,8 @@
+import type { Hex } from "@happy.tech/common"
 import type { Boop } from "#lib/interfaces/Boop"
-import { bytesToAddress, bytesToBigInt, getBytes, getDynamicLengthBytes } from "./bytes"
+import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "./bytes"
 
-export function decodeBoop(encoded: `0x${string}`): Boop {
+export function decodeBoop(encoded: Hex): Boop {
     const encodedBytes = encoded.slice(2)
 
     // Read static fields (204 bytes total)
@@ -13,10 +14,10 @@ export function decodeBoop(encoded: `0x${string}`): Boop {
     const nonceValue = bytesToBigInt(getBytes(encodedBytes, 116, 8))
     const maxFeePerGas = bytesToBigInt(getBytes(encodedBytes, 124, 32))
     const submitterFee = bytesToBigInt(getBytes(encodedBytes, 156, 32))
-    const gasLimit = bytesToBigInt(getBytes(encodedBytes, 188, 4))
-    const validateGasLimit = bytesToBigInt(getBytes(encodedBytes, 192, 4))
-    const executeGasLimit = bytesToBigInt(getBytes(encodedBytes, 196, 4))
-    const validatePaymentGasLimit = bytesToBigInt(getBytes(encodedBytes, 200, 4))
+    const gasLimit = bytesToNumber(getBytes(encodedBytes, 188, 4))
+    const validateGasLimit = bytesToNumber(getBytes(encodedBytes, 192, 4))
+    const executeGasLimit = bytesToNumber(getBytes(encodedBytes, 196, 4))
+    const validatePaymentGasLimit = bytesToNumber(getBytes(encodedBytes, 200, 4))
 
     // Read dynamic fields with their 4-byte length prefixes
     const [callData, callDataEndOffset] = getDynamicLengthBytes(encodedBytes, 204)

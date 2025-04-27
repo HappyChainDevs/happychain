@@ -1,6 +1,6 @@
 import type { Prettify } from "@happy.tech/common"
+import type { SimulateOutput } from "#lib/interfaces/boop_simulate"
 import type { BoopReceipt } from "./BoopReceipt"
-import type { SimulationResult } from "./SimulationResult"
 import type {
     EntryPointStatus,
     SubmitterErrorSimulationMaybeAvailable,
@@ -31,7 +31,7 @@ export type BoopStateEntryPointError = {
      * The result of simulation. Not guaranteed to be available, as a submitter does not have
      * to presimulate a tx before submitting, nor does he have to persist the simulation result.
      */
-    simulation?: SimulationResult | undefined
+    simulation?: SimulateOutput | undefined
 }
 
 export type BoopStateSuccess = {

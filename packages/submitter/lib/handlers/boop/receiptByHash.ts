@@ -3,7 +3,7 @@ import { DEFAULT_RECEIPT_TIMEOUT_MS } from "#lib/data/defaults"
 import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
 import type { ReceiptRequestInput } from "#lib/interfaces/boop_receipt"
 import { EntryPointStatus } from "#lib/interfaces/status"
-import { boopReceiptService, boopSimulationService } from "#lib/services"
+import { boopReceiptService, simulationCache } from "#lib/services"
 
 export async function receiptByHash({
     hash,
@@ -17,12 +17,13 @@ export async function receiptByHash({
         } satisfies StateRequestOutput)
     }
 
-    const simulation = await boopSimulationService.findResultByBoopHash(hash)
-
-    if (simulation?.status) {
+    const simulation = await simulationCache.findSimulation(hash)
+    if (simulation) {
         return ok({
             status: StateRequestStatus.Success,
-            state: { status: simulation.status, included: false, simulation },
+            // TODO must check scenarios here
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            state: { status: simulation.status as any, included: false, simulation },
         } satisfies StateRequestOutput)
     }
 

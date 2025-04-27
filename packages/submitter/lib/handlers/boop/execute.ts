@@ -1,23 +1,27 @@
+import { type Hex, getProp, hasDefinedKey } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import { env } from "#lib/env"
-import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
-import { type ExecuteInput, type ExecuteOutput, ExecuteSuccess } from "#lib/interfaces/boop_execute"
+import { getErrorNameFromSelector } from "#lib/errors/viem"
+import { EXECUTE_SUCCESS, type ExecuteInput, type ExecuteOutput } from "#lib/interfaces/boop_execute"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { submit } from "./submit"
 
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
-    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), data.tx)
+    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), data.boop)
     const status = await submit(data)
 
     if (status.isErr()) {
-        if ("simulation" in status.error && status.error.simulation) {
+        if (hasDefinedKey(status.error, "simulation")) {
             return err({
-                status: status.error.simulation.status || SubmitterErrorStatus.UnexpectedError,
+                // TODO totally hacked this whole thing for it to compile
+                status:
+                    (getProp(status.error.simulation, "status") as SubmitterErrorStatus.UnexpectedError) ||
+                    SubmitterErrorStatus.UnexpectedError,
                 revertData:
-                    getErrorNameFromSelector(status.error.simulation.revertData || "0x") ||
-                    status.error.simulation.revertData,
+                    getErrorNameFromSelector((getProp(status.error.simulation, "revertData") as Hex) || "0x") ||
+                    (getProp(status.error.simulation, "revertData") as Hex),
             })
         }
         if ("status" in status.error && "revertData" in status.error) {

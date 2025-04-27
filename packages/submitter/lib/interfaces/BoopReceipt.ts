@@ -1,5 +1,5 @@
 import type { Address, Hash, Hex, UInt256 } from "@happy.tech/common"
-import type { Log, Receipt } from "./common"
+import type { Log, Receipt } from "./ethereum"
 import type { EntryPointStatus } from "./status"
 
 /**

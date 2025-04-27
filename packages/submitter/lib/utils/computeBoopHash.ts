@@ -1,24 +1,34 @@
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop } from "../interfaces/Boop"
+import type { Boop, BoopOptionalFields, PartialBoop } from "../interfaces/Boop"
 import { encodeBoop } from "./encodeBoop"
 
-// with paymaster, don't include gas values in the signature!
-const paymasterGasData = {
+const zeroGasData = {
     maxFeePerGas: 0n,
     submitterFee: 0n,
-    gasLimit: 0n,
-    executeGasLimit: 0n,
-    validateGasLimit: 0n,
-    validatePaymentGasLimit: 0n,
-} as const
+    gasLimit: 0,
+    executeGasLimit: 0,
+    validateGasLimit: 0,
+    validatePaymentGasLimit: 0,
+} as const satisfies Partial<Boop> & Record<BoopOptionalFields, unknown>
 
-export function computeBoopHash(chainId: bigint, boop: Boop): `0x${string}` {
-    // Don't include validator data in the signature so that pre & post signing are the same
-    const isSelfPaying = boop.payer === boop.account
+/**
+ * Computes a boop hash, which is compute over a Boop and the chain ID.
+ */
+export function computeBoopHash(chainId: bigint, boop: PartialBoop): `0x${string}` {
+    // Don't include validator data in the signature so that pre & post signing are the same.
+    const boopToHash: PartialBoop = { ...boop, validatorData: "0x" }
 
-    const hashData: Boop = isSelfPaying
-        ? { ...boop, validatorData: "0x" }
-        : { ...boop, validatorData: "0x", ...paymasterGasData }
+    if (boop.payer === boop.account) {
+        // For self-paying boops, all fields have to be specified!
+        for (const key in zeroGasData) {
+            // @ts-ignore
+            if (boopToHash[key] === undefined)
+                throw new Error(`Can't compute Boop hash: Field ${key} is undefined for a self-paying Boop.`)
+        }
+    } else {
+        // If not self-paying, zero all the gas related values.
+        Object.assign(boopToHash, zeroGasData)
+    }
 
-    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(hashData), chainId]))
+    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(boopToHash), chainId]))
 }

@@ -5,10 +5,8 @@ import { z } from "zod"
 import { ExecuteSuccess } from "#lib/interfaces/boop_execute"
 import { EntryPointStatus } from "#lib/interfaces/status"
 import { isProduction } from "#lib/utils/isProduction"
+import { inputSchema } from "#lib/validation/schemas/boop"
 import { boopReceiptSchema } from "#lib/validation/schemas/boopReceipt"
-import { inputSchema } from "./submit"
-
-export { inputSchema }
 
 const outputSchema = z.object({
     status: z.literal(ExecuteSuccess),

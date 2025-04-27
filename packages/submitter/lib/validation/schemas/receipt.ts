@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { env } from "#lib/env"
-import { TransactionTypeName } from "#lib/interfaces/common"
+import { TransactionTypeName } from "#lib/interfaces/ethereum"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { transactionSchema } from "./transaction"

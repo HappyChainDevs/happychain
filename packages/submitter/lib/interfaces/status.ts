@@ -20,6 +20,9 @@ export enum SubmitterErrorStatus {
     /** The RPC execution call (or related RPC call) timed out. */
     SubmitTimeout = "submitterSubmitTimeout",
 
+    /** Error from the node's JSON-RPC server. */
+    RpcError = "submitterRpcError",
+
     /**
      * Timed out while waiting for a receipt.
      * This could indicate that the submitter tx is stuck in the mempool or an RPC issue.
@@ -40,12 +43,15 @@ export type SubmitterErrorSimulationUnavailable =
     | SubmitterErrorStatus.OverCapacity
     | SubmitterErrorStatus.UnexpectedError
     | SubmitterErrorStatus.SimulationTimeout
+    | SubmitterErrorStatus.RpcError
 
 export type SubmitterErrorSimulationMaybeAvailable =
     | SubmitterErrorStatus.SubmitTimeout
     | SubmitterErrorStatus.ReceiptTimeout
 
 // -------------------------------------------------------------------------------------------------
+
+// TODO rename with new names
 
 /**
  * Possible outcomes of submitting the Boop to the onchain EntryPoint
@@ -54,6 +60,26 @@ export type SubmitterErrorSimulationMaybeAvailable =
 export enum EntryPointStatus {
     /** The Boop succeeded: the intended call was made without errors. */
     Success = "entrypointSuccess",
+
+    /**
+     * The nonce provided was invalid outside of simulation.
+     */
+    InvalidNonce = "entrypointInvalidNonce",
+
+    /**
+     * The submitter or paymaster has insufficient stake.
+     */
+    InsufficientStake = "entrypointInsufficientStake",
+
+    /**
+     * The account or the paymaster rejected the boop because of an invalid signature.
+     */
+    InvalidSignature = "entrypointInvalidSignature",
+
+    /**
+     * The account or the paymaster rejected the boop because an extension value in the extraData is invalid.
+     */
+    InvalidExtensionValue = "entrypointInvalidExtensionValue",
 
     /**
      * The account validation of the Boop reverted.

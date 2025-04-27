@@ -1,12 +1,12 @@
 import { serializeBigInt } from "@happy.tech/common"
 import { Hono } from "hono"
 import type { Result } from "neverthrow"
-import type { ExecuteOutput, PendingBoopOutput, SimulationOutput, StateRequestOutput, SubmitOutput } from "#lib/client"
+import type { ExecuteOutput, PendingBoopOutput, StateRequestOutput, SubmitOutput } from "#lib/client"
 import { HappyBaseError } from "#lib/errors/happy-base-error"
 import { execute } from "#lib/handlers/boop/execute"
 import { pendingByAccount } from "#lib/handlers/boop/pendingByAccount"
 import { receiptByHash } from "#lib/handlers/boop/receiptByHash"
-import { simulate } from "#lib/handlers/boop/simulate"
+import { simulateFromRoute } from "#lib/handlers/boop/simulate"
 import { stateByHash } from "#lib/handlers/boop/stateByHash"
 import { submit } from "#lib/handlers/boop/submit"
 import * as executeRoute from "./openApi/execute"
@@ -34,8 +34,7 @@ export default new Hono()
         simulationRoute.validation,
         async (c) => {
             const input = c.req.valid("json")
-            const output = await simulate(input)
-            const [response, code] = makeResponse<SimulationOutput>(output)
+            const [response, code] = await simulateFromRoute(input)
             return c.json(response, code)
         },
     )

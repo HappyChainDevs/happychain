@@ -15,10 +15,10 @@ describe("encode", () => {
             nonceValue: 5678n,
             maxFeePerGas: 2000000000n, // (2 * 10^9) wei
             submitterFee: 100000000n, // (10^8) wei
-            gasLimit: 1000000n,
-            validateGasLimit: 800000n,
-            executeGasLimit: 800001n,
-            validatePaymentGasLimit: 800002n,
+            gasLimit: 1000000,
+            validateGasLimit: 800000,
+            executeGasLimit: 800001,
+            validatePaymentGasLimit: 800002,
             callData: "0x",
             validatorData: "0x",
             extraData: "0x",
@@ -42,10 +42,10 @@ describe("encode", () => {
             nonceValue: 5678n,
             maxFeePerGas: 2000000000n, // (2 * 10^9) wei
             submitterFee: 100000000n, // (10^8) wei
-            gasLimit: 1000000n,
-            validateGasLimit: 800000n,
-            executeGasLimit: 800001n,
-            validatePaymentGasLimit: 800002n,
+            gasLimit: 1000000,
+            validateGasLimit: 800000,
+            executeGasLimit: 800001,
+            validatePaymentGasLimit: 800002,
             callData: "0x0123456789",
             validatorData: "0x09abcd",
             extraData: "0xdef0",
@@ -68,10 +68,10 @@ describe("encode", () => {
             nonceValue: 5678n,
             maxFeePerGas: 2000000000n, // (2 * 10^9) wei
             submitterFee: 100000000n, // (10^8) wei
-            gasLimit: 1000000n,
-            validateGasLimit: 800000n,
-            executeGasLimit: 800001n,
-            validatePaymentGasLimit: 800002n,
+            gasLimit: 1000000,
+            validateGasLimit: 800000,
+            executeGasLimit: 800001,
+            validatePaymentGasLimit: 800002,
             callData:
                 "0x40c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c68000",
             validatorData:
@@ -96,10 +96,10 @@ describe("encode", () => {
             nonceValue: 0n,
             maxFeePerGas: 0n,
             submitterFee: 0n,
-            gasLimit: 0n,
-            validateGasLimit: 0n,
-            executeGasLimit: 0n,
-            validatePaymentGasLimit: 0n,
+            gasLimit: 0,
+            validateGasLimit: 0,
+            executeGasLimit: 0,
+            validatePaymentGasLimit: 0,
             callData: "0x",
             validatorData: "0x",
             extraData: "0x",

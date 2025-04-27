@@ -1,42 +1,28 @@
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
-import { checksum } from "ox/Address"
 import { z } from "zod"
-import { deployment } from "#lib/env"
+import { CallStatus } from "#lib/interfaces/contracts"
 import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
-import { boopInputSchema } from "#lib/validation/schemas/boop"
-import { simulationResultSchema } from "#lib/validation/schemas/simulationResult"
-
-const inputSchema = z.object({
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z.string().refine(isAddress).transform(checksum).optional().default(deployment.EntryPoint),
-
-    /**
-     * Boop for which to estimate gas limits and fee parameters. The gas limits and fee
-     * parameters are made optional.
-     */
-    tx: boopInputSchema.merge(
-        z.object({
-            maxFeePerGas: z.string().transform(toBigInt).openapi({ example: "1200000000" }).optional(), // UInt256 //
-            submitterFee: z.string().transform(toBigInt).openapi({ example: "100" }).optional(), // Int256 //
-            gasLimit: z.string().transform(toBigInt).openapi({ example: "4000000000" }).optional(), // UInt32 //
-            executeGasLimit: z.string().transform(toBigInt).openapi({ example: "4000000000" }).optional(), // UInt32 //
-        }),
-    ),
-})
+import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { inputSchema } from "#lib/validation/schemas/boop"
 
 const outputSchema = z.discriminatedUnion("status", [
     z.object({
-        simulationResult: simulationResultSchema,
+        status: z.enum([EntryPointStatus.Success]).openapi({ example: EntryPointStatus.Success }),
         maxFeePerGas: z.string().openapi({ example: "1200000000" }),
         submitterFee: z.string().openapi({ example: "100" }),
-        gasLimit: z.string().openapi({ example: "4000000000" }),
-        executeGasLimit: z.string().openapi({ example: "4000000000" }),
-        status: z.enum([EntryPointStatus.Success]).openapi({ example: EntryPointStatus.Success }),
+        gas: z.number().openapi({ example: 4000000000 }),
+        validateGas: z.number().openapi({ example: 4000000000 }),
+        paymentValidateGas: z.number().openapi({ example: 4000000000 }),
+        executeGas: z.number().openapi({ example: 4000000000 }),
+        validityUnknownDuringSimulation: z.boolean().openapi({}),
+        paymentValidityUnknownDuringSimulation: z.boolean().openapi({}),
+        futureNonceDuringSimulation: z.boolean().openapi({}),
+        feeTooLowDuringSimulation: z.boolean().openapi({}),
+        callStatus: z.nativeEnum(CallStatus),
+        revertData: z.string().refine(isHexString),
     }),
     z.object({
         status: z.enum([SubmitterErrorStatus.UnexpectedError, EntryPointStatus.UnexpectedReverted]),

@@ -4,6 +4,7 @@ import { migrator } from "#lib/database/utils/migrator"
 import { anvil } from "./utils/anvil"
 import { contracts } from "./utils/contracts"
 
+// TODO temp
 beforeAll(async () => {
     const { error } = await migrator.migrateToLatest()
     if (error) throw new Error("[Submitter] Failed to run test migrations", { cause: error })
@@ -14,6 +15,7 @@ beforeAll(async () => {
      * you need to run anvil as a separate service and deploy the
      * contracts manually.
      */
+
     await anvil.start()
     await contracts.deploy()
 })
