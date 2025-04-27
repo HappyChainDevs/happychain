@@ -1,9 +1,9 @@
 import {
-    EIP1193ErrorCodes,
+    EIP1193UserRejectedRequestError,
     Msgs,
     type PopupMsgs,
     WalletType,
-    getEIP1193ErrorObjectFromCode,
+    serializeRpcError,
 } from "@happy.tech/wallet-common"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { happyProviderBus } from "#src/services/eventBus"
@@ -16,7 +16,7 @@ import { iframeProvider } from "#src/wagmi/provider"
  * a social or injected wallet.
  */
 export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): Promise<void> {
-    const error = data.error || getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest)
+    const error = data.error || serializeRpcError(new EIP1193UserRejectedRequestError())
 
     const response = {
         key: data.key,
