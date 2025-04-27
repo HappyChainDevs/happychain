@@ -4,7 +4,7 @@ import type { BoopReceiptRepository } from "#lib/database/repositories/BoopRecei
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
 import type { Receipt } from "#lib/interfaces/ethereum"
-import type { EntryPointStatus } from "#lib/interfaces/status"
+import type { OnchainStatus } from "#lib/interfaces/Onchain"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 
 export class BoopReceiptService {
@@ -20,7 +20,7 @@ export class BoopReceiptService {
 
         return {
             boopHash: boopHash,
-            status: boopReceipt.status as EntryPointStatus,
+            status: boopReceipt.status as OnchainStatus,
             account: boopReceipt.account,
             nonceTrack: boopReceipt.nonceTrack,
             nonceValue: boopReceipt.nonceValue,

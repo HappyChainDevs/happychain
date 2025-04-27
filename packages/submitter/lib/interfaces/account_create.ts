@@ -1,36 +1,47 @@
 import type { Address } from "@happy.tech/common"
-import type { SubmitterErrorStatus } from "#lib/interfaces/status"
+import { SubmitterError } from "#lib/interfaces/SubmitterError"
 
-export interface CreateAccountInput {
+/**
+ * Possible results of an `account/create` call.
+ */
+export const CreateAccount = {
+    ...SubmitterError,
+    /** The account was successfully created. */
+    Success: "createAccountSuccess",
+    /** The account was already existing. */
+    AlreadyCreated: "createAccountAlreadyCreated",
+    /** The account creation transaction made it onchain, but failed there. */
+    Failed: "createAccountFailed",
+} as const
+
+/**
+ * @inheritDoc CreateAccount
+ * cf. {@link CreateAccount}
+ */
+export type CreateAccountStatus = (typeof CreateAccount)[keyof typeof CreateAccount]
+
+export type CreateAccountInput = {
     owner: Address
     salt: Address
 }
 
-export enum CreateAccountOwnStatus {
-    /** The account was successfully created. */
-    Success = "createAccountSuccess",
-    /** The account was already existing. */
-    AlreadyCreated = "createAccountAlreadyCreated",
-    /** The account creation transaction made it onchain, but failed there. */
-    Failed = "createAccountFailed",
+/**
+ * Output of an `account/create` call: either an account successfully created (or previously created), or a failure.
+ */
+export type CreateAccountOutput = CreateAccountSuccess | CreateAccountFailed
+
+/** Successful account creation (or creation previously successful). */
+export type CreateAccountSuccess = CreateAccountInput & {
+    status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
+
+    /** The address of the account. */
+    address: Address
 }
 
-export type CreateAccountStatus = CreateAccountOwnStatus | SubmitterErrorStatus
-export type CreateAccountStatusSuccess = CreateAccountOwnStatus.Success | CreateAccountOwnStatus.AlreadyCreated
-export type CreateAccountStatusFailed = Exclude<CreateAccountStatus, CreateAccountStatusSuccess>
+/** Failed account creation. */
+export type CreateAccountFailed = CreateAccountInput & {
+    status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
 
-export type CreateAccountOutput = CreateAccountInput &
-    (
-        | {
-              status: CreateAccountStatusSuccess
-
-              /** The address of the account. */
-              address: Address
-          }
-        | {
-              status: CreateAccountStatusFailed
-
-              /** Optional description of the problem. */
-              description?: string
-          }
-    )
+    /** Optional description of the problem. */
+    description?: string
+}

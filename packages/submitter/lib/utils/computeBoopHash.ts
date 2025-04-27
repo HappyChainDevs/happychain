@@ -1,4 +1,6 @@
+import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
+import { env } from "#lib/env"
 import type { Boop, BoopOptionalFields, PartialBoop } from "../interfaces/Boop"
 import { encodeBoop } from "./encodeBoop"
 
@@ -11,10 +13,25 @@ const zeroGasData = {
     validatePaymentGasLimit: 0,
 } as const satisfies Partial<Boop> & Record<BoopOptionalFields, unknown>
 
+export type ComputeBoopHashOptions = {
+    /** Cache the hash onto the object itself. */
+    cache?: boolean
+}
+
 /**
  * Computes a boop hash, which is compute over a Boop and the chain ID.
  */
-export function computeBoopHash(chainId: bigint, boop: PartialBoop): `0x${string}` {
+export function computeBoopHash(
+    chainId: bigint | number,
+    boop: PartialBoop,
+    options: ComputeBoopHashOptions = { cache: false },
+): Hash {
+    // We sneakily piggyback the boopHash on the boop as a form of caching.
+    // We must never edit boop object in place!
+    //
+    const cached = getProp(boop, "boopHash", "string")
+    if (cached) return cached as Hash
+
     // Don't include validator data in the signature so that pre & post signing are the same.
     const boopToHash: PartialBoop = { ...boop, validatorData: "0x" }
 
@@ -30,5 +47,7 @@ export function computeBoopHash(chainId: bigint, boop: PartialBoop): `0x${string
         Object.assign(boopToHash, zeroGasData)
     }
 
-    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(boopToHash), chainId]))
+    const boopHash = keccak256(encodePacked(["bytes", "uint"], [encodeBoop(boopToHash), BigInt(chainId)]))
+    if (options.cache) Object.assign(boop, { boopHash })
+    return boopHash
 }

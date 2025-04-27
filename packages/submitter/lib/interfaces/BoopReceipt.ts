@@ -1,6 +1,6 @@
 import type { Address, Hash, Hex, UInt256 } from "@happy.tech/common"
+import type { OnchainStatus } from "#lib/interfaces/Onchain"
 import type { Log, Receipt } from "./ethereum"
-import type { EntryPointStatus } from "./status"
 
 /**
  * Describes the result of a Boop that has been submitted onchain.
@@ -20,7 +20,7 @@ export type BoopReceipt = {
     entryPoint: Address
 
     /** Result of onchain submission of the Boop. */
-    status: EntryPointStatus
+    status: OnchainStatus
 
     /** Logs emitted by Boop. */
     logs: Log[]

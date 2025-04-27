@@ -5,7 +5,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { StateRequestStatus } from "#lib/interfaces/BoopState"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client, createSmartAccount } from "./utils/client"
@@ -43,7 +43,7 @@ describe("submitter_receipt", () => {
 
         expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
-        expect(state.state.status).toBe(EntryPointStatus.Success)
+        expect(state.state.status).toBe(Onchain.Success)
         expect(state.state.included).toBe(true)
         expect(state.state.receipt.boopHash).toBe(boopHash)
         expect(state.state.simulation).toBeUndefined()
@@ -65,13 +65,13 @@ describe("submitter_receipt", () => {
         ])
 
         expect(stateSimulated.status).toBe(StateRequestStatus.Success)
-        expect(stateSimulated.state.status).toBe(EntryPointStatus.Success)
+        expect(stateSimulated.state.status).toBe(Onchain.Success)
         expect(stateSimulated.state.included).toBe(false)
         expect(stateSimulated.state.receipt).toBeUndefined()
         expect(stateSimulated.state.simulation).toBeDefined()
 
         expect(stateResolved.status).toBe(StateRequestStatus.Success)
-        expect(stateResolved.state.status).toBe(EntryPointStatus.Success)
+        expect(stateResolved.state.status).toBe(Onchain.Success)
         expect(stateResolved.state.included).toBe(true)
         expect(stateResolved.state.receipt.boopHash).toBe(boopHash)
         expect(stateResolved.state.simulation).toBeUndefined()

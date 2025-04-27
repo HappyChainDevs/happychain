@@ -1,14 +1,15 @@
 import { z } from "zod"
-import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
+import { SubmitterError } from "#lib/interfaces/SubmitterError"
+import { simulateOutputSchema } from "#lib/routes/api/boop/openApi/simulate"
 import { boopReceiptSchema } from "./boopReceipt"
-import { simulationResultSchema } from "./simulationResult"
 
 const BoopStateSubmitterErrorSchema = z.object({
     status: z.enum([
-        SubmitterErrorStatus.BufferExceeded,
-        SubmitterErrorStatus.OverCapacity,
-        SubmitterErrorStatus.UnexpectedError,
-        SubmitterErrorStatus.SimulationTimeout,
+        SubmitterError.BufferExceeded,
+        SubmitterError.OverCapacity,
+        SubmitterError.UnexpectedError,
+        SubmitterError.SimulationTimeout,
     ]),
     included: z.literal(undefined),
 })
@@ -16,24 +17,23 @@ const BoopStateSubmitterErrorSchema = z.object({
 const BoopStateEntryPointErrorSchema = z.object({
     status: z.enum([
         // EntryPointStatus
-        EntryPointStatus.Success,
-        EntryPointStatus.ValidationReverted,
-        EntryPointStatus.ValidationFailed,
-        EntryPointStatus.ExecuteReverted,
-        EntryPointStatus.ExecuteFailed,
-        EntryPointStatus.PaymentValidationReverted,
-        EntryPointStatus.PayoutFailed,
-        EntryPointStatus.UnexpectedReverted,
-        // SubmitterErrorSimulationMaybeAvailable
-        SubmitterErrorStatus.SubmitTimeout,
-        SubmitterErrorStatus.ReceiptTimeout,
+        Onchain.Success,
+        Onchain.ValidationReverted,
+        Onchain.ValidationRejected,
+        Onchain.ExecuteReverted,
+        Onchain.ExecuteRejected,
+        Onchain.PaymentValidationReverted,
+        Onchain.PayoutFailed,
+        Onchain.UnexpectedReverted,
+        SubmitterError.SubmitTimeout,
+        SubmitterError.ReceiptTimeout,
     ]),
     included: z.literal(false),
-    simulation: simulationResultSchema.optional(),
+    simulation: simulateOutputSchema.optional(),
 })
 
 const BoopStateSuccessSchema = z.object({
-    status: z.literal(EntryPointStatus.Success).openapi({ example: EntryPointStatus.Success }),
+    status: z.literal(Onchain.Success).openapi({ example: Onchain.Success }),
     included: z.literal(true).openapi({ example: true }),
     receipt: boopReceiptSchema,
 })

@@ -1,7 +1,7 @@
 import { type Result, err, ok } from "neverthrow"
 import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
 import type { StateRequestInput } from "#lib/interfaces/boop_state"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { boopReceiptService, simulationCache } from "#lib/services"
 
 export async function stateByHash({
@@ -9,7 +9,7 @@ export async function stateByHash({
 }: StateRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
     const receipt = await boopReceiptService.findByBoopHash(hash)
 
-    if (receipt?.status === EntryPointStatus.Success) {
+    if (receipt?.status === Onchain.Success) {
         return ok({
             status: StateRequestStatus.Success,
             state: { status: receipt.status, included: true, receipt: receipt },
@@ -22,7 +22,7 @@ export async function stateByHash({
         return ok({
             status: StateRequestStatus.Success,
             // TODO big hack cast for compile
-            state: { status: simulation.status as EntryPointStatus.Success, included: false, simulation },
+            state: { status: simulation.status as typeof Onchain.Success, included: false, simulation },
         })
     }
 

@@ -2,39 +2,26 @@ export { BoopClient } from "./client"
 export type { BoopClientConfig } from "./client"
 
 export type {
-    CreateAccountInput,
-    CreateAccountOutput,
-    SimulateInput,
-    SimulateOutput,
-    ExecuteInput,
-    ExecuteOutput,
     PendingBoopInput,
     PendingBoopOutput,
     ReceiptRequestInput,
     ReceiptRequestOutput,
     StateRequestInput,
     StateRequestOutput,
-    SubmitInput,
-    SubmitOutput,
     //
     BoopState,
     Optional,
-    SimulationResult,
-    ExecuteSuccess,
     Boop,
     Prettify,
     BoopStateSubmitterError,
     BoopStateEntryPointError,
     BoopStateSuccess,
-    SimulatedValidationStatus,
     BoopReceipt,
-    SimulateStatus,
-    SubmitStatus,
-    SubmitSuccess,
     PendingBoopInfo,
     Log,
     Receipt,
     TransactionTypeName,
+    StateRequestStatus,
     // TODO missing stuff now
 } from "@happy.tech/submitter/client"
 
@@ -63,6 +50,60 @@ export type {
     Hex,
 } from "@happy.tech/common"
 
-export { EntryPointStatus, StateRequestStatus, computeBoopHash } from "@happy.tech/submitter/client"
+export {
+    //
+    // Generic
+    //
+    type EntryPointOutput,
+    Onchain,
+    type OnchainStatus,
+    isOnchain,
+    SubmitterError,
+    type SubmitterErrorStatus,
+    isSubmitterError,
+    //
+    // CreateAccount
+    //
+    CreateAccount,
+    type CreateAccountStatus,
+    type CreateAccountInput,
+    type CreateAccountOutput,
+    type CreateAccountSuccess,
+    type CreateAccountFailed,
+    //
+    // Simulate
+    //
+    Simulate,
+    type SimulateStatus,
+    type SimulateInput,
+    type SimulateOutput,
+    type SimulateSuccess,
+    type SimulateFailed,
+    type SimulateError,
+    //
+    // Submit
+    //
+    Submit,
+    type SubmitStatus,
+    type SubmitInput,
+    type SubmitOutput,
+    type SubmitSuccess,
+    type SubmitSimulationFailed,
+    type SubmitError,
+    //
+    // Execute
+    //
+    Execute,
+    type ExecuteStatus,
+    type ExecuteInput,
+    type ExecuteOutput,
+    type ExecuteSuccess,
+    type ExecuteFailedOnchain,
+    type ExecuteError,
+    //
+    // Utilities
+    //
+    computeBoopHash,
+} from "@happy.tech/submitter/client"
 
 export type { Result, Ok, Err } from "./utils/neverthrow"

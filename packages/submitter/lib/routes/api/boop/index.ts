@@ -1,14 +1,14 @@
 import { serializeBigInt } from "@happy.tech/common"
 import { Hono } from "hono"
 import type { Result } from "neverthrow"
-import type { ExecuteOutput, PendingBoopOutput, StateRequestOutput, SubmitOutput } from "#lib/client"
+import type { PendingBoopOutput, StateRequestOutput } from "#lib/client"
 import { HappyBaseError } from "#lib/errors/happy-base-error"
-import { execute } from "#lib/handlers/boop/execute"
+import { executeFromRoute } from "#lib/handlers/boop/execute"
 import { pendingByAccount } from "#lib/handlers/boop/pendingByAccount"
 import { receiptByHash } from "#lib/handlers/boop/receiptByHash"
 import { simulateFromRoute } from "#lib/handlers/boop/simulate"
 import { stateByHash } from "#lib/handlers/boop/stateByHash"
-import { submit } from "#lib/handlers/boop/submit"
+import { submitFromRoute } from "#lib/handlers/boop/submit"
 import * as executeRoute from "./openApi/execute"
 import * as pendingByAccountRoute from "./openApi/pendingByAccount"
 import * as receiptByHashRoute from "./openApi/receiptByHash"
@@ -16,6 +16,7 @@ import * as simulationRoute from "./openApi/simulate"
 import * as stateByHashRoute from "./openApi/stateByHash"
 import * as submitRoute from "./openApi/submit"
 
+// TODO: reintroduce this, switching on .status, instead of our per-route `fromRoute` functions
 function makeResponse<TOk>(output: Result<TOk, unknown>) {
     if (output.isOk()) return [serializeBigInt(output.value), 200] as const
 
@@ -39,22 +40,25 @@ export default new Hono()
         },
     )
     .post(
+        "/submit", //
+        submitRoute.description,
+        submitRoute.validation,
+        async (c) => {
+            const input = c.req.valid("json")
+            const [response, code] = await submitFromRoute(input)
+            return c.json(response, code)
+        },
+    )
+    .post(
         "/execute", //
         executeRoute.description,
         executeRoute.validation,
         async (c) => {
             const input = c.req.valid("json")
-            const output = await execute(input)
-            const [response, code] = makeResponse<ExecuteOutput>(output)
+            const [response, code] = await executeFromRoute(input)
             return c.json(response, code)
         },
     )
-    .post("/submit", submitRoute.description, submitRoute.validation, async (c) => {
-        const input = c.req.valid("json")
-        const output = await submit(input)
-        const [response, code] = makeResponse<SubmitOutput>(output)
-        return c.json(response, code)
-    })
     .get(
         "/state/:hash", //
         stateByHashRoute.description,

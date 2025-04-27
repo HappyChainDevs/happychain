@@ -4,9 +4,9 @@ import type { ClientResponse } from "hono/client"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { getSelectorFromErrorName } from "#lib/errors/viem"
 import type { Boop } from "#lib/interfaces/Boop"
-import type { SimulateOutput, SimulateOutputFailed, SimulateOutputSuccess } from "#lib/interfaces/boop_simulate"
+import { Onchain } from "#lib/interfaces/Onchain"
+import type { SimulateFailed, SimulateOutput, SimulateSuccess } from "#lib/interfaces/boop_simulate"
 import { CallStatus } from "#lib/interfaces/contracts"
-import { EntryPointStatus } from "#lib/interfaces/status"
 import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
 import { client, createSmartAccount } from "./utils/client"
 
@@ -37,16 +37,16 @@ describe("submitter_simulate", () => {
     }
 
     const partialSimpleSuccessfulOutput = (opts: ChecksOptions) => ({
-        status: EntryPointStatus.Success,
+        status: Onchain.Success,
         validityUnknownDuringSimulation: opts.invalidSignature ?? false,
         futureNonceDuringSimulation: opts.future ?? false,
         callStatus: CallStatus.SUCCEEDED,
     })
 
     async function checks(results: ClientResponse<SimulateOutput>, opts: ChecksOptions = {}) {
-        const response = (await results.json()) as SimulateOutputSuccess
+        const response = (await results.json()) as SimulateSuccess
         expect(results.status).toBe(200)
-        expect(response.status).toBe(EntryPointStatus.Success)
+        expect(response.status).toBe(Onchain.Success)
         expect(response).toMatchObject(partialSimpleSuccessfulOutput(opts))
         expect(BigInt(response.maxFeePerGas)).toBeGreaterThan(1000000000n)
         expect(BigInt(response.submitterFee)).toBeGreaterThanOrEqual(0n)
@@ -99,10 +99,10 @@ describe("submitter_simulate", () => {
             // execute so that this nonce has been used
             await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutputFailed>
-            const response = (await results.json()) as SimulateOutputFailed
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
+            const response = (await results.json()) as SimulateFailed
             expect(results.status).toBe(422)
-            expect(response.status).toBe(EntryPointStatus.InvalidNonce)
+            expect(response.status).toBe(Onchain.InvalidNonce)
             expect(response.revertData).toBe(getSelectorFromErrorName("InvalidNonce")!)
         })
 
@@ -112,10 +112,10 @@ describe("submitter_simulate", () => {
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutputFailed>
-            const response = (await results.json()) as SimulateOutputFailed
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
+            const response = (await results.json()) as SimulateFailed
             expect(results.status).toBe(422)
-            expect(response.status).toBe(EntryPointStatus.PayoutFailed)
+            expect(response.status).toBe(Onchain.PayoutFailed)
         })
 
         it("should revert on invalid call", async () => {
@@ -123,10 +123,10 @@ describe("submitter_simulate", () => {
             unsignedTx.dest = smartAccount
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutputFailed>
-            const response = (await results.json()) as SimulateOutputFailed
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
+            const response = (await results.json()) as SimulateFailed
             expect(results.status).toBe(422)
-            expect(response.status).toBe(EntryPointStatus.CallReverted)
+            expect(response.status).toBe(Onchain.CallReverted)
             expect(response.revertData).toBe("0x")
         })
     })

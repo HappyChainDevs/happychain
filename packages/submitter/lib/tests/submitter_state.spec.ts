@@ -5,7 +5,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { StateRequestStatus } from "#lib/interfaces/BoopState"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client, createSmartAccount } from "./utils/client"
@@ -44,7 +44,7 @@ describe("submitter_state", () => {
         expect(response.error).toBeUndefined()
         expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
-        expect(state.state.status).toBe(EntryPointStatus.Success)
+        expect(state.state.status).toBe(Onchain.Success)
         expect(state.state.included).toBe(true)
         expect(state.state.receipt.boopHash).toBe(response.state.receipt.boopHash)
         expect(state.state.simulation).toBeUndefined()
@@ -76,7 +76,7 @@ describe("submitter_state", () => {
 
         expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
-        expect(state.state.status).toBe(EntryPointStatus.Success)
+        expect(state.state.status).toBe(Onchain.Success)
         expect(state.state.included).toBe(false)
         expect(state.state.receipt).toBeUndefined()
         expect(state.state.simulation).toBeDefined()

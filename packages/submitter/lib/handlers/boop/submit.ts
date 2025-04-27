@@ -1,94 +1,101 @@
-import type { Hex } from "@happy.tech/common"
-import { type Result, err, ok } from "neverthrow"
+import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { walletClient } from "#lib/clients"
-import { abis, deployment } from "#lib/env"
-import { UnknownError } from "#lib/errors/contract-errors"
-import { getContractRevertError } from "#lib/errors/viem"
-import type { SimulateOutput, SimulateOutputSuccess } from "#lib/interfaces/boop_simulate"
-import { SUBMIT_SUCCESS, type SubmitInput, type SubmitOutput } from "#lib/interfaces/boop_submit"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { abis, deployment, env } from "#lib/env"
+import { processError } from "#lib/handlers/utils/errorHandling"
+import { Onchain } from "#lib/interfaces/Onchain"
+import { SubmitterError } from "#lib/interfaces/SubmitterError"
+import type { SimulateInput, SimulateOutput } from "#lib/interfaces/boop_simulate"
+import type { SubmitInput, SubmitOutput } from "#lib/interfaces/boop_submit"
+import { logger } from "#lib/logger"
 import { boopNonceManager, submitterService } from "#lib/services"
+import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
+import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 import { simulate } from "./simulate"
 
-export async function submit(input: SubmitInput): Promise<Result<SubmitOutput, Error | SimulateOutput>> {
-    const entryPoint = input.entryPoint ?? deployment.EntryPoint
-    // Save original tx to the database for historic purposes and data recovery
-    await submitterService.initialize(entryPoint, input.boop)
-
-    let simulation = await simulate({ entryPoint, boop: input.boop })
-
-    // TODO can we?
-    // Simulation failed, we can abort the transaction.
-    if (simulation.status !== EntryPointStatus.Success) return err(simulation)
-
-    const isFutureNonce = simulation.futureNonceDuringSimulation
-    if (isFutureNonce && (await boopNonceManager.checkIfBlocked(entryPoint, input.boop))) {
-        const resp = await boopNonceManager.pauseUntilUnblocked(entryPoint, input.boop)
-        if (resp.isErr()) return err(resp.error)
-
-        // update simulation
-        simulation = await simulate({ entryPoint, boop: input.boop })
-        if (simulation.status !== EntryPointStatus.Success) return err(simulation)
-    }
-    // use simulated result instead of the original tx as it may have updated gas values
-    const writeResponse = await submitWriteContract(input, simulation)
-
-    if (writeResponse.isErr()) {
-        // Unknown error cause, we will reset the local view nonce as a precaution
-        boopNonceManager.resetLocalNonce(input.boop)
-        return writeResponse
-    }
-
-    // Increment the localNonce so the next tx can be executed (if available)
-    boopNonceManager.incrementLocalNonce(input.boop)
-    submitterService.finalizeWhenReady(input.boop, writeResponse.value.hash as `0x${string}`)
-
-    return ok(writeResponse.value)
+export async function submitFromRoute(
+    input: SimulateInput,
+): Promise<[BigIntSerialized<SubmitOutput>, ContentfulStatusCode]> {
+    const output = await submit(input)
+    // TODO do better, maybe other successful statuses, better http codes
+    return output.status === Onchain.Success
+        ? ([serializeBigInt(output), 200] as const)
+        : ([serializeBigInt(output), 422] as const)
 }
 
-async function submitWriteContract(
-    input: SubmitInput,
-    simulation: SimulateOutputSuccess,
-): Promise<Result<SubmitOutput, Error>> {
-    const account = findExecutionAccount(input.boop)
-
-    // TODO must use simulation data to avoid extra simulation!!!!
-    // TODO better parsing / transmission back of errors
-
-    // TODO
-    const args: [Hex] = [encodeBoop(input.boop)]
+export async function submit(input: SubmitInput): Promise<SubmitOutput> {
+    const { entryPoint = deployment.EntryPoint, boop } = input
+    const boopHash = computeBoopHash(env.CHAIN_ID, boop, { cache: true })
     try {
-        // TODO I broke this
-        const _viemRequest = await walletClient.prepareTransactionRequest({
-            address: input.entryPoint,
-            args,
-            abi: abis.EntryPoint,
-            functionName: "submit",
-            gas: BigInt(simulation.gas),
-            // maxFeePerGas,
-            // maxPriorityFeePerGas,
-            account,
-        })
+        logger.trace("Submitting boop with hash", boopHash)
 
-        const transactionHash = await walletClient.writeContract({
+        // Save original tx to the database for historic purposes and data recovery.
+        await submitterService.initialize(entryPoint, boop, boopHash)
+
+        let simulation = await simulate(input)
+
+        if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+
+        // If future nonce, wait until ready.
+        const isFutureNonce = simulation.futureNonceDuringSimulation
+        if (isFutureNonce && (await boopNonceManager.checkIfBlocked(entryPoint, boop))) {
+            logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
+            const resp = await boopNonceManager.pauseUntilUnblocked(entryPoint, boop)
+            logger.trace("boop unblocked", boopHash)
+            if (resp.isErr())
+                return {
+                    // TODO pauseUntilBlocked should provide this object
+                    status: SubmitterError.UnexpectedError,
+                    description: resp.error.message,
+                    stage: "submit",
+                }
+            simulation = await simulate(input) // update simulation
+            if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+        }
+
+        const account = findExecutionAccount(input.boop)
+        logger.trace("Submitting to the chain using execution account", account.address, boopHash)
+
+        // TODO make simulate return an updated boop
+        const updatedBoop = {
+            ...input.boop,
+            gas: simulation.gas, // TODO should probably be lower than the gas limit
+            validateGas: simulation.validateGas,
+            paymentValidateGas: simulation.paymentValidateGas,
+            executeGas: simulation.executeGas,
+            maxFeePerGas: simulation.maxFeePerGas,
+            submitterFee: simulation.submitterFee,
+        }
+
+        // TODO make sure this does no extra needless simulations
+        const txHash = await walletClient.writeContract({
             address: input.entryPoint ?? deployment.EntryPoint,
-            args,
+            args: [encodeBoop(updatedBoop)],
             abi: abis.EntryPoint,
             functionName: "submit",
             gas: BigInt(simulation.gas),
-            // maxFeePerGas,
-            // maxPriorityFeePerGas,
+            maxFeePerGas: simulation.maxFeePerGas,
+            maxPriorityFeePerGas: 1n,
             account,
-        }) // satisfies SubmitRequest)
-
-        return ok({
-            status: SubmitSuccess,
-            hash: transactionHash,
         })
-    } catch (_err: unknown) {
-        // @ts-expect-error
-        return err(getContractRevertError(_err) || new UnknownError(_err?.message || "Failed to simulate contract"))
+        logger.trace("Successfully submitted", boopHash, txHash)
+
+        // TODO does this need the updatd boop instead?
+        boopNonceManager.incrementLocalNonce(boop)
+        submitterService.finalizeWhenReady(boop, txHash)
+
+        // TODO we need to return way before!
+        return {
+            status: Onchain.Success,
+            hash: boopHash,
+            txHash,
+        }
+    } catch (error) {
+        return {
+            ...(processError({ boop, boopHash, error }) as SimulateOutput),
+            stage: "submit", // simulation failures are caught in the `simulate` call
+        } as SubmitOutput
+        // TODO if refactoring, might get be able to get rid of this cast (needs to know it will only get SubmitError-compatible statuses)
     }
 }

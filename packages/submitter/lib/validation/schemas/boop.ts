@@ -6,8 +6,6 @@ import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
 
-// TODO use corce.toBigInt?
-
 export const partialBoopSchema = z.object({
     account: z
         .string()
