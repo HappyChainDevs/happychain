@@ -160,7 +160,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
             bytes memory signature = boop.validatorData;
             boop.validatorData = ""; // set to "" to get the hash
             address signer =
-                keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().recover(signature);
+                keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().tryRecover(signature);
             boop.validatorData = signature; // revert back to original value
 
             validationResult = signer == owner()
@@ -211,7 +211,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         // 0x1626ba7e is the ERC-1271 magic value to be returned in case of success
-        return hash.recover(signature) == owner() ? bytes4(0x1626ba7e) : bytes4(0);
+        return hash.tryRecover(signature) == owner() ? bytes4(0x1626ba7e) : bytes4(0);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {

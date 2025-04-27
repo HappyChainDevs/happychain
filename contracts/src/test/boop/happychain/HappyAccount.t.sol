@@ -93,10 +93,8 @@ contract HappyAccountTest is BoopTestUtils {
         // Validate function must be called by the EntryPoint
         vm.prank(_entryPoint);
 
-        // The function should revert with ValidationReverted(InvalidSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
-
-        HappyAccount(payable(smartAccount)).validate(boop);
+        bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
+        assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
     }
 
     function testValidateInvalidSignatureLength() public {
@@ -107,10 +105,8 @@ contract HappyAccountTest is BoopTestUtils {
         // Validate function must be called by the EntryPoint
         vm.prank(_entryPoint);
 
-        // The function should revert with ValidationReverted(InvalidSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
-
-        HappyAccount(payable(smartAccount)).validate(boop);
+        bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
+        assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
     }
 
     function testValidateInvalidSignature() public {
@@ -122,10 +118,8 @@ contract HappyAccountTest is BoopTestUtils {
         // Validate function must be called by the EntryPoint
         vm.prank(_entryPoint);
 
-        // The function should revert with ValidationReverted(InvalidSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(InvalidSignature.selector));
-
-        HappyAccount(payable(smartAccount)).validate(boop);
+        bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
+        assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
     }
 
     function testValidateInvalidOwnerSignature() public {

@@ -349,7 +349,7 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = hex"deadbeef";
 
         vm.expectRevert(
-            abi.encodeWithSelector(ValidationReverted.selector, abi.encodeWithSelector(InvalidSignature.selector))
+            abi.encodeWithSelector(ValidationRejected.selector, abi.encodeWithSelector(InvalidSignature.selector))
         );
         entryPoint.submit(boop.encode());
     }
