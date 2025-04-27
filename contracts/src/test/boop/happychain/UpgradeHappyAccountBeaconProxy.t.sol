@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {Encoding} from "boop/core/Encoding.sol";
 import {HappyAccountBeaconProxyFactory} from "boop/happychain/factories/HappyAccountBeaconProxyFactory.sol";
+import {HappyAccountFactoryBase} from "boop/happychain/factories/HappyAccountFactoryBase.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
-import {Encoding} from "./../../../boop/core/Encoding.sol";
 import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
 import {MockERC20} from "./../../../mocks/MockERC20.sol";
 import {BoopTestUtils} from "./../Utils.sol";
@@ -68,6 +69,14 @@ contract UpgradeHappyAccountBeaconProxyTest is Test, BoopTestUtils {
 
     /// @dev Test upgradeability via beacon
     function testUpgradeImplForSmartAccountViaBeacon() public {
+        // Verify that the account was deployed at the predicted address
+        assertEq(smartAccount, happyAccountFactory.getAddress(SALT, owner));
+
+        // We emit the predicted address
+        vm.expectEmit();
+        emit HappyAccountFactoryBase.Deployed(happyAccountFactory.getAddress(bytes32(uint256(42)), owner), owner);
+        happyAccountFactory.createAccount(bytes32(uint256(42)), owner);
+
         // Beacon slot should point to the beacon address
         bytes32 beacon = vm.load(smartAccount, ERC1967_BEACON_SLOT);
         assertEq(beacon, bytes32(uint256(uint160(address(accountBeacon)))), "Initial implementation not set correctly");
