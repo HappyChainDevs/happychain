@@ -1,9 +1,9 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import {
-    EIP1193ErrorCodes,
+    EIP1193SwitchChainError,
+    EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
-    getEIP1193ErrorObjectFromCode,
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
 import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
@@ -142,8 +142,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case "wallet_addEthereumChain": {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
-            if (!isValid)
-                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
+            if (!isValid) throw new EIP1474InvalidInput("Invalid wallet_addEthereumChain request body")
 
             const resp = await sendToInjectedClient(request.payload)
 
@@ -165,15 +164,8 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case "wallet_switchEthereumChain": {
             const chains = getChains()
             const chainId = request.payload.params[0].chainId
-
-            // ensure chain has already been added
-            if (!(chainId in chains)) {
-                throw getEIP1193ErrorObjectFromCode(
-                    EIP1193ErrorCodes.SwitchChainError,
-                    "Unrecognized chain ID, try adding the chain first.",
-                )
-            }
-
+            if (!(chainId in chains))
+                throw new EIP1193SwitchChainError("Unrecognized chain ID, try adding the chain first.")
             const resp = await sendToInjectedClient(request.payload)
             setCurrentChain(chains[chainId])
             return resp

@@ -1,8 +1,8 @@
-import { createStorage } from "@happy.tech/common"
+import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address } from "abitype"
 import type { Hex } from "viem"
-import type { BoopEntry } from "./boopsHistory"
+import type { BoopEntry } from "#src/services/boopHistory"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -25,7 +25,10 @@ type StorageSchema = {
     [StorageKey.Boops]: Record<Address, Array<BoopEntry>> | undefined
 }
 
-export const storage = createStorage<StorageSchema>()
+export const storage = createStorage<StorageSchema>({
+    reviver: bigIntReviver,
+    replacer: bigIntReplacer,
+})
 
 function cleanOrMigrateStorage() {
     if (typeof window === "undefined") return

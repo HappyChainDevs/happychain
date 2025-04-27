@@ -1,16 +1,18 @@
+import { getProp, stringify } from "@happy.tech/common"
 import {
     type EIP1193RequestParameters,
     EIP1474InternalError,
     Msgs,
     type ProviderEventPayload,
     WalletType,
-    getEIP1193ErrorObjectFromUnknown,
+    serializeRpcError,
 } from "@happy.tech/wallet-common"
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
-import type { UnauthorizedProviderError } from "viem"
+import { RpcError, type UnauthorizedProviderError } from "viem"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { reqLogger } from "#src/logger"
 import { happyProviderBus } from "#src/services/eventBus"
+import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user.ts"
 import { appForSourceID, isIframe } from "#src/utils/appURL"
 import { iframeProvider } from "#src/wagmi/provider"
@@ -62,19 +64,28 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
         }
     } catch (e) {
         reqLogger.info("request handling threw", e)
+
+        // Peel off up to two layers of Viem wrappers to get at the root cause and avoid noise in errors.
+        const err = e instanceof RpcError ? (getProp(e.cause, "cause") ?? e.cause) : e
+
+        const ctxMessages = [
+            `RPC URL: ${getCurrentChain().rpcUrls[0]}`, //
+            `Request body: ${stringify(request.payload)}`,
+        ]
+
         const response = {
             key: request.key,
             windowId: request.windowId,
-            error: getEIP1193ErrorObjectFromUnknown(e),
+            error: serializeRpcError(err, ctxMessages),
             payload: null,
         }
 
-        const _isIframe = isIframe(app)
-        const _isInjected = getUser()?.type === WalletType.Injected
+        const isIframe_ = isIframe(app)
+        const isInjected_ = getUser()?.type === WalletType.Injected
 
-        if (_isIframe && _isInjected) {
+        if (isIframe_ && isInjected_) {
             InjectedProviderProxy.getInstance().handleRequestResolution(response)
-        } else if (_isIframe) {
+        } else if (isIframe_) {
             iframeProvider.handleRequestResolution(response)
         } else {
             void happyProviderBus.emit(Msgs.RequestResponse, response)
