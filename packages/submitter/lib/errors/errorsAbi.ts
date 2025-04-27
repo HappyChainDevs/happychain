@@ -1,12 +1,13 @@
 import type { AbiError, AbiFunction } from "abitype"
 import { parseAbi } from "viem/utils"
 
-// ABIs used to obtain selectors and to parse revert data.
-//
-// Both lists are needed: Viem does not expose a function to obtain a selector with an error ABI item,
-// however we need the error ABI to parse errors.
-//
+// ABIs lists, used to parse and serialize selectors and parse errors and logs.
 // Functions leveraging these lists are available in ./viem.ts
+
+export const eventsAbi = parseAbi([
+    // Factories
+    "event Deployed(address account, address owner)",
+])
 
 const errorSignatures = [
     // =================================================================================================================
@@ -79,6 +80,11 @@ const errorSignatures = [
     // would trigger if using a Boop to call another's account private functions
     "NotSelfOrOwner()",
 ]
+
+// ABIs used to obtain selectors and to parse revert data.
+//
+// Both lists are needed: Viem does not expose a function to obtain a selector with an error ABI item,
+// however we need the error ABI to parse errors.
 
 export const errorsAbi = parseAbi(errorSignatures.map((s) => `error ${s}`)) as AbiError[]
 export const errorsAsFunctionsAbi = parseAbi(errorSignatures.map((s) => `function ${s}`)) as AbiFunction[]

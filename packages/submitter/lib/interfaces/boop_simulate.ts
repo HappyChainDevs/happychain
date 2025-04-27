@@ -2,7 +2,7 @@ import type { Bytes } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
 import type { EntryPointSubmitOutput } from "#lib/interfaces/contracts"
 import type { PartialBoop } from "./Boop"
-import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
+import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
 
 /**
  * Input for a `simulate` call.
@@ -24,9 +24,9 @@ export type SimulateOutput = SimulateOutputSuccess | SimulateOutputFailed | Simu
 /**
  * Possible result of a `simulate` call: either the status from a successfully attempted
  * simulation ({@link EntryPointStatus}), which may be either successful or unsuccessful, or an error status indicating
- * the simulation could not be carried out ({@link SubmitterErrorSimulationUnavailable}.
+ * the simulation could not be carried out ({@link SubmitterErrorStatus}.
  */
-export type SimulateStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
+export type SimulateStatus = SubmitterErrorStatus | EntryPointStatus
 
 /**
  * Output of a successful simulation.
@@ -63,7 +63,7 @@ export type SimulateOutputFailed = {
  */
 export type SimulateOutputError = {
     // check with `isSubmitterError(status)`
-    status: SubmitterErrorSimulationUnavailable
+    status: SubmitterErrorStatus
 
     /** Description of the problem. */
     description?: string

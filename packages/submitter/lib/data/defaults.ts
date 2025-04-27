@@ -1,1 +1,0 @@
-export const DEFAULT_RECEIPT_TIMEOUT_MS = 8_000

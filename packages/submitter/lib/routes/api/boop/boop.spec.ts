@@ -1,27 +1,25 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import { serializeBigInt } from "@happy.tech/common"
+import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeBoopHash } from "#lib/client"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
 import { client } from "#lib/tests/utils/client"
+import { createSmartAccount } from "#lib/tests/utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("routes: api/submitter", () => {
-    let smartAccount: `0x${string}`
+    let smartAccount: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
-            .then((a) => a.json())
-            .then((a) => a.address)
+        smartAccount = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
