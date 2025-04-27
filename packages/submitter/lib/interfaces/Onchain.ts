@@ -1,0 +1,98 @@
+/**
+ * Possible outcomes of submitting the Boop to the onchain EntryPoint
+ * contract, either during simulation or onchain execution.
+ */
+export const Onchain = {
+    /** The Boop succeeded: the intended call was made without errors. */
+    Success: "onchainSuccess",
+
+    /**
+     * The boop got rejected because the gas price was above the maxFeePerGas.
+     */
+    GasPriceTooHigh: "onchainGasPriceTooHigh",
+
+    /**
+     * The nonce provided was invalid outside of simulation.
+     */
+    InvalidNonce: "onchainInvalidNonce",
+
+    /**
+     * The submitter or paymaster has insufficient stake.
+     */
+    InsufficientStake: "onchainInsufficientStake",
+
+    /**
+     * The account or the paymaster rejected the boop because of an invalid signature.
+     */
+    InvalidSignature: "onchainInvalidSignature",
+
+    /**
+     * The account or the paymaster rejected the boop because an extension value in the extraData is invalid.
+     */
+    InvalidExtensionValue: "onchainInvalidExtensionValue",
+
+    /**
+     * The account validation of the Boop reverted.
+     * This indicates either a dysfunctional account or a dysfunctional submitter.
+     */
+    ValidationReverted: "onchainValidationReverted",
+
+    /**
+     * The account rejected the boop during validation.
+     */
+    ValidationRejected: "onchainValidationRejected",
+
+    /**
+     * The paymaster's `payout` call reverted.
+     * This indicates either a dysfunctional paymaster or a dysfunctional submitter.
+     */
+    PaymentValidationReverted: "onchainPaymentValidationReverted",
+
+    /**
+     * The paymaster rejected the boop during payment validation.
+     */
+    PaymentValidationRejected: "onchainPaymentValidationRejected",
+
+    /**
+     * The account's `execute` call reverted.
+     * This indicates either a dysfunctional account or a dysfunctional submitter.
+     */
+    ExecuteReverted: "onchainExecuteReverted",
+
+    /**
+     * The account's `execute` function returned indicating a failure.
+     * This is typically caused by an incorrect input from the user.
+     */
+    ExecuteRejected: "onchainExecuteRejected",
+
+    /**
+     * The call made by the account's `execute` function reverted.
+     */
+    CallReverted: "onchainCallReverted",
+
+    /**
+     * When self-paying and the payment from the account fails, either because IAccount.payout
+     * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
+     */
+    PayoutFailed: "onchainPayoutFailed",
+
+    /**
+     * Unexpected revert of the boop, most likely out-of-gas.
+     */
+    UnexpectedReverted: "onchainUnexpectedReverted",
+} as const
+
+export const { Success, ...OnchainFail } = Onchain
+
+/**
+ * {@inheritDoc Onchain}
+ * cf. {@link SubmitterError}
+ */
+export type OnchainStatus = (typeof Onchain)[keyof typeof Onchain]
+
+/**
+ * Checks is a status string is a {@link OnchainStatus}.
+ */
+export function isOnchain(status: string): status is OnchainStatus {
+    return status.startsWith("onchain")
+}

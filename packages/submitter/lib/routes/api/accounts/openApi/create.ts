@@ -3,8 +3,8 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
-import { CreateAccountOwnStatus } from "#lib/interfaces/account_create"
-import { SubmitterErrorStatus } from "#lib/interfaces/status"
+import { CreateAccount } from "#lib/interfaces/account_create"
+import { SubmitterError } from "#lib/interfaces/SubmitterError"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
@@ -27,8 +27,8 @@ const inputSchema = z.object({
 const outputSchema = inputSchema.merge(
     z.object({
         status: z
-            .union([z.nativeEnum(CreateAccountOwnStatus), z.nativeEnum(SubmitterErrorStatus)])
-            .openapi({ example: CreateAccountOwnStatus.Success }),
+            .union([z.nativeEnum(CreateAccount), z.nativeEnum(SubmitterError)])
+            .openapi({ example: CreateAccount.Success }),
         address: z
             .string()
             .refine(isHexString)

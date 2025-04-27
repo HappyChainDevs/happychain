@@ -1,4 +1,4 @@
-import { LogLevel, Logger, logLevel } from "@happy.tech/common"
+import { Logger, logLevel } from "@happy.tech/common"
 import { env } from "./env"
 
-export const logger = Logger.create("Submitter", env.NODE_ENV === "test" ? LogLevel.WARN : logLevel(env.NODE_ENV))
+export const logger = Logger.create("Submitter", logLevel(env.LOG_LEVEL))

@@ -1,11 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import type { Address } from "@happy.tech/common"
-import { serializeBigInt } from "@happy.tech/common"
+import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
-import { SubmitSuccess } from "#lib/interfaces/boop_submit"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
 import { client, createSmartAccount } from "./utils/client"
 
@@ -34,7 +33,7 @@ describe("submitter_submit", () => {
         const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         const response = (await result.json()) as any
         expect(result.status).toBe(200)
-        expect(response.status).toBe(SubmitSuccess)
+        expect(response.status).toBe(Onchain.Success)
         expect((response as { hash: string }).hash).toBeString()
     })
 
@@ -57,13 +56,13 @@ describe("submitter_submit", () => {
 
         const rs = await Promise.all(
             results.map((a) => {
-                if (a.status !== SubmitSuccess) return { status: a.status }
-                return publicClient.waitForTransactionReceipt({ hash: a.hash, pollingInterval: 100 })
+                if (a.status !== Onchain.Success) return { status: a.status }
+                return publicClient.waitForTransactionReceipt({ hash: a.txHash, pollingInterval: 100 })
             }),
         )
 
         expect(results.length).toBe(count)
-        expect(results.every((r) => r.status === SubmitSuccess)).toBe(true)
+        expect(results.every((r) => r.status === Onchain.Success)).toBe(true)
         expect(rs.length).toBe(count)
         expect(rs.every((r) => r.status === "success")).toBe(true)
     })
@@ -144,6 +143,6 @@ describe("submitter_submit", () => {
 
         expect(tx9_response.status).toBe(422) // replaced!
         expect(tx9_2_response.status).toBe(200)
-        expect(tx9_rejection.message).toBe("transaction replaced")
+        expect(tx9_rejection.description).toBe("transaction replaced")
     })
 })

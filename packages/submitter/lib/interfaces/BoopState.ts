@@ -1,7 +1,8 @@
 import type { Prettify } from "@happy.tech/common"
+import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
+import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
 import type { SimulateOutput } from "#lib/interfaces/boop_simulate"
-import type { BoopReceipt } from "./BoopReceipt"
-import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
+import type { SubmitterErrorStatus } from "./SubmitterError"
 
 // -------------------------------------------------------------------------------------------------
 
@@ -17,7 +18,7 @@ export type BoopStateSubmitterError = {
     simulation?: never
 }
 export type BoopStateEntryPointError = {
-    status: EntryPointStatus | SubmitterErrorStatus
+    status: OnchainStatus | SubmitterErrorStatus
 
     /** Whether the Boop was included and executed onchain. */
     included: false
@@ -31,13 +32,13 @@ export type BoopStateEntryPointError = {
 }
 
 export type BoopStateSuccess = {
-    status: EntryPointStatus.Success
+    status: typeof Onchain.Success
     included: true
     receipt: BoopReceipt
     simulation?: never
 }
 
-export type BoopState = Prettify<BoopStateSubmitterError | BoopStateEntryPointError | BoopStateSuccess>
+export type BoopState = BoopStateSubmitterError | BoopStateEntryPointError | BoopStateSuccess
 
 // -------------------------------------------------------------------------------------------------
 

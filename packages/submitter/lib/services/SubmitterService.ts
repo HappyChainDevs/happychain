@@ -1,3 +1,4 @@
+import type { Address, Hash } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
@@ -5,7 +6,7 @@ import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#
 import type { PartialBoop } from "#lib/interfaces/Boop"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
 import type { BoopState } from "#lib/interfaces/BoopState"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { logger } from "#lib/logger"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
@@ -20,8 +21,8 @@ export class SubmitterService {
         private boopReceiptService: BoopReceiptService,
     ) {}
 
-    async initialize(entryPoint: `0x${string}`, boop: PartialBoop) {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
+    async initialize(entryPoint: Address, boop: PartialBoop, boopHash: Hash) {
+        logger.trace("saving boop to db", boopHash)
         // TODO yolo db is broken
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
@@ -40,7 +41,7 @@ export class SubmitterService {
         })
     }
 
-    async finalizeWhenReady(boop: PartialBoop, txHash: `0x${string}`) {
+    async finalizeWhenReady(boop: PartialBoop, txHash: Hash) {
         try {
             const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
@@ -51,7 +52,8 @@ export class SubmitterService {
             }
             const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
             return await this.finalize(persisted.id, {
-                status: receipt.status as unknown as EntryPointStatus.Success,
+                // TODO ??
+                status: receipt.status as unknown as typeof Onchain.Success,
                 included: Boolean(receipt.txReceipt.transactionHash) as true,
                 receipt,
             })
@@ -84,7 +86,7 @@ export class SubmitterService {
             entryPoint: receipt.to,
 
             /** Result of onchain submission of the Boop. */
-            status: receipt.status === "success" ? EntryPointStatus.Success : EntryPointStatus.UnexpectedReverted,
+            status: receipt.status === "success" ? Onchain.Success : Onchain.UnexpectedReverted,
 
             /** Logs emitted by Boop. */
             logs: receipt.logs.filter((l) => l.address === receipt.to),

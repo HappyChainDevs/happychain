@@ -21,5 +21,6 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+    console.log("Stopping anvil...")
     await anvil.stop()
 })

@@ -1,8 +1,9 @@
 import type { Bytes } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
-import type { EntryPointSubmitOutput } from "#lib/interfaces/contracts"
+import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
+import type { EntryPointOutput } from "#lib/interfaces/contracts"
 import type { PartialBoop } from "./Boop"
-import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
+import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
 
 /**
  * Input for a `simulate` call.
@@ -16,23 +17,32 @@ export type SimulateInput = {
 }
 
 /**
- * Output of a `simulate` call: either a successful simulation, or a failed simulation (validation & checks failed),
- * or a validation that could not be carried out successfully for operational reasons.
+ * Possible result of a `simulate` call: either the status from a successfully attempted
+ * simulation ({@link OnchainStatus}), which may be either successful or unsuccessful, or an error status indicating
+ * the simulation could not be carried out ({@link SubmitterError}.
  */
-export type SimulateOutput = SimulateOutputSuccess | SimulateOutputFailed | SimulateOutputError
+export const Simulate = {
+    ...Onchain,
+    ...SubmitterError,
+} as const
 
 /**
- * Possible result of a `simulate` call: either the status from a successfully attempted
- * simulation ({@link EntryPointStatus}), which may be either successful or unsuccessful, or an error status indicating
- * the simulation could not be carried out ({@link SubmitterErrorStatus}.
+ * @inheritDoc Simulate
+ * cf. {@link Simulate}
  */
-export type SimulateStatus = SubmitterErrorStatus | EntryPointStatus
+export type SimulateStatus = (typeof Simulate)[keyof typeof Simulate]
+
+/**
+ * Output of a `simulate` call: either a successful simulation, or a failed
+ * simulation, or a simulation that could not be carried out for other reasons.
+ */
+export type SimulateOutput = SimulateSuccess | SimulateFailed | SimulateError
 
 /**
  * Output of a successful simulation.
  */
-export type SimulateOutputSuccess = EntryPointSubmitOutput & {
-    status: EntryPointStatus.Success
+export type SimulateSuccess = EntryPointOutput & {
+    status: typeof Onchain.Success
 
     /** Estimated max fee per gas (in wei) for the Boop. */
     maxFeePerGas: bigint
@@ -44,14 +54,14 @@ export type SimulateOutputSuccess = EntryPointSubmitOutput & {
 /**
  * Output of a simulation that was attempted, but failed onchain, most likely due validation or checks.
  */
-export type SimulateOutputFailed = {
-    status: Exclude<EntryPointStatus, EntryPointStatus.Success>
+export type SimulateFailed = {
+    status: Exclude<OnchainStatus, typeof Onchain.Success>
 
     /**
-     * Depending on the status, either empty, or the revert data matching an EntryPointIllegalRevert
-     * status, or the the returned encoded error matching an EntryPointRejection status.
+     * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted`
+     * status, or the the returned encoded error matching an `Onchain.*Rejected` status.
      */
-    revertData: Bytes
+    revertData?: Bytes
 
     /** Description of the problem. */
     description?: string
@@ -61,7 +71,7 @@ export type SimulateOutputFailed = {
  * Output of a simulation that failed to be carried out for offchain operational
  * reasons (communication with the node, submitter capacity, etc...).
  */
-export type SimulateOutputError = {
+export type SimulateError = {
     // check with `isSubmitterError(status)`
     status: SubmitterErrorStatus
 

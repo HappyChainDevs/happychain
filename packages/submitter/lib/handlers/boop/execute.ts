@@ -1,46 +1,56 @@
-import { type Hex, getProp, hasDefinedKey } from "@happy.tech/common"
-import { type Result, err, ok } from "neverthrow"
+import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { env } from "#lib/env"
-import { getErrorNameFromSelector } from "#lib/errors/viem"
-import { EXECUTE_SUCCESS, type ExecuteInput, type ExecuteOutput } from "#lib/interfaces/boop_execute"
-import { EntryPointStatus, SubmitterErrorStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
+import { SubmitterError } from "#lib/interfaces/SubmitterError"
+import type { ExecuteInput, ExecuteOutput } from "#lib/interfaces/boop_execute"
+import { logger } from "#lib/logger"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
+import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 import { submit } from "./submit"
 
-export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
-    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), data.boop)
-    const status = await submit(data)
+export async function executeFromRoute(
+    input: ExecuteInput,
+): Promise<[BigIntSerialized<ExecuteOutput>, ContentfulStatusCode]> {
+    const output = await execute(input)
+    // TODO do better, maybe other successful statuses, better http codes
+    return output.status === Onchain.Success
+        ? ([serializeBigInt(output), 200] as const)
+        : ([serializeBigInt(output), 422] as const)
+}
 
-    if (status.isErr()) {
-        if (hasDefinedKey(status.error, "simulation")) {
-            return err({
-                // TODO totally hacked this whole thing for it to compile
-                status:
-                    (getProp(status.error.simulation, "status") as SubmitterErrorStatus.UnexpectedError) ||
-                    SubmitterErrorStatus.UnexpectedError,
-                revertData:
-                    getErrorNameFromSelector((getProp(status.error.simulation, "revertData") as Hex) || "0x") ||
-                    (getProp(status.error.simulation, "revertData") as Hex),
-            })
-        }
-        if ("status" in status.error && "revertData" in status.error) {
-            return err({ status: status.error.status, revertData: status.error.revertData } as ExecuteOutput)
+export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
+    const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })
+    const submission = await submit(data)
+    if (submission.status !== Onchain.Success) return submission
+
+    logger.trace("Waiting for receipt", boopHash)
+    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, 4_000) // TODO constant
+    if (!receipt)
+        return {
+            status: SubmitterError.ReceiptTimeout,
+            stage: "execute",
+            description:
+                "Timed out while waiting for the boop receipt.\n" +
+                "The boop may still be included onchain later, though unlikely.",
         }
 
-        return err({ status: SubmitterErrorStatus.UnexpectedError })
+    if (receipt.txReceipt.status === "success") {
+        // TODO parse logs to ascertain that the boop actually succeeded — the tx can succeed with a failed call
+        // TODO make sure we haven't been griefed ... and take note
+        logger.trace("Successfully executed", boopHash)
+        return { status: Onchain.Success, receipt }
     }
 
-    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, 10_000)
-
-    if (!receipt || receipt.txReceipt.status !== "success") return err({ status: SubmitterErrorStatus.UnexpectedError })
-
-    return ok({
-        status: ExecuteSuccess,
-        state: {
-            status: EntryPointStatus.Success,
-            included: true,
-            receipt: receipt,
-        },
-    })
+    // TODO what can we even gather from a failed receipt? I think we might be able to tell OOG vs non-OOG
+    // TODO provide a boop-sdk functiont that performs self simulation, and that can be automatically attempted to gather data on the client-side
+    logger.trace("Reverted onchain", boopHash)
+    return {
+        status: Onchain.UnexpectedReverted,
+        stage: "execute",
+        receipt,
+        description:
+            "The boop was included onchain but reverted there.\n" +
+            "It previously passed simulation. It happens sometimes :')",
+    }
 }

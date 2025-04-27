@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { EntryPointStatus } from "#lib/interfaces/status"
+import { Onchain } from "#lib/interfaces/Onchain"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { receiptSchema } from "./receipt"
@@ -11,7 +11,7 @@ export const boopReceiptSchema = z.object({
     nonceTrack: z.string().openapi({ example: "69" }),
     nonceValue: z.string().openapi({ example: "420" }),
     entryPoint: z.string().refine(isAddress).openapi({ example: "" }),
-    status: z.string().openapi({ example: EntryPointStatus.Success }),
+    status: z.string().openapi({ example: Onchain.Success }),
     logs: z.array(transactionSchema).openapi({ example: [] }),
     revertData: z.string().openapi({ example: "0x" }),
     gasUsed: z.string().openapi({ example: "0" }),

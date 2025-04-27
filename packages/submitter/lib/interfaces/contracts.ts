@@ -9,7 +9,7 @@ export enum CallStatus {
 }
 
 /** TypeScript version of the contract's SubmitOutput (in Types.sol). */
-export type EntryPointSubmitOutput = {
+export type EntryPointOutput = {
     /**
      * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
      * at the top-level of a transaction.

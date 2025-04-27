@@ -1,15 +1,8 @@
-import type { Address, Hash } from "@happy.tech/common"
+import type { Address, Bytes, Hash } from "@happy.tech/common"
 import type { Boop, PartialBoop } from "./Boop"
-import type { SubmitterErrorStatus } from "./status"
 
-export type SubmitSuccess = "submitSuccess"
-export const SubmitSuccess = "submitSuccess" as const
-
-export type SubmitStatus =
-    | SubmitSuccess
-    | SubmitterErrorStatus.UnexpectedError
-    | SubmitterErrorStatus.BufferExceeded
-    | SubmitterErrorStatus.OverCapacity
+import { Onchain, type OnchainStatus } from "./Onchain"
+import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
 
 export type SubmitInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
@@ -19,16 +12,65 @@ export type SubmitInput = {
     boop: PartialBoop
 }
 
-export type SubmitOutput =
-    | {
-          status: SubmitSuccess
-          /** Hash of the submitted Boop */
-          hash: Hash
-      }
-    | {
-          status: Exclude<SubmitStatus, SubmitSuccess>
-          hash?: never
-      }
+/**
+ * Possible result of a `submit` call.
+ */
+export const Submit = {
+    ...Onchain,
+    ...SubmitterError,
+} as const
+
+/**
+ * @inheritDoc Submit
+ * cf. {@link Submit}
+ */
+export type SubmitStatus = (typeof Submit)[keyof typeof Submit]
+
+/**
+ * Output of a `submit` call: either a successful submission, a
+ * failed submission, or an offchain failure for other reasons.
+ */
+export type SubmitOutput = SubmitSuccess | SubmitSimulationFailed | SubmitError
+
+/** Output type of successful `submit` calls. */
+export type SubmitSuccess = {
+    status: typeof Onchain.Success
+
+    /** Hash of the submitted Boop */
+    hash: Hash
+
+    /** Hash of the transaction carrying the Boop */
+    // TODO: I refuse
+    txHash: Hash
+}
+
+/** Output type of `submit` who failed simulation "onchain". */
+export type SubmitSimulationFailed = {
+    status: Exclude<OnchainStatus, typeof Onchain.Success>
+
+    /** Whether the error occurred at the simulation stage or at the submit stage. */
+    stage: "simulate"
+
+    /**
+     * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted` status, or
+     * the the returned encoded error matching an `Onchain.*Rejected` status. This pertains to simulation.
+     */
+    revertData?: Bytes
+
+    /** Description of the problem. */
+    description?: string
+}
+
+/** Output type of  `submit` calls that failed for other reasons. */
+export type SubmitError = {
+    status: SubmitterErrorStatus
+
+    /** Whether the error occurred at the simulation stage or at the submit stage. */
+    stage: "simulate" | "submit"
+
+    /** Description of the problem. */
+    description?: string
+}
 
 /**
  * POST `/api/v1/boop/submit`
