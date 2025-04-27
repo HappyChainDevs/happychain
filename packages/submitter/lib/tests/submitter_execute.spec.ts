@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -7,23 +8,20 @@ import { ExecuteSuccess } from "#lib/interfaces/boop_execute"
 import { SubmitSuccess } from "#lib/interfaces/boop_submit"
 import { EntryPointStatus } from "#lib/interfaces/status"
 import { createMockTokenAMintBoop, fundAccount, getMockTokenABalance, getNonce, mockDeployments, signTx } from "./utils"
-import { client } from "./utils/client"
+import { client, createSmartAccount } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = async (tx: Boop) => await signTx(testAccount, tx)
 
 describe("submitter_execute", () => {
-    let smartAccount: `0x${string}`
+    let smartAccount: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
-            .then((a) => a.json())
-            .then((a) => a.address)
+        smartAccount = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {

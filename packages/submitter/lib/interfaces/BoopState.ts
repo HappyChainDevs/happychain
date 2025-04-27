@@ -1,11 +1,7 @@
 import type { Prettify } from "@happy.tech/common"
 import type { SimulateOutput } from "#lib/interfaces/boop_simulate"
 import type { BoopReceipt } from "./BoopReceipt"
-import type {
-    EntryPointStatus,
-    SubmitterErrorSimulationMaybeAvailable,
-    SubmitterErrorSimulationUnavailable,
-} from "./status"
+import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
 
 // -------------------------------------------------------------------------------------------------
 
@@ -15,13 +11,13 @@ import type {
  */
 // biome-ignore format: readability
 export type BoopStateSubmitterError = {
-    status: SubmitterErrorSimulationUnavailable
+    status: SubmitterErrorStatus
     included?: never,
     receipt?: never
     simulation?: never
 }
 export type BoopStateEntryPointError = {
-    status: EntryPointStatus | SubmitterErrorSimulationMaybeAvailable
+    status: EntryPointStatus | SubmitterErrorStatus
 
     /** Whether the Boop was included and executed onchain. */
     included: false

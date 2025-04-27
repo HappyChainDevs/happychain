@@ -38,19 +38,6 @@ export function isSubmitterError(status: string): status is SubmitterErrorStatus
 
 // -------------------------------------------------------------------------------------------------
 
-export type SubmitterErrorSimulationUnavailable =
-    | SubmitterErrorStatus.BufferExceeded
-    | SubmitterErrorStatus.OverCapacity
-    | SubmitterErrorStatus.UnexpectedError
-    | SubmitterErrorStatus.SimulationTimeout
-    | SubmitterErrorStatus.RpcError
-
-export type SubmitterErrorSimulationMaybeAvailable =
-    | SubmitterErrorStatus.SubmitTimeout
-    | SubmitterErrorStatus.ReceiptTimeout
-
-// -------------------------------------------------------------------------------------------------
-
 // TODO rename with new names
 
 /**

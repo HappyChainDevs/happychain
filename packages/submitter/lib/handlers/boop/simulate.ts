@@ -1,10 +1,11 @@
-import { type Hex, getProp, stringify } from "@happy.tech/common"
+import type { Hex } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { BaseError, zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { getSubmitterFee } from "#lib/custom/feePolicy"
 import { abis, deployment, env } from "#lib/env"
+import { extractErrorMessage } from "#lib/errors/utils"
 import { decodeRawError, getRevertError } from "#lib/errors/viem"
 import type { SimulateInput, SimulateOutput } from "#lib/interfaces/boop_simulate.ts"
 import { CallStatus } from "#lib/interfaces/contracts"
@@ -65,8 +66,19 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
     } catch (error) {
         const { raw, decoded, isContractRevert } = getRevertError(error)
 
-        // biome-ignore format: limit indentation
-        if (isContractRevert)
+        if (!isContractRevert) {
+            if (error instanceof BaseError)
+                return {
+                    status: SubmitterErrorStatus.RpcError,
+                    description: error.message,
+                }
+
+            return {
+                status: SubmitterErrorStatus.UnexpectedError,
+                description: extractErrorMessage(error),
+            }
+        }
+
         switch (decoded?.errorName) {
             case "InvalidNonce": {
                 // We don't necessarily need to reset the nonce here, but we do it to be safe.
@@ -95,7 +107,9 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                 console.log(raw)
                 return {
                     status: EntryPointStatus.ValidationReverted,
-                    description: "Account reverted in `validate` — this is not standard compliant behaviour",
+                    description:
+                        "Account reverted in `validate` — this is not standard compliant behaviour.\n" +
+                        "Are you sure you specified the correct account address?",
                     revertData: decoded.args[0] as Hex,
                 }
             }
@@ -111,7 +125,8 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                     case "InvalidExtensionValue":
                         return {
                             status: EntryPointStatus.InvalidExtensionValue,
-                            description: "Account rejected the boop because an extension value in the extraData is invalid",
+                            description:
+                                "Account rejected the boop because an extension value in the extraData is invalid",
                             revertData: "0x",
                         }
                     case "UnknownDuringSimulation": {
@@ -127,7 +142,9 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
             case "PaymentValidationReverted": {
                 return {
                     status: EntryPointStatus.PaymentValidationReverted,
-                    description: "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour",
+                    description:
+                        "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour.\n" +
+                        "Are you sure you specified the correct paymaster address?",
                     revertData: decoded.args[0] as Hex,
                 }
             }
@@ -141,17 +158,19 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                             revertData: "0x",
                         }
                     }
-                    case "SubmitterFeeTooHigh": { // HappyPaymaster
+                    case "SubmitterFeeTooHigh": {
+                        // HappyPaymaster
                         return {
                             status: EntryPointStatus.PaymentValidationFailed,
                             description: `Paymaster rejected the boop because of the submitter fee (${boop.submitterFee} wei) was too high`,
                             revertData: decoded.args[0] as Hex,
                         }
                     }
-                    case "InsufficientGasBudget": { // HappyPaymaster
+                    case "InsufficientGasBudget": {
+                        // HappyPaymaster
                         return {
                             status: EntryPointStatus.PaymentValidationFailed,
-                            description: `The HappyPaymaster rejected the boop because your gas budget is insufficient`,
+                            description: "The HappyPaymaster rejected the boop because your gas budget is insufficient",
                             revertData: decoded.args[0] as Hex,
                         }
                     }
@@ -183,17 +202,6 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                 }
             }
             // TODO later: extension stuff
-        }
-
-        if (error instanceof BaseError)
-            return {
-                status: SubmitterErrorStatus.RpcError,
-                description: error.message,
-            }
-
-        return {
-            status: SubmitterErrorStatus.UnexpectedError,
-            description: stringify(getProp(error, "message") ?? getProp(error, "shortMessage") ?? getProp(error, "details")),
         }
     }
 }

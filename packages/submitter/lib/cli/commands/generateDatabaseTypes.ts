@@ -8,7 +8,7 @@ import { overrides } from "#lib/database/type-generation-overrides"
  * it to `lib/database/generated.d.ts`. It should be run after migrations are applied.
  *
  * Note: This file can't easily be built for production, but the type generation is also
- * not needed in production. It
+ * not needed in production.
  */
 
 const baseDir = join(import.meta.dir, "../../../")

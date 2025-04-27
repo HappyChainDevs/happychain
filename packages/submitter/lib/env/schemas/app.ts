@@ -28,4 +28,5 @@ export const appSchema = z.object({
     LOG_LEVEL: z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default(DEFAULT_LOG_LEVEL),
     DATABASE_URL: z.string(),
     GAS_SAFETY_MARGIN: z.coerce.number().gt(100).lt(10000).default(120),
+    RECEIPT_TIMEOUT: z.coerce.number().default(8000),
 })

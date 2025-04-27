@@ -8,7 +8,7 @@ import type { SimulateOutput, SimulateOutputFailed, SimulateOutputSuccess } from
 import { CallStatus } from "#lib/interfaces/contracts"
 import { EntryPointStatus } from "#lib/interfaces/status"
 import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
-import { client } from "./utils/client"
+import { client, createSmartAccount } from "./utils/client"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -21,10 +21,7 @@ describe("submitter_simulate", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
-            .then((a) => a.json())
-            .then((a) => a.address)
+        smartAccount = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
@@ -48,7 +45,6 @@ describe("submitter_simulate", () => {
 
     async function checks(results: ClientResponse<SimulateOutput>, opts: ChecksOptions = {}) {
         const response = (await results.json()) as SimulateOutputSuccess
-        console.log(response)
         expect(results.status).toBe(200)
         expect(response.status).toBe(EntryPointStatus.Success)
         expect(response).toMatchObject(partialSimpleSuccessfulOutput(opts))

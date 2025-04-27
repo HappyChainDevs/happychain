@@ -3,6 +3,8 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
+import { CreateAccountOwnStatus } from "#lib/interfaces/account_create"
+import { SubmitterErrorStatus } from "#lib/interfaces/status"
 import { isProduction } from "#lib/utils/isProduction"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
@@ -22,6 +24,20 @@ const inputSchema = z.object({
         .openapi({ example: "0x1" }),
 })
 
+const outputSchema = inputSchema.merge(
+    z.object({
+        status: z
+            .union([z.nativeEnum(CreateAccountOwnStatus), z.nativeEnum(SubmitterErrorStatus)])
+            .openapi({ example: CreateAccountOwnStatus.Success }),
+        address: z
+            .string()
+            .refine(isHexString)
+            .optional()
+            .openapi({ example: "0x5b3064DD8C5A33e6F7Fb814FdCdb0c249bf57Ad2" }),
+        description: z.string().optional().openapi({ example: "Account creation failed onchain" }),
+    }),
+)
+
 export const description = describeRoute({
     // Experimental option. Disable in production, but useful in development
     validateResponse: !isProduction,
@@ -32,11 +48,7 @@ export const description = describeRoute({
             description: "Successfully created an account",
             content: {
                 "application/json": {
-                    schema: resolver(
-                        z
-                            .object({ address: z.string().refine(isHexString) })
-                            .openapi({ example: { address: "0x5b3064DD8C5A33e6F7Fb814FdCdb0c249bf57Ad2" } }),
-                    ),
+                    schema: resolver(outputSchema),
                 },
             },
         },

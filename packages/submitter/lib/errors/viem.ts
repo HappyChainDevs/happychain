@@ -1,7 +1,15 @@
 import { type Hex, hasKey } from "@happy.tech/common"
-import { type AbiFunction, BaseError, ContractFunctionRevertedError, RawContractError } from "viem"
+import {
+    type AbiFunction,
+    BaseError,
+    ContractFunctionRevertedError,
+    type Log,
+    RawContractError,
+    decodeEventLog,
+    toEventSelector,
+} from "viem"
 import { decodeErrorResult, getAbiItem, toFunctionSelector } from "viem/utils"
-import { errorsAbi, errorsAsFunctionsAbi } from "#lib/errors/errorsAbi"
+import { errorsAbi, errorsAsFunctionsAbi, eventsAbi } from "#lib/errors/errorsAbi"
 
 /**
  * Optional raw & decoded view of a contract revert error. In general, if the decoded
@@ -92,7 +100,7 @@ export function decodeRawError(data: Hex): DecodedRevertError | undefined {
  * Converts a known error name into its 4 bytes selector, or return undefined if the error isn't known.
  */
 export function getSelectorFromErrorName(name: string): Hex | undefined {
-    const item = errorsAsFunctionsAbi.find((a) => a.name === name)
+    const item = errorsAsFunctionsAbi.find((e) => e.name === name)
     // toErrorSelector? who needs that? :')
     return item ? toFunctionSelector(item) : undefined
 }
@@ -107,4 +115,34 @@ export function getErrorNameFromSelector(selector: Hex): string | undefined {
     } catch {
         return
     }
+}
+
+/**
+ * An ABI-decoded event.
+ */
+export type DecodedEvent = {
+    /** Name of the event. */
+    eventName: string
+    /** Map argument names to their values. */
+    args: Record<string, unknown>
+}
+
+/**
+ * Attempts to decode the given log against known abis, returning the result or undefined if not known.
+ */
+export function decodeEvent(log: Log): DecodedEvent | undefined {
+    try {
+        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: log.topics })
+    } catch {
+        return
+    }
+}
+
+/**
+ * Converts a known event name into its 4 bytes selector, or return undefined if the event isn't known.
+ */
+export function getSelectorFromEventName(name: string): Hex | undefined {
+    const item = eventsAbi.find((a) => a.name === name)
+    // toErrorSelector? who needs that? :')
+    return item ? toEventSelector(item) : undefined
 }

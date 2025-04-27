@@ -19,7 +19,6 @@ export type {
     //
     BoopState,
     Optional,
-    SubmitterErrorSimulationUnavailable,
     SimulationResult,
     ExecuteSuccess,
     Boop,
@@ -28,7 +27,6 @@ export type {
     BoopStateEntryPointError,
     BoopStateSuccess,
     SimulatedValidationStatus,
-    SubmitterErrorSimulationMaybeAvailable,
     BoopReceipt,
     SimulateStatus,
     SubmitStatus,
@@ -37,6 +35,7 @@ export type {
     Log,
     Receipt,
     TransactionTypeName,
+    // TODO missing stuff now
 } from "@happy.tech/submitter/client"
 
 export type {
