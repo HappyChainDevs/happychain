@@ -28,7 +28,6 @@ export class Server {
         this.cloudflareService = new CloudflareService(env.TURNSTILE_SECRET)
     }
 
-
     async start() {
         this.app.use(
             "*",
@@ -83,5 +82,4 @@ export class Server {
             }),
         )
     }
-
 }

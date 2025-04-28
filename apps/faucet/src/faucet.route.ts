@@ -1,14 +1,14 @@
 import { isAddress } from "@happy.tech/common"
-import type { Handler, Hono } from "hono"
+import type { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator } from "hono-openapi/zod"
 import { err } from "neverthrow"
 import { z } from "zod"
+import { env } from "./env"
 import type { CloudflareService } from "./services/cloudflare"
 import type { FaucetService } from "./services/faucet"
 import { makeResponse } from "./utils"
-import { env } from "./env"
 
 export const inputSchema = z.object({
     address: z.string().refine(isAddress),
