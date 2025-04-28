@@ -1,8 +1,4 @@
-import useClients from "../useClients"
-
 const CallBatchDemo = () => {
-    const { walletClient } = useClients()
-
     async function getCapabilities() {
         // const caps = await walletClient?.getCapabilities()
     }
