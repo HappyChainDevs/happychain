@@ -1,8 +1,8 @@
 import { type Result, err, ok } from "neverthrow"
 import { env } from "#lib/env"
 import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
-import type { ReceiptRequestInput } from "#lib/interfaces/boop_receipt"
 import { Onchain } from "#lib/interfaces/Onchain"
+import type { ReceiptRequestInput } from "#lib/interfaces/boop_receipt"
 import { boopReceiptService, simulationCache } from "#lib/services"
 
 export async function receiptByHash({

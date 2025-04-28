@@ -6,11 +6,7 @@ import { abis, deployment } from "#lib/env"
 import { extractErrorMessage } from "#lib/errors/utils"
 import { decodeEvent } from "#lib/errors/viem"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import {
-    CreateAccount,
-    type CreateAccountInput,
-    type CreateAccountOutput,
-} from "#lib/interfaces/account_create"
+import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "#lib/interfaces/account_create"
 import { logger } from "#lib/logger"
 import { computeHappyAccountAddress } from "#lib/utils/computeHappyAccountAddress"
 import { getAccountDeployerAccount } from "#lib/utils/getAccountDeployerAccount"

@@ -3,8 +3,8 @@ import { publicClient } from "#lib/clients"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
-import type { Receipt } from "#lib/interfaces/ethereum"
 import type { OnchainStatus } from "#lib/interfaces/Onchain"
+import type { Receipt } from "#lib/interfaces/ethereum"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 
 export class BoopReceiptService {

@@ -1,6 +1,6 @@
 import type { Prettify } from "@happy.tech/common"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
-import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
+import type { Onchain, OnchainStatus } from "#lib/interfaces/Onchain"
 import type { SimulateOutput } from "#lib/interfaces/boop_simulate"
 import type { SubmitterErrorStatus } from "./SubmitterError"
 

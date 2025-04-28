@@ -12,6 +12,7 @@ import {
 } from "boop/interfaces/EventsAndErrors.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
+import {console} from "forge-std/console.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 import {Encoding} from "./../core/Encoding.sol";

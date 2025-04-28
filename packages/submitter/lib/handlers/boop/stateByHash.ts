@@ -1,7 +1,7 @@
 import { type Result, err, ok } from "neverthrow"
 import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
-import type { StateRequestInput } from "#lib/interfaces/boop_state"
 import { Onchain } from "#lib/interfaces/Onchain"
+import type { StateRequestInput } from "#lib/interfaces/boop_state"
 import { boopReceiptService, simulationCache } from "#lib/services"
 
 export async function stateByHash({
