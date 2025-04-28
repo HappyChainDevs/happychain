@@ -1,9 +1,11 @@
 import { type Hex, type UUID, bigIntToZeroPadded, unknownToError } from "@happy.tech/common"
 import { type Result, ResultAsync } from "neverthrow"
-import { Drand } from "./Drand"
+import { Drand, FinalizedDrandStatuses } from "./Drand"
 import { DIGITS_MAX_UINT256 } from "./constants"
 import { db } from "./db/driver"
 import type { DrandRow } from "./db/types"
+
+const PRUNE_INTERVAL_ROUNDS = 20n // 1 minute
 
 export class DrandRepository {
     private cache: Drand[] = []
@@ -76,6 +78,22 @@ export class DrandRepository {
                 .updateTable("drands")
                 .set(row)
                 .where("round", "=", bigIntToZeroPadded(drand.round, DIGITS_MAX_UINT256))
+                .execute(),
+            unknownToError,
+        ).map(() => undefined)
+    }
+
+    async pruneDrands(latestRound: bigint): Promise<Result<void, Error>> {
+        const cutoffRound = latestRound - PRUNE_INTERVAL_ROUNDS
+
+        this.cache = this.cache.filter(
+            (drand) => !(drand.round <= cutoffRound && FinalizedDrandStatuses.includes(drand.status)),
+        )
+        return await ResultAsync.fromPromise(
+            db
+                .deleteFrom("drands")
+                .where("round", "<=", bigIntToZeroPadded(cutoffRound, DIGITS_MAX_UINT256))
+                .where("status", "in", FinalizedDrandStatuses)
                 .execute(),
             unknownToError,
         ).map(() => undefined)

@@ -7,6 +7,8 @@ export enum DrandStatus {
     FAILED = "FAILED",
 }
 
+export const FinalizedDrandStatuses = [DrandStatus.SUCCESS, DrandStatus.FAILED]
+
 export class Drand {
     #round: bigint
     #signature: Hex
