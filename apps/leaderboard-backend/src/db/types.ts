@@ -23,8 +23,8 @@ export interface UserTable {
     id: Generated<UserTableId>
     primary_wallet: Address // Primary wallet for the user
     username: string
-    created_at: ColumnType<Date, string, never>
-    updated_at: ColumnType<Date, string, never>
+    created_at: ColumnType<Date, string | undefined, never>
+    updated_at: ColumnType<Date, string | undefined, string>
 }
 
 // User wallet addresses (allows multiple wallets per user)
@@ -33,7 +33,7 @@ export interface UserWalletTable {
     user_id: UserTableId // FK to users
     wallet_address: Address
     is_primary: boolean // If this is the user's primary wallet
-    created_at: ColumnType<Date, string, never>
+    created_at: ColumnType<Date, string | undefined, never>
 }
 
 // Guilds (groups of users)
@@ -42,8 +42,8 @@ export interface GuildTable {
     name: string
     icon_url: string | null
     creator_id: UserTableId // FK to users, original creator
-    created_at: ColumnType<Date, string, never>
-    updated_at: ColumnType<Date, string, string>
+    created_at: ColumnType<Date, string | undefined, never>
+    updated_at: ColumnType<Date, string | undefined, string>
 }
 
 // Guild membership JOIN table (users in guilds with role)
@@ -52,7 +52,7 @@ export interface GuildMemberTable {
     guild_id: GuildTableId // FK to guilds
     user_id: UserTableId // FK to users
     is_admin: boolean // Whether user is an admin of this guild
-    joined_at: ColumnType<Date, string, never>
+    joined_at: ColumnType<Date, string | undefined, never>
 }
 
 // Games available on the platform
@@ -62,7 +62,7 @@ export interface GameTable {
     icon_url: string | null
     description: string | null
     admin_id: UserTableId // FK to users, creator/admin of the game
-    created_at: ColumnType<Date, string, never>
+    created_at: ColumnType<Date, string | undefined, never>
 }
 
 // User scores in games
@@ -72,8 +72,8 @@ export interface UserGameScoreTable {
     game_id: GameTableId // FK to games
     score: number // The actual score
     metadata: string | null // JSON string for any additional game-specific data
-    created_at: ColumnType<Date, string, never>
-    updated_at: ColumnType<Date, string, string>
+    created_at: ColumnType<Date, string | undefined, never>
+    updated_at: ColumnType<Date, string | undefined, string>
 }
 
 // Kysely helper types
