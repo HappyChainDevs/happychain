@@ -30,7 +30,8 @@ export class LeaderBoardRepository {
 
     // Guild leaderboard: top guilds by total score of all members
     async getGuildLeaderboard(limit = 50): Promise<GuildLeaderboardEntry[]> {
-        return await this.db
+        // Get leaderboard entries (without member_count)
+        const leaderboardRows = await this.db
             .selectFrom("guilds")
             .innerJoin("guild_members", "guilds.id", "guild_members.guild_id")
             .innerJoin("user_game_scores", "guild_members.user_id", "user_game_scores.user_id")
@@ -39,12 +40,29 @@ export class LeaderBoardRepository {
                 "guilds.name as guild_name",
                 "guilds.icon_url",
                 this.db.fn.sum<number>("user_game_scores.score").as("total_score"),
-                this.db.fn.count<number>("guild_members.id").as("member_count"),
             ])
             .groupBy(["guilds.id", "guilds.name", "guilds.icon_url"])
             .orderBy("total_score", "desc")
             .limit(limit)
-            .execute()
+            .execute();
+
+        // Get member counts for all guilds in the leaderboard
+        const guildIds = leaderboardRows.map(row => row.guild_id);
+        let memberCounts: Record<number, number> = {};
+        if (guildIds.length > 0) {
+            const memberCountRows = await this.db
+                .selectFrom("guild_members")
+                .select(["guild_id", this.db.fn.count<number>("user_id").as("member_count")])
+                .where("guild_id", "in", guildIds)
+                .groupBy(["guild_id"])
+                .execute();
+            memberCounts = Object.fromEntries(memberCountRows.map(row => [row.guild_id, row.member_count]));
+        }
+
+        return leaderboardRows.map(row => ({
+            ...row,
+            member_count: memberCounts[row.guild_id] ?? 0,
+        }));
     }
 
     // Game-specific leaderboard: top users by score in a game
