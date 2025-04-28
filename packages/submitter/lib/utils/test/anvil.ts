@@ -17,7 +17,7 @@ const noop = () => {}
 
 async function startAnvil() {
     // As anvil is a long running process, we won't await.
-    $`FOUNDRY_DISABLE_NIGHTLY_WARNING=true anvil --chain-id 1337 --block-time 2`.quiet().then(noop).catch(noop)
+    $`FOUNDRY_DISABLE_NIGHTLY_WARNING=true anvil --block-time 2`.quiet().then(noop).catch(noop)
     await waitBlocks() // ensure anvil is up and running at least block 1
     console.log("\n⚒️ Anvil Started")
 }

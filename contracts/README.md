@@ -42,7 +42,7 @@ By default:
 
 ### Deployment
 
-- `make anvil` — run local Anvil devnet on port 1337
+- `make anvil` — run local Anvil devnet on port 31337
 - `make validate-upgrades` — uses OpenZeppelin Upgrades to perform checks related to upgradeability (automatically called by `make deploy`)
 ----
 - `make deploy` — executes a deploy script to deploy contracts to the chain, with many options (env variables):

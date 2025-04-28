@@ -1,10 +1,10 @@
 import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
 import { http, createPublicClient, createWalletClient } from "viem"
-import { happychainTestnet, localhost } from "viem/chains"
+import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
 
 function getChain(): Chain {
-    const chain = [localhost, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
+    const chain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
     if (chain)
         return {
             ...chain,

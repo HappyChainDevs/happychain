@@ -3,7 +3,7 @@ import {
     abis as abisHappyChainSepolia,
     deployment as deploymentHappyChainSepolia,
 } from "@happy.tech/contracts/boop/sepolia"
-import { happychainTestnet, localhost } from "viem/chains"
+import { anvil, happychainTestnet } from "viem/chains"
 import type { Environment } from "#lib/env/index"
 
 export function getDeployment(env: Environment) {
@@ -11,7 +11,7 @@ export function getDeployment(env: Environment) {
         switch (env.CHAIN_ID) {
             case happychainTestnet.id:
                 return deploymentHappyChainSepolia
-            case localhost.id:
+            case anvil.id:
                 return deploymentAnvil
             default:
                 return deploymentHappyChainSepolia
