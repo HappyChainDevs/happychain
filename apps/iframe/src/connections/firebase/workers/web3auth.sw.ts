@@ -1,76 +1,18 @@
-import "./web3auth.polyfill"
+import "./web3auth/polyfill"
+
 import type { Address } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
-import { worker } from "@happy.tech/worker/runtime"
-import { tssLib } from "@toruslabs/tss-dkls-lib"
-import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
-import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
-import { createStore, get, set } from "idb-keyval"
-import { config } from "../services/config"
+import { COREKIT_STATUS, type JWTLoginParams } from "@web3auth/mpc-core-kit"
+import { web3Auth } from "./web3auth/mpc-core-kit"
+import { ethereumSigningProvider } from "./web3auth/signingProvider"
+
 export { addMessageListener } from "@happy.tech/worker/runtime"
-
-const web3AuthStore = createStore("web-3-auth-db", "web-3-auth-store")
-
-const web3AuthWorkerStorage = {
-    async getItem(key: string) {
-        return get(key, web3AuthStore)
-    },
-    async setItem(key: string, value: string) {
-        return set(key, value, web3AuthStore)
-    },
-}
-
-const web3AuthOptions = {
-    web3AuthClientId: import.meta.env.VITE_WEB3AUTH_CLIENT_ID,
-    web3AuthNetwork: config.web3AuthNetwork,
-    manualSync: true,
-    tssLib: tssLib,
-    enableLogging: false,
-    storage: web3AuthWorkerStorage,
-}
-const web3Auth = new Web3AuthMPCCoreKit(web3AuthOptions)
-
-const signerProviderChainConfig = {
-    chainNamespace: config.web3AuthChainNamespace,
-    chainId: config.chainId,
-    rpcTarget: config.rpcUrls[0],
-    displayName: config.chainName,
-    blockExplorerUrl: config.blockExplorerUrls?.[0],
-    ticker: config.nativeCurrency.symbol,
-    tickerName: config.nativeCurrency.name,
-    decimals: config.nativeCurrency.decimals,
-    wsTarget: undefined, // unsupported currently
-}
-
-const ethereumSigningProvider = new EthereumSigningProvider({
-    config: {
-        skipLookupNetwork: true,
-        chainConfig: signerProviderChainConfig,
-    },
-})
-ethereumSigningProvider.setupProvider(makeEthereumSigner(web3Auth))
 
 /**
  *  Global mutable variables/state
  */
 let state: "connecting" | "connected" | "disconnected" | "disconnecting" = "disconnected"
 let _addresses: Address[] = []
-
-/**
- * Proxy all provider events to iframe provider
- */
-ethereumSigningProvider.on("connect", async (data) => {
-    worker.broadcast({ action: "connect", data })
-})
-ethereumSigningProvider.on("disconnect", () => {
-    worker.broadcast({ action: "disconnect", data: undefined })
-})
-ethereumSigningProvider.on("chainChanged", async (data) => {
-    worker.broadcast({ action: "chainChanged", data })
-})
-ethereumSigningProvider.on("accountsChanged", (data) => {
-    worker.broadcast({ action: "accountsChanged", data })
-})
 
 /**
  * Before calling connect(), disconnect(), or request() functions, we must verify that web3Auth

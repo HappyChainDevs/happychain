@@ -28,7 +28,7 @@ import {
     setFirebaseAuthState,
     setFirebaseSharedUser,
 } from "../workers/firebase.sw"
-import { FirebaseAuthState } from "../workers/firebaseAuthState"
+import { FirebaseAuthState } from "../workers/firebase/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
 type HappyUserDetails = Omit<HappyUser, "address" | "controllingAddress">

@@ -1,5 +1,5 @@
 import type { HappyUser } from "@happy.tech/wallet-common"
-import { FirebaseAuthState } from "./firebaseAuthState"
+import { FirebaseAuthState } from "./firebase/firebaseAuthState"
 
 // === SHARED USER STATE ===========================================================================
 
