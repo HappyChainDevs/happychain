@@ -20,6 +20,7 @@ import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
+import {console} from "forge-std/console.sol";
 import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
 import {MockERC20} from "src/mocks/MockERC20.sol";
 import {MockRevert} from "src/mocks/MockRevert.sol";
