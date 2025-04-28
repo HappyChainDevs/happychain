@@ -1,4 +1,3 @@
-import { happyLogo128x128 } from "@happy.tech/common"
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
@@ -17,14 +16,14 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
             <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
                 <img
                     alt={dappUrl}
-                    className="text-transparent rounded-full"
+                    className="text-transparent rounded-full h-[1.3rem] w-[1.5rem]"
                     loading="lazy"
                     width="20"
                     height="20"
                     onError={() => setIsFaviconBroken(true)}
                     src={
                         isFaviconBroken || dappUrl.includes("localhost:")
-                            ? happyLogo128x128
+                            ? "/images/happychainIcon.png"
                             : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=20`
                     }
                 />
