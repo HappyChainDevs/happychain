@@ -68,6 +68,7 @@ export class DrandService {
         this.handleNewDrandBeacons()
 
         setInterval(this.handleNewDrandBeacons.bind(this), periodMs)
+        setInterval(this.pruneDrands.bind(this), MS_IN_SECOND * 20)
     }
 
     async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
@@ -140,8 +141,14 @@ export class DrandService {
         this.pendingGetDrandBeaconPromises.forEach((p) => p.reject())
     }
 
+    private async pruneDrands() {
+        const currentRound = this.currentRound()
+        await this.drandRepository.pruneDrands(currentRound)
+    }
+
     private async _handleNewDrandBeacons() {
         const currentRound = this.currentRound()
+
         const drandGaps = this.drandRepository.findRoundGapsInRange(currentRound - env.EVM_DRAND_MARGIN, currentRound)
 
         await Promise.all(
