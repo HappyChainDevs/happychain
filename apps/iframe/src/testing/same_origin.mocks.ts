@@ -13,7 +13,7 @@ export const appURLMock = async () => ({
 
 export const iframeID = createUUID()
 
-export const requestUtilsMock = (importUtils: () => Promise<typeof import("#src/requests/utils")>) =>
+export const requestUtilsMock = (importUtils: () => Promise<typeof import("#src/utils/appURL")>) =>
     importUtils().then((utils) => ({
         ...utils,
         appForSourceID(sourceId: UUID): AppURL | undefined {

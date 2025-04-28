@@ -1,10 +1,10 @@
-import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { publicClient, walletClient } from "../clients"
+import { abis, deployment } from "../deployments"
 
 const SessionKeyDemo = () => {
     const { user } = useHappyWallet()
