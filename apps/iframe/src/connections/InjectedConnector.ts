@@ -7,19 +7,18 @@ import type {
     MsgsFromApp,
     MsgsFromIframe,
 } from "@happy.tech/wallet-common"
-import { EIP1193UserRejectedRequestError, Msgs, WalletType, chainDefinitions } from "@happy.tech/wallet-common"
-import { connect as connectWagmi, disconnect as disconnectWagmi } from "@wagmi/core"
+import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
-import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
-import { setInjectedProvider } from "#src/state/injectedProvider.ts"
-import { config } from "#src/wagmi/config.ts"
-import { happyConnector } from "#src/wagmi/connector.ts"
+import { setUserWithProvider } from "#src/actions/setUserWithProvider"
+import { getCurrentChain } from "#src/state/chains"
+import { setInjectedProvider } from "#src/state/injectedProvider"
+import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
+import { connectWagmi, disconnectWagmi } from "#src/wagmi/utils"
 import { iframeID } from "../requests/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
 import { grantPermissions } from "../state/permissions"
 import { getAppURL, isStandaloneIframe } from "../utils/appURL"
-import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
 import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
 /**
@@ -75,19 +74,19 @@ export class InjectedConnector implements ConnectionProvider {
     public async onConnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connectWagmi(config, { connector: happyConnector })
+        await connectWagmi()
     }
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connectWagmi(config, { connector: happyConnector })
+        await connectWagmi()
     }
 
     public async onDisconnect() {
         try {
             // if wagmi wasn't previously successfully connected, this throws
-            await disconnectWagmi(config)
+            await disconnectWagmi()
         } catch {}
         setUserWithProvider(undefined, undefined)
     }
@@ -200,24 +199,25 @@ export class InjectedConnector implements ConnectionProvider {
 
     private async switchInjectedWalletToHappyChain() {
         try {
+            const configuredChain = getCurrentChain()
             // Ensures the chain has been added to the injected wallet
             await this.provider.request({
                 method: "wallet_addEthereumChain",
                 params: [
                     {
-                        chainId: chainDefinitions.defaultChain.chainId,
-                        chainName: chainDefinitions.defaultChain.chainName,
-                        rpcUrls: chainDefinitions.defaultChain.rpcUrls,
+                        chainId: configuredChain.chainId,
+                        chainName: configuredChain.chainName,
+                        rpcUrls: configuredChain.rpcUrls,
                         iconUrls: [],
-                        nativeCurrency: chainDefinitions.defaultChain.nativeCurrency,
-                        blockExplorerUrls: chainDefinitions.defaultChain.blockExplorerUrls,
+                        nativeCurrency: configuredChain.nativeCurrency,
+                        blockExplorerUrls: configuredChain.blockExplorerUrls,
                     },
                 ],
             })
             // Ensures the chain has been selected (will not prompt)
             await this.provider.request({
                 method: "wallet_switchEthereumChain",
-                params: [{ chainId: chainDefinitions.defaultChain.chainId }],
+                params: [{ chainId: configuredChain.chainId }],
             })
         } catch (e) {
             console.error(e)
