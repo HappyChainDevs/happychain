@@ -1,6 +1,5 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import { env } from "#lib/env"
 import type { Boop, BoopOptionalFields, PartialBoop } from "../interfaces/Boop"
 import { encodeBoop } from "./encodeBoop"
 

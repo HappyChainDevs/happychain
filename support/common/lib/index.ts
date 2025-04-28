@@ -49,6 +49,7 @@ export {
     bigIntToZeroPadded,
     serializeBigInt,
     parseBigInt,
+    type BigIntSerialized,
 } from "./utils/bigint"
 
 export { validateNumericInput } from "./utils/regexChecks"
