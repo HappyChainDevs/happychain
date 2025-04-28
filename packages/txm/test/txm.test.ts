@@ -1,3 +1,4 @@
+import { bigIntToZeroPadded } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
 import { err } from "neverthrow"
 import {
@@ -35,7 +36,6 @@ import {
 import { deployMockContracts } from "./utils/contracts"
 import { assertIsDefined, assertIsOk, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
-import { bigIntToZeroPadded } from "@happy.tech/common"
 
 const retryManager = new TestRetryManager()
 
