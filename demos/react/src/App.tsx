@@ -1,4 +1,5 @@
 import { useHappyWallet } from "@happy.tech/react"
+import CallBatchDemo from "./demo-components/CallBatchDemo"
 import ChainSwitchingDemo from "./demo-components/ChainSwitchingDemo"
 import ConnectionDemo from "./demo-components/ConnectionDemo"
 import SessionKeyDemo from "./demo-components/SessionKeyDemo"
@@ -24,6 +25,7 @@ function App() {
                 <ChainSwitchingDemo />
                 <WalletFunctionalityDemo />
                 <SessionKeyDemo />
+                <CallBatchDemo />
             </div>
         </main>
     )
