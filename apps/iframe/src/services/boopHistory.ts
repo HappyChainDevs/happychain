@@ -1,4 +1,4 @@
-import { EntryPointStatus, type ExecuteOutput } from "@happy.tech/submitter-client"
+import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
 import type { Address, Hash } from "viem"
 import { StorageKey, storage } from "./storage"
 
@@ -42,12 +42,12 @@ export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, 
 }
 
 export function markBoopAsConfirmed(account: Address, value: bigint, receipt: ExecuteOutput): void {
-    if (receipt.status !== EntryPointStatus.Success) {
+    if (receipt.status !== Onchain.Success) {
         console.error("Cannot mark boop as confirmed: Boop hash is missing.")
         return
     }
 
-    updateBoopStatus(account, receipt.hash!, {
+    updateBoopStatus(account, (receipt as ExecuteSuccess).receipt.boopHash, {
         status: "confirmed",
         receipt,
         value,

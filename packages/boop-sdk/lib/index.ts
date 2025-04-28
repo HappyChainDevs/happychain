@@ -1,21 +1,21 @@
 export { BoopClient } from "./client"
 export type { BoopClientConfig } from "./client"
 
-export type {
-    PendingBoopInput,
-    PendingBoopOutput,
-    ReceiptRequestInput,
-    ReceiptRequestOutput,
-    StateRequestInput,
-    StateRequestOutput,
-    BoopStateSubmitterError,
-    BoopStateEntryPointError,
-    BoopStateSuccess,
-    PendingBoopInfo,
+export {
+    type PendingBoopInput,
+    type PendingBoopOutput,
+    type ReceiptRequestInput,
+    type ReceiptRequestOutput,
+    type StateRequestInput,
+    type StateRequestOutput,
+    type BoopStateSubmitterError,
+    type BoopStateEntryPointError,
+    type BoopStateSuccess,
+    type PendingBoopInfo,
     StateRequestStatus,
-    Boop,
-    BoopState,
-    BoopReceipt,
+    type Boop,
+    type BoopState,
+    type BoopReceipt,
     // TODO missing stuff now
 } from "@happy.tech/submitter/client"
 

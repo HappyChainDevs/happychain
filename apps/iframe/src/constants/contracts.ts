@@ -26,7 +26,7 @@ function getBoopAbis(chainId: number) {
         case devnet.id:
             return boopAnvilAbis
         default:
-            throw new Error(`Unsupported chainId: ${chainId}. Failed to fetch deployments`)
+            throw new Error(`Unsupported chainId: ${chainId}. Failed to fetch abis`)
     }
 }
 

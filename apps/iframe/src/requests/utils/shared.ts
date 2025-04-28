@@ -2,7 +2,7 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { EntryPointStatus, type Receipt, StateRequestStatus } from "@happy.tech/boop-sdk"
+import { Onchain, type Receipt, StateRequestStatus } from "@happy.tech/boop-sdk"
 import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
 import { type Address, type Transaction, toHex } from "viem"
@@ -37,7 +37,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
         const output = (await boopClient.state({ hash })).unwrap()
 
         // Unknown boop: this might be an EVM tx hash instead, signal caller to forward to the public client.
-        if (output.status === StateRequestStatus.UnknownHappyTx) return FORWARD
+        if (output.status === StateRequestStatus.UnknownBoop) return FORWARD
 
         const receipt = output.state?.receipt
         const boop = undefined
@@ -113,10 +113,10 @@ export async function eth_estimateGas(
     if (user?.address !== tx.from) return FORWARD
 
     const boop = await boopFromTransaction(user?.address, tx)
-    const output = (await boopClient.simulate({ entryPoint, tx: boop })).unwrap()
+    const output = (await boopClient.simulate({ entryPoint, boop })).unwrap()
 
     // TODO need robust error handling
-    if (output.status !== EntryPointStatus.Success) throw new Error("can't simulate lol")
+    if (output.status !== Onchain.Success) throw new Error("can't simulate lol")
 
     return toHex(output.executeGasLimit)
 }

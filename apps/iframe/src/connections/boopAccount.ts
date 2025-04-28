@@ -1,3 +1,4 @@
+import type { CreateAccountSuccess } from "@happy.tech/boop-sdk"
 import type { Address } from "viem"
 import { boopClient } from "#src/state/boopClient"
 
@@ -11,11 +12,9 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
             salt,
         })
 
-        if (result.isErr()) {
-            throw result.error
-        }
-
-        return result.value.address
+        const value = result.unwrap()
+        // TODO: types are broken?
+        return (value as CreateAccountSuccess).address
     } catch (error) {
         console.error("Failed to create Boop account:", error)
         throw error
