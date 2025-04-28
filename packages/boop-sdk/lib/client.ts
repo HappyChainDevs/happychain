@@ -20,22 +20,28 @@ import {
     type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
-import { ApiClient } from "./utils/api-client"
+import { ApiClient } from "./utils/apiClient"
+import { type GetNonceInput, type GetNonceOutput, getNonce } from "./utils/getNonce"
 
 export type BoopClientConfig = {
     baseUrl: string
+    rpcUrl: string
+    entryPoint: `0x${string}`
 }
 
 export class BoopClient {
-    private client: ApiClient
+    #client: ApiClient
+    #config: BoopClientConfig
     constructor(config?: Partial<BoopClientConfig>) {
-        const { baseUrl } = this.#applyDefaults(config)
-        this.client = new ApiClient({ baseUrl })
+        this.#config = this.#applyDefaults(config)
+        this.#client = new ApiClient({ baseUrl: this.#config.baseUrl })
     }
 
     #applyDefaults(config?: Partial<BoopClientConfig>): BoopClientConfig {
         return {
             baseUrl: config?.baseUrl ?? env.SUBMITTER_URL,
+            rpcUrl: config?.rpcUrl ?? "http://localhost:8545", //env.RPC_URL,
+            entryPoint: config?.entryPoint ?? "0xDCE87Ac6850A0D3938B0e1B2F7b8B29789BB29D3", //env.ENTRYPOINT,
         }
     }
 
@@ -47,8 +53,19 @@ export class BoopClient {
      * @param data.salt Salt for the account creation
      */
     async createAccount(data: CreateAccountInput): Promise<CreateAccountOutput> {
-        const response = await this.client.post("/api/v1/accounts/create", data)
+        const response = await this.#client.post("/api/v1/accounts/create", data)
         return response as CreateAccountOutput
+    }
+
+    /**
+     * Fetches an accounts nonce.
+     * @param data Nonce Fetch Options
+     * @param data.address Account address
+     * @param data.nonceTrack Nonce track
+     */
+    async getNonce(data: GetNonceInput): Promise<GetNonceOutput> {
+        const response = await getNonce(this.#config.rpcUrl, this.#config.entryPoint, data)
+        return response as GetNonceOutput
     }
 
     // == Submit API Routes ============================================================================
@@ -72,7 +89,7 @@ export class BoopClient {
      * transaction.
      */
     async submit(data: SubmitInput): Promise<SubmitOutput> {
-        const response = await this.client.post("/api/v1/boop/submit", serializeBigInt(data))
+        const response = await this.#client.post("/api/v1/boop/submit", serializeBigInt(data))
         return this.#getSubmitOutput(response)
     }
 
@@ -94,7 +111,7 @@ export class BoopClient {
      * @param data.boop boop to be submitted
      */
     async execute(data: ExecuteInput): Promise<ExecuteOutput> {
-        const response = await this.client.post("/api/v1/boop/execute", serializeBigInt(data))
+        const response = await this.#client.post("/api/v1/boop/execute", serializeBigInt(data))
         return this.#getExecuteOutput(response)
     }
 
@@ -116,7 +133,7 @@ export class BoopClient {
      * @param data.boop boop to be submitted
      */
     async simulate(data: SimulateInput): Promise<SimulateOutput> {
-        const response = await this.client.post("/api/v1/boop/simulate", serializeBigInt(data))
+        const response = await this.#client.post("/api/v1/boop/simulate", serializeBigInt(data))
         return this.#getSimulateOutput(response)
     }
 
@@ -128,7 +145,7 @@ export class BoopClient {
      * {@link GetState.UnknownBoop}.
      */
     async state({ hash }: GetStateInput): Promise<GetStateOutput> {
-        const response = await this.client.get(`/api/v1/boop/state/${hash}`)
+        const response = await this.#client.get(`/api/v1/boop/state/${hash}`)
         return this.#getStateOutput(response)
     }
 
@@ -140,7 +157,7 @@ export class BoopClient {
      * The submitter can return without a receipt if the Boop submission failed for other reasons.
      */
     async receipt({ hash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
-        const response = await this.client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
+        const response = await this.#client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
         return this.#getReceiptOutput(response)
     }
 
@@ -151,7 +168,7 @@ export class BoopClient {
      * @returns
      */
     async pending({ account }: GetPendingInput): Promise<GetPendingOutput> {
-        const response = await this.client.get(`/api/v1/boop/pending/${account}`)
+        const response = await this.#client.get(`/api/v1/boop/pending/${account}`)
         return this.#getPendingOutput(response)
     }
 
