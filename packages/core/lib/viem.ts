@@ -1,4 +1,4 @@
-import type { HappyUser } from "@happy.tech/wallet-common"
+import { type Chain, type HappyUser, defaultChain } from "@happy.tech/wallet-common"
 import {
     type CustomTransport,
     type ParseAccount,
@@ -12,6 +12,7 @@ import {
 } from "viem"
 import { onUserUpdate } from "./functions"
 import { happyProvider } from "./happyProvider"
+import { getChain } from "./utils/getChain"
 
 /**
  * Return type for {@link createHappyPublicClient}.
@@ -39,7 +40,7 @@ export function createHappyPublicClient(): HappyPublicClient {
 // biome-ignore format: readability
 export interface HappyWalletClient extends WalletClient<
     CustomTransport,
-    undefined,
+    Chain,
     ParseAccount<`0x${string}`>,
     [...WalletRpcSchema]
 > {}
@@ -54,10 +55,24 @@ export interface HappyWalletClient extends WalletClient<
 export function createHappyWalletClient(): HappyWalletClient {
     let walletClient: HappyWalletClient | undefined = undefined
     onUserUpdate((user: HappyUser | undefined) => {
-        walletClient = user
-            ? (createWalletClient({ account: user.address, transport: custom(happyProvider) }) as HappyWalletClient)
-            : undefined
+        if (!user) return undefined
+
+        happyProvider
+            .request({ method: "eth_chainId" })
+            .then((id: `0x${string}`) => {
+                const chain = getChain(Number(id))
+                walletClient = createWalletClient({ account: user.address, transport: custom(happyProvider), chain })
+            })
+            .catch((error) => {
+                console.warn(`Failed to fetch chain ID. Defaulting to ${defaultChain.name} (${defaultChain.id})`, error)
+                walletClient = createWalletClient({
+                    account: user.address,
+                    transport: custom(happyProvider),
+                    chain: defaultChain,
+                })
+            })
     })
+
     return new Proxy<HappyWalletClient>({} as HappyWalletClient, {
         get(_target, prop, _receiver) {
             if (!walletClient) {
