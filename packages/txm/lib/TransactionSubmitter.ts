@@ -7,7 +7,6 @@ import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TraceMethod } from "./telemetry/traces"
-import { logger } from "./utils/logger"
 
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
