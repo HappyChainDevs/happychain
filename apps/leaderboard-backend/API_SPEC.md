@@ -1,27 +1,50 @@
-# Leaderboard Backend API Specification
+# API Routes structure
 
-## Overview
+## User management
 
-This document details the REST API for the Leaderboard backend. It describes endpoints, request/response schemas, and validation rules for managing users, guilds, games, and leaderboards.
+POST /api/users            // Create new user  
+GET /api/users/:id         // Get user by ID  
+PATCH /api/users/:id       // Update user details  
+GET /api/users             // List users (with filtering)  
 
----
+## User wallets
 
-## Entities
+POST /api/users/:id/wallets        // Add wallet to user  
+GET /api/users/:id/wallets         // Get user's wallets  
+DELETE /api/users/:id/wallets/:addr // Remove wallet from user  
+PATCH /api/users/:id/wallets/:addr // Set wallet as primary  
 
-### User
+## Guild management
 
-| Field         | Type    | Required on Create | Updatable | Nullable | Description                      |
-|---------------|---------|-------------------|-----------|-----------|----------------------------------|
-| happy_wallet  | string  | Yes               | No        | No        | User's wallet address (ID)       |
-| username      | string  | Yes               | Yes       | No        | User's display name              |
-| guild_id      | number  | No                | Yes       | Yes       | Guild the user belongs to        |
-| created_at    | string  | No (set by DB)    | No        | No        | User creation timestamp          |
+POST /api/guilds           // Create new guild (creator becomes admin)  
+GET /api/guilds/:id        // Get guild by ID  
+PATCH /api/guilds/:id      // Update guild details (admin only)  
+GET /api/guilds            // List guilds (with filtering)  
 
-### Guild
+## Guild membership
 
-| Field      | Type    | Required on Create | Updatable | Nullable | Description                       |
-|------------|---------|-------------------|-----------|----------|-----------------------------------|
-| id         | number  | No (set by DB)    | No        | No       | Guild's unique identifier         |
-| name       | string  | Yes               | Yes       | No       | Guild name (must be unique)       |
-| admin_id   | number  | Yes               | Yes       | No       | User ID of guild admin            |
-| created_at | string  | No (set by DB)    | No        | No       | Guild creation timestamp (ISO8601)|
+POST /api/guilds/:id/members       // Add member to guild (admin only)  
+GET /api/guilds/:id/members        // List guild members  
+DELETE /api/guilds/:id/members/:userId // Remove member from guild (admin only)  
+PATCH /api/guilds/:id/members/:userId  // Update member role (admin only)  
+GET /api/users/:id/guilds          // Get guilds a user belongs to  
+
+## Games
+
+POST /api/games            // Create new game  
+GET /api/games/:id         // Get game by ID  
+PATCH /api/games/:id       // Update game details (admin only)  
+GET /api/games             // List games (with filtering)  
+
+## Scores
+
+POST /api/scores           // Submit new score  
+GET /api/users/:id/scores  // Get scores for a user  
+GET /api/games/:id/scores  // Get scores for a game  
+
+## Leaderboards
+
+GET /api/leaderboards/global        // Global leaderboard (top users across all games)  
+GET /api/leaderboards/guilds        // Guild leaderboard (top guilds)  
+GET /api/leaderboards/games/:id     // Game-specific leaderboard (top users in a game)  
+GET /api/leaderboards/games/:id/guilds // Game-specific guild leaderboard  
