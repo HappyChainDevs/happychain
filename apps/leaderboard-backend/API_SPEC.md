@@ -38,8 +38,8 @@ GET /games             // List games (with filtering)
 
 ## Scores
 
-POST /scores           // Submit new score  
-GET /users/:id/scores  // Get scores for a user  
+POST /games/:id/scores           // Submit new score  
+GET /games/:id/scores/:id        // Get scores for a user  
 GET /games/:id/scores  // Get scores for a game  
 
 ## Leaderboards

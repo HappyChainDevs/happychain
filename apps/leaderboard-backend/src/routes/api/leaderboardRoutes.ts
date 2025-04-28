@@ -1,29 +1,17 @@
-import { z } from "@hono/zod-openapi"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
-import type { GameTableId } from "../../db/types"
-import type { Repositories } from "../../repositories"
+import { LeaderboardGameIdParamSchema, LeaderboardLimitQuerySchema } from "../../validation/schema/leaderBoardSchema"
 
 const leaderboardApi = new Hono()
 
-// Validation schemas for query parameters
-const limitQuerySchema = z.object({
-    limit: z.coerce.number().int().min(1).max(100).default(50),
-})
-
-const gameIdParamSchema = z.object({
-    id: z.coerce
-        .number()
-        .int()
-        .positive()
-        .transform((id) => id as GameTableId),
-})
-
-// GET /leaderboards/global - Global leaderboard (top users across all games)
-leaderboardApi.get("/global", zValidator("query", limitQuerySchema), async (c) => {
+/**
+ * GET /leaderboards/global - Global leaderboard (top users across all games)
+ * Returns users ranked by their total score across all games
+ */
+leaderboardApi.get("/global", zValidator("query", LeaderboardLimitQuerySchema), async (c) => {
     try {
         const { limit } = c.req.valid("query")
-        const { leaderboardRepo } = c.get("repos") as Repositories
+        const { leaderboardRepo } = c.get("repos")
 
         const leaderboard = await leaderboardRepo.getGlobalLeaderboard(limit)
         return c.json({
@@ -36,11 +24,14 @@ leaderboardApi.get("/global", zValidator("query", limitQuerySchema), async (c) =
     }
 })
 
-// GET /leaderboards/guilds - Guild leaderboard (top guilds)
-leaderboardApi.get("/guilds", zValidator("query", limitQuerySchema), async (c) => {
+/**
+ * GET /leaderboards/guilds - Guild leaderboard (top guilds)
+ * Returns guilds ranked by their members' total score across all games
+ */
+leaderboardApi.get("/guilds", zValidator("query", LeaderboardLimitQuerySchema), async (c) => {
     try {
         const { limit } = c.req.valid("query")
-        const { leaderboardRepo } = c.get("repos") as Repositories
+        const { leaderboardRepo } = c.get("repos")
 
         const leaderboard = await leaderboardRepo.getGuildLeaderboard(limit)
         return c.json({
@@ -53,16 +44,25 @@ leaderboardApi.get("/guilds", zValidator("query", limitQuerySchema), async (c) =
     }
 })
 
-// GET /leaderboards/games/:id - Game-specific leaderboard (top users in a game)
+/**
+ * GET /leaderboards/games/:id - Game-specific leaderboard (top users in a game)
+ * Returns users ranked by their score in a specific game
+ */
 leaderboardApi.get(
     "/games/:id",
-    zValidator("param", gameIdParamSchema),
-    zValidator("query", limitQuerySchema),
+    zValidator("param", LeaderboardGameIdParamSchema),
+    zValidator("query", LeaderboardLimitQuerySchema),
     async (c) => {
         try {
             const { id } = c.req.valid("param")
             const { limit } = c.req.valid("query")
-            const { leaderboardRepo } = c.get("repos") as Repositories
+            const { leaderboardRepo, gameRepo } = c.get("repos")
+
+            // Check if game exists
+            const game = await gameRepo.findById(id)
+            if (!game) {
+                return c.json({ ok: false, error: "Game not found" }, 404)
+            }
 
             const leaderboard = await leaderboardRepo.getGameLeaderboard(id, limit)
             return c.json({
@@ -76,16 +76,25 @@ leaderboardApi.get(
     },
 )
 
-// GET /leaderboards/games/:id/guilds - Game-specific guild leaderboard
+/**
+ * GET /leaderboards/games/:id/guilds - Game-specific guild leaderboard
+ * Returns guilds ranked by their members' total score in a specific game
+ */
 leaderboardApi.get(
     "/games/:id/guilds",
-    zValidator("param", gameIdParamSchema),
-    zValidator("query", limitQuerySchema),
+    zValidator("param", LeaderboardGameIdParamSchema),
+    zValidator("query", LeaderboardLimitQuerySchema),
     async (c) => {
         try {
             const { id } = c.req.valid("param")
             const { limit } = c.req.valid("query")
-            const { leaderboardRepo } = c.get("repos") as Repositories
+            const { leaderboardRepo, gameRepo } = c.get("repos")
+
+            // Check if game exists
+            const game = await gameRepo.findById(id)
+            if (!game) {
+                return c.json({ ok: false, error: "Game not found" }, 404)
+            }
 
             const leaderboard = await leaderboardRepo.getGameGuildLeaderboard(id, limit)
             return c.json({

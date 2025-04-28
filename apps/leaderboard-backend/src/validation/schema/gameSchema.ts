@@ -178,3 +178,24 @@ export const GameScoresQuerySchema = z
             top: 10,
         },
     })
+
+// Game ID path parameter schema
+export const GameIdParamSchema = z
+    .object({
+        id: z
+            .string()
+            .regex(/^\d+$/, { message: "Game ID must be a number" })
+            .transform((val) => Number.parseInt(val, 10) as GameTableId),
+    })
+    .strict()
+
+// Combined Game ID and User ID parameter schema
+export const GameUserParamSchema = z
+    .object({
+        id: GameIdParamSchema.shape.id,
+        userId: z
+            .string()
+            .regex(/^\d+$/, { message: "User ID must be a number" })
+            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+    })
+    .strict()

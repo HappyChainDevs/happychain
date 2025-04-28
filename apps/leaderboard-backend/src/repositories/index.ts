@@ -1,5 +1,5 @@
 import { db } from "../db/driver"
-import { GameRepository } from "./GamesRepository"
+import { GameRepository, GameScoreRepository } from "./GamesRepository"
 import { GuildRepository } from "./GuildsRepository"
 import { LeaderBoardRepository } from "./LeaderBoardRepository"
 import { UserRepository } from "./UsersRepository"
@@ -9,6 +9,7 @@ export type Repositories = {
     guildRepo: GuildRepository
     leaderboardRepo: LeaderBoardRepository
     gameRepo: GameRepository
+    gameScoreRepo: GameScoreRepository
 }
 
 export const repositories: Repositories = {
@@ -16,4 +17,5 @@ export const repositories: Repositories = {
     guildRepo: new GuildRepository(db),
     leaderboardRepo: new LeaderBoardRepository(db),
     gameRepo: new GameRepository(db),
+    gameScoreRepo: new GameScoreRepository(db),
 }

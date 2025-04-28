@@ -106,3 +106,19 @@ export const GameGuildLeaderboardEntrySchema = z
             member_count: 3,
         },
     })
+
+// Parameter and query validation schemas
+
+// Limit query parameter schema
+export const LeaderboardLimitQuerySchema = z.object({
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+})
+
+// Game ID parameter schema
+export const LeaderboardGameIdParamSchema = z.object({
+    id: z.coerce
+        .number()
+        .int()
+        .positive()
+        .transform((id) => id as GameTableId),
+})
