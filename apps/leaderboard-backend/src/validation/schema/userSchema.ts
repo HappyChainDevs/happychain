@@ -191,3 +191,17 @@ export const UserIdParamSchema = z
             id: "1",
         },
     })
+
+// Combined user ID and wallet address parameter schema (for endpoints with :id/wallets/:addr)
+export const UserWalletParamSchema = z
+    .object({
+        id: UserIdParamSchema.shape.id,
+        addr: WalletAddressParamSchema.shape.addr,
+    })
+    .strict()
+    .openapi({
+        example: {
+            id: "1",
+            addr: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+        },
+    })

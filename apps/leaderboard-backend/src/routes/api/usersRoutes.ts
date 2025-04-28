@@ -1,89 +1,229 @@
-import type { Address } from "@happy.tech/common"
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
-import type { GuildTableId, User } from "../../db/types"
 import {
     UserCreateRequestSchema,
-    UserDeleteRequestSchema,
+    UserIdParamSchema,
     UserQuerySchema,
     UserUpdateRequestSchema,
+    UserWalletAddRequestSchema,
+    UserWalletParamSchema,
 } from "../../validation/schema/userSchema"
 
 const usersApi = new Hono()
 
-// GET /users
+// GET /users - List users (with filtering)
 usersApi.get("/", zValidator("query", UserQuerySchema), async (c) => {
     try {
         const query = c.req.valid("query")
-        const criteria: Partial<User> = {}
-
-        if (query.happy_wallet) criteria.happy_wallet = query.happy_wallet
-        if (query.username) criteria.username = query.username
-        if (query.guild_id !== undefined && query.guild_id !== null) criteria.guild_id = query.guild_id as GuildTableId
-
         const { userRepo } = c.get("repos")
-        const users = await userRepo.find(criteria)
-        return c.json(users)
+
+        const users = await userRepo.find({
+            wallet_address: query.wallet_address,
+            username: query.username,
+            includeWallets: query.include_wallets,
+        })
+
+        return c.json({ ok: true, data: users })
     } catch (err) {
-        console.error(err)
-        return c.json({ error: "Internal Server Error" }, 500)
+        console.error("Error listing users:", err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
     }
 })
 
-// POST /users
+// GET /users/:id - Get user by ID
+usersApi.get("/:id", zValidator("param", UserIdParamSchema), async (c) => {
+    try {
+        const { id } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        const user = await userRepo.findById(id, true) // Include wallets
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        return c.json({ ok: true, data: user })
+    } catch (err) {
+        console.error(`Error fetching user ${c.req.param("id")}:`, err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
+    }
+})
+
+// POST /users - Create new user
 usersApi.post("/", zValidator("json", UserCreateRequestSchema), async (c) => {
     try {
-        const { happy_wallet, username } = c.req.valid("json")
-
+        const userData = c.req.valid("json")
         const { userRepo } = c.get("repos")
+
+        // Check if user with this wallet or username already exists
+        const existingByWallet = await userRepo.findByWalletAddress(userData.primary_wallet)
+        if (existingByWallet) {
+            return c.json({ ok: false, error: "Wallet address already registered" }, 409)
+        }
+
+        const existingByUsername = await userRepo.findByUsername(userData.username)
+        if (existingByUsername) {
+            return c.json({ ok: false, error: "Username already taken" }, 409)
+        }
+
         const newUser = await userRepo.create({
-            happy_wallet,
-            username,
-            created_at: new Date().toISOString(),
+            primary_wallet: userData.primary_wallet,
+            username: userData.username,
         })
-        return c.json(newUser, 201)
+
+        return c.json({ ok: true, data: newUser }, 201)
     } catch (err) {
-        console.error(err)
-        return c.json({ error: "Internal Server Error" }, 500)
+        console.error("Error creating user:", err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
     }
 })
 
-// PATCH /users/:happy_wallet
-usersApi.patch("/:happy_wallet", zValidator("json", UserUpdateRequestSchema), async (c) => {
-    try {
-        const { happy_wallet } = c.req.param()
-        const patch = c.req.valid("json")
+// PATCH /users/:id - Update user details
+usersApi.patch(
+    "/:id",
+    zValidator("param", UserIdParamSchema),
+    zValidator("json", UserUpdateRequestSchema),
+    async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+            const updateData = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
+            // Check if user exists
+            const user = await userRepo.findById(id)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
+
+            // Check if username is being changed and is unique
+            if (updateData.username && updateData.username !== user.username) {
+                const existingUser = await userRepo.findByUsername(updateData.username)
+                if (existingUser) {
+                    return c.json({ ok: false, error: "Username already taken" }, 409)
+                }
+            }
+
+            const updatedUser = await userRepo.update(id, updateData)
+            return c.json({ ok: true, data: updatedUser })
+        } catch (err) {
+            console.error(`Error updating user ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
+    },
+)
+
+// GET /users/:id/wallets - Get user's wallets
+usersApi.get("/:id/wallets", zValidator("param", UserIdParamSchema), async (c) => {
+    try {
+        const { id } = c.req.valid("param")
         const { userRepo } = c.get("repos")
-        // Only allow updating username and/or guild_id
-        const user = await userRepo.findByHappyWallet(happy_wallet as Address)
+
+        // Check if user exists
+        const user = await userRepo.findById(id)
         if (!user) {
-            return c.json({ error: "User not found" }, 404)
+            return c.json({ ok: false, error: "User not found" }, 404)
         }
 
-        const updatedUser = await userRepo.update(user.id, patch)
-        return c.json(updatedUser)
+        const wallets = await userRepo.getUserWallets(id)
+        return c.json({ ok: true, data: wallets })
     } catch (err) {
-        console.error(err)
-        return c.json({ error: "Internal Server Error" }, 500)
+        console.error(`Error fetching wallets for user ${c.req.param("id")}:`, err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
     }
 })
 
-// DELETE /users/:happy_wallet
-usersApi.delete("/:happy_wallet", zValidator("param", UserDeleteRequestSchema), async (c) => {
-    try {
-        const { happy_wallet } = c.req.valid("param")
+// POST /users/:id/wallets - Add wallet to user
+usersApi.post(
+    "/:id/wallets",
+    zValidator("param", UserIdParamSchema),
+    zValidator("json", UserWalletAddRequestSchema),
+    async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+            const { wallet_address, set_as_primary } = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
-        const { userRepo } = c.get("repos")
-        const user = await userRepo.findByHappyWallet(happy_wallet as Address)
-        if (!user) {
-            return c.json({ error: "User not found" }, 404)
+            // Check if user exists
+            const user = await userRepo.findById(id)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
+
+            // Check if wallet already belongs to another user
+            const existingUser = await userRepo.findByWalletAddress(wallet_address)
+            if (existingUser && existingUser.id !== id) {
+                return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
+            }
+
+            const success = await userRepo.addWallet(id, wallet_address, set_as_primary || false)
+            if (!success) {
+                return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
+            }
+
+            // Get updated user with wallets
+            const updatedUser = await userRepo.findById(id, true)
+            return c.json({ ok: true, data: updatedUser })
+        } catch (err) {
+            console.error(`Error adding wallet for user ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
-        const deletedUser = await userRepo.delete(user.id)
-        return c.json({ success: true, deleted_user: deletedUser })
+    },
+)
+
+// PATCH /users/:id/wallets/:addr - Set wallet as primary
+usersApi.patch("/:id/wallets/:addr", zValidator("param", UserWalletParamSchema), async (c) => {
+    try {
+        const { id, addr } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const user = await userRepo.findById(id)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        const success = await userRepo.setWalletAsPrimary(id, addr)
+        if (!success) {
+            return c.json({ ok: false, error: "Wallet not found for this user" }, 404)
+        }
+
+        // Get updated user with wallets
+        const updatedUser = await userRepo.findById(id, true)
+        return c.json({ ok: true, data: updatedUser })
     } catch (err) {
-        console.error(err)
-        return c.json({ error: "Internal Server Error" }, 500)
+        console.error(`Error setting primary wallet for user ${c.req.param("id")}:`, err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
+    }
+})
+
+// DELETE /users/:id/wallets/:addr - Remove wallet from user
+usersApi.delete("/:id/wallets/:addr", zValidator("param", UserWalletParamSchema), async (c) => {
+    try {
+        const { id, addr } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const user = await userRepo.findById(id)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        const success = await userRepo.removeWallet(id, addr)
+        if (!success) {
+            return c.json(
+                {
+                    ok: false,
+                    error: "Cannot remove wallet: it may be the primary wallet or not found",
+                },
+                400,
+            )
+        }
+
+        // Get updated user with wallets
+        const updatedUser = await userRepo.findById(id, true)
+        return c.json({ ok: true, data: updatedUser })
+    } catch (err) {
+        console.error(`Error removing wallet for user ${c.req.param("id")}:`, err)
+        return c.json({ ok: false, error: "Internal Server Error" }, 500)
     }
 })
 

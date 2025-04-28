@@ -192,3 +192,35 @@ export const GuildMemberUpdateRequestSchema = z
             is_admin: true,
         },
     })
+
+// Guild ID path parameter schema (for endpoints with :id)
+export const GuildIdParamSchema = z
+    .object({
+        id: z
+            .string()
+            .regex(/^\d+$/, { message: "Guild ID must be a number" })
+            .transform((val) => Number.parseInt(val, 10) as GuildTableId),
+    })
+    .strict()
+    .openapi({
+        example: {
+            id: "1",
+        },
+    })
+
+// Combined guild ID and user ID parameter schema (for endpoints with :id/members/:userId)
+export const GuildMemberParamSchema = z
+    .object({
+        id: GuildIdParamSchema.shape.id,
+        userId: z
+            .string()
+            .regex(/^\d+$/, { message: "User ID must be a number" })
+            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+    })
+    .strict()
+    .openapi({
+        example: {
+            id: "1",
+            userId: "2",
+        },
+    })

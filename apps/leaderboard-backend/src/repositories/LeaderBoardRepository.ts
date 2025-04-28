@@ -44,25 +44,25 @@ export class LeaderBoardRepository {
             .groupBy(["guilds.id", "guilds.name", "guilds.icon_url"])
             .orderBy("total_score", "desc")
             .limit(limit)
-            .execute();
+            .execute()
 
         // Get member counts for all guilds in the leaderboard
-        const guildIds = leaderboardRows.map(row => row.guild_id);
-        let memberCounts: Record<number, number> = {};
+        const guildIds = leaderboardRows.map((row) => row.guild_id)
+        let memberCounts: Record<number, number> = {}
         if (guildIds.length > 0) {
             const memberCountRows = await this.db
                 .selectFrom("guild_members")
                 .select(["guild_id", this.db.fn.count<number>("user_id").as("member_count")])
                 .where("guild_id", "in", guildIds)
                 .groupBy(["guild_id"])
-                .execute();
-            memberCounts = Object.fromEntries(memberCountRows.map(row => [row.guild_id, row.member_count]));
+                .execute()
+            memberCounts = Object.fromEntries(memberCountRows.map((row) => [row.guild_id, row.member_count]))
         }
 
-        return leaderboardRows.map(row => ({
+        return leaderboardRows.map((row) => ({
             ...row,
             member_count: memberCounts[row.guild_id] ?? 0,
-        }));
+        }))
     }
 
     // Game-specific leaderboard: top users by score in a game

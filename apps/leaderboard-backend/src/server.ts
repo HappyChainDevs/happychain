@@ -3,7 +3,9 @@ import { cors } from "hono/cors"
 import { prettyJSON } from "hono/pretty-json"
 
 import { type Repositories, repositories } from "./repositories"
+import { gamesApi } from "./routes/api/gamesRoutes"
 import { guildsApi } from "./routes/api/guildsRoutes"
+import { leaderboardApi } from "./routes/api/leaderboardRoutes"
 import { usersApi } from "./routes/api/usersRoutes"
 
 declare module "hono" {
@@ -26,6 +28,8 @@ app.use("*", async (c, next) => {
 app.get("/", (c) => c.text("Leaderboard API"))
 app.route("/users", usersApi)
 app.route("/guilds", guildsApi)
+app.route("/games", gamesApi)
+app.route("/leaderboards", leaderboardApi)
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 export type AppType = typeof app
