@@ -2,9 +2,9 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { prettyJSON } from "hono/pretty-json"
 
-import { usersApi } from "./routes/api/usersRoutes"
-import { guildsApi } from "./routes/api/guildsRoutes"
 import { type Repositories, repositories } from "./repositories"
+import { guildsApi } from "./routes/api/guildsRoutes"
+import { usersApi } from "./routes/api/usersRoutes"
 
 declare module "hono" {
     interface ContextVariableMap {
