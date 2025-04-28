@@ -315,14 +315,12 @@ docs-serve: unpatch-docs
 ####################################################################################################
 ##@ Devnet
 
-# The 1337 chain id matches "localhost" in Wagmi & "Localhost 8545" in MetaMask.
-# (Unfortunately some tools will mistakenly report this as not having the Shangai fork activated.)
 anvil: ## Runs anvil at $ANVIL_PORT (blocking)
-	anvil --chain-id 1337 --port $(ANVIL_PORT) --block-time 2
+	anvil --port $(ANVIL_PORT) --block-time 2
 .PHONY: anvil
 
 anvil-background: ## Runs anvil at in the background at $ANVIL_PORT, logging to anvil.log
-	@make anvil --chain-id 1337 --port $(ANVIL_PORT) --block-time 2 > anvil.log 2>&1 &
+	@make anvil --port $(ANVIL_PORT) --block-time 2 > anvil.log 2>&1 &
 	@echo "Running Anvil at {http,ws}://localhost:$(ANVIL_PORT)"
 .PHONY: anvil-background
 
@@ -466,7 +464,7 @@ endef
 
 # Sets CHAIN_NAME based on CHAIN_ID when called.
 define set-chain-name
-	ifeq ($(CHAIN_ID),1337)
+	ifeq ($(CHAIN_ID),31337)
 		CHAIN_NAME = anvil
 	else ifeq ($(CHAIN_ID),216)
 		CHAIN_NAME = happy-sepolia

@@ -553,16 +553,16 @@ select-iframe-testnet:
 .PHONY: select-iframe-local
 
 select-chain-local:
-	$(call update_env,apps/submitter/.env,CHAIN_ID,1337)
+	$(call update_env,apps/submitter/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
 
-	$(call update_env,apps/randomness/.env,CHAIN_ID,1337)
+	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
 
-	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,1337)
-	$(call update_env,demos/js/.env,VITE_CHAIN_ID,1337)
-	$(call update_env,demos/react/.env,VITE_CHAIN_ID,1337)
-	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,1337)
+	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
+	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)
+	$(call update_env,demos/react/.env,VITE_CHAIN_ID,31337)
+	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,31337)
 .PHONY: select-chain-local
 
 select-chain-testnet:

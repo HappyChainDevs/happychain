@@ -3,7 +3,7 @@ import { type Chain, type ChainRpcUrls, devnet, happyChainSepolia } from "@happy
 /**
  * Returns a {@link Chain} object based on the provided chain ID.
  *
- * If the chain has built-in support (HappyChain Sepolia (216), Local Devnet (1337), then
+ * If the chain has built-in support (HappyChain Sepolia (216), Local Devnet (31337), then
  * it is not necessary to provide RPC urls. Otherwise providing the rpc URL(s) is mandatory.
 
  * @throws Error if an rpc URL is not provided for a custom chain
