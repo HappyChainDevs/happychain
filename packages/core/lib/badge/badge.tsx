@@ -1,8 +1,7 @@
-// biome-ignore format: messes up the preact compiler
-import { happyIcon128x128 } from "@happy.tech/common"
 /** @jsxImportSource preact */
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
+import { config } from "../config"
 import { onUserUpdate } from "../functions"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
@@ -60,7 +59,9 @@ const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecti
 const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     const [loadFailed, setLoadFailed] = useState(false)
     if (!user?.avatar || loadFailed) {
-        return <img src={happyIcon128x128} alt="HappyChain logo" className="happychain-icon" />
+        return (
+            <img src={`${config.iframePath}/images/happychainLogo128x128.png`} alt="HappyChain logo" className="happychain-icon" />
+        )
     }
 
     return (

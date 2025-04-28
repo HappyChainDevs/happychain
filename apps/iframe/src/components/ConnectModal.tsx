@@ -1,4 +1,4 @@
-import { createUUID, happyIcon128x128 } from "@happy.tech/common"
+import { createUUID } from "@happy.tech/common"
 import { type ConnectionProvider, Msgs, type MsgsFromApp, WalletDisplayAction } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
@@ -17,7 +17,11 @@ export function ConnectModal() {
             <div className="max-w-xs grid grid-rows-[auto_1fr] gap-6 px-2 p-4 w-full">
                 <div className="flex items-center justify-center">
                     <div className="flex flex-col items-center gap-2">
-                        <img alt="HappyChain Logo" src={happyIcon128x128} className="mx-auto size-16 drop-shadow-lg" />
+                        <img
+                            alt="HappyChain Logo"
+                            src={"/images/happychainLogo128x128.png"}
+                            className="mx-auto size-16 drop-shadow-lg"
+                        />
                         <p className="text-xl font-bold">HappyChain</p>
                     </div>
                 </div>
@@ -139,7 +143,7 @@ const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
     return (
         <div className="grid gap-8">
             <div className="flex items-center justify-center gap-4">
-                <img alt="HappyChain Logo" src={happyIcon128x128} className="h-12" />
+                <img alt="HappyChain Logo" src={"/images/happychainIcon.png"} className="h-10" />
                 <DotLinearMotionBlurLoader />
                 <img className="h-8" src={provider?.icon} alt={`${provider?.name} icon`} />
             </div>
