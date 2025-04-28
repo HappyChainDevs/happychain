@@ -1,3 +1,4 @@
+import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { env } from "#lib/env"
 import { Onchain } from "#lib/interfaces/Onchain"
@@ -6,7 +7,6 @@ import type { ExecuteInput, ExecuteOutput } from "#lib/interfaces/boop_execute"
 import { logger } from "#lib/logger"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 import { submit } from "./submit"
 
 export async function executeFromRoute(

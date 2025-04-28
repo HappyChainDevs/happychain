@@ -1,3 +1,4 @@
+import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
@@ -12,7 +13,6 @@ import { CallStatus } from "#lib/interfaces/contracts"
 import { logger } from "#lib/logger"
 import { simulationCache } from "#lib/services"
 import { encodeBoop } from "#lib/utils/encodeBoop"
-import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 
 export async function simulateFromRoute(
     input: SimulateInput,

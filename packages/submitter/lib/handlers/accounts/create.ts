@@ -1,4 +1,5 @@
 import type { Address, Hex } from "@happy.tech/common"
+import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { BaseError, createWalletClient } from "viem"
 import { config, publicClient } from "#lib/clients"
@@ -10,7 +11,6 @@ import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from
 import { logger } from "#lib/logger"
 import { computeHappyAccountAddress } from "#lib/utils/computeHappyAccountAddress"
 import { getAccountDeployerAccount } from "#lib/utils/getAccountDeployerAccount"
-import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 
 // Account responsible for deploying HappyAccounts.
 // May or may not be the same as the global submitter accounts

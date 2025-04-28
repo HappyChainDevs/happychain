@@ -49,8 +49,8 @@ export function bigIntToZeroPadded(value: bigint, totalDigits: number = DIGITS_M
 }
 
 // Utility type to transform all bigint fields to string
-type ReplaceBigIntWithString<T> = Prettify<{
-    [K in keyof T]: T[K] extends bigint ? string : T[K] extends object ? ReplaceBigIntWithString<T[K]> : T[K]
+export type BigIntSerialized<T> = Prettify<{
+    [K in keyof T]: T[K] extends bigint ? string : T[K] extends object ? BigIntSerialized<T[K]> : T[K]
 }>
 
 /**
@@ -58,11 +58,11 @@ type ReplaceBigIntWithString<T> = Prettify<{
  * - Designed for use with `JSON.stringify` and `JSON.parse`.
  * - Normally, we mark `bigint` fields with `#bigint`, but here we serialize them using [`toString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/toString) for better compatibility with open APIs.
  */
-export function serializeBigInt<T>(obj: T): ReplaceBigIntWithString<T> {
+export function serializeBigInt<T>(obj: T): BigIntSerialized<T> {
     if (typeof obj === "bigint") {
-        return obj.toString() as ReplaceBigIntWithString<T>
+        return obj.toString() as BigIntSerialized<T>
     } else if (Array.isArray(obj)) {
-        return obj.map((item) => serializeBigInt(item)) as unknown as ReplaceBigIntWithString<T>
+        return obj.map((item) => serializeBigInt(item)) as unknown as BigIntSerialized<T>
     } else if (obj !== null && typeof obj === "object") {
         const serializedObj = {} as Record<string, unknown>
         for (const key in obj) {
@@ -70,9 +70,9 @@ export function serializeBigInt<T>(obj: T): ReplaceBigIntWithString<T> {
                 serializedObj[key] = serializeBigInt((obj as T)[key])
             }
         }
-        return serializedObj as ReplaceBigIntWithString<T>
+        return serializedObj as BigIntSerialized<T>
     }
-    return obj as ReplaceBigIntWithString<T>
+    return obj as BigIntSerialized<T>
 }
 
 /** Returns a parsed bigint from the input, or undefined if unable to parse. */

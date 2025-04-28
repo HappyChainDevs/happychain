@@ -1,3 +1,4 @@
+import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
@@ -11,7 +12,6 @@ import { boopNonceManager, submitterService } from "#lib/services"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { type BigIntSerialized, serializeBigInt } from "#lib/utils/serializeBigInt"
 import { simulate } from "./simulate"
 
 export async function submitFromRoute(
