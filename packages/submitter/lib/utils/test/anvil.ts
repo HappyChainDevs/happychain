@@ -1,8 +1,8 @@
 import { $, sleep } from "bun"
 import { http, createPublicClient } from "viem"
-import { localhost } from "viem/chains"
+import { anvil as anvilChain } from "viem/chains"
 
-const publicClient = createPublicClient({ chain: localhost, transport: http() })
+const publicClient = createPublicClient({ chain: anvilChain, transport: http() })
 
 export async function waitBlocks(minBlocks = 1) {
     const start = await publicClient.getBlockNumber()
