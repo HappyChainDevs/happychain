@@ -11,10 +11,10 @@ export type GuildMemberTableId = number & { _brand: "guild_members_id" }
 // Main Kysely database schema definition
 export interface Database {
     users: UserTable
-    guilds: GuildTable
-    games: GameTable
-    guild_members: GuildMemberTable
     user_wallets: UserWalletTable
+    guilds: GuildTable
+    guild_members: GuildMemberTable
+    games: GameTable
     user_game_scores: UserGameScoreTable
 }
 
@@ -63,6 +63,7 @@ export interface GameTable {
     description: string | null
     admin_id: UserTableId // FK to users, creator/admin of the game
     created_at: ColumnType<Date, string | undefined, never>
+    updated_at: ColumnType<Date, string | undefined, string>
 }
 
 // User scores in games
@@ -92,6 +93,10 @@ export type UpdateGuild = Updateable<GuildTable>
 export type GuildMember = Selectable<GuildMemberTable>
 export type NewGuildMember = Insertable<GuildMemberTable>
 export type UpdateGuildMember = Updateable<GuildMemberTable>
+export type GuildMemberWithUser = GuildMember & {
+    username: string
+    primary_wallet: Address
+}
 
 export type Game = Selectable<GameTable>
 export type NewGame = Insertable<GameTable>
@@ -100,3 +105,35 @@ export type UpdateGame = Updateable<GameTable>
 export type UserGameScore = Selectable<UserGameScoreTable>
 export type NewUserGameScore = Insertable<UserGameScoreTable>
 export type UpdateUserGameScore = Updateable<UserGameScoreTable>
+
+export interface GlobalLeaderboardEntry {
+    user_id: UserTableId
+    username: string
+    primary_wallet: Address
+    total_score: number
+}
+
+export interface GuildLeaderboardEntry {
+    guild_id: GuildTableId
+    guild_name: string
+    icon_url: string | null
+    total_score: number
+    member_count: number
+}
+
+export interface GameLeaderboardEntry {
+    game_id: GameTableId
+    user_id: UserTableId
+    username: string
+    primary_wallet: Address
+    score: number
+}
+
+export interface GameGuildLeaderboardEntry {
+    game_id: GameTableId
+    guild_id: GuildTableId
+    guild_name: string
+    icon_url: string | null
+    total_score: number
+    member_count: number
+}

@@ -8,97 +8,173 @@ export const GameResponseSchema = z
             .number()
             .int()
             .transform((val) => val as GameTableId),
-        name: z.string(), // must be unique (enforced in service)
+        name: z.string().min(3).max(50), // must be unique (enforced in DB)
+        icon_url: z.string().nullable(),
+        description: z.string().nullable(),
         admin_id: z
             .number()
             .int()
             .transform((val) => val as UserTableId),
-        icon_url: z.string().url(),
         created_at: z.string().datetime(),
+        updated_at: z.string().datetime(),
     })
     .strict()
     .openapi({
         example: {
             id: 1,
-            name: "Prince of Persia",
-            admin_id: 117,
-            icon_url: "http://path_to_image_url.png",
+            name: "Crypto Racer",
+            icon_url: "https://example.com/game-icon.png",
+            description: "Race to earn the most crypto",
+            admin_id: 1,
             created_at: "2023-01-01T00:00:00.000Z",
+            updated_at: "2023-01-01T00:00:00.000Z",
+        },
+    })
+
+// User game score response schema
+export const UserGameScoreResponseSchema = z
+    .object({
+        id: z.number().int(),
+        user_id: z
+            .number()
+            .int()
+            .transform((val) => val as UserTableId),
+        game_id: z
+            .number()
+            .int()
+            .transform((val) => val as GameTableId),
+        score: z.number().int(),
+        metadata: z.string().nullable(),
+        created_at: z.string().datetime(),
+        updated_at: z.string().datetime(),
+        // Extended properties when including additional details
+        username: z.string().optional(),
+        game_name: z.string().optional(),
+    })
+    .strict()
+    .openapi({
+        example: {
+            id: 1,
+            user_id: 2,
+            game_id: 3,
+            score: 1000,
+            metadata: '{"level": 5, "items": ["sword", "shield"]}',
+            created_at: "2023-01-01T00:00:00.000Z",
+            updated_at: "2023-01-01T00:00:00.000Z",
+            username: "player1",
+            game_name: "Crypto Racer",
         },
     })
 
 // Game query schema for GET /games (query params)
 export const GameQuerySchema = z
     .object({
-        id: z
-            .number()
-            .int()
-            .transform((val) => val as GameTableId),
-        name: z.string(),
+        name: z.string().min(3).max(50).optional(), // must be unique (enforced in DB)
         admin_id: z
             .number()
             .int()
-            .transform((val) => val as UserTableId),
+            .transform((val) => val as UserTableId)
+            .optional(),
     })
     .strict()
-    .refine((data) => data.id !== undefined || data.name !== undefined || data.admin_id !== undefined, {
-        message: "At least one filter (id, name, or admin_id) must be provided",
+    .refine((data) => data.name !== undefined || data.admin_id !== undefined, {
+        message: "At least one filter (name or admin_id) must be provided",
     })
     .openapi({
         example: {
-            id: 1,
-            name: "Prince of Persia",
-            admin_id: 117,
+            name: "Crypto",
+            admin_id: 1,
         },
     })
 
 // Game creation request schema (for POST /games)
 export const GameCreateRequestSchema = z
     .object({
-        name: z.string().openapi({ example: "Guild Name" }),
+        name: z.string().min(3).max(50), // must be unique (enforced in DB)
+        icon_url: z.string().url().nullable().optional(),
+        description: z.string().nullable().optional(),
         admin_id: z
             .number()
             .int()
             .transform((val) => val as UserTableId),
-        icon_url: z.string().url(),
     })
     .strict()
     .openapi({
         example: {
-            name: "Prince of Persia",
-            admin_id: 117,
-            icon_url: "http://path_to_image_url.png",
+            name: "Crypto Racer",
+            icon_url: "https://example.com/game-icon.png",
+            description: "Race to earn the most crypto",
+            admin_id: 1,
         },
     })
 
 // Game update request schema (for PATCH /games/:id)
 export const GameUpdateRequestSchema = z
     .object({
-        name: z.string().optional(),
-        icon_url: z.string().url().optional(),
+        name: z.string().min(3).max(50).optional(), // must be unique (enforced in DB)
+        icon_url: z.string().url().nullable().optional(),
+        description: z.string().nullable().optional(),
     })
     .strict()
-    .refine((data) => data.name !== undefined || data.icon_url !== undefined, {
-        message: "At least one of name or icon_url must be provided",
+    .refine((data) => data.name !== undefined || data.icon_url !== undefined || data.description !== undefined, {
+        message: "At least one field must be provided",
     })
     .openapi({
         example: {
-            name: "Assassin's Creed",
-            icon_url: "http://path_to_image_url.png",
+            name: "Crypto Racing",
+            icon_url: "https://example.com/updated-icon.png",
+            description: "Updated game description",
         },
     })
 
-// Game delete request schema (for DELETE /games/:id)
-export const GameDeleteRequestSchema = z
+// Score submission request schema (for POST /scores)
+export const ScoreSubmitRequestSchema = z
     .object({
-        id: z
+        user_id: z
+            .number()
+            .int()
+            .transform((val) => val as UserTableId),
+        game_id: z
             .number()
             .int()
             .transform((val) => val as GameTableId),
+        score: z.number().int().positive(),
+        metadata: z.string().optional(),
     })
     .strict()
     .openapi({
         example: {
-            id: 1,
+            user_id: 1,
+            game_id: 1,
+            score: 1000,
+            metadata: '{"level": 5, "items": ["sword", "shield"]}',
+        },
+    })
+
+// User scores query schema (for GET /users/:id/scores)
+export const UserScoresQuerySchema = z
+    .object({
+        game_id: z
+            .number()
+            .int()
+            .transform((val) => val as GameTableId)
+            .optional(),
+    })
+    .strict()
+    .openapi({
+        example: {
+            game_id: 1,
+        },
+    })
+
+// Game scores query schema (for GET /games/:id/scores)
+export const GameScoresQuerySchema = z
+    .object({
+        top: z.number().int().positive().optional().default(50),
+    })
+    .strict()
+    .openapi({
+        example: {
+            top: 10,
         },
     })

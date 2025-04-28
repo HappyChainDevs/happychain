@@ -3,99 +3,192 @@ import { z } from "@hono/zod-openapi"
 import { isHex } from "viem"
 import type { GuildTableId, UserTableId } from "../../db/types"
 
-// Guild API response schema (for GET, POST, PATCH responses)
+// Guild API response schema (for GET, POST responses)
 export const GuildResponseSchema = z
     .object({
         id: z
             .number()
             .int()
             .transform((val) => val as GuildTableId),
-        name: z.string(), // must be unique (enforced in service)
-        admin_id: z
+        name: z.string(),
+        icon_url: z.string().nullable(),
+        creator_id: z
             .number()
             .int()
             .transform((val) => val as UserTableId),
         created_at: z.string().datetime(),
+        updated_at: z.string().datetime(),
     })
     .strict()
     .openapi({
         example: {
             id: 1,
-            name: "Guild Name",
-            admin_id: 2,
-            created_at: "2025-04-25T19:00:00.000Z",
+            name: "Alpha Guild",
+            icon_url: "https://example.com/icon.png",
+            creator_id: 1,
+            created_at: "2023-01-01T00:00:00.000Z",
+            updated_at: "2023-01-01T00:00:00.000Z",
         },
     })
 
-// Guild query schema (for GET /guilds with optional filters)
-export const GuildQuerySchema = z
+// Guild member response schema
+export const GuildMemberResponseSchema = z
     .object({
-        id: z
+        id: z.number().int(),
+        guild_id: z
             .number()
             .int()
-            .transform((val) => val as GuildTableId)
+            .transform((val) => val as GuildTableId),
+        user_id: z
+            .number()
+            .int()
+            .transform((val) => val as UserTableId),
+        is_admin: z.boolean(),
+        joined_at: z.string().datetime(),
+        // Extended properties when including user details
+        username: z.string().optional(),
+        primary_wallet: z
+            .string()
+            .refine(isHex)
+            .transform((val) => val as Address)
             .optional(),
+    })
+    .strict()
+    .openapi({
+        example: {
+            id: 1,
+            guild_id: 1,
+            user_id: 1,
+            is_admin: true,
+            joined_at: "2023-01-01T00:00:00.000Z",
+            username: "player1",
+            primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+        },
+    })
+
+// Guild with members response schema
+export const GuildWithMembersResponseSchema = GuildResponseSchema.extend({
+    members: z.array(GuildMemberResponseSchema).optional(),
+}).openapi({
+    example: {
+        id: 1,
+        name: "Alpha Guild",
+        icon_url: "https://example.com/icon.png",
+        creator_id: 1,
+        created_at: "2023-01-01T00:00:00.000Z",
+        updated_at: "2023-01-01T00:00:00.000Z",
+        members: [
+            {
+                id: 1,
+                guild_id: 1,
+                user_id: 1,
+                is_admin: true,
+                joined_at: "2023-01-01T00:00:00.000Z",
+                username: "player1",
+                primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+            },
+        ],
+    },
+})
+
+// User's guild membership response schema
+export const UserGuildMembershipSchema = GuildResponseSchema.extend({
+    is_admin: z.boolean(),
+    joined_at: z.string().datetime(),
+}).openapi({
+    example: {
+        id: 1,
+        name: "Alpha Guild",
+        icon_url: "https://example.com/icon.png",
+        creator_id: 1,
+        created_at: "2023-01-01T00:00:00.000Z",
+        updated_at: "2023-01-01T00:00:00.000Z",
+        is_admin: true,
+        joined_at: "2023-01-01T00:00:00.000Z",
+    },
+})
+
+// Guild query schema for GET /guilds (query params)
+export const GuildQuerySchema = z
+    .object({
         name: z.string().optional(),
-        admin_id: z
+        creator_id: z
             .number()
             .int()
             .transform((val) => val as UserTableId)
             .optional(),
+        include_members: z.boolean().default(false).optional(),
     })
     .strict()
-    .refine((data) => data.id !== undefined || data.name !== undefined || data.admin_id !== undefined, {
-        message: "At least one filter (id, name, or admin_id) must be provided",
-    })
     .openapi({
         example: {
-            id: 1,
-            name: "Guild Name",
-            admin_id: 2,
+            name: "Alpha",
+            creator_id: 1,
+            include_members: true,
         },
     })
 
 // Guild creation request schema (for POST /guilds)
 export const GuildCreateRequestSchema = z
     .object({
-        name: z.string(), // must be unique (enforced in service)
-        admin_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        name: z.string().min(3).max(50),
+        icon_url: z.string().url().nullable().optional(),
+        creator_id: z
+            .number()
+            .int()
+            .transform((val) => val as UserTableId),
     })
     .strict()
     .openapi({
         example: {
-            name: "Guild Name",
-            admin_wallet: "0x1111111111111111111111111111111111111111",
+            name: "Alpha Guild",
+            icon_url: "https://example.com/icon.png",
+            creator_id: 1,
         },
     })
 
 // Guild update request schema (for PATCH /guilds/:id)
 export const GuildUpdateRequestSchema = z
     .object({
-        name: z.string().optional(), // must be unique (enforced in service)
+        name: z.string().min(3).max(50).optional(),
+        icon_url: z.string().url().nullable().optional(),
     })
     .strict()
-    .refine((data) => data.name !== undefined, { message: "Name must be provided to update a guild" })
+    .refine((data) => data.name !== undefined || data.icon_url !== undefined, {
+        message: "At least one of name or icon_url must be provided",
+    })
     .openapi({
         example: {
-            name: "New Guild Name",
+            name: "Beta Guild",
+            icon_url: "https://example.com/new-icon.png",
         },
     })
 
-// Guild delete request schema (for DELETE /guilds/:id)
-export const GuildDeleteRequestSchema = z
+// Guild member add request schema (for POST /guilds/:id/members)
+export const GuildMemberAddRequestSchema = z
     .object({
-        id: z
+        user_id: z
             .number()
             .int()
-            .openapi({ example: 1 })
-            .transform((val) => val as GuildTableId),
+            .transform((val) => val as UserTableId),
+        is_admin: z.boolean().default(false).optional(),
     })
     .strict()
     .openapi({
         example: {
-            id: 1,
+            user_id: 2,
+            is_admin: false,
+        },
+    })
+
+// Guild member update request schema (for PATCH /guilds/:id/members/:userId)
+export const GuildMemberUpdateRequestSchema = z
+    .object({
+        is_admin: z.boolean(),
+    })
+    .strict()
+    .openapi({
+        example: {
+            is_admin: true,
         },
     })
