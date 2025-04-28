@@ -3,7 +3,7 @@ import { walletClient } from "../clients"
 
 const CallBatchDemo = () => {
     async function getCapabilities() {
-        const caps = await walletClient?.getCapabilities()
+        const caps = await walletClient.getCapabilities()
 
         console.log(caps)
 
@@ -22,7 +22,11 @@ const CallBatchDemo = () => {
         <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">EIP-5792</div>
 
-            <button type="button" onClick={getCapabilities} className="rounded-lg bg-sky-300 p-2 shadow-xl font-mono">
+            <button
+                type="button"
+                onClick={getCapabilities}
+                className="rounded-lg bg-sky-300 p-2 shadow-xl font-mono truncate"
+            >
                 wallet_getCapabilities
             </button>
 
