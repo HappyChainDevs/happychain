@@ -24,9 +24,10 @@ export class Web3ProviderProxy extends SafeEventEmitter {
                 case "connect":
                 case "disconnect":
                 case "chainChanged":
-                case "accountsChanged":
+                case "accountsChanged": {
                     this.emit(n.action, "data" in n ? n.data : undefined)
                     break
+                }
             }
         })
     }

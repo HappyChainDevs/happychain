@@ -55,7 +55,6 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
                 throw new EIP1193SwitchChainError("Unrecognized chain ID, try adding the chain first.")
             if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
             const response = await sendToWalletClient(request.payload)
-            // Currently this always fails: web3Auth is hardcoded to the default intial chain.
             setCurrentChain(chains[chainId])
             return response
         }
