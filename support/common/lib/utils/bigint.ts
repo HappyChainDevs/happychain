@@ -1,4 +1,4 @@
-import type { Prettify } from "viem"
+import type { Prettify } from "../utils/types"
 
 /**
  * Returns the maximum value among the given BigInt arguments.
