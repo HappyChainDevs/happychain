@@ -1,15 +1,14 @@
 import {
     type Boop,
     type BoopReceipt,
-    EXECUTE_SUCCESS,
-    EntryPointStatus,
-    type EstimateGasOutput,
     type ExecuteOutput,
+    type ExecuteSuccess,
     type Log,
+    Onchain,
     type Receipt,
     type SimulateOutput,
     type SubmitStatus,
-    SubmitterErrorStatus,
+    SubmitterError,
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
 import { Map2, Mutex } from "@happy.tech/common"
@@ -44,7 +43,6 @@ export async function getNextNonce(account: Address, nonceTrack = 0n): Promise<b
     const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
     return mutex.locked(async () => {
         const nonce = await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
-
         nonces.set(account, nonceTrack, nonce + 1n)
         return nonce
     })
@@ -99,13 +97,14 @@ export async function sendBoop(
         const boop = await boopFromTransaction(account, tx)
 
         if (!isSponsored) {
-            const output = (await boopClient.simulate({ entryPoint, tx: boop })).unwrap()
+            const output = (await boopClient.simulate({ entryPoint, boop })).unwrap()
 
-            if (output.status === EntryPointStatus.Success) {
-                boop.gasLimit = BigInt(output.gasLimit)
-                boop.validateGasLimit = BigInt(output.validateGasLimit)
-                boop.validatePaymentGasLimit = BigInt(output.validatePaymentGasLimit)
-                boop.executeGasLimit = BigInt(output.executeGasLimit)
+            if (output.status === Onchain.Success) {
+                // TODO: this should be the correct types inside of the SDK
+                boop.gasLimit = Number(output.gasLimit)
+                boop.validateGasLimit = Number(output.validateGasLimit)
+                boop.validatePaymentGasLimit = Number(output.validatePaymentGasLimit)
+                boop.executeGasLimit = Number(output.executeGasLimit)
                 boop.maxFeePerGas = BigInt(output.maxFeePerGas)
                 boop.submitterFee = BigInt(output.submitterFee)
             } else {
@@ -117,12 +116,12 @@ export async function sendBoop(
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop(account, { boopHash, value })
-        const output = (await boopClient.execute({ entryPoint, tx: signedBoop })).unwrap()
+        const output = (await boopClient.execute({ entryPoint, boop: signedBoop })).unwrap()
 
-        if (output.status === EXECUTE_SUCCESS) {
+        if (output.status === Onchain.Success) {
             markBoopAsConfirmed(account, value, output)
-            // TODO better flow typing?
-            return output.state.receipt!.boopHash
+            // TODO: types are broken
+            return (output as ExecuteSuccess).receipt.boopHash
         } else {
             throw new BoopExecutionError(output)
         }
@@ -152,10 +151,10 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
         // For self-paying boops, we will fill this after calling `simulate`.
         maxFeePerGas: 0n,
         submitterFee: 0n,
-        gasLimit: 0n,
-        validateGasLimit: 0n,
-        validatePaymentGasLimit: 0n,
-        executeGasLimit: 0n,
+        gasLimit: 0,
+        validateGasLimit: 0,
+        validatePaymentGasLimit: 0,
+        executeGasLimit: 0,
     }
 }
 
@@ -173,7 +172,7 @@ export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): Rece
         gasUsed: receipt.gasUsed,
         logs: receipt.logs as Log[], // TODO parse boop logs
         logsBloom: receipt.txReceipt.logsBloom,
-        status: receipt.status === EntryPointStatus.Success ? "success" : "reverted",
+        status: receipt.status === Onchain.Success ? "success" : "reverted",
         to: "0x0", // TODO include Boop inside receipt and read from there
         transactionHash: hash,
         transactionIndex: receipt.txReceipt.transactionIndex,
@@ -224,49 +223,58 @@ export function formatTransaction(hash: Hash, boop?: Boop, receipt?: BoopReceipt
 
 // === ERROR HANDLING ==================================================================================================
 
-// TODO expose these from the submitter
+// TODO: expose these from the submitter
 
-// TODO needs a better key type
+// TODO: needs a better key type
 // biome-ignore format: consistency
-const boopErrorMessages: Record<SubmitStatus | EntryPointStatus | SubmitterErrorStatus, string> = {
-    // TODO names should change: s/Failed/Rejected
-    [SubmitterErrorStatus.UnexpectedError]:
+const boopErrorMessages: Record<SubmitStatus, string> = {
+    // TODO: names should change: s/Failed/Rejected
+    [SubmitterError.UnexpectedError]:
         "The submitter failed with an unexpected error.",
-    [SubmitterErrorStatus.BufferExceeded]:
+    [SubmitterError.BufferExceeded]:
         "The submitter rejected the request because of its boop buffering policies.",
-    [SubmitterErrorStatus.OverCapacity]:
+    [SubmitterError.OverCapacity]:
         "The submitter rejected the request because it is over capacity.",
 
-    // TODO the following three are not in the ExecuteOutput.status type, but they should be
-    [SubmitterErrorStatus.SimulationTimeout]:
+    // TODO: the following three are not in the ExecuteOutput.status type, but they should be
+    [SubmitterError.SimulationTimeout]:
         "The RPC simulation call (or related RPC call) timed out.",
-    [SubmitterErrorStatus.SubmitTimeout]:
+    [SubmitterError.SubmitTimeout]:
         "The RPC submit call (or related RPC call) timed out.",
-    [SubmitterErrorStatus.ReceiptTimeout]:
+    [SubmitterError.ReceiptTimeout]:
         "Timed out while waiting for a receipt. This could indicate that the submitter tx is stuck in the mempool or an RPC issue.",
 
-    [EntryPointStatus.ValidationReverted]:
+    [SubmitterError.RpcError]: "Error from the submitter node's JSON-RPC server.",
+
+    [Onchain.ValidationReverted]:
         "The account validation of the boop reverted. This indicates either a dysfunctional account or a dysfunctional submitter.",
-    [EntryPointStatus.ValidationFailed]:
+    [Onchain.ValidationRejected]:
         "The account rejected the boop.",
-    [EntryPointStatus.ExecuteReverted]:
+    [Onchain.ExecuteReverted]:
         "The account's `execute` call reverted. This indicates either a dysfunctional account or a dysfunctional submitter.",
-    [EntryPointStatus.ExecuteFailed]:
+    [Onchain.ExecuteRejected]:
         "The account's `execute` function returned indicate a failure. This is typically caused by an incorrect input from the user.",
-    [EntryPointStatus.CallReverted]:
+    [Onchain.CallReverted]:
         "The call made by the account's `execute` function reverted.",
-    [EntryPointStatus.PaymentValidationReverted]:
+    [Onchain.PaymentValidationReverted]:
         "The paymaster's `validatePayment` call reverted. This indicates either a dysfunctional paymaster or a dysfunctional submitter.",
-    [EntryPointStatus.PaymentValidationFailed]:
+    [Onchain.PaymentValidationRejected]:
         "The paymaster rejected the boop.",
-    [EntryPointStatus.PayoutFailed]:
+    [Onchain.PayoutFailed]:
         "When self-paying and the payment from the account fails, either because IAccount.payout reverts, consumes too much gas, or does not transfer the full cost to the submitter.",
-    [EntryPointStatus.UnexpectedReverted]:
+    [Onchain.UnexpectedReverted]:
         "Unexpected revert of the submission, most likely out-of-gas.",
 
     // not used, there for type completeness
-    [EXECUTE_SUCCESS]: "success",
-    [EntryPointStatus.Success]: "success",
+    [Onchain.Success]: "success",
+
+
+    [Onchain.MissingValidationInformation]: "The boop passes simulation but can't be submitted onchain because either validation or payment validation has indicated that the status is unknown during validation",
+    [Onchain.GasPriceTooHigh]: "The boop got rejected because the gas price was above the maxFeePerGas.",
+    [Onchain.InvalidNonce]: "The nonce provided was invalid outside of simulation.",
+    [Onchain.InsufficientStake]: "The submitter or paymaster has insufficient stake.",
+    [Onchain.InvalidSignature]: "The account or the paymaster rejected the boop because of an invalid signature.",
+    [Onchain.InvalidExtensionValue]: "The account or the paymaster rejected the boop because an extension value in the extraData is invalid.",
 }
 
 /**
@@ -274,12 +282,14 @@ const boopErrorMessages: Record<SubmitStatus | EntryPointStatus | SubmitterError
  */
 export class BoopExecutionError extends Error {
     constructor(public readonly output: ExecuteOutput) {
-        super(boopErrorMessages[output.status])
+        // TODO: broken types
+        super(boopErrorMessages[output.status as SubmitStatus])
     }
 }
 
 export class BoopSimulationError extends Error {
     constructor(public readonly output: SimulateOutput) {
-        super(boopErrorMessages[output.status])
+        // TODO: broken types
+        super(boopErrorMessages[output.status as SubmitStatus])
     }
 }

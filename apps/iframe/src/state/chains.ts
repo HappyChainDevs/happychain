@@ -8,11 +8,14 @@ import { StorageKey } from "../services/storage"
 
 export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
-
+    const chainKey = chainId && `0x${BigInt(chainId).toString(16)}`
     const chains = getChains()
-    return chainId && chainId in chains //
-        ? chains[chainId]
-        : defaultChains.defaultChain
+    const chain =
+        chainKey && chainKey in chains //
+            ? chains[chainKey]
+            : defaultChains.defaultChain
+
+    return chain
 }
 
 function getDefaultChainsRecord() {
