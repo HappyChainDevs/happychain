@@ -44,7 +44,9 @@ type ReplaceBigIntWithString<T> = Prettify<{
 }>
 
 /**
- * Utility functions to serialize and deserialize bigint values
+ * Utility functions to serialize and deserialize `bigint` values.
+ * - Designed for use with `JSON.stringify` and `JSON.parse`.
+ * - Normally, we mark `bigint` fields with `#bigint`, but here we serialize them using [`toString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/toString) for better compatibility with open APIs.
  */
 export function serializeBigInt<T>(obj: T): ReplaceBigIntWithString<T> {
     if (typeof obj === "bigint") {
