@@ -60,7 +60,11 @@ const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     const [loadFailed, setLoadFailed] = useState(false)
     if (!user?.avatar || loadFailed) {
         return (
-            <img src={`${config.iframePath}/images/happychainLogo128x128.png`} alt="HappyChain logo" className="happychain-icon" />
+            <img
+                src={`${config.iframePath}/images/happychainLogo128x128.png`}
+                alt="HappyChain logo"
+                className="happychain-icon"
+            />
         )
     }
 
