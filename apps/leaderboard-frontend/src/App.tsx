@@ -1,4 +1,5 @@
 import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom"
+import GuildsPage from "./components/GuildsPage"
 import HomeLogoButton from "./components/HomeLogoButton"
 import ProfilePage from "./components/ProfilePage"
 import WalletConnect from "./components/WalletConnect"
@@ -14,6 +15,9 @@ function App() {
                     </div>
                     <div className="top-bar-right">
                         <WalletConnect />
+                        <Link to="/guilds" className="profile-btn">
+                            Guilds
+                        </Link>
                         <Link to="/profile" className="profile-btn">
                             Profile
                         </Link>
@@ -21,8 +25,17 @@ function App() {
                 </header>
                 <main className="main-content">
                     <Routes>
+                        <Route
+                            path="/"
+                            element={
+                                <div className="home-welcome-box">
+                                    <h1 className="home-welcome-title">Welcome to HappyChain Leaderboard!</h1>
+                                    {/* Future: leaderboard grid/list goes here */}
+                                </div>
+                            }
+                        />
                         <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/" element={<div>{/* Main content */}</div>} />
+                        <Route path="/guilds" element={<GuildsPage />} />
                     </Routes>
                 </main>
             </div>
