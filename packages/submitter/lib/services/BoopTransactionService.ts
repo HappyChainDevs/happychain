@@ -1,6 +1,6 @@
 import type { BoopTransaction } from "#lib/database/generated"
 import type { BoopTransactionRepository } from "#lib/database/repositories/BoopTransactionRepository"
-import { SubmitterError } from "#lib/errors/submitter-errors"
+import { SubmitterError } from "#lib/errors"
 
 export class BoopTransactionService {
     constructor(private boopTransactionRepository: BoopTransactionRepository) {}

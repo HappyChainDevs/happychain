@@ -2,10 +2,10 @@ import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
-import { processError } from "#lib/handlers/utils/errorHandling"
+import { outputForGenericError } from "#lib/handlers/utils/errorHandling"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import type { SimulateInput, SimulateOutput } from "#lib/interfaces/boop_simulate"
+import type { SimulateInput } from "#lib/interfaces/boop_simulate"
 import type { SubmitInput, SubmitOutput } from "#lib/interfaces/boop_submit"
 import { logger } from "#lib/logger"
 import { boopNonceManager, submitterService } from "#lib/services"
@@ -30,8 +30,8 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
     try {
         logger.trace("Submitting boop with hash", boopHash)
 
-        // Save original tx to the database for historic purposes and data recovery.
-        await submitterService.initialize(entryPoint, boop, boopHash)
+        // Save original boop to the database for historic purposes and data recovery.
+        await submitterService.add(entryPoint, boop, boopHash)
 
         let simulation = await simulate(input)
 
@@ -81,9 +81,10 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         })
         logger.trace("Successfully submitted", boopHash, txHash)
 
-        // TODO does this need the updatd boop instead?
         boopNonceManager.incrementLocalNonce(boop)
-        submitterService.finalizeWhenReady(boop, txHash)
+        // TODO save gas values
+        // TODO don't monitor unless asked
+        submitterService.monitorReceipt(boop, txHash)
 
         // TODO we need to return way before!
         return {
@@ -93,9 +94,8 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         }
     } catch (error) {
         return {
-            ...(processError({ boop, boopHash, error }) as SimulateOutput),
-            stage: "submit", // simulation failures are caught in the `simulate` call
-        } as SubmitOutput
-        // TODO if refactoring, might get be able to get rid of this cast (needs to know it will only get SubmitError-compatible statuses)
+            ...outputForGenericError(error),
+            stage: "submit",
+        }
     }
 }

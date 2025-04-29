@@ -4,7 +4,6 @@ import { migrator } from "#lib/database/utils/migrator"
 import { anvil } from "./utils/anvil"
 import { contracts } from "./utils/contracts"
 
-// TODO temp
 beforeAll(async () => {
     const { error } = await migrator.migrateToLatest()
     if (error) throw new Error("[Submitter] Failed to run test migrations", { cause: error })
@@ -21,6 +20,5 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-    console.log("Stopping anvil...")
     await anvil.stop()
 })

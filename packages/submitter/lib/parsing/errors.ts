@@ -1,15 +1,7 @@
-import { type Hex, hasKey } from "@happy.tech/common"
-import {
-    type AbiFunction,
-    BaseError,
-    ContractFunctionRevertedError,
-    type Log,
-    RawContractError,
-    decodeEventLog,
-    toEventSelector,
-} from "viem"
+import { type Hex, getProp, hasKey, stringify } from "@happy.tech/common"
+import { type AbiFunction, BaseError, ContractFunctionRevertedError, RawContractError } from "viem"
 import { decodeErrorResult, getAbiItem, toFunctionSelector } from "viem/utils"
-import { errorsAbi, errorsAsFunctionsAbi, eventsAbi } from "#lib/errors/errorsAbi"
+import { errorsAbi, errorsAsFunctionsAbi } from "./abis"
 
 /**
  * Optional raw & decoded view of a contract revert error. In general, if the decoded
@@ -35,17 +27,20 @@ export function getRevertError(err: unknown): RevertErrorInfo {
     // This is not a Viem error, bail out.
     if (!(err instanceof BaseError)) return { isContractRevert: false }
 
-    const contractRevertError = getContractRevertError(err)
-    if (contractRevertError) {
-        const decoded = decodeError(contractRevertError)
-        return { decoded, raw: contractRevertError.raw, isContractRevert: true }
+    const revErr = getContractRevertError(err)
+    if (revErr) {
+        // The alternate is only ever useful if whatever generated this error did not have the proper ABI available,
+        // which should never be the case.
+        const decoded = (revErr.data || (revErr.raw && decodeRawError(revErr.raw))) as DecodedRevertError | undefined
+        return { decoded, raw: revErr.raw, isContractRevert: true }
     }
 
-    // In the context of the submitter, we always call with Viem's `simulateContract` and proper ABIs. So  if there is
+    // In the context of the submitter, we always call with Viem's `simulateContract` and proper ABIs. So if there is
     // any revert data at all, we expect to get a ContractFunctionRevertedError and for it to hold decoded data. A boop
     // should not be able to revert arbitrarily: we intercept the call's revert and wrap it in one of our own errors.
 
     // However, let's keep going, because we can. The approach that follows is pulled from Viem's `call` implementation.
+    // `err.walk()` follow the `.cause` chain until the end. The cast is unsafe but we validate access.
     const rawErr = err.walk() as RawContractError
     const raw = typeof rawErr?.data === "object" ? rawErr.data?.data : rawErr.data
     return {
@@ -59,24 +54,13 @@ export function getRevertError(err: unknown): RevertErrorInfo {
  * Checks if the error or one of the error in its `.cause`  chain is a Viem revert error, and returns the first one
  * that is found, or undefined if none is found.
  */
-// TODO make private after submit refactored
-export function getContractRevertError(err: unknown): ContractFunctionRevertedError | undefined {
+function getContractRevertError(err: unknown): ContractFunctionRevertedError | undefined {
     if (!hasKey(err, "cause") || !(err instanceof BaseError)) return undefined
     return err.walk(isRevertError) as ContractFunctionRevertedError | undefined
 }
 
 function isRevertError(err: unknown): err is ContractFunctionRevertedError {
     return err instanceof ContractFunctionRevertedError
-}
-
-/**
- * Extracts a decoded error, if possible, from a {@link ContractFunctionRevertedError}, which can be obtained via {@link
- * getContractRevertError}, otherwise returns undefined if the error does not carry error data or if the error isn't known.
- */
-function decodeError(err: ContractFunctionRevertedError): DecodedRevertError | undefined {
-    // The alternate is only ever useful if whatever generated this error did not have the proper ABI available,
-    // which should never be the case.
-    return (err.data || (err.raw && decodeRawError(err.raw))) as DecodedRevertError | undefined
 }
 
 /**
@@ -118,31 +102,12 @@ export function getErrorNameFromSelector(selector: Hex): string | undefined {
 }
 
 /**
- * An ABI-decoded event.
+ * Attempts to extract a string description from the error, falling back to undefined if failing.
  */
-export type DecodedEvent = {
-    /** Name of the event. */
-    eventName: string
-    /** Map argument names to their values. */
-    args: Record<string, unknown>
-}
-
-/**
- * Attempts to decode the given log against known abis, returning the result or undefined if not known.
- */
-export function decodeEvent(log: Log): DecodedEvent | undefined {
-    try {
-        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: log.topics })
-    } catch {
-        return
-    }
-}
-
-/**
- * Converts a known event name into its 4 bytes selector, or return undefined if the event isn't known.
- */
-export function getSelectorFromEventName(name: string): Hex | undefined {
-    const item = eventsAbi.find((a) => a.name === name)
-    // toErrorSelector? who needs that? :')
-    return item ? toEventSelector(item) : undefined
+export function extractErrorMessage(error: unknown): string | undefined {
+    // biome-ignore format: beauty
+    return stringify(getProp(error, "message")
+            ?? stringify(getProp(error, "shortMessage"))
+            ?? stringify(getProp(error, "details")))
+        ?? stringify(error)
 }

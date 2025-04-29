@@ -22,6 +22,7 @@ async function startAnvil() {
 }
 
 async function stopAnvil() {
+    console.log("Stopping anvil...")
     try {
         await $`pkill -f anvil`
             .quiet()
