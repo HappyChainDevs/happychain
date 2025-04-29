@@ -863,8 +863,6 @@ test("Multiple transaction managers with different accounts work correctly", asy
     }
 })
 
-
-
 test("Transaction manager successfully processes transactions despite random RPC failures", async () => {
     const previousLivenessThreshold = txm.livenessThreshold
     Object.defineProperty(txm, "livenessThreshold", {
