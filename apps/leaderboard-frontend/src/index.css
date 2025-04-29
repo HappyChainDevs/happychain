@@ -232,3 +232,189 @@
 .profile-form-btn:not(:disabled):hover {
     background: #444;
 }
+
+/* --- Games Page Styles --- */
+.games-page {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    padding: 32px 24px 24px 24px;
+    max-width: 700px;
+    margin: 32px auto;
+}
+
+.games-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.game-card {
+    background: #f8f8ff;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.game-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 2px;
+}
+
+.game-card-desc {
+    color: #666;
+    font-size: 1.02rem;
+    margin-bottom: 8px;
+}
+
+.game-card-manage-btn {
+    align-self: flex-end;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4em 1.1em;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+.game-card-manage-btn:hover {
+    background: #444;
+}
+
+.games-create-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.games-create-box input {
+    flex: 1;
+    padding: 0.5em 1em;
+    font-size: 1.07em;
+    border: 1.5px solid #bbb;
+    border-radius: 8px;
+    outline: none;
+    transition: border 0.2s;
+}
+.games-create-box input:focus {
+    border-color: #888;
+}
+.games-create-box button {
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 1.3em;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+.games-create-box button:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+}
+.games-create-box button:not(:disabled):hover {
+    background: #444;
+}
+
+.game-details {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.14);
+    padding: 32px 24px 24px 24px;
+    max-width: 420px;
+    margin: 0 auto;
+    z-index: 10;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 80px;
+}
+.game-details h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+.game-details .close-btn {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.18s;
+}
+.game-details .close-btn:hover {
+    color: #222;
+}
+
+.score-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 18px 0 10px 0;
+}
+.score-form input {
+    padding: 0.5em 1em;
+    font-size: 1.07em;
+    border: 1.5px solid #bbb;
+    border-radius: 8px;
+    outline: none;
+    transition: border 0.2s;
+}
+.score-form input:focus {
+    border-color: #888;
+}
+.score-form button {
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 1.3em;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+.score-form button:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+}
+.score-form button:not(:disabled):hover {
+    background: #444;
+}
+
+.score-list {
+    margin-top: 10px;
+}
+.score-list h4 {
+    margin: 0 0 7px 0;
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: #333;
+}
+.score-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.score-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 1.03em;
+    color: #444;
+}
+.score-list li:last-child {
+    border-bottom: none;
+}

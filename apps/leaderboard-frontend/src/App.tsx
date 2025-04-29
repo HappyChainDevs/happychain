@@ -1,4 +1,5 @@
 import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom"
+import GamesPage from "./components/GamesPage"
 import GuildsPage from "./components/GuildsPage"
 import HomeLogoButton from "./components/HomeLogoButton"
 import ProfilePage from "./components/ProfilePage"
@@ -18,6 +19,9 @@ function App() {
                         <Link to="/guilds" className="profile-btn">
                             Guilds
                         </Link>
+                        <Link to="/games" className="profile-btn">
+                            Games
+                        </Link>
                         <Link to="/profile" className="profile-btn">
                             Profile
                         </Link>
@@ -36,6 +40,7 @@ function App() {
                         />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/guilds" element={<GuildsPage />} />
+                        <Route path="/games" element={<GamesPage />} />
                     </Routes>
                 </main>
             </div>
