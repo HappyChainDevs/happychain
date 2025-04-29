@@ -32,6 +32,7 @@
         "@happy.tech/happybuild": "workspace:0.1.1",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "@types/node": "^22.0.2",
+        "node-jq": "^6.0.1",
         "permissionless": "^0.2.0",
         "solhint": "^5.0.5",
         "viem": "^2.21.53"

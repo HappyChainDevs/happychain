@@ -91,7 +91,7 @@ app.get(
                     description: "Staging server",
                 },
                 { url: "https://submitter.happy.tech", description: "Production server" },
-            ],
+            ].filter(Boolean) as { url: string; description: string }[],
         },
     }),
 )
