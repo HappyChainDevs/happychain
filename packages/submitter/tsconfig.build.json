@@ -6,8 +6,7 @@
         "jsxImportSource": "hono/jsx",
         "paths": {
             "#lib/*": ["./lib/*"]
-        },
-        "moduleResolution": "bundler"
+        }
     },
     "include": ["lib", "./package.json"]
 }

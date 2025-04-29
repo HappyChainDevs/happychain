@@ -30,7 +30,7 @@ export const simulateOutputSchema = z.discriminatedUnion("status", [
     }),
 ])
 
-export const description = describeRoute({
+export const simulateDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Simulates the supplied Boop",
     responses: {
@@ -44,4 +44,4 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("json", inputSchema)
+export const simulateValidation = zv("json", inputSchema)

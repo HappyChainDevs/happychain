@@ -3,14 +3,15 @@ import type { Address, PrivateKeyAccount } from "viem"
 import { zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
-import { publicClient, walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
-import type { Boop } from "#lib/interfaces/Boop"
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import type { inputSchema as ExecuteInputSchema } from "#lib/validation/schemas/boop"
+import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { findExecutionAccount } from "#lib/services/evmAccounts"
+import type { Boop } from "#lib/types"
+import { publicClient, walletClient } from "#lib/utils/clients"
+import type { inputSchema as ExecuteInputSchema } from "#lib/utils/validation/boop"
 
 export { mockDeployments, mockAbis }
+export { client, createSmartAccount } from "./client"
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 

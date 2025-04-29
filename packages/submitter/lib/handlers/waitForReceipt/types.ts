@@ -1,5 +1,5 @@
 import type { Hash } from "@happy.tech/common"
-import type { StateRequestOutput } from "./BoopState"
+import type { StateRequestOutput } from "#lib/handlers/getState"
 
 export type ReceiptRequestInput = {
     /** Hash of the Boop whose receipt is requested. */

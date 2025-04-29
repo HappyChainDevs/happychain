@@ -1,5 +1,5 @@
 import type { Account } from "viem/accounts"
-import { ExecutorHeap } from "#lib/utils/ExecutorHeap"
+import { ExecutorHeap } from "./ExecutorHeap"
 
 interface Expiry {
     executor: { account: Account }

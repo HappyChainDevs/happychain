@@ -2,7 +2,7 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { Execute } from "#lib/handlers/execute/types"
+import { Execute } from "#lib/handlers/execute"
 import { OnchainFail, Success } from "#lib/types"
 import { SubmitterError } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
@@ -29,7 +29,7 @@ const outputSchema = z.discriminatedUnion("status", [
     }),
 ])
 
-export const description = describeRoute({
+export const executeDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Execute Boop",
     responses: {
@@ -43,4 +43,4 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("json", inputSchema)
+export const executeValidation = zv("json", inputSchema)

@@ -1,5 +1,5 @@
 import type { Address } from "@happy.tech/common"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
+import { SubmitterError } from "#lib/types"
 
 /**
  * Possible results of an `account/create` call.

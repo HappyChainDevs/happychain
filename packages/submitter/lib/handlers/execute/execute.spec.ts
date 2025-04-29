@@ -2,10 +2,17 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { Boop } from "#lib/interfaces/Boop"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { createMockTokenAMintBoop, fundAccount, getMockTokenABalance, getNonce, mockDeployments, signTx } from "./utils"
-import { client, createSmartAccount } from "./utils/client"
+import type { Boop } from "#lib/types"
+import { Onchain } from "#lib/types"
+import {
+    createMockTokenAMintBoop,
+    fundAccount,
+    getMockTokenABalance,
+    getNonce,
+    mockDeployments,
+    signTx,
+} from "#lib/utils/test"
+import { client, createSmartAccount } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = async (tx: Boop) => await signTx(testAccount, tx)

@@ -1,11 +1,8 @@
 import type { Hash } from "@happy.tech/common"
-import { publicClient } from "#lib/clients"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { SubmitterError } from "#lib/errors"
-import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
-import type { OnchainStatus } from "#lib/interfaces/Onchain"
-import type { Receipt } from "#lib/interfaces/ethereum"
-import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
+import type { BoopReceipt, OnchainStatus, Receipt, TransactionTypeName } from "#lib/types"
+import { publicClient } from "#lib/utils/clients"
 
 export class BoopReceiptService {
     constructor(private boopReceiptRepository: BoopReceiptRepository) {}
@@ -14,9 +11,6 @@ export class BoopReceiptService {
         const boopReceipt = await this.boopReceiptRepository.findByBoopHash(boopHash)
         if (!boopReceipt) return
         const transactionReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.transactionHash })
-
-        if (!isValidTransactionType(transactionReceipt.type))
-            throw new SubmitterError(`[${boopHash}] Invalid receipt.type`)
 
         return {
             boopHash: boopHash,
@@ -31,7 +25,7 @@ export class BoopReceiptService {
             gasCost: boopReceipt.gasCost,
             txReceipt: {
                 ...transactionReceipt,
-                type: transactionReceipt.type,
+                type: transactionReceipt.type as TransactionTypeName,
                 contractAddress: transactionReceipt.contractAddress || null,
             } satisfies Receipt,
         }

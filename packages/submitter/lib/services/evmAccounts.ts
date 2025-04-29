@@ -2,9 +2,9 @@ import { type Account, type PrivateKeyAccount, createNonceManager } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { jsonRpc } from "viem/nonce"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/interfaces/Boop"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
-import { privateKeyToExecutionAccount } from "#lib/utils/privateKeyToExecutionAccount"
+import type { Boop } from "#lib/types"
+import { logger } from "#lib/utils/logger"
 import { computeBoopHash } from "./computeBoopHash"
 
 /**
@@ -37,12 +37,10 @@ import { computeBoopHash } from "./computeBoopHash"
 
 const nonceManager = createNonceManager({ source: jsonRpc() })
 
-const executionAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
-    privateKeyToAccount(key, { nonceManager }),
-)
-const executorService = new ExecutorCacheService(executionAccounts)
+const evmAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) => privateKeyToAccount(key, { nonceManager }))
+const executorService = new ExecutorCacheService(evmAccounts)
 
-export const defaultAccount: Account = executionAccounts[0]
+export const defaultAccount: Account = evmAccounts[0]
 
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
@@ -51,6 +49,18 @@ export function findExecutionAccount(tx?: Boop): Account {
     return executorService.get(hash, tx.account, tx.nonceTrack)
 }
 
-function privateKeyToExecutionAccount(key: `0x${string}`): PrivateKeyAccount {
-    return
+function getAccountDeployer(): Account {
+    if (env.PRIVATE_KEY_ACCOUNT_DEPLOYER) {
+        try {
+            return privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER, { nonceManager })
+        } catch (error) {
+            logger.warn(
+                "Failed to parse PRIVATE_KEY_ACCOUNT_DEPLOYER. Falling back to default execution account.",
+                error,
+            )
+        }
+    }
+    return defaultAccount
 }
+
+export const accountDeployer: Account = getAccountDeployer()

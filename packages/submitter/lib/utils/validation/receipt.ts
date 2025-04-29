@@ -1,8 +1,8 @@
 import { z } from "zod"
 import { env } from "#lib/env"
-import { TransactionTypeName } from "#lib/interfaces/ethereum"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { TransactionTypeName } from "#lib/types"
+import { isAddress } from "#lib/utils/validation/isAddress"
+import { isHexString } from "#lib/utils/validation/isHexString"
 import { transactionSchema } from "./transaction"
 
 export const receiptSchema = z.object({

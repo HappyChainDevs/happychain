@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { getErrorNameFromSelector, getSelectorFromErrorName } from "#lib/parsing"
+import { getErrorNameFromSelector, getSelectorFromErrorName } from "./index"
+
 describe("error-codes", () => {
     it("should encode error selectors predictably", () => {
         expect(getSelectorFromErrorName("InvalidSignature")).toBe("0x8baa579f")

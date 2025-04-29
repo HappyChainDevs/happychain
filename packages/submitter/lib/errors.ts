@@ -38,8 +38,3 @@ export class InvalidTransactionRecipientError extends SubmitterError {
         super(`Invalid Receipt To - ${boopHash}`)
     }
 }
-export class InvalidTransactionTypeError extends SubmitterError {
-    constructor(boopHash: `0x${string}`) {
-        super(`Invalid Receipt Type - ${boopHash}`)
-    }
-}

@@ -1,5 +1,3 @@
-// -------------------------------------------------------------------------------------------------
-
 /**
  * Possible status pertaining to issues in the operation of the submitter (as opposed to onchain
  * simulation or onchain execution).

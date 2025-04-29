@@ -2,9 +2,9 @@ import { checksum } from "ox/Address"
 import { getAddress } from "viem"
 import { z } from "zod"
 import { deployment } from "#lib/env"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
+import { isAddress } from "#lib/utils/validation/isAddress"
+import { isHexString } from "#lib/utils/validation/isHexString"
+import { toBigInt } from "#lib/utils/validation/toBigInt"
 
 export const boopSchema = z.object({
     account: z

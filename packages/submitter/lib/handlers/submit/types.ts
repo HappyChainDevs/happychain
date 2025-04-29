@@ -1,8 +1,6 @@
 import type { Address, Bytes, Hash } from "@happy.tech/common"
-import type { Boop } from "./Boop"
-
-import { Onchain, type OnchainStatus } from "./Onchain"
-import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
+import type { Boop } from "#lib/types"
+import { Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
 export type SubmitInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */

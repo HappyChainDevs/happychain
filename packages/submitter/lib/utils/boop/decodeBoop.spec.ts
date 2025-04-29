@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { Hex } from "viem"
-import type { Boop } from "#lib/interfaces/Boop"
+import type { Boop } from "#lib/types"
 import { decodeBoop } from "./decodeBoop"
 
 describe("decode", () => {

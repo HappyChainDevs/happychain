@@ -142,7 +142,8 @@ export class BoopClient {
     }
 
     /**
-     * Get the pending Boops of an account
+     * Returns a list of pending (not yet included on chain) boops for the given account, identified by their hash and
+     * nonce.
      * @param data
      * @returns
      */

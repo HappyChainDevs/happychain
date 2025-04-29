@@ -19,7 +19,7 @@ const outputSchema = z.object({
     pending: z.array(pendingTxSchema).openapi({ example: [] }),
 })
 
-export const description = describeRoute({
+export const getPendingDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Retrieve pending happy transactions for Account",
     responses: {
@@ -33,4 +33,4 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("param", inputSchema)
+export const getPendingValidation = zv("param", inputSchema)

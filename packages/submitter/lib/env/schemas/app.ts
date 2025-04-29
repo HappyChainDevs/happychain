@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { isHexString } from "#lib/utils/validation/isHexString"
 
 const DEFAULT_LOG_LEVEL = "INFO"
 const DEFAULT_NODE_ENV = "development"

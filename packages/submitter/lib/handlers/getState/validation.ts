@@ -2,10 +2,10 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { StateRequestStatus } from "#lib/interfaces/BoopState"
 import { isProduction } from "#lib/utils/isProduction"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { boopStateSchema } from "#lib/validation/schemas/boopState"
+import { boopStateSchema } from "#lib/utils/validation/boopState"
+import { isHexString } from "#lib/utils/validation/isHexString"
+import { StateRequestStatus } from "./types"
 
 export const inputSchema = z.object({
     hash: z
@@ -19,7 +19,7 @@ export const outputSchema = z.object({
     state: boopStateSchema.optional(),
 })
 
-export const description = describeRoute({
+export const getStateDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Retrieve state by BoopHash",
     responses: {
@@ -33,4 +33,4 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("param", inputSchema)
+export const getStateValidation = zv("param", inputSchema)

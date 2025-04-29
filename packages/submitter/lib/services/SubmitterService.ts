@@ -1,17 +1,15 @@
 import type { Address, Hash } from "@happy.tech/common"
 import type { Hex } from "viem"
-import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
-import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors"
-import type { Boop } from "#lib/interfaces/Boop"
-import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { logger } from "#lib/logger"
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
+import { InvalidTransactionRecipientError } from "#lib/errors"
+import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
+import { Onchain } from "#lib/types"
+import { publicClient } from "#lib/utils/clients"
+import { logger } from "#lib/utils/logger"
 import type { BoopReceiptService } from "./BoopReceiptService"
 import type { BoopStateService } from "./BoopStateService"
 import type { BoopTransactionService } from "./BoopTransactionService"
+import { computeBoopHash } from "./computeBoopHash"
 
 export class SubmitterService {
     constructor(
@@ -60,7 +58,6 @@ export class SubmitterService {
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
         if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)
-        if (!isValidTransactionType(receipt.type)) throw new InvalidTransactionTypeError(boopHash)
 
         return {
             boopHash,
@@ -115,7 +112,7 @@ export class SubmitterService {
                 to: receipt.to,
                 transactionHash: receipt.transactionHash,
                 transactionIndex: receipt.transactionIndex,
-                type: receipt.type,
+                type: receipt.type as TransactionTypeName,
             },
         }
     }

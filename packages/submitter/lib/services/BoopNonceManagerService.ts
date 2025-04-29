@@ -1,12 +1,12 @@
 import { Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
-import { publicClient } from "#lib/clients"
 import { abis, env } from "#lib/env"
 import { SubmitterError } from "#lib/errors"
-import type { Boop } from "#lib/interfaces/Boop"
-import type { PendingBoopInfo } from "#lib/interfaces/boop_pending"
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
+import type { PendingBoopInfo } from "#lib/handlers/getPending"
+import type { Boop } from "#lib/types"
+import { publicClient } from "#lib/utils/clients"
+import { computeBoopHash } from "./computeBoopHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint

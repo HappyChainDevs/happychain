@@ -1,7 +1,7 @@
 import { z } from "zod"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { simulateOutputSchema } from "#lib/routes/api/boop/openApi/simulate"
+import { simulateOutputSchema } from "#lib/handlers/simulate/simulateValidation"
+import { Onchain } from "#lib/types"
+import { SubmitterError } from "#lib/types"
 import { boopReceiptSchema } from "./boopReceipt"
 
 const BoopStateSubmitterErrorSchema = z.object({

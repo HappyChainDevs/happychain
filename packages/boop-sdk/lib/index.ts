@@ -8,20 +8,14 @@ export type {
     ReceiptRequestOutput,
     StateRequestInput,
     StateRequestOutput,
-    //
-    BoopState,
-    Optional,
-    Boop,
-    Prettify,
     BoopStateSubmitterError,
     BoopStateEntryPointError,
     BoopStateSuccess,
-    BoopReceipt,
     PendingBoopInfo,
-    Log,
-    Receipt,
-    TransactionTypeName,
     StateRequestStatus,
+    Boop,
+    BoopState,
+    BoopReceipt,
     // TODO missing stuff now
 } from "@happy.tech/submitter/client"
 
@@ -100,6 +94,12 @@ export {
     type ExecuteSuccess,
     type ExecuteFailedOnchain,
     type ExecuteError,
+    //
+    // Ethereum Types
+    //
+    type Log,
+    type Receipt,
+    TransactionTypeName,
     //
     // Utilities
     //
