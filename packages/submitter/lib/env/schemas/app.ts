@@ -24,8 +24,11 @@ export const appSchema = z.object({
     // Defaults to first EXECUTOR_KEYS at runtime
     PRIVATE_KEY_ACCOUNT_DEPLOYER: z.string().refine(isHexString).optional(),
     APP_PORT: z.coerce.number().default(DEFAULT_APP_PORT),
-    NODE_ENV: z.enum(["production", "development", "staging", "test", "cli"]).default(DEFAULT_NODE_ENV),
-    LOG_LEVEL: z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default(DEFAULT_LOG_LEVEL),
+    NODE_ENV: z.enum(["production", "staging", "development", "test", "cli"]).default(DEFAULT_NODE_ENV),
+    LOG_LEVEL: z.preprocess(
+        (level) => level && String(level).toUpperCase(),
+        z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default(DEFAULT_LOG_LEVEL),
+    ),
     DATABASE_URL: z.string(),
     GAS_SAFETY_MARGIN: z.coerce.number().gt(100).lt(10000).default(120),
     RECEIPT_TIMEOUT: z.coerce.number().default(8000),

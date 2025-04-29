@@ -12,12 +12,12 @@ import { isHexString } from "#lib/utils/validation/isHexString"
 export const simulateOutputSchema = z.discriminatedUnion("status", [
     z.object({
         status: z.enum([Onchain.Success]).openapi({ example: Onchain.Success }),
-        maxFeePerGas: z.string().openapi({ example: "1200000000" }),
-        submitterFee: z.string().openapi({ example: "100" }),
-        gas: z.number().openapi({ example: 4000000000 }),
-        validateGas: z.number().openapi({ example: 4000000000 }),
-        paymentValidateGas: z.number().openapi({ example: 4000000000 }),
-        executeGas: z.number().openapi({ example: 4000000000 }),
+        maxFeePerGas: z.string().openapi({ example: (1_200_000_000).toString() }),
+        submitterFee: z.string().openapi({ example: (100).toString() }),
+        gas: z.number().openapi({ example: 25_000_000 }),
+        validateGas: z.number().openapi({ example: 25_000_000 }),
+        paymentValidateGas: z.number().openapi({ example: 25_000_000 }),
+        executeGas: z.number().openapi({ example: 25_000_000 }),
         validityUnknownDuringSimulation: z.boolean().openapi({}),
         paymentValidityUnknownDuringSimulation: z.boolean().openapi({}),
         futureNonceDuringSimulation: z.boolean().openapi({}),

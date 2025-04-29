@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { Boop } from "#lib/types"
+import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 import {
     createMockTokenAMintBoop,
@@ -35,27 +35,26 @@ describe("submitter_execute", () => {
         signedTx = await sign(unsignedTx)
     })
 
-    // TODO unskip, temporary while I look into easier things
-    describe.skip("self-paying", () => {
+    describe("self-paying", () => {
         beforeAll(async () => {
             await fundAccount(smartAccount)
         })
 
-        it("mints tokens", async () => {
+        it.skip("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             // be your own payer! define your own gas!
-            unsignedTx.gasLimit = 2000000
-            unsignedTx.executeGasLimit = 1000000
+            unsignedTx.gasLimit = 25_000_000
+            unsignedTx.executeGasLimit = 25_000_000
+            unsignedTx.validateGasLimit = 25_000_000
+            unsignedTx.validatePaymentGasLimit = 25_000_000
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
-            console.log(response)
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(response.status).toBe(Onchain.Success)
-            expect(response.state.included).toBe(true)
             expect(response.receipt.txReceipt.transactionHash).toBeString()
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
@@ -115,8 +114,6 @@ describe("submitter_execute", () => {
 
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
-            console.log(response)
-
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.status).toBe(Onchain.Success)
             expect(result.status).toBe(200)
@@ -136,10 +133,10 @@ describe("submitter_execute", () => {
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
-        it("executes with 4000000000n gas", async () => {
+        it("executes with 25_000_000n gas", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            unsignedTx.executeGasLimit = 4000000000
-            unsignedTx.gasLimit = 4000000000
+            unsignedTx.executeGasLimit = 25_000_000
+            unsignedTx.gasLimit = 25_000_000
             signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
@@ -172,9 +169,9 @@ describe("submitter_execute", () => {
             const response = (await result.json()) as any
 
             expect(response.error).toBeUndefined()
-            expect(result.status).toBe(422)
-            expect(response.revertData).toBe("InvalidNonce")
-            expect(response.status).toBe(Onchain.UnexpectedReverted)
+            expect(result.status).toBe(400)
+            expect(response.stage).toBe("simulate")
+            expect(response.status).toBe(Onchain.InvalidNonce)
         })
 
         it("can't re-use a nonce", async () => {
@@ -188,9 +185,9 @@ describe("submitter_execute", () => {
             expect(response1.error).toBeUndefined()
             expect(response2.error).toBeUndefined()
             expect(result1.status).toBe(200)
-            expect(result2.status).toBe(422)
-            expect(response2.revertData).toBe("InvalidNonce")
-            expect(response2.status).toBe(Onchain.UnexpectedReverted)
+            expect(result2.status).toBe(400)
+            expect(response2.stage).toBe("simulate")
+            expect(response2.status).toBe(Onchain.InvalidNonce)
         })
 
         it("should fail with out of range future nonce", async () => {
@@ -198,8 +195,8 @@ describe("submitter_execute", () => {
             const jsonTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
-            expect(response.status).toBe("submitterUnexpectedError")
-            expect(result.status).toBe(422)
+            expect(response.status).toBe(SubmitterError.UnexpectedError)
+            expect(result.status).toBe(500)
         })
 
         it("throws error when PaymentReverted with unsupported payer", async () => {
@@ -233,7 +230,7 @@ describe("submitter_execute", () => {
 
             expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
             expect(result.status).toBe(422)
-            expect(response.status).toBe("entrypointCallReverted")
+            expect(response.status).toBe(Onchain.CallReverted)
         })
 
         it("throws when using the wrong user account", async () => {
@@ -248,7 +245,7 @@ describe("submitter_execute", () => {
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(422)
-            expect(response.status).toBe("entrypointValidationReverted")
+            expect(response.status).toBe(Onchain.ValidationReverted)
         })
     })
 })

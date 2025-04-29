@@ -36,17 +36,15 @@ describe("submitter_state", () => {
         const response = (await client.api.v1.boop.execute
             .$post({ json: { boop: serializeBigInt(signedTx) } })
             .then((a) => a.json())) as any
-
         const state = (await client.api.v1.boop.state[":hash"]
-            .$get({ param: { hash: response.state.receipt.boopHash } })
+            .$get({ param: { hash: response.receipt.boopHash } })
             .then((a) => a.json())) as any
-
         expect(response.error).toBeUndefined()
         expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(Onchain.Success)
         expect(state.state.included).toBe(true)
-        expect(state.state.receipt.boopHash).toBe(response.state.receipt.boopHash)
+        expect(state.state.receipt.boopHash).toBe(response.receipt.boopHash)
         expect(state.state.simulation).toBeUndefined()
     })
 
