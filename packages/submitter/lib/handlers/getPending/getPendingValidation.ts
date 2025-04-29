@@ -4,8 +4,8 @@ import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { pendingTxSchema } from "#lib/validation/schemas/pendingTx"
+import { isAddress } from "#lib/utils/validation/isAddress"
+import { pendingTxSchema } from "#lib/utils/validation/pendingTx"
 
 const inputSchema = z.object({
     account: z

@@ -2,12 +2,12 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { OnchainFail, Success } from "#lib/interfaces/Onchain"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { Submit } from "#lib/interfaces/boop_submit"
+import { Submit } from "#lib/handlers/submit/types"
+import { OnchainFail, Success } from "#lib/types"
+import { SubmitterError } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import { inputSchema } from "#lib/validation/schemas/boop"
+import { inputSchema } from "#lib/utils/validation/boop"
+import { isHexString } from "#lib/utils/validation/isHexString"
 
 const outputSchema = z.discriminatedUnion("status", [
     z.object({

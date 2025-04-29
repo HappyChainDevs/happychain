@@ -3,11 +3,11 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { CreateAccount } from "#lib/interfaces/account_create"
+import { SubmitterError } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { isAddress } from "#lib/utils/validation/isAddress"
+import { isHexString } from "#lib/utils/validation/isHexString"
+import { CreateAccount } from "./types"
 
 const inputSchema = z.object({
     owner: z
