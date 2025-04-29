@@ -5,9 +5,12 @@
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "type": "module",
+    "types": "./dist/index.es.d.ts",
     "exports": {
-        ".": "./dist/index.es.js",
-        "./migrate": "./dist/migrate.es.js"
+        ".": {
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
+        }
     },
     "devDependencies": {
         "@happy.tech/common": "workspace:0.1.0",

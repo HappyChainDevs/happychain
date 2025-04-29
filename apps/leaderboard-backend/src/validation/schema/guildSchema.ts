@@ -66,48 +66,6 @@ export const GuildMemberResponseSchema = z
         },
     })
 
-// Guild with members response schema
-export const GuildWithMembersResponseSchema = GuildResponseSchema.extend({
-    members: z.array(GuildMemberResponseSchema).optional(),
-}).openapi({
-    example: {
-        id: 1,
-        name: "Alpha Guild",
-        icon_url: "https://example.com/icon.png",
-        creator_id: 1,
-        created_at: "2023-01-01T00:00:00.000Z",
-        updated_at: "2023-01-01T00:00:00.000Z",
-        members: [
-            {
-                id: 1,
-                guild_id: 1,
-                user_id: 1,
-                is_admin: true,
-                joined_at: "2023-01-01T00:00:00.000Z",
-                username: "player1",
-                primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
-            },
-        ],
-    },
-})
-
-// User's guild membership response schema
-export const UserGuildMembershipSchema = GuildResponseSchema.extend({
-    is_admin: z.boolean(),
-    joined_at: z.string().datetime(),
-}).openapi({
-    example: {
-        id: 1,
-        name: "Alpha Guild",
-        icon_url: "https://example.com/icon.png",
-        creator_id: 1,
-        created_at: "2023-01-01T00:00:00.000Z",
-        updated_at: "2023-01-01T00:00:00.000Z",
-        is_admin: true,
-        joined_at: "2023-01-01T00:00:00.000Z",
-    },
-})
-
 // Guild query schema for GET /guilds (query params)
 export const GuildQuerySchema = z
     .object({
