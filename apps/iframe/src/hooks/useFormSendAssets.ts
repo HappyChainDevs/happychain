@@ -156,7 +156,7 @@ export function useFormSendAssets(asset?: Address) {
     }, [queryWaitForTransactionReceipt.isSuccess, onTransactionCompleted])
 
     /**
-     * I the user is navigating from `/send` to `/embed` (via GLobalHeader)
+     * If the user is navigating from `/send` to `/embed` (via GLobalHeader)
      * while a tx is in-flight (approved), this fires so as to reset the form
      * to its default state.
      */
