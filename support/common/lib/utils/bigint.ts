@@ -54,9 +54,12 @@ export type BigIntSerialized<T> = Prettify<{
 }>
 
 /**
- * Utility functions to serialize and deserialize `bigint` values.
- * - Designed for use with `JSON.stringify` and `JSON.parse`.
- * - Normally, we mark `bigint` fields with `#bigint`, but here we serialize them using [`toString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/toString) for better compatibility with open APIs.
+ * Utility functions that serializes `bigint` values into strings, returning a deep copy of the object
+ * with all bigints replaced by their string representation (as accepted by `BigInt`, so no trailing "n").
+ *
+ * If you want to serialize to a JSON string AND want to preserve serialized bigint identity
+ * (i.e. differentiate serialized bigints from regular strings), use {@link JSON.parse} and
+ * {@link JSON.stringify} along with {@link bigIntReplacer} and {@link bigIntReviver} instead.
  */
 export function serializeBigInt<T>(obj: T): BigIntSerialized<T> {
     if (typeof obj === "bigint") {
