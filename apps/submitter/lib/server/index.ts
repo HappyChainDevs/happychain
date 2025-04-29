@@ -103,14 +103,14 @@ app.get(
                 description: "Boop Submitter",
             },
             servers: [
-                env.NODE_ENV === "development" && {
-                    url: `http://localhost:${env.APP_PORT}`,
-                    description: "Local server",
-                },
-                env.NODE_ENV === "staging" && {
-                    url: "https://submitter-staging.happy.tech",
-                    description: "Staging server",
-                },
+                // env.NODE_ENV === "development" && {
+                //     url: `http://localhost:${env.APP_PORT}`,
+                //     description: "Local server",
+                // },
+                // env.NODE_ENV === "staging" && {
+                //     url: "https://submitter-staging.happy.tech",
+                //     description: "Staging server",
+                // },
                 { url: "https://submitter.happy.tech", description: "Production server" },
             ].filter(Boolean) as { url: string; description: string }[],
         },
