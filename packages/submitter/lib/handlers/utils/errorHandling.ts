@@ -1,6 +1,6 @@
 import type { Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
-import type { PartialBoop } from "#lib/interfaces/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
 import type { SimulateError, SimulateFailed } from "#lib/interfaces/boop_simulate"
@@ -30,7 +30,7 @@ export function outputForGenericError(error: unknown): SimulateError {
  * Return error information for an onchain revert from simulation.
  */
 export function outputForRevertError(
-    boop: PartialBoop,
+    boop: Boop,
     boopHash: Hash,
     { raw, decoded }: RevertErrorInfo,
 ): SimulateFailed | SimulateError {

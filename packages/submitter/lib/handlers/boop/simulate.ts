@@ -2,7 +2,7 @@ import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
-import { Onchain, type PartialBoop, computeBoopHash } from "#lib/client"
+import { type Boop, Onchain, computeBoopHash } from "#lib/client"
 import { publicClient } from "#lib/clients"
 import { getSubmitterFee } from "#lib/custom/feePolicy"
 import { abis, deployment, env } from "#lib/env"
@@ -92,7 +92,7 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
 }
 
 // TODO fill in
-export function noteSimulationMisbehaviour(_boop: PartialBoop, output: SimulateOutput): void {
+export function noteSimulationMisbehaviour(_boop: Boop, output: SimulateOutput): void {
     switch (output.status) {
         case Onchain.ValidationReverted:
         // Note the account as suspicious: validation is never supposed to revert during validation, only return

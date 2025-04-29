@@ -1,11 +1,11 @@
 import type { Hex } from "@happy.tech/common"
-import type { PartialBoop } from "#lib/interfaces/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
 import { toBytes, toDynamicLengthBytes } from "./bytes"
 
 /**
  * Encodes a Boop to encoded form for onchain submission.
  */
-export function encodeBoop(boop: PartialBoop): Hex {
+export function encodeBoop(boop: Boop): Hex {
     // Static fields
     const accountHex = boop.account.slice(2)
     const destHex = boop.dest.slice(2)
