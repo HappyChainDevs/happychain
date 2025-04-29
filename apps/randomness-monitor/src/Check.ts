@@ -1,19 +1,19 @@
-export enum MonitoringResult {
+export enum CheckResult {
     Success = "success",
     Failure = "failure",
 }
 
-export class Monitoring {
+export class Check {
     readonly blockNumber: bigint
     readonly blockTimestamp: bigint
-    readonly result: MonitoringResult
+    readonly result: CheckResult
     readonly errorDescription: string | undefined
     readonly value: string | undefined
 
     constructor(
         blockNumber: bigint,
         blockTimestamp: bigint,
-        result: MonitoringResult,
+        result: CheckResult,
         errorDescription?: string,
         value?: string,
     ) {

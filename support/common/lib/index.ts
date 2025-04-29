@@ -89,6 +89,8 @@ export { hasKey, hasDefinedKey, getProp } from "./utils/objects"
 
 export { stringify } from "./utils/string"
 
+export { getUrlProtocol } from "./utils/urlProtocol"
+
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"

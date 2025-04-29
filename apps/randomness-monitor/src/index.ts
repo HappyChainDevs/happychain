@@ -1,17 +1,18 @@
 import { bigIntReplacer, unknownToError } from "@happy.tech/common"
+import { getUrlProtocol } from "@happy.tech/common"
 import { abis } from "@happy.tech/contracts/random/anvil"
 import { type Result, err, ok } from "neverthrow"
 import { http, type Block, type PublicClient, type Transport, createPublicClient, defineChain, webSocket } from "viem"
-import { MonitoringRepository } from "./MonitorigRepository"
-import { Monitoring, MonitoringResult } from "./Monitoring"
+import { CheckRepository } from "./CheckRepository"
+import { Check, CheckResult } from "./Check"
 import { env } from "./env"
-import { getUrlProtocol } from "./utils/getUrlProtocol"
+import { logger } from "./utils/logger"
 
 /**
  * Main monitoring service for tracking blockchain randomness
  */
 export class MonitoringService {
-    private readonly monitoringRepository: MonitoringRepository
+    private readonly checkRepository: CheckRepository
     private readonly viemClient: PublicClient
     private readonly protocol: "http" | "websocket"
 
@@ -20,7 +21,7 @@ export class MonitoringService {
     private isProcessing = false
 
     constructor() {
-        this.monitoringRepository = new MonitoringRepository()
+        this.checkRepository = new CheckRepository()
 
         const protocolResult = getUrlProtocol(env.RPC_URL)
 
@@ -90,14 +91,14 @@ export class MonitoringService {
      * Initialize monitoring state from database
      */
     private async initializeMonitoring(): Promise<void> {
-        const latestMonitoring = await this.monitoringRepository.findLatestMonitoring()
+        const latestCheck = await this.checkRepository.findLatestCheck()
 
-        if (latestMonitoring.isErr()) {
-            console.error("Failed to retrieve latest monitoring:", latestMonitoring.error)
+        if (latestCheck.isErr()) {
+            console.error("Failed to retrieve latest check:", latestCheck.error)
             process.exit(1)
         }
 
-        this.latestMonitoringBlockNumber = latestMonitoring.value?.blockNumber
+        this.latestMonitoringBlockNumber = latestCheck.value?.blockNumber
         console.log("Starting monitoring from block:", this.latestMonitoringBlockNumber)
     }
 
@@ -109,7 +110,7 @@ export class MonitoringService {
             return
         }
 
-        this.monitoringRepository.pruneMonitoring(block.timestamp)
+        this.checkRepository.pruneChecks(block.timestamp)
 
         this.latestBlockchainBlockNumber = block.number
 
@@ -135,19 +136,17 @@ export class MonitoringService {
                 this.latestMonitoringBlockNumber = this.latestBlockchainBlockNumber
             }
 
-            if (this.latestMonitoringBlockNumber && this.latestBlockchainBlockNumber) {
-                let blockToMonitor = this.latestMonitoringBlockNumber + 1n
-                const endBlock = this.latestBlockchainBlockNumber
+            let blockToMonitor = this.latestMonitoringBlockNumber + 1n
+            const endBlock = this.latestBlockchainBlockNumber
 
-                while (blockToMonitor < endBlock) {
-                    const result = await this.monitorBlock(blockToMonitor)
-                    if (result.isErr()) {
-                        break
-                    }
-
-                    this.latestMonitoringBlockNumber = blockToMonitor
-                    blockToMonitor = blockToMonitor + 1n
+            while (blockToMonitor < endBlock) {
+                const result = await this.monitorBlock(blockToMonitor)
+                if (result.isErr()) {
+                    break
                 }
+
+                this.latestMonitoringBlockNumber = blockToMonitor
+                blockToMonitor = blockToMonitor + 1n
             }
         } catch (error) {
             console.error("Error in processing monitoring:", error)
@@ -160,7 +159,7 @@ export class MonitoringService {
      * Monitor a specific block for randomness
      */
     private async monitorBlock(blockNumber: bigint): Promise<Result<void, Error>> {
-        console.log("Monitoring block", blockNumber)
+        logger.info(`Monitoring block ${blockNumber}`)
 
         let block: Block<bigint, false, "latest"> | undefined
         try {
@@ -184,12 +183,12 @@ export class MonitoringService {
                 functionName: "random",
                 blockNumber,
             })
-            await this.monitoringRepository
-                .saveMonitoring(
-                    new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random),
+            await this.checkRepository
+                .saveCheck(
+                    new Check(blockNumber, block.timestamp, CheckResult.Success, undefined, random),
                 )
                 .catch((error) => {
-                    console.error("Error in saving monitoring:", error)
+                    console.error("Error in saving check:", error)
                 })
         } catch (err: unknown) {
             let errorMessage: string | undefined
@@ -200,10 +199,10 @@ export class MonitoringService {
                 errorMessage = JSON.stringify(err, bigIntReplacer)
             }
 
-            await this.monitoringRepository
-                .saveMonitoring(new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage))
+            await this.checkRepository
+                .saveCheck(new Check(blockNumber, block.timestamp, CheckResult.Failure, errorMessage))
                 .catch((error) => {
-                    console.error("Error in saving monitoring:", error)
+                    console.error("Error in saving check:", error)
                 })
         }
 

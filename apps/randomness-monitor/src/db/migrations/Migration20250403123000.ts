@@ -3,7 +3,7 @@ import type { Database } from "../types"
 
 export async function up(db: Kysely<Database>) {
     await db.schema
-        .createTable("monitoring")
+        .createTable("checks")
         .addColumn("blockNumber", "integer", (col) => col.notNull())
         .addColumn("blockTimestamp", "integer", (col) => col.notNull())
         .addColumn("result", "text", (col) => col.notNull())
