@@ -3,7 +3,17 @@ import { defineConfig } from "vite"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    server: { port: 6002, strictPort: true },
+    server: {
+        port: 6002,
+        strictPort: true,
+        proxy: {
+            "/api": {
+                target: "http://localhost:4545",
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, ""),
+            },
+        },
+    },
     preview: { port: 6002, strictPort: true },
     plugins: [react()],
     build: {
