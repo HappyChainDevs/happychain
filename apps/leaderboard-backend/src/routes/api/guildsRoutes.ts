@@ -16,6 +16,7 @@ export default new Hono()
     // GET /guilds - List guilds (with filtering)
     .get("/", zValidator("query", GuildQuerySchema), async (c) => {
         try {
+            console.log("reached GET /guilds", c.req.query())
             const query = c.req.valid("query")
             const { guildRepo } = c.get("repos")
 
@@ -25,8 +26,11 @@ export default new Hono()
                 includeMembers: query.include_members,
             })
 
+            console.log("returning: ", guilds)
+
             return c.json({ ok: true, data: guilds })
         } catch (err) {
+            console.log("getting error here")
             console.error("Error listing guilds:", err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }

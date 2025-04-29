@@ -71,9 +71,8 @@ export const GuildQuerySchema = z
     .object({
         name: z.string().optional(),
         creator_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId)
+            .string()
+            .transform((val) => Number.parseInt(val, 10) as UserTableId)
             .optional(),
         include_members: z.boolean().default(false).optional(),
     })
@@ -81,7 +80,7 @@ export const GuildQuerySchema = z
     .openapi({
         example: {
             name: "Alpha",
-            creator_id: 1,
+            creator_id: "1",
             include_members: true,
         },
     })

@@ -1,4 +1,4 @@
-import type { Guild } from "../GuildsPage";
+import type { Guild } from "../GuildsPage"
 
 export default function GuildCard({ guild, onManage }: { guild: Guild; onManage: (g: Guild) => void }) {
     return (
@@ -9,5 +9,5 @@ export default function GuildCard({ guild, onManage }: { guild: Guild; onManage:
                 Manage
             </button>
         </div>
-    );
+    )
 }
