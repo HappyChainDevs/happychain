@@ -18,15 +18,3 @@ export type ReceiptRequestInput = {
 }
 
 export type ReceiptRequestOutput = StateRequestOutput
-
-/**
- * GET `/api/v1/boop/receipt/{hash}`
- * GET `/api/v1/boop/receipt/{hash}?timeout={timeout}`
- *
- * Instructs the submitter to wait for the Boop's receipt then return.
- *
- * It may also return earlier if a user-specified or submitter-mandated timeout is reached.
- *
- * The submitter can return without a receipt if the Boop submission failed for other reasons.
- */
-export declare function submitter_receipt(input: ReceiptRequestInput): ReceiptRequestOutput

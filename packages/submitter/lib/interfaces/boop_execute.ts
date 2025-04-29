@@ -62,22 +62,3 @@ export type ExecuteError = {
     /** Description of the problem. */
     description?: string
 }
-
-/**
- * POST `/api/v1/boop/execute`
- *
- * Given a boop, submits it onchain to be executed, waits for and returns the result of
- * execution.
- *
- * Unless `input.account === input.payer`, the `gasLimit`, `executeGasLimit`, `maxFeePerGas` and
- * `submitterFee` fields can be omitted and will be filled by the submitter.
- *
- * If the gas limits are provided, the submitter is free to perform or not perform simulation before
- * submitting.
- *
- * The submitter is nonce-aware and will buffer up to a certain amount of boop per nonce track,
- * depending on its configuration. It will submit boop whenever their nonces becomes eligible.
- *
- * To cancel a pending Boop, simply call with an empty replacement transaction.
- */
-export declare function submitter_execute(input: ExecuteInput): ExecuteOutput
