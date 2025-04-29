@@ -1,15 +1,15 @@
-import { Monitoring, type MonitoringResult } from "../Monitoring"
+import { Check, type CheckResult } from "../Check"
 
-export interface MonitoringRow {
+export interface CheckRow {
     blockNumber: number
     blockTimestamp: number
-    result: MonitoringResult
+    result: CheckResult
     errorDescription: string | undefined
     value: string | undefined
 }
 
-export function monitoringRowToEntity(row: MonitoringRow): Monitoring {
-    return new Monitoring(
+export function checkRowToEntity(row: CheckRow): Check {
+    return new Check(
         BigInt(row.blockNumber),
         BigInt(row.blockTimestamp),
         row.result,
@@ -18,7 +18,7 @@ export function monitoringRowToEntity(row: MonitoringRow): Monitoring {
     )
 }
 
-export function monitoringEntityToRow(entity: Monitoring): MonitoringRow {
+export function checkEntityToRow(entity: Check): CheckRow {
     return {
         blockNumber: Number(entity.blockNumber),
         blockTimestamp: Number(entity.blockTimestamp),
@@ -29,5 +29,5 @@ export function monitoringEntityToRow(entity: Monitoring): MonitoringRow {
 }
 
 export interface Database {
-    monitoring: MonitoringRow
+    checks: CheckRow
 }
