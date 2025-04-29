@@ -1,11 +1,8 @@
-import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
-import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { walletClient } from "#lib/clients"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/utils/errorHandling"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import type { SimulateInput } from "#lib/interfaces/boop_simulate"
 import type { SubmitInput, SubmitOutput } from "#lib/interfaces/boop_submit"
 import { logger } from "#lib/logger"
 import { boopNonceManager, submitterService } from "#lib/services"
@@ -13,16 +10,6 @@ import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { encodeBoop } from "#lib/utils/encodeBoop"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 import { simulate } from "./simulate"
-
-export async function submitFromRoute(
-    input: SimulateInput,
-): Promise<[BigIntSerialized<SubmitOutput>, ContentfulStatusCode]> {
-    const output = await submit(input)
-    // TODO do better, maybe other successful statuses, better http codes
-    return output.status === Onchain.Success
-        ? ([serializeBigInt(output), 200] as const)
-        : ([serializeBigInt(output), 422] as const)
-}
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
     const { entryPoint = deployment.EntryPoint, boop } = input

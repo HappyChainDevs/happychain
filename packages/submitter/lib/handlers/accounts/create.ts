@@ -1,6 +1,4 @@
 import type { Address, Hex } from "@happy.tech/common"
-import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
-import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { BaseError, createWalletClient } from "viem"
 import { config, publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/env"
@@ -17,15 +15,6 @@ import { getAccountDeployerAccount } from "#lib/utils/getAccountDeployerAccount"
 // so we define private/internal clients independently here.
 const account = getAccountDeployerAccount()
 const walletClient = createWalletClient({ ...config, account })
-
-export async function createFromRoute(
-    input: CreateAccountInput,
-): Promise<[BigIntSerialized<CreateAccountOutput>, ContentfulStatusCode]> {
-    const output = await create(input)
-    return ([CreateAccount.Success, CreateAccount.AlreadyCreated] as string[]).includes(output.status)
-        ? [serializeBigInt(output), 200]
-        : [serializeBigInt(output), 500]
-}
 
 export async function create({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {

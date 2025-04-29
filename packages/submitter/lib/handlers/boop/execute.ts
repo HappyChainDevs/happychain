@@ -1,5 +1,3 @@
-import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
-import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { env } from "#lib/env"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
@@ -8,16 +6,6 @@ import { logger } from "#lib/logger"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 import { submit } from "./submit"
-
-export async function executeFromRoute(
-    input: ExecuteInput,
-): Promise<[BigIntSerialized<ExecuteOutput>, ContentfulStatusCode]> {
-    const output = await execute(input)
-    // TODO do better, maybe other successful statuses, better http codes
-    return output.status === Onchain.Success
-        ? ([serializeBigInt(output), 200] as const)
-        : ([serializeBigInt(output), 422] as const)
-}
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })

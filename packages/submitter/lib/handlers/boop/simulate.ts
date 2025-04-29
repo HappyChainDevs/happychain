@@ -1,5 +1,3 @@
-import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
-import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { type Boop, Onchain, computeBoopHash } from "#lib/client"
@@ -14,16 +12,6 @@ import { logger } from "#lib/logger"
 import { getRevertError } from "#lib/parsing"
 import { simulationCache } from "#lib/services"
 import { encodeBoop } from "#lib/utils/encodeBoop"
-
-export async function simulateFromRoute(
-    input: SimulateInput,
-): Promise<[BigIntSerialized<SimulateOutput>, ContentfulStatusCode]> {
-    const output = await simulate(input)
-    // TODO do better, maybe other successful statuses, better http codes
-    return output.status === Onchain.Success
-        ? ([serializeBigInt(output), 200] as const)
-        : ([serializeBigInt(output), 422] as const)
-}
 
 export async function simulate({ entryPoint = deployment.EntryPoint, boop }: SimulateInput): Promise<SimulateOutput> {
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
