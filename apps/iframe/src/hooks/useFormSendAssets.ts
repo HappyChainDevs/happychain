@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { atom, useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo } from "react"
 import { type Address, formatEther, isAddress, parseEther } from "viem"
@@ -53,6 +53,7 @@ export function useFormSendAssets(asset?: Address) {
     const user = useAtomValue(userAtom)
     const formAtom = useAtom(formSendAssetsAtom)
     const [form, setForm] = formAtom
+    const location = useLocation()
 
     /**
      * Get user's native token balance.
@@ -153,6 +154,20 @@ export function useFormSendAssets(asset?: Address) {
     useEffect(() => {
         if (queryWaitForTransactionReceipt.isSuccess) onTransactionCompleted()
     }, [queryWaitForTransactionReceipt.isSuccess, onTransactionCompleted])
+
+    /**
+     * I the user is navigating from `/send` to `/embed` (via GLobalHeader)
+     * while a tx is in-flight (approved), this fires so as to reset the form
+     * to its default state.
+     */
+    useEffect(() => {
+        if (
+            location.pathname === "/embed" &&
+            (mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading)
+        ) {
+            setForm(DEFAULT_FORM_STATE)
+        }
+    }, [location.pathname, mutationSendTransaction.status, queryWaitForTransactionReceipt.isLoading, setForm])
 
     return {
         formAtom,
