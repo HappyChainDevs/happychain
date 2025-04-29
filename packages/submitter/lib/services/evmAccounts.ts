@@ -1,9 +1,11 @@
-import type { Account } from "viem"
+import { type Account, type PrivateKeyAccount, createNonceManager } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { jsonRpc } from "viem/nonce"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/interfaces/Boop"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
+import { privateKeyToExecutionAccount } from "#lib/utils/privateKeyToExecutionAccount"
 import { computeBoopHash } from "./computeBoopHash"
-import { getDefaultExecutionAccount, getExecutionAccounts } from "./getExecutionAccounts"
 
 /**
   flowchart TD
@@ -33,12 +35,22 @@ import { getDefaultExecutionAccount, getExecutionAccounts } from "./getExecution
     P --> Q
  */
 
-const executorService = new ExecutorCacheService(getExecutionAccounts())
-const defaultAccount = getDefaultExecutionAccount()
+const nonceManager = createNonceManager({ source: jsonRpc() })
+
+const executionAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
+    privateKeyToAccount(key, { nonceManager }),
+)
+const executorService = new ExecutorCacheService(executionAccounts)
+
+export const defaultAccount: Account = executionAccounts[0]
 
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
 
     const hash = computeBoopHash(BigInt(env.CHAIN_ID), tx)
     return executorService.get(hash, tx.account, tx.nonceTrack)
+}
+
+function privateKeyToExecutionAccount(key: `0x${string}`): PrivateKeyAccount {
+    return
 }
