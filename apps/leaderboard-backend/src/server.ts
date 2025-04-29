@@ -3,11 +3,10 @@ import { cors } from "hono/cors"
 import { prettyJSON } from "hono/pretty-json"
 
 import { type Repositories, repositories } from "./repositories"
-import { gamesApi } from "./routes/api/gamesRoutes"
-import { guildsApi } from "./routes/api/guildsRoutes"
-import { leaderboardApi } from "./routes/api/leaderboardRoutes"
-import { scoresApi } from "./routes/api/scoresRoutes"
-import { usersApi } from "./routes/api/usersRoutes"
+import gamesApi from "./routes/api/gamesRoutes"
+import guildsApi from "./routes/api/guildsRoutes"
+import leaderboardApi from "./routes/api/leaderboardRoutes"
+import usersApi from "./routes/api/usersRoutes"
 
 declare module "hono" {
     interface ContextVariableMap {
@@ -16,24 +15,18 @@ declare module "hono" {
 }
 
 const app = new Hono()
-
-app.use(cors())
-app.use(prettyJSON())
-
-// Middleware to inject repositories into context
-app.use("*", async (c, next) => {
-    c.set("repos", repositories)
-    await next()
-})
-
-app.get("/", (c) => c.text("Leaderboard API"))
-app.route("/users", usersApi)
-app.route("/guilds", guildsApi)
-app.route("/games", gamesApi)
-app.route("/scores", scoresApi)
-app.route("/leaderboards", leaderboardApi)
-
-app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
+    .use(cors())
+    .use(prettyJSON())
+    .use("*", async (c, next) => {
+        c.set("repos", repositories)
+        await next()
+    })
+    .get("/", (c) => c.text("Leaderboard API"))
+    .route("/users", usersApi)
+    .route("/guilds", guildsApi)
+    .route("/games", gamesApi)
+    .route("/leaderboards", leaderboardApi)
+    .notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 export type AppType = typeof app
 export { app }
