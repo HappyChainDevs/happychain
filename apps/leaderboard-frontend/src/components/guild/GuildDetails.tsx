@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react"
 import type { Guild, GuildMember } from "../GuildsPage"
-import type { UserProfile } from "../ProfilePage"
 
-export default function GuildDetails({
-    guild,
-    onClose,
-    profile,
-}: { guild: Guild; onClose: () => void; profile: UserProfile | null }) {
+export default function GuildDetails({ guild, onClose }: { guild: Guild; onClose: () => void }) {
     const [members, setMembers] = useState<GuildMember[]>([])
     const [loading, setLoading] = useState(false)
     const [addUser, setAddUser] = useState("")
@@ -34,18 +29,11 @@ export default function GuildDetails({
         if (!addUser) return
         setLoading(true)
         try {
-            // Resolve username to user_id
-            const userId = await getUserIdByUsername(addUser)
-            if (!userId) {
-                setError("User not found")
-                setLoading(false)
-                return
-            }
-            // POST to /guilds/:id/members
+            // POST to /guilds/:id/members with username
             const res = await fetch(`/api/guilds/${guild.id}/members`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId, is_admin: false }),
+                body: JSON.stringify({ username: addUser, is_admin: false }),
             })
             const data = await res.json()
             if (res.ok && data.ok) {
@@ -58,9 +46,10 @@ export default function GuildDetails({
                     errMsg = data.error
                 } else if (data.error && typeof data.error === "object") {
                     if (data.error.issues) {
-                        // biome-ignore lint/suspicious/noExplicitAny: error shape from backend
                         errMsg =
-                            data.error.issues.map((issue: any) => issue.message).join("; ") || data.error.name || errMsg
+                            data.error.issues.map((issue: { message: string }) => issue.message).join("; ") ||
+                            data.error.name ||
+                            errMsg
                     } else if (data.error.message) {
                         errMsg = data.error.message
                     } else if (data.error.name) {
@@ -72,21 +61,10 @@ export default function GuildDetails({
                 setError(errMsg)
             }
         } catch (e) {
-            setError("Network error")
+            setError("Network error" + e)
         } finally {
             setLoading(false)
         }
-    }
-
-    // Utility to resolve username → user_id
-    async function getUserIdByUsername(username: string): Promise<number | null> {
-        const res = await fetch(`/api/users?username=${encodeURIComponent(username)}`)
-        if (!res.ok) return null
-        const data = await res.json()
-        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
-            return data.data[0].id
-        }
-        return null
     }
 
     return (

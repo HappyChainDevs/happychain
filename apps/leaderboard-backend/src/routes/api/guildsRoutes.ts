@@ -16,7 +16,6 @@ export default new Hono()
     // GET /guilds - List guilds (with filtering)
     .get("/", zValidator("query", GuildQuerySchema), async (c) => {
         try {
-            console.log("reached GET /guilds", c.req.query())
             const query = c.req.valid("query")
             const { guildRepo } = c.get("repos")
 
@@ -26,11 +25,8 @@ export default new Hono()
                 includeMembers: query.include_members,
             })
 
-            console.log("returning: ", guilds)
-
             return c.json({ ok: true, data: guilds })
         } catch (err) {
-            console.log("getting error here")
             console.error("Error listing guilds:", err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
@@ -140,17 +136,29 @@ export default new Hono()
         async (c) => {
             try {
                 const { id } = c.req.valid("param")
-
-                const { user_id, is_admin } = c.req.valid("json")
+                let { user_id, username, is_admin } = c.req.valid("json")
                 const { guildRepo, userRepo } = c.get("repos")
 
-                // Check if guild exists
+                // Ensure guild exists
                 const guild = await guildRepo.findById(id as GuildTableId)
                 if (!guild) {
                     return c.json({ ok: false, error: "Guild not found" }, 404)
                 }
 
-                // Check if user exists
+                // Resolve user_id from username if needed
+                if (!user_id && username) {
+                    const userByName = await userRepo.findByUsername(username)
+                    if (!userByName) {
+                        return c.json({ ok: false, error: "User not found by username" }, 404)
+                    }
+                    user_id = userByName.id
+                }
+
+                if (user_id === undefined) {
+                    return c.json({ ok: false, error: "User ID or username required" }, 400)
+                }
+
+                // Ensure user exists
                 const user = await userRepo.findById(user_id)
                 if (!user) {
                     return c.json({ ok: false, error: "User not found" }, 404)

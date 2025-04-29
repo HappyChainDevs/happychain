@@ -127,13 +127,18 @@ export const GuildMemberAddRequestSchema = z
         user_id: z
             .number()
             .int()
-            .transform((val) => val as UserTableId),
+            .transform((val) => val as UserTableId)
+            .optional(),
+        username: z.string().min(1).optional(),
         is_admin: z.boolean().default(false).optional(),
     })
     .strict()
+    .refine((data) => data.user_id !== undefined || data.username !== undefined, {
+        message: "Either user_id or username must be provided",
+    })
     .openapi({
         example: {
-            user_id: 2,
+            username: "aryan",
             is_admin: false,
         },
     })

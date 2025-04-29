@@ -196,22 +196,30 @@ export class GuildRepository {
             .selectFrom("guild_members")
             .where("guild_id", "=", guildId)
             .where("user_id", "=", userId)
+            .select(["id"]) // only need id to check existence
             .executeTakeFirst()
 
         if (existing) {
             return null // Already a member
         }
 
-        // Add new member
-        return await this.db
+        // Add new member (simple insert)
+        await this.db
             .insertInto("guild_members")
             .values({
                 guild_id: guildId,
                 user_id: userId,
                 is_admin: isAdmin,
             })
-            .returningAll()
-            .executeTakeFirstOrThrow()
+            .execute()
+
+        // Explicitly select only the columns needed
+        return await this.db
+            .selectFrom("guild_members")
+            .where("guild_id", "=", guildId)
+            .where("user_id", "=", userId)
+            .select(["id", "guild_id", "user_id", "is_admin", "joined_at"]) // be explicit
+            .executeTakeFirst()
     }
 
     /// Update member role
