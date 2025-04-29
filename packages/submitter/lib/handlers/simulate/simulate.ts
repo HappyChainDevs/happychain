@@ -40,7 +40,7 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                 validateGas: boop.validateGasLimit || applyGasMargin(submitOutput.validateGas),
                 paymentValidateGas: boop.validatePaymentGasLimit || applyGasMargin(submitOutput.validateGas),
                 executeGas: boop.executeGasLimit || applyGasMargin(submitOutput.executeGas),
-                maxFeePerGas: gasPrice,
+                maxFeePerGas: BigInt(applyGasMargin(Number(gasPrice))) / 100000000n * 100000000n,
                 submitterFee: getSubmitterFee(boop),
             } : {
                 status,

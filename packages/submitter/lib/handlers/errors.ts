@@ -29,7 +29,7 @@ export function outputForGenericError(error: unknown): SimulateError {
 export function outputForRevertError(
     boop: Boop,
     boopHash: Hash,
-    { raw, decoded }: RevertErrorInfo,
+    { decoded }: RevertErrorInfo,
 ): SimulateFailed | SimulateError {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
@@ -53,7 +53,6 @@ export function outputForRevertError(
             }
         }
         case "ValidationReverted": {
-            console.log(raw)
             return {
                 status: Onchain.ValidationReverted,
                 description:

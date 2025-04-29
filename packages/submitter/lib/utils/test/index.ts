@@ -57,12 +57,12 @@ export function createMockTokenAMintBoop(
 
         // payer is default
         payer: zeroAddress,
-        executeGasLimit: 0,
+        executeGasLimit: 0, // 25_000_000,
         gasLimit: 0,
-        validatePaymentGasLimit: 4000000000,
-        validateGasLimit: 4000000000,
-        maxFeePerGas: 1200000000n,
-        submitterFee: 100n,
+        validatePaymentGasLimit: 0,
+        validateGasLimit: 0,
+        maxFeePerGas: 1_200_000_000n, // 1_000_000_007n,
+        submitterFee: 0n,
 
         callData: encodeFunctionData({
             abi: mockAbis.MockTokenA,

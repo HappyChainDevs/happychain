@@ -4,7 +4,7 @@ import { simulate } from "#lib/handlers/simulate"
 import { boopNonceManager, submitterService } from "#lib/services"
 import { computeBoopHash } from "#lib/services/computeBoopHash"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
-import { Onchain, SubmitterError } from "#lib/types"
+import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
@@ -46,13 +46,13 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         // TODO make simulate return an updated boop
         const updatedBoop = {
             ...input.boop,
-            gas: simulation.gas, // TODO should probably be lower than the gas limit
-            validateGas: simulation.validateGas,
-            paymentValidateGas: simulation.paymentValidateGas,
-            executeGas: simulation.executeGas,
+            gasLimit: simulation.gas, // TODO should probably be lower than the gas limit
+            validateGasLimit: simulation.validateGas,
+            validatePaymentGasLimit: simulation.paymentValidateGas,
+            executeGasLimit: simulation.executeGas,
             maxFeePerGas: simulation.maxFeePerGas,
             submitterFee: simulation.submitterFee,
-        }
+        } satisfies Boop
 
         // TODO make sure this does no extra needless simulations
         const txHash = await walletClient.writeContract({
