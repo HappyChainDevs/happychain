@@ -1,4 +1,4 @@
-import type { Address, Bytes, Int256, Optional, UInt32, UInt256 } from "@happy.tech/common"
+import type { Address, Bytes, Int256, UInt32, UInt256 } from "@happy.tech/common"
 
 /**
  * Typescript version of the Boop onchain structure.
@@ -20,15 +20,3 @@ export type Boop = {
     validatorData: Bytes
     extraData: Bytes
 }
-
-/** Fields of {@link Boop} that can be ommitted from an API call. */
-export type BoopOptionalFields =
-    | "gasLimit"
-    | "executeGasLimit"
-    | "validateGasLimit"
-    | "validatePaymentGasLimit"
-    | "maxFeePerGas"
-    | "submitterFee"
-
-/** A Boop with the fields that can be ommitted from an API call made optional. */
-export type PartialBoop = Optional<Boop, BoopOptionalFields>

@@ -4,7 +4,7 @@ import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { abis, env } from "#lib/env"
 import { SubmitterError } from "#lib/errors"
-import type { PartialBoop } from "#lib/interfaces/Boop"
+import type { Boop } from "#lib/interfaces/Boop"
 import type { PendingBoopInfo } from "#lib/interfaces/boop_pending"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
 
@@ -45,17 +45,17 @@ export class BoopNonceManagerService {
         })
     }
 
-    public async checkIfBlocked(entryPoint: Address, tx: PartialBoop): Promise<boolean> {
-        const localNonce = await this.getLocalNonce(entryPoint, tx.account, tx.nonceTrack)
-        return tx.nonceValue > localNonce
+    public async checkIfBlocked(entryPoint: Address, boop: Boop): Promise<boolean> {
+        const localNonce = await this.getLocalNonce(entryPoint, boop.account, boop.nonceTrack)
+        return boop.nonceValue > localNonce
     }
 
-    public async pauseUntilUnblocked(entrypoint: Address, tx: PartialBoop): Promise<Result<undefined, SubmitterError>> {
-        if (this.trackExceedsBuffer(tx)) return err(new SubmitterError("bufferExceeded"))
+    public async pauseUntilUnblocked(entrypoint: Address, boop: Boop): Promise<Result<undefined, SubmitterError>> {
+        if (this.trackExceedsBuffer(boop)) return err(new SubmitterError("bufferExceeded"))
         if (this.reachedMaxCapacity()) return err(new SubmitterError("maxCapacity"))
-        if (await this.nonceOutOfRange(entrypoint, tx)) return err(new SubmitterError("nonce out of range"))
+        if (await this.nonceOutOfRange(entrypoint, boop)) return err(new SubmitterError("nonce out of range"))
 
-        const { account, nonceTrack, nonceValue } = tx
+        const { account, nonceTrack, nonceValue } = boop
 
         const previouslyBlocked = this.blockedTxMap.get(account, nonceTrack)?.get(nonceValue)
         if (previouslyBlocked) previouslyBlocked.resolve(err(new SubmitterError("transaction replaced")))
@@ -76,9 +76,9 @@ export class BoopNonceManagerService {
         }, MAX_WAIT_TIMEOUT_MS)
 
         this.blockedTxMap
-            .getOrSet(tx.account, tx.nonceTrack, () => new Map())
-            .set(tx.nonceValue, {
-                hash: computeBoopHash(BigInt(env.CHAIN_ID), tx),
+            .getOrSet(boop.account, boop.nonceTrack, () => new Map())
+            .set(boop.nonceValue, {
+                hash: computeBoopHash(BigInt(env.CHAIN_ID), boop),
                 resolve: (response: Result<undefined, SubmitterError>) => {
                     clearTimeout(timeout)
                     resolve(response)
@@ -92,13 +92,13 @@ export class BoopNonceManagerService {
 
     /**
      * Increments the local nonce determined by the given transaction
-     * @param tx The transaction to be tracked
+     * @param boop The transaction to be tracked
      */
-    public incrementLocalNonce(tx: PartialBoop): void {
+    public incrementLocalNonce(boop: Boop): void {
         this.totalCapacity--
 
-        const { account, nonceTrack } = tx
-        const nextNonce = tx.nonceValue + 1n
+        const { account, nonceTrack } = boop
+        const nextNonce = boop.nonceValue + 1n
 
         this.nonces.set(account, nonceTrack, nextNonce)
 
@@ -121,7 +121,7 @@ export class BoopNonceManagerService {
     /**
      * Resets the local nonce so that the next call to getLocalNonce will fetch the onchain nonce.
      */
-    public resetLocalNonce(boop: PartialBoop): void {
+    public resetLocalNonce(boop: Boop): void {
         const { account, nonceTrack } = boop
         this.nonces.delete(account, nonceTrack)
     }
@@ -134,22 +134,22 @@ export class BoopNonceManagerService {
         return this.totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY
     }
 
-    private trackExceedsBuffer(tx: PartialBoop) {
-        const track = this.blockedTxMap.get(tx.account, tx.nonceTrack)
+    private trackExceedsBuffer(boop: Boop) {
+        const track = this.blockedTxMap.get(boop.account, boop.nonceTrack)
         if (!track) return false
         return track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT
     }
 
-    private async nonceOutOfRange(entrypoint: `0x${string}`, tx: PartialBoop) {
-        const possiblyCachedNonce = await this.getLocalNonce(entrypoint, tx.account, tx.nonceTrack)
-        if (tx.nonceValue <= this.getMaxNonce(possiblyCachedNonce)) return false
+    private async nonceOutOfRange(entrypoint: `0x${string}`, boop: Boop) {
+        const possiblyCachedNonce = await this.getLocalNonce(entrypoint, boop.account, boop.nonceTrack)
+        if (boop.nonceValue <= this.getMaxNonce(possiblyCachedNonce)) return false
 
         // reset to force onchain lookup
-        this.resetLocalNonce(tx)
+        this.resetLocalNonce(boop)
         // lookup one more time
-        const onchainNonce = await this.getLocalNonce(entrypoint, tx.account, tx.nonceTrack)
+        const onchainNonce = await this.getLocalNonce(entrypoint, boop.account, boop.nonceTrack)
         // if its still out of range, abort
-        return tx.nonceValue > this.getMaxNonce(onchainNonce)
+        return boop.nonceValue > this.getMaxNonce(onchainNonce)
     }
 
     private async getOnchainNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<NonceValue> {

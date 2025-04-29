@@ -2,7 +2,7 @@ import type { Address } from "@happy.tech/common"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
 import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
 import { SubmitterError, type SubmitterErrorStatus } from "#lib/interfaces/SubmitterError"
-import type { PartialBoop } from "./Boop"
+import type { Boop } from "./Boop"
 
 /**
  * Possible results of a `submit` call.
@@ -19,7 +19,7 @@ export type ExecuteInput = {
     entryPoint?: Address | undefined
 
     /** Boop to execute. */
-    boop: PartialBoop
+    boop: Boop
 }
 
 export type ExecuteOutput = ExecuteSuccess | ExecuteFailedOnchain | ExecuteError

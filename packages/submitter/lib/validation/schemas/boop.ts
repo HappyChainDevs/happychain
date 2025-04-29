@@ -6,7 +6,7 @@ import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
 
-export const partialBoopSchema = z.object({
+export const boopSchema = z.object({
     account: z
         .string()
         .refine(isAddress)
@@ -31,13 +31,13 @@ export const partialBoopSchema = z.object({
     nonceValue: z.string().transform(toBigInt).openapi({ example: "25" }), // UInt256
 
     // gas
-    maxFeePerGas: z.string().transform(toBigInt).openapi({ example: "1200000000" }).optional(), // UInt256
-    submitterFee: z.string().transform(toBigInt).openapi({ example: "100" }).optional(), // Int256
+    maxFeePerGas: z.string().transform(toBigInt).openapi({ example: "1200000000" }).default("0"), // UInt256
+    submitterFee: z.string().transform(toBigInt).openapi({ example: "100" }).default("0"), // Int256
 
-    gasLimit: z.coerce.number().openapi({ example: 4000000000 }).optional(), // UInt32
-    validateGasLimit: z.coerce.number().openapi({ example: 4000000000 }).optional(), // UInt32
-    validatePaymentGasLimit: z.coerce.number().openapi({ example: 4000000000 }).optional(), // UInt32
-    executeGasLimit: z.coerce.number().openapi({ example: 4000000000 }).optional(), // UInt32
+    gasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
+    validateGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
+    validatePaymentGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
+    executeGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
 
     validatorData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
     extraData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
@@ -53,5 +53,5 @@ export const inputSchema = z.object({
         .transform((a) => getAddress(a)),
 
     /** Boop to execute. */
-    boop: partialBoopSchema,
+    boop: boopSchema,
 })

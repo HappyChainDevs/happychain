@@ -1,6 +1,6 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop, BoopOptionalFields, PartialBoop } from "../interfaces/Boop"
+import type { Boop } from "../interfaces/Boop"
 import { encodeBoop } from "./encodeBoop"
 
 const zeroGasData = {
@@ -10,7 +10,7 @@ const zeroGasData = {
     executeGasLimit: 0,
     validateGasLimit: 0,
     validatePaymentGasLimit: 0,
-} as const satisfies Partial<Boop> & Record<BoopOptionalFields, unknown>
+} as const satisfies Partial<Boop>
 
 export type ComputeBoopHashOptions = {
     /** Cache the hash onto the object itself. */
@@ -22,7 +22,7 @@ export type ComputeBoopHashOptions = {
  */
 export function computeBoopHash(
     chainId: bigint | number,
-    boop: PartialBoop,
+    boop: Boop,
     options: ComputeBoopHashOptions = { cache: false },
 ): Hash {
     // We sneakily piggyback the boopHash on the boop as a form of caching.
@@ -32,9 +32,10 @@ export function computeBoopHash(
     if (cached) return cached as Hash
 
     // Don't include validator data in the signature so that pre & post signing are the same.
-    const boopToHash: PartialBoop = { ...boop, validatorData: "0x" }
+    const boopToHash: Boop = { ...boop, validatorData: "0x" }
 
     if (boop.payer === boop.account) {
+        // TODO
         // For self-paying boops, all fields have to be specified!
         for (const key in zeroGasData) {
             // @ts-ignore

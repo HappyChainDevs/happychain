@@ -2,7 +2,7 @@ import type { Bytes } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
 import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
 import type { EntryPointOutput } from "#lib/interfaces/contracts"
-import type { PartialBoop } from "./Boop"
+import type { Boop } from "./Boop"
 import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
 
 /**
@@ -13,7 +13,7 @@ export type SimulateInput = {
     entryPoint?: Address | undefined
 
     /** Boop for which to simulate gas limits and fee parameters. The gas limits and fee parameters are made optional. */
-    boop: PartialBoop
+    boop: Boop
 }
 
 /**

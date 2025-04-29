@@ -1,5 +1,5 @@
 import type { Address, Bytes, Hash } from "@happy.tech/common"
-import type { Boop, PartialBoop } from "./Boop"
+import type { Boop } from "./Boop"
 
 import { Onchain, type OnchainStatus } from "./Onchain"
 import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
@@ -9,7 +9,7 @@ export type SubmitInput = {
     entryPoint?: Address | undefined
 
     /** Boop to execute. */
-    boop: PartialBoop
+    boop: Boop
 }
 
 /**
