@@ -1,3 +1,4 @@
+import { WarningCircle } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { Button } from "#src/components/primitives/button/Button"
@@ -122,6 +123,16 @@ export const FormSend = () => {
                     </div>
                 </div>
             </FormField>
+
+            {mutationSendTransaction.status === "pending" && (
+                <div className="flex items-start bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
+                    <WarningCircle size="1.25em" className="shrink-0 mt-[0.15em]" />
+                    <p>
+                        {`${!queryWaitForTransactionReceipt.isLoading ? "Once sent, the" : "the".replace(/^./, "T")} transaction will not be cancelled!`}
+                    </p>
+                </div>
+            )}
+
             <div className="grid gap-4">
                 <Button
                     className="justify-center"
