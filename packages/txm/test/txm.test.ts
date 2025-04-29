@@ -30,6 +30,7 @@ import {
     CHAIN_ID,
     PRIVATE_KEY,
     PRIVATE_KEY_2,
+    PRIVATE_KEY_3,
     PROXY_URL,
     RPC_URL,
 } from "./utils/constants"
@@ -707,6 +708,162 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 2)
     expect(transactionBurnerExecuted.collectionBlock).toBe(previousBlock.number! + 1n)
 })
+
+test("Multiple transaction managers with different accounts work correctly", async () => {
+    const destinationAddress1 = "0xFa0C819aA6C37550784f1D32BCA0077e25E915D6"
+    const destinationAddress2 = "0xcc575f9170c5Bc1eb4e76f04e9Fe25CD95785173"
+    const privateKeyFromTxm1 = PRIVATE_KEY_2
+    const privateKeyFromTxm2 = PRIVATE_KEY_3
+    const addressFromTxm1 = privateKeyToAddress(privateKeyFromTxm1)
+    const addressFromTxm2 = privateKeyToAddress(privateKeyFromTxm2)
+
+    const quantityToSend = 1000000000000000000n
+    const numTransactions = 5
+
+    const txm1 = new TransactionManager({
+        privateKey: privateKeyFromTxm1,
+        chainId: CHAIN_ID,
+        rpc: {
+            url: PROXY_URL,
+            pollingInterval: 200,
+            allowDebug: true,
+            livenessCheckInterval: 500,
+            livenessDownDelay: 1000,
+        },
+        abis: abis,
+        gasEstimator: new TestGasEstimator(),
+        retryPolicyManager: retryManager,
+        gas: {
+            baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
+            eip1559: ethereumDefaultEIP1559Parameters,
+            minPriorityFeePerGas: 10n,
+        },
+        metrics: {
+            active: false,
+        },
+        traces: {
+            active: false,
+        },
+    })
+
+    const txm2 = new TransactionManager({
+        privateKey: privateKeyFromTxm2,
+        chainId: CHAIN_ID,
+        rpc: {
+            url: PROXY_URL,
+            pollingInterval: 200,
+            allowDebug: true,
+            livenessCheckInterval: 500,
+            livenessDownDelay: 1000,
+        },
+        abis: abis,
+        gasEstimator: new TestGasEstimator(),
+        retryPolicyManager: retryManager,
+        gas: {
+            baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
+            eip1559: ethereumDefaultEIP1559Parameters,
+            minPriorityFeePerGas: 10n,
+        },
+        metrics: {
+            active: false,
+        },
+        traces: {
+            active: false,
+        },
+    })
+
+    await txm1.start()
+    await txm2.start()
+
+    const initialBalance1 = await directBlockchainClient.getBalance({
+        address: destinationAddress1,
+    })
+
+    const initialBalance2 = await directBlockchainClient.getBalance({
+        address: destinationAddress2,
+    })
+
+    const initialNonce1 = await directBlockchainClient.getTransactionCount({
+        address: addressFromTxm1,
+    })
+    const initialNonce2 = await directBlockchainClient.getTransactionCount({
+        address: addressFromTxm2,
+    })
+
+    const transactions1: Transaction[] = []
+    const transactions2: Transaction[] = []
+
+    for (let i = 0; i < numTransactions; i++) {
+        const transaction1 = await txm1.createTransaction({
+            address: destinationAddress1,
+            value: quantityToSend,
+            calldata: "0x",
+        })
+
+        const transaction2 = await txm2.createTransaction({
+            address: destinationAddress2,
+            value: quantityToSend,
+            calldata: "0x",
+        })
+
+        await txm1.sendTransactions([transaction1])
+        await txm2.sendTransactions([transaction2])
+
+        await mineBlock(2)
+    }
+
+    const finalBalance1 = await directBlockchainClient.getBalance({
+        address: destinationAddress1,
+    })
+
+    const finalBalance2 = await directBlockchainClient.getBalance({
+        address: destinationAddress2,
+    })
+
+    expect(finalBalance1).toBe(initialBalance1 + quantityToSend * BigInt(numTransactions))
+    expect(finalBalance2).toBe(initialBalance2 + quantityToSend * BigInt(numTransactions))
+
+    const finalNonce1 = await directBlockchainClient.getTransactionCount({
+        address: addressFromTxm1,
+    })
+    const finalNonce2 = await directBlockchainClient.getTransactionCount({
+        address: addressFromTxm2,
+    })
+
+    expect(finalNonce1).toBe(initialNonce1 + numTransactions)
+    expect(finalNonce2).toBe(initialNonce2 + numTransactions)
+
+    for (const [i, transaction] of transactions1.entries()) {
+        const transactionResult = await txm1.getTransaction(transaction.intentId)
+        if (!assertIsOk(transactionResult)) return
+
+        const transactionValue = transactionResult.value
+        if (!assertIsDefined(transactionValue)) return
+
+        expect(transactionValue.status).toBe(TransactionStatus.Success)
+        expect(transactionValue.lastAttempt?.nonce).toBe(initialNonce1 + i)
+
+        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+        expect(persistedTransaction).toBeDefined()
+        expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+    }
+
+    for (const [i, transaction] of transactions2.entries()) {
+        const transactionResult = await txm2.getTransaction(transaction.intentId)
+        if (!assertIsOk(transactionResult)) return
+
+        const transactionValue = transactionResult.value
+        if (!assertIsDefined(transactionValue)) return
+
+        expect(transactionValue.status).toBe(TransactionStatus.Success)
+        expect(transactionValue.lastAttempt?.nonce).toBe(initialNonce2 + i)
+        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+        expect(persistedTransaction).toBeDefined()
+        expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+    }
+})
+
+
 
 test("Transaction manager successfully processes transactions despite random RPC failures", async () => {
     const previousLivenessThreshold = txm.livenessThreshold
