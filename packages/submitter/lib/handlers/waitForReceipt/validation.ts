@@ -3,13 +3,13 @@ import { resolver, validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { env } from "#lib/env"
 import { isProduction } from "#lib/utils/isProduction"
-import { outputSchema, inputSchema as paramSchema } from "./stateByHash"
+import { outputSchema, inputSchema as paramSchema } from "../getState/validation"
 
 const querySchema = z.object({
     timeout: z.coerce.number().min(0).max(30_000).default(env.RECEIPT_TIMEOUT).openapi({ example: 500 }),
 })
 
-export const description = describeRoute({
+export const waitForReceiptDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Retrieve state by BoopHash, waiting if necessary",
     responses: {
@@ -24,5 +24,5 @@ export const description = describeRoute({
     },
 })
 
-export const paramValidation = zv("param", paramSchema)
-export const queryValidation = zv("query", querySchema)
+export const waitForReceiptParamValidation = zv("param", paramSchema)
+export const waitForReceiptQueryValidation = zv("query", querySchema)

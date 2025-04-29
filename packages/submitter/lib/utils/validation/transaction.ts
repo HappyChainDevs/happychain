@@ -1,7 +1,6 @@
-// import { checksum } from "ox/Address"
 import { z } from "zod"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { isAddress } from "#lib/utils/validation/isAddress"
+import { isHexString } from "#lib/utils/validation/isHexString"
 
 export const transactionSchema = z.object({
     address: z

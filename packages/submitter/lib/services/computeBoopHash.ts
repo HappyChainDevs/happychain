@@ -1,7 +1,7 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop } from "../interfaces/Boop"
-import { encodeBoop } from "./encodeBoop"
+import type { Boop } from "#lib/types"
+import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 
 const zeroGasData = {
     maxFeePerGas: 0n,

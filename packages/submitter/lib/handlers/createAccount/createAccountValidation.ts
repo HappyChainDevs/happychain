@@ -38,7 +38,7 @@ const outputSchema = inputSchema.merge(
     }),
 )
 
-export const description = describeRoute({
+export const createAccountDescription = describeRoute({
     // Experimental option. Disable in production, but useful in development
     validateResponse: !isProduction,
     description: "Create a new account",
@@ -55,4 +55,4 @@ export const description = describeRoute({
     },
 })
 
-export const validation = zv("json", inputSchema)
+export const createAccountValidation = zv("json", inputSchema)

@@ -1,10 +1,8 @@
 import { type Result, ok } from "neverthrow"
-import type { PendingBoopInput, PendingBoopOutput } from "#lib/interfaces/boop_pending"
-import { boopNonceManager } from "#lib/services/index"
+import type { PendingBoopInput, PendingBoopOutput } from "#lib/handlers/getPending"
+import { boopNonceManager } from "#lib/services"
 
-export async function pendingByAccount({
-    account,
-}: PendingBoopInput): Promise<Result<PendingBoopOutput, PendingBoopOutput>> {
+export async function getPending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, PendingBoopOutput>> {
     const pending = boopNonceManager.getBlockedBoops(account)
     return ok({ pending })
 }

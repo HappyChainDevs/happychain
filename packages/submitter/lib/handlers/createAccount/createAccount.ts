@@ -1,22 +1,18 @@
 import type { Address, Hex } from "@happy.tech/common"
 import { BaseError, createWalletClient } from "viem"
-import { config, publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/env"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "#lib/interfaces/account_create"
-import { logger } from "#lib/logger"
-import { extractErrorMessage } from "#lib/parsing"
-import { decodeEvent } from "#lib/parsing"
-import { computeHappyAccountAddress } from "#lib/utils/computeHappyAccountAddress"
-import { getAccountDeployerAccount } from "#lib/utils/getAccountDeployerAccount"
+import { accountDeployer } from "#lib/services/evmAccounts"
+import { SubmitterError } from "#lib/types"
+import { config, publicClient } from "#lib/utils/clients"
+import { logger } from "#lib/utils/logger"
+import { extractErrorMessage } from "#lib/utils/parsing"
+import { decodeEvent } from "#lib/utils/parsing"
+import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
+import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
 
-// Account responsible for deploying HappyAccounts.
-// May or may not be the same as the global submitter accounts
-// so we define private/internal clients independently here.
-const account = getAccountDeployerAccount()
-const walletClient = createWalletClient({ ...config, account })
+const walletClient = createWalletClient({ ...config, account: accountDeployer })
 
-export async function create({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
+export async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
         const predictedAddress = computeHappyAccountAddress(salt, owner)
         // For reference, fetch onchain with `_getPredictedAddressOnchain(salt, owner)`
@@ -39,7 +35,7 @@ export async function create({ salt, owner }: CreateAccountInput): Promise<Creat
             abi: abis.HappyAccountBeaconProxyFactory,
             functionName: "createAccount",
             args: [salt, owner],
-            account,
+            account: accountDeployer,
         })
 
         logger.trace("Waiting for transaction inclusion", hash, predictedAddress)

@@ -1,10 +1,9 @@
 import { Hono } from "hono"
-import { create } from "#lib/handlers/accounts/create.ts"
-import { makeResponse } from "#lib/routes/api/makeResponse"
-import * as createRoute from "./openApi/create"
+import { createAccount, createAccountDescription, createAccountValidation } from "#lib/handlers/createAccount"
+import { makeResponse } from "#lib/server/makeResponse"
 
-export default new Hono().post("/create", createRoute.description, createRoute.validation, async (c) => {
+export default new Hono().post("/create", createAccountDescription, createAccountValidation, async (c) => {
     const input = await c.req.valid("json")
-    const [output, code] = makeResponse(await create(input))
+    const [output, code] = makeResponse(await createAccount(input))
     return c.json(output, code)
 })

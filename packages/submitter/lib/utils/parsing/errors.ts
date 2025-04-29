@@ -94,7 +94,7 @@ export function getSelectorFromErrorName(name: string): Hex | undefined {
  */
 export function getErrorNameFromSelector(selector: Hex): string | undefined {
     try {
-        // Using errors here doesn't work. Thank you Viem. Typing is also broken :')
+        // Using errors here doesn't work. Thank you Viem.
         return (getAbiItem({ abi: errorsAsFunctionsAbi, name: selector }) as AbiFunction)?.name
     } catch {
         return

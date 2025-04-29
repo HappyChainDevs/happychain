@@ -23,3 +23,6 @@ export const boopReceiptService = new BoopReceiptService(boopReceiptRepository)
 export const boopNonceManager = new BoopNonceManagerService()
 export const simulationCache = new SimulationCache()
 export const submitterService = new SubmitterService(boopTransactionService, boopStateService, boopReceiptService)
+
+export { computeBoopHash } from "./computeBoopHash"
+export { findExecutionAccount } from "./evmAccounts"

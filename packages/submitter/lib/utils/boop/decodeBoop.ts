@@ -1,6 +1,7 @@
 import type { Hex } from "@happy.tech/common"
-import type { Boop } from "#lib/interfaces/Boop"
-import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "./bytes"
+import type { Boop } from "#lib/types"
+
+import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "../bytes"
 
 export function decodeBoop(encoded: Hex): Boop {
     const encodedBytes = encoded.slice(2)

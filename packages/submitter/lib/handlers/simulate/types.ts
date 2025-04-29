@@ -1,9 +1,6 @@
-import type { Bytes } from "@happy.tech/common"
-import type { Address } from "@happy.tech/common"
-import { Onchain, type OnchainStatus } from "#lib/interfaces/Onchain"
-import type { EntryPointOutput } from "#lib/interfaces/contracts"
-import type { Boop } from "./Boop"
-import { SubmitterError, type SubmitterErrorStatus } from "./SubmitterError"
+import type { Address, Bytes } from "@happy.tech/common"
+import type { Boop, EntryPointOutput } from "#lib/types"
+import { Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
 /**
  * Input for a `simulate` call.

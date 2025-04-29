@@ -1,12 +1,9 @@
 import { type Result, err, ok } from "neverthrow"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
-import { Onchain } from "#lib/interfaces/Onchain"
-import type { StateRequestInput } from "#lib/interfaces/boop_state"
 import { boopReceiptService, simulationCache } from "#lib/services"
+import { Onchain } from "#lib/types"
+import { type StateRequestInput, type StateRequestOutput, StateRequestStatus } from "./types"
 
-export async function stateByHash({
-    hash,
-}: StateRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
+export async function getState({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
     const receipt = await boopReceiptService.findByBoopHash(hash)
 
     if (receipt?.status === Onchain.Success) {

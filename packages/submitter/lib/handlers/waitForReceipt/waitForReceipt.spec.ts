@@ -3,12 +3,10 @@ import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/interfaces/Boop"
-import { StateRequestStatus } from "#lib/interfaces/BoopState"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { createMockTokenAMintBoop, getNonce, signTx } from "./utils"
-import { client, createSmartAccount } from "./utils/client"
+import { StateRequestStatus } from "#lib/handlers/getState"
+import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { type Boop, Onchain } from "#lib/types"
+import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)

@@ -1,8 +1,7 @@
 import type { Hex } from "viem"
 import { env } from "#lib/env"
-import type { SimulateInput, SimulateOutput } from "#lib/interfaces/boop_simulate"
-
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
+import type { SimulateInput, SimulateOutput } from "#lib/handlers/simulate"
+import { computeBoopHash } from "./computeBoopHash"
 
 /**
  * A LRU cache to store simulation outputs.

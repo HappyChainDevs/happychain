@@ -1,13 +1,10 @@
 import type { Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
-import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate/types"
-import type { Boop } from "#lib/interfaces/Boop"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { logger } from "#lib/logger"
-import { type RevertErrorInfo, extractErrorMessage } from "#lib/parsing"
-import { decodeRawError } from "#lib/parsing"
+import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate"
 import { boopNonceManager } from "#lib/services"
+import { type Boop, Onchain, SubmitterError } from "#lib/types"
+import { logger } from "#lib/utils/logger"
+import { type RevertErrorInfo, decodeRawError, extractErrorMessage } from "#lib/utils/parsing"
 
 /**
  * Return error information for a generic error.

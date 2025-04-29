@@ -2,13 +2,11 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { Boop } from "#lib/interfaces/Boop"
-import { Onchain } from "#lib/interfaces/Onchain"
-import type { SimulateFailed, SimulateOutput, SimulateSuccess } from "#lib/interfaces/boop_simulate"
-import { CallStatus } from "#lib/interfaces/contracts"
-import { getSelectorFromErrorName } from "#lib/parsing"
-import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
-import { client, createSmartAccount } from "./utils/client"
+import type { SimulateFailed, SimulateOutput, SimulateSuccess } from "#lib/handlers/simulate"
+import type { Boop } from "#lib/types"
+import { CallStatus, Onchain } from "#lib/types"
+import { getSelectorFromErrorName } from "#lib/utils/parsing"
+import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -114,7 +112,7 @@ describe("submitter_simulate", () => {
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
             const response = (await results.json()) as SimulateFailed
-            expect(results.status).toBe(422)
+            expect(results.status).toBe(402)
             expect(response.status).toBe(Onchain.PayoutFailed)
         })
 

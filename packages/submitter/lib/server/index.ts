@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
 import { every, except } from "hono/combine"
-import { cors } from "hono/cors"
+import { cors as corsMiddleware } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { logger as loggerMiddleware } from "hono/logger"
 import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
@@ -9,16 +9,15 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
-import pkg from "../package.json" assert { type: "json" }
-import { env } from "./env"
-import { logger } from "./logger"
-import accountsApi from "./routes/api/accounts"
-import boopApi from "./routes/api/boop"
-import { isProduction } from "./utils/isProduction"
+import { env } from "#lib/env"
+import { isProduction } from "#lib/utils/isProduction"
+import { logger } from "#lib/utils/logger"
+import pkg from "../../package.json" assert { type: "json" }
+import accountsApi from "./accountRoute"
+import boopApi from "./boopRoute"
 
 const app = new Hono()
-    // middleware
-    .use("/api/*", cors())
+    .use("/api/*", corsMiddleware())
     .use(
         except(
             // don't run these during testing

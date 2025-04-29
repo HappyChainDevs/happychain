@@ -1,24 +1,28 @@
 import { Hono } from "hono"
-import type { PendingBoopOutput, StateRequestOutput } from "#lib/client"
-import { execute } from "#lib/handlers/boop/execute"
-import { pendingByAccount } from "#lib/handlers/boop/pendingByAccount"
-import { receiptByHash } from "#lib/handlers/boop/receiptByHash"
-import { simulate } from "#lib/handlers/boop/simulate"
-import { stateByHash } from "#lib/handlers/boop/stateByHash"
-import { submit } from "#lib/handlers/boop/submit"
-import { makeResponse, makeResponseOld } from "#lib/routes/api/makeResponse"
-import * as executeRoute from "./openApi/execute"
-import * as pendingByAccountRoute from "./openApi/pendingByAccount"
-import * as receiptByHashRoute from "./openApi/receiptByHash"
-import * as simulationRoute from "./openApi/simulate"
-import * as stateByHashRoute from "./openApi/stateByHash"
-import * as submitRoute from "./openApi/submit"
+import { executeDescription, executeValidation } from "#lib/handlers/execute"
+import { execute } from "#lib/handlers/execute/execute"
+import {
+    type PendingBoopOutput,
+    getPending,
+    getPendingDescription,
+    getPendingValidation,
+} from "#lib/handlers/getPending"
+import { type StateRequestOutput, getState, getStateDescription, getStateValidation } from "#lib/handlers/getState"
+import { simulate, simulateDescription, simulateValidation } from "#lib/handlers/simulate"
+import { submit, submitDescription, submitValidation } from "#lib/handlers/submit"
+import {
+    waitForReceipt,
+    waitForReceiptDescription,
+    waitForReceiptParamValidation,
+    waitForReceiptQueryValidation,
+} from "#lib/handlers/waitForReceipt"
+import { makeResponse, makeResponseOld } from "#lib/server/makeResponse"
 
 export default new Hono()
     .post(
         "/simulate", //
-        simulationRoute.description,
-        simulationRoute.validation,
+        simulateDescription,
+        simulateValidation,
         async (c) => {
             const input = c.req.valid("json")
             const [response, code] = makeResponse(await simulate(input))
@@ -27,8 +31,8 @@ export default new Hono()
     )
     .post(
         "/submit", //
-        submitRoute.description,
-        submitRoute.validation,
+        submitDescription,
+        submitValidation,
         async (c) => {
             const input = c.req.valid("json")
             const [response, code] = makeResponse(await submit(input))
@@ -37,8 +41,8 @@ export default new Hono()
     )
     .post(
         "/execute", //
-        executeRoute.description,
-        executeRoute.validation,
+        executeDescription,
+        executeValidation,
         async (c) => {
             const input = c.req.valid("json")
             const [response, code] = makeResponse(await execute(input))
@@ -47,35 +51,35 @@ export default new Hono()
     )
     .get(
         "/state/:hash", //
-        stateByHashRoute.description,
-        stateByHashRoute.validation,
+        getStateDescription,
+        getStateValidation,
         async (c) => {
             const input = c.req.valid("param")
-            const output = await stateByHash(input)
+            const output = await getState(input)
             const [response, code] = makeResponseOld<StateRequestOutput>(output)
             return c.json(response, code)
         },
     )
     .get(
         "/receipt/:hash", //
-        receiptByHashRoute.description,
-        receiptByHashRoute.paramValidation,
-        receiptByHashRoute.queryValidation,
+        waitForReceiptDescription,
+        waitForReceiptParamValidation,
+        waitForReceiptQueryValidation,
         async (c) => {
             const { hash } = c.req.valid("param")
             const { timeout } = c.req.valid("query")
-            const output = await receiptByHash({ hash, timeout })
+            const output = await waitForReceipt({ hash, timeout })
             const [response, code] = makeResponseOld<StateRequestOutput>(output)
             return c.json(response, code)
         },
     )
     .get(
         "/pending/:account", //
-        pendingByAccountRoute.description,
-        pendingByAccountRoute.validation,
+        getPendingDescription,
+        getPendingValidation,
         async (c) => {
             const input = c.req.valid("param")
-            const output = await pendingByAccount(input)
+            const output = await getPending(input)
             const [response, code] = makeResponseOld<PendingBoopOutput>(output)
             return c.json(response, code)
         },

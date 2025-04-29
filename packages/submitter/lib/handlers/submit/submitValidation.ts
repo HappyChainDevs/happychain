@@ -1,13 +1,11 @@
 import { describeRoute } from "hono-openapi"
-import { resolver } from "hono-openapi/zod"
-import { validator as zv } from "hono-openapi/zod"
+import { resolver, validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { Submit } from "#lib/handlers/submit/types"
-import { OnchainFail, Success } from "#lib/types"
-import { SubmitterError } from "#lib/types"
+import { OnchainFail, SubmitterError, Success } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
 import { inputSchema } from "#lib/utils/validation/boop"
 import { isHexString } from "#lib/utils/validation/isHexString"
+import { Submit } from "./types"
 
 const outputSchema = z.discriminatedUnion("status", [
     z.object({
@@ -30,7 +28,7 @@ const outputSchema = z.discriminatedUnion("status", [
     }),
 ])
 
-export const description = describeRoute({
+export const submitDescription = describeRoute({
     validateResponse: !isProduction,
     description: "Submits Boop",
     responses: {
@@ -44,4 +42,4 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("json", inputSchema)
+export const submitValidation = zv("json", inputSchema)

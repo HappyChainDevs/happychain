@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isHexString } from "#lib/utils/zod/refines/isHexString"
+import { isHexString } from "#lib/utils/validation/isHexString"
 
 export const deploymentsSchema = z.object({
     CHAIN_ID: z.coerce.number(),

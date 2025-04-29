@@ -1,11 +1,11 @@
 import { type Result, err, ok } from "neverthrow"
 import { env } from "#lib/env"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/interfaces/BoopState"
-import { Onchain } from "#lib/interfaces/Onchain"
-import type { ReceiptRequestInput } from "#lib/interfaces/boop_receipt"
+import { type StateRequestOutput, StateRequestStatus } from "#lib/handlers/getState"
 import { boopReceiptService, simulationCache } from "#lib/services"
+import { Onchain } from "#lib/types"
+import type { ReceiptRequestInput } from "./types"
 
-export async function receiptByHash({
+export async function waitForReceipt({
     hash,
     timeout,
 }: ReceiptRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {

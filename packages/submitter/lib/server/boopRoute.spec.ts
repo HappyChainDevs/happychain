@@ -1,12 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { computeBoopHash } from "#lib/client"
 import { env } from "#lib/env"
-import type { Boop } from "#lib/interfaces/Boop"
-import { createMockTokenAMintBoop, getNonce, signTx } from "#lib/tests/utils"
-import { client } from "#lib/tests/utils/client"
-import { createSmartAccount } from "#lib/tests/utils/client"
+import { computeBoopHash } from "#lib/services"
+import type { Boop } from "#lib/types"
+import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)

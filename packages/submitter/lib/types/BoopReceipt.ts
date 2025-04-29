@@ -1,5 +1,5 @@
 import type { Address, Hash, Hex, UInt256 } from "@happy.tech/common"
-import type { OnchainStatus } from "#lib/interfaces/Onchain"
+import type { OnchainStatus } from "./Onchain"
 import type { Log, Receipt } from "./ethereum"
 
 /**

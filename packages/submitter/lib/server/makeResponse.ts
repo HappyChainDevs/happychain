@@ -2,9 +2,8 @@ import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import type { Result } from "neverthrow"
 import { HappyBaseError } from "#lib/errors"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import { CreateAccount } from "#lib/interfaces/account_create"
+import { CreateAccount } from "#lib/handlers/createAccount"
+import { Onchain, SubmitterError } from "#lib/types"
 
 export function makeResponseOld<TOk>(
     output: Result<TOk, unknown>,

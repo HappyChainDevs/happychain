@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/env"
-import { createSmartAccount } from "#lib/tests/utils/client"
-import { computeHappyAccountAddress } from "#lib/utils/computeHappyAccountAddress"
+import { computeHappyAccountAddress } from "#lib/handlers/createAccount/computeHappyAccountAddress"
+import { publicClient } from "#lib/utils/clients"
+import { createSmartAccount } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 

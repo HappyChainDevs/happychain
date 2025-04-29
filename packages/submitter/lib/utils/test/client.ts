@@ -1,6 +1,6 @@
 import type { Address } from "@happy.tech/common"
 import { testClient } from "hono/testing"
-import { CreateAccount } from "#lib/interfaces/account_create"
+import { CreateAccount } from "#lib/handlers/createAccount"
 import { app } from "#lib/server"
 
 export const client = testClient(app)

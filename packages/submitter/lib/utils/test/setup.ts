@@ -1,8 +1,11 @@
 import { afterAll, beforeAll } from "bun:test"
-import "./env-bootstrap"
 import { migrator } from "#lib/database/utils/migrator"
-import { anvil } from "./utils/anvil"
-import { contracts } from "./utils/contracts"
+import { anvil } from "./anvil"
+import { contracts } from "./contracts"
+
+// Force some common test environment variables
+process.env.NODE_ENV = "test"
+process.env.DATABASE_URL = ":memory:"
 
 beforeAll(async () => {
     const { error } = await migrator.migrateToLatest()

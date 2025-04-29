@@ -1,11 +1,11 @@
 import { env } from "#lib/env"
-import { Onchain } from "#lib/interfaces/Onchain"
-import { SubmitterError } from "#lib/interfaces/SubmitterError"
-import type { ExecuteInput, ExecuteOutput } from "#lib/interfaces/boop_execute"
-import { logger } from "#lib/logger"
+import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
-import { computeBoopHash } from "#lib/utils/computeBoopHash"
-import { submit } from "./submit"
+import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { Onchain } from "#lib/types"
+import { SubmitterError } from "#lib/types"
+import { logger } from "#lib/utils/logger"
+import type { ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })
