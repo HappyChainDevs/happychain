@@ -1,45 +1,39 @@
 import type { Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
-import { extractErrorMessage } from "#lib/errors/utils"
-import { decodeRawError, getRevertError } from "#lib/errors/viem"
 import type { PartialBoop } from "#lib/interfaces/Boop"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { SubmitterError } from "#lib/interfaces/SubmitterError"
+import type { SimulateError, SimulateFailed } from "#lib/interfaces/boop_simulate"
 import { logger } from "#lib/logger"
+import { type RevertErrorInfo, extractErrorMessage } from "#lib/parsing"
+import { decodeRawError } from "#lib/parsing"
 import { boopNonceManager } from "#lib/services"
 
-export type ErrorInfo = {
-    status: string
-    description?: string
-    revertData?: Hex
-}
-
-export type ProcessErrorInput = {
-    boop: PartialBoop
-    boopHash: Hash
-    error: unknown
-    simulation?: boolean
-}
-
-export function processError({ boop, boopHash, error, simulation = false }: ProcessErrorInput): ErrorInfo {
-    const { raw, decoded, isContractRevert } = getRevertError(error)
-
-    if (!isContractRevert) {
-        if (error instanceof BaseError)
-            return {
-                status: SubmitterError.RpcError,
-                description: error.message,
-            }
-
+/**
+ * Return error information for a generic error.
+ * If we could determine that the error was a contract revert, call {@link outputForRevertError} instead.
+ */
+export function outputForGenericError(error: unknown): SimulateError {
+    if (error instanceof BaseError)
         return {
-            status: SubmitterError.UnexpectedError,
-            description: extractErrorMessage(error),
+            status: SubmitterError.RpcError,
+            description: error.message,
         }
+
+    return {
+        status: SubmitterError.UnexpectedError,
+        description: extractErrorMessage(error),
     }
+}
 
-    // TODO Think about the fact all that follows is moot for simulate.
-    //      Correctness is guaranteed, but maybe we want to isolate the above for a bit of a nicer flow?
-
+/**
+ * Return error information for an onchain revert from simulation.
+ */
+export function outputForRevertError(
+    boop: PartialBoop,
+    boopHash: Hash,
+    { raw, decoded }: RevertErrorInfo,
+): SimulateFailed | SimulateError {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
             // We don't necessarily need to reset the nonce here in simulation, but we do it to be safe.
@@ -140,6 +134,8 @@ export function processError({ boop, boopHash, error, simulation = false }: Proc
             }
         }
         case "GasPriceTooHigh": {
+            // TODO this is for when this will be refactored for execute too
+            const simulation = true
             if (simulation) {
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {

@@ -55,7 +55,6 @@ export const Onchain = {
 
     /**
      * The account's `execute` call reverted.
-     * This indicates either a dysfunctional account or a dysfunctional submitter.
      */
     ExecuteReverted: "onchainExecuteReverted",
 
@@ -77,7 +76,10 @@ export const Onchain = {
     PayoutFailed: "onchainPayoutFailed",
 
     /**
-     * Unexpected revert of the boop, most likely out-of-gas.
+     * Unexpected revert of the boop, most likely out-of-gas. This is not supposed to happen and is
+     * indicative of a deep issue, as only the EntryPoint can revert, and because of simulation we should
+     * always be able to provide enough gas that this does not happen (third-parties like accounts and
+     * paymasters are provided their separate gas limits and so cannot trigger a paymaster OOG revert).
      */
     UnexpectedReverted: "onchainUnexpectedReverted",
 } as const

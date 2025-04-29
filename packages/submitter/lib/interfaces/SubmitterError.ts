@@ -42,9 +42,3 @@ export type SubmitterErrorStatus = (typeof SubmitterError)[keyof typeof Submitte
 export function isSubmitterError(status: string): status is SubmitterErrorStatus {
     return status.startsWith("submitter")
 }
-
-// -------------------------------------------------------------------------------------------------
-
-// TODO rename with new names
-
-// -------------------------------------------------------------------------------------------------

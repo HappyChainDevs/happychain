@@ -12,7 +12,7 @@ import { boopReceiptSchema } from "#lib/validation/schemas/boopReceipt"
 
 const outputSchema = z.discriminatedUnion("status", [
     z.object({
-        status: z.enum([Success]).openapi({ example: Execute.Success }),
+        status: z.literal(Success).openapi({ example: Execute.Success }),
         receipt: boopReceiptSchema,
     }),
     z.object({

@@ -25,14 +25,15 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     if (submission.status !== Onchain.Success) return submission
 
     logger.trace("Waiting for receipt", boopHash)
-    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, 4_000) // TODO constant
+    // TODO allow specifying a custom timeout
+    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, env.RECEIPT_TIMEOUT)
     if (!receipt)
         return {
             status: SubmitterError.ReceiptTimeout,
             stage: "execute",
             description:
                 "Timed out while waiting for the boop receipt.\n" +
-                "The boop may still be included onchain later, though unlikely.",
+                "The boop may still be included onchain later if the timeout was low.",
         }
 
     if (receipt.txReceipt.status === "success") {

@@ -1,7 +1,7 @@
 import type { Hash } from "@happy.tech/common"
 import { publicClient } from "#lib/clients"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
-import { SubmitterError } from "#lib/errors/submitter-errors"
+import { SubmitterError } from "#lib/errors"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
 import type { OnchainStatus } from "#lib/interfaces/Onchain"
 import type { Receipt } from "#lib/interfaces/ethereum"

@@ -2,10 +2,9 @@ import type { Address, Hash } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { env } from "#lib/env"
-import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
+import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors"
 import type { PartialBoop } from "#lib/interfaces/Boop"
 import type { BoopReceipt } from "#lib/interfaces/BoopReceipt"
-import type { BoopState } from "#lib/interfaces/BoopState"
 import { Onchain } from "#lib/interfaces/Onchain"
 import { logger } from "#lib/logger"
 import { computeBoopHash } from "#lib/utils/computeBoopHash"
@@ -21,27 +20,14 @@ export class SubmitterService {
         private boopReceiptService: BoopReceiptService,
     ) {}
 
-    async initialize(entryPoint: Address, boop: PartialBoop, boopHash: Hash) {
-        logger.trace("saving boop to db", boopHash)
+    async add(entryPoint: Address, boop: PartialBoop, boopHash: Hash) {
+        logger.trace("Saving boop to db", boopHash)
         // TODO yolo db is broken
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
     }
 
-    async finalize(boopTransactionId: number, state: BoopState) {
-        const { id: boopReceiptId } = state.receipt
-            ? await this.boopReceiptService.insertOrThrow(state.receipt)
-            : { id: null }
-
-        await this.boopStateService.insert({
-            status: state.status,
-            boopTransactionId,
-            boopReceiptId: boopReceiptId as number,
-            included: state.included ?? false,
-        })
-    }
-
-    async finalizeWhenReady(boop: PartialBoop, txHash: Hash) {
+    async monitorReceipt(boop: PartialBoop, txHash: Hash) {
         try {
             const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
@@ -51,11 +37,14 @@ export class SubmitterService {
                 return
             }
             const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
-            return await this.finalize(persisted.id, {
-                // TODO ??
-                status: receipt.status as unknown as typeof Onchain.Success,
-                included: Boolean(receipt.txReceipt.transactionHash) as true,
-                receipt,
+
+            const { id: boopReceiptId } = receipt ? await this.boopReceiptService.insertOrThrow(receipt) : { id: null }
+
+            return await this.boopStateService.insert({
+                status: receipt.status,
+                boopTransactionId: persisted.id,
+                boopReceiptId: boopReceiptId as number,
+                included: !!receipt.txReceipt.transactionHash,
             })
         } catch (err) {
             logger.warn("Error while finalizing Boop", err)
@@ -67,6 +56,7 @@ export class SubmitterService {
 
         const boop = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
 
+        // TODO this needs a timeout / cancellation policy
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
         if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)
