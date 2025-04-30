@@ -1,2 +1,1 @@
-/// <reference types="../../scripts/lib/plugins" />
-declare module "*.css?inline"
+/// <reference types="../../support/happybuild/lib/plugins" />
