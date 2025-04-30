@@ -40,7 +40,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all the swarm leaderboard packages
-LEADERBOARD_PKGS := apps/leaderboard-backend
+LEADERBOARD_PKGS := apps/leaderboard-backend,apps/leaderboard-frontend
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/leaderboard-backend
