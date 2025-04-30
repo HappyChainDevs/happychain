@@ -33,7 +33,7 @@ GET /users/:id/guilds               // Get guilds a user belongs to
 
 POST /games                    // Create new game  
 GET /games/:id                 // Get game by ID  
-GET /games/admin/:admin_id     // List games by admin_id  
+GET /games/admin/:admin_wallet // List games by admin wallet  
 PATCH /games/:id               // Update game details (admin only)  
 GET /games                     // List games (with filtering)  
 

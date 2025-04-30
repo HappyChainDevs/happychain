@@ -151,19 +151,17 @@ export class GameScoreRepository {
         const existingScore = await this.findUserGameScore(userId, gameId)
 
         if (existingScore) {
-            // Update existing score if new score is higher
-            if (score > existingScore.score) {
-                return await this.db
-                    .updateTable("user_game_scores")
-                    .set({
-                        score,
-                        metadata: metadata || existingScore.metadata,
-                    })
-                    .where("id", "=", existingScore.id)
-                    .returningAll()
-                    .executeTakeFirstOrThrow()
-            }
-            return existingScore
+            // Add new score to existing score
+            const newScore = existingScore.score + score
+            return await this.db
+                .updateTable("user_game_scores")
+                .set({
+                    score: newScore,
+                    metadata: metadata !== undefined ? metadata : existingScore.metadata,
+                })
+                .where("id", "=", existingScore.id)
+                .returningAll()
+                .executeTakeFirstOrThrow()
         } else {
             // Create new score
             return await this.db

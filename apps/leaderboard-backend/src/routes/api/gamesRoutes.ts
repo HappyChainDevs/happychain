@@ -1,8 +1,9 @@
+import type { Address } from "@happy.tech/common"
+
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
-import { GameIdParamSchema, GameUserParamSchema } from "../../validation/schema/gameSchema"
+import { AdminWalletParamSchema, GameIdParamSchema, UserWalletParamSchema } from "../../validation/schema/gameSchema"
 import {
-    AdminIdParamSchema,
     GameCreateRequestSchema,
     GameQuerySchema,
     GameScoresQuerySchema,
@@ -48,12 +49,17 @@ export default new Hono()
         }
     })
 
-    // GET /games/admin/:admin_id - List games by admin_id
-    .get("/admin/:admin_id", zValidator("param", AdminIdParamSchema), async (c) => {
+    // GET /games/admin/:admin_wallet - List games by admin_wallet
+    .get("/admin/:admin_wallet", zValidator("param", AdminWalletParamSchema), async (c) => {
         try {
-            const { admin_id } = c.req.valid("param")
-            const { gameRepo } = c.get("repos")
-            const games = await gameRepo.findByAdmin(admin_id)
+            const { admin_wallet } = c.req.valid("param")
+            const { gameRepo, userRepo } = c.get("repos")
+            // Find user by wallet
+            const admin = await userRepo.findByWalletAddress(admin_wallet as Address)
+            if (!admin) {
+                return c.json({ ok: false, error: "Admin user not found for provided wallet address" }, 404)
+            }
+            const games = await gameRepo.findByAdmin(admin.id)
             return c.json({ ok: true, data: games })
         } catch (err) {
             console.error("Error listing games by admin:", err)
@@ -73,17 +79,17 @@ export default new Hono()
                 return c.json({ ok: false, error: "Game name already exists" }, 409)
             }
 
-            // Check if admin user exists
-            const admin = await userRepo.findById(gameData.admin_id)
+            // Check if admin user exists by wallet address
+            const admin = await userRepo.findByWalletAddress(gameData.admin_wallet as Address)
             if (!admin) {
-                return c.json({ ok: false, error: "Admin user not found" }, 404)
+                return c.json({ ok: false, error: "Admin user not found for provided wallet address" }, 404)
             }
 
             const newGame = await gameRepo.create({
                 name: gameData.name,
                 icon_url: gameData.icon_url || null,
                 description: gameData.description || null,
-                admin_id: gameData.admin_id,
+                admin_id: admin.id,
             })
 
             return c.json({ ok: true, data: newGame }, 201)
@@ -130,7 +136,7 @@ export default new Hono()
         async (c) => {
             try {
                 const { id: gameId } = c.req.valid("param")
-                const { user_id, score, metadata } = c.req.valid("json")
+                const { user_wallet, score, metadata } = c.req.valid("json")
                 const { gameRepo, userRepo } = c.get("repos")
 
                 // Check if game exists
@@ -140,14 +146,14 @@ export default new Hono()
                 }
 
                 // Check if user exists
-                const user = await userRepo.findById(user_id)
+                const user = await userRepo.findByWalletAddress(user_wallet)
                 if (!user) {
                     return c.json({ ok: false, error: "User not found" }, 404)
                 }
 
                 // Submit score
                 const { gameScoreRepo } = c.get("repos")
-                const newScore = await gameScoreRepo.submitScore(user_id, gameId, score, metadata)
+                const newScore = await gameScoreRepo.submitScore(user.id, gameId, score, metadata)
                 return c.json({ ok: true, data: newScore }, 201)
             } catch (err) {
                 console.error(`Error submitting score for game ${c.req.param("id")}:`, err)
@@ -185,29 +191,33 @@ export default new Hono()
     )
 
     // GET /games/:id/scores/:userId - Get scores for a user in a game
-    .get("/:id/scores/:userId", zValidator("param", GameUserParamSchema), async (c) => {
-        try {
-            const { id: gameId, userId } = c.req.valid("param")
-            const { gameRepo, userRepo } = c.get("repos")
+    .get(
+        "/:id/scores/user/:user_wallet",
+        zValidator("param", GameIdParamSchema.merge(UserWalletParamSchema)),
+        async (c) => {
+            try {
+                const { id: gameId, user_wallet } = c.req.valid("param")
+                const { gameRepo, userRepo } = c.get("repos")
 
-            // Check if game exists
-            const game = await gameRepo.findById(gameId)
-            if (!game) {
-                return c.json({ ok: false, error: "Game not found" }, 404)
+                // Check if game exists
+                const game = await gameRepo.findById(gameId)
+                if (!game) {
+                    return c.json({ ok: false, error: "Game not found" }, 404)
+                }
+
+                // Find user by wallet address
+                const user = await userRepo.findByWalletAddress(user_wallet as Address)
+                if (!user) {
+                    return c.json({ ok: false, error: "User not found" }, 404)
+                }
+
+                // Get user's scores for the game
+                const { gameScoreRepo } = c.get("repos")
+                const scores = await gameScoreRepo.findUserScores(user.id, gameId)
+                return c.json({ ok: true, data: scores })
+            } catch (err) {
+                console.error(`Error fetching user ${c.req.param("userId")} scores for game ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
             }
-
-            // Check if user exists
-            const user = await userRepo.findById(userId)
-            if (!user) {
-                return c.json({ ok: false, error: "User not found" }, 404)
-            }
-
-            // Get user's scores for the game
-            const { gameScoreRepo } = c.get("repos")
-            const scores = await gameScoreRepo.findUserScores(userId, gameId)
-            return c.json({ ok: true, data: scores })
-        } catch (err) {
-            console.error(`Error fetching user ${c.req.param("userId")} scores for game ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )
