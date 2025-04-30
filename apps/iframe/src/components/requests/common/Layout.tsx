@@ -1,4 +1,5 @@
 import { useAtomValue } from "jotai"
+import type React from "react"
 import type { PropsWithChildren } from "react"
 import type { Address } from "viem"
 import { Button, type ButtonProps } from "#src/components/primitives/button/Button"
@@ -12,7 +13,7 @@ interface LayoutProps extends PropsWithChildren {
     description?: React.ReactNode
     hideActions?: boolean
     actions: {
-        accept: ButtonProps
+        accept?: ButtonProps
         reject: ButtonProps
     }
 }
@@ -27,6 +28,7 @@ export const Layout = ({
 }: LayoutProps) => {
     const user = useAtomValue(userAtom)
     const appURL = getAppURL()
+    console.log(reject)
     return (
         <main className="flex flex-col min-h-dvh bg-base-300">
             <header className="w-full fixed z-10 bg-base-300 border-b border-neutral/10 dark:border-neutral/50 p-2 text-center font-bold text-xs">
@@ -71,7 +73,9 @@ export const Layout = ({
                 {!hideActions && (
                     <div className="mt-auto px-2 py-6 border-t border-neutral/10 dark:border-neutral/50">
                         <div className="w-full max-w-prose mx-auto grid gap-2 sm:grid-cols-2 ">
-                            <Button {...accept} intent="primary" className="text-neutral-content justify-center" />
+                            {accept && (
+                                <Button {...accept} intent="primary" className="text-neutral-content justify-center" />
+                            )}
                             <Button
                                 {...reject}
                                 intent="outline-negative"

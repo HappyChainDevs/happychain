@@ -83,10 +83,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
 
-            if (import.meta.env.PROD) {
-                throw new Error("Adding chains is not supported in production")
-            }
-
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
 

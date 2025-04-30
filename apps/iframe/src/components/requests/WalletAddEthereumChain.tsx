@@ -9,6 +9,7 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
+import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletAddEthereumChain = ({
@@ -18,29 +19,20 @@ export const WalletAddEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
+    const headline = "Add new chain"
 
-    if (import.meta.env.PROD) {
+    if (import.meta.env.PROD)
         return (
-            <Layout
-                headline="Add new chain"
-                description="This feature is not available in production."
-                actions={{
-                    accept: {
-                        children: "Go back",
-                        onClick: reject,
-                    },
-                    reject: {
-                        children: "Go back",
-                        onClick: reject,
-                    },
-                }}
+            <RequestDisabled
+                headline={headline}
+                description="The Happy Wallet is an HappyChain exclusive 🤠"
+                reject={reject}
             />
         )
-    }
 
     return (
         <Layout
-            headline="Add new chain"
+            headline={headline}
             actions={{
                 accept: {
                     children: "Add chain",
