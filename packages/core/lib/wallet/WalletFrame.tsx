@@ -42,7 +42,7 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
             {showSpinner && <LoadingSpinner />}
             {/* Base64 to avoid any bundle issues and network requests */}
             <img
-                src={`${config.iframePath}/images/happyIconWithRope128x128.png`}
+                src={`${config.iframePath}/images/happychainLogoRope.png`}
                 alt="HappyChain Logo"
                 className="wallet-logo"
                 inert={true}

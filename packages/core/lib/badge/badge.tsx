@@ -61,7 +61,7 @@ const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     if (!user?.avatar || loadFailed) {
         return (
             <img
-                src={`${config.iframePath}/images/happychainIcon.png`}
+                src={`${config.iframePath}/images/happychainLogoSimple.png`}
                 alt="HappyChain logo"
                 className="happychain-icon"
             />
