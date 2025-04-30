@@ -26,9 +26,19 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
             functionName: "submit",
         })
         const gasPricePromise = publicClient.getGasPrice()
+
+        const balancePromise =
+            boop.account === boop.payer
+                ? await publicClient.getBalance({ address: boop.account })
+                : Promise.resolve(null)
+
         // TODO make sure nonce is gucci / prefetched?
         // TODO inline boop into return value
-        const [{ result: submitOutput }, gasPrice] = await Promise.all([simulatePromise, gasPricePromise])
+        const [{ result: submitOutput }, gasPrice, balance] = await Promise.all([
+            simulatePromise,
+            gasPricePromise,
+            balancePromise,
+        ])
         const status = getEntryPointStatusFromCallStatus(submitOutput.callStatus)
 
         // biome-ignore format: pretty
@@ -46,6 +56,16 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
                 status,
                 revertData: submitOutput.revertData,
             }
+
+        if (output.status === Onchain.Success && balance !== null) {
+            // During simulation the gas price is usually 0, so we check here instead.
+            const cost = BigInt(output.gas) * output.maxFeePerGas + output.submitterFee
+            if (balance < cost)
+                return {
+                    status: Onchain.PayoutFailed,
+                    description: "Not enough funds to pay for a self-paying boop.",
+                }
+        }
 
         await simulationCache.insertSimulation({ entryPoint, boop }, output)
         logger.trace("finished simulation with output", output)

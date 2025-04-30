@@ -30,8 +30,7 @@ describe("submitter_state", () => {
         signedTx = await sign(unsignedTx)
     })
 
-    // TODO re-enable when I've fixed execute
-    it.skip("fetches state of recent tx", async () => {
+    it("fetches state of recent tx", async () => {
         // submit all transactions, but only wait for the first to complete
         const response = (await client.api.v1.boop.execute
             .$post({ json: { boop: serializeBigInt(signedTx) } })
