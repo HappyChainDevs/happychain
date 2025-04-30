@@ -11,23 +11,23 @@ export enum CallStatus {
 /** TypeScript version of the contract's SubmitOutput (in Types.sol). */
 export type EntryPointOutput = {
     /**
-     * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
+     * An overestimation of the minimum gas limit necessary to successfully call `EntryPoint.submit`
      * at the top-level of a transaction.
      */
     gas: UInt32
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.validate} from {EntryPoint.submit}.
+     * `IAccount.validate` from `EntryPoint.submit`.
      */
     validateGas: UInt32
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IPaymaster.paymentValidateGas} from {EntryPoint.submit}.
+     * `IPaymaster.paymentValidateGas` from `EntryPoint.submit`.
      */
     paymentValidateGas: UInt32
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.execute} from {EntryPoint.submit}.
+     * `IAccount.execute` from `EntryPoint.submit`.
      */
     executeGas: UInt32
     /**
@@ -57,9 +57,9 @@ export type EntryPointOutput = {
      */
     callStatus: CallStatus
     /**
-     * Depending on {callstatus}: the revertData with which either the call or the
-     * {IAccount.execute} function reverted, or the rejection reason (encoded error) returned by
-     * {IAccount.execute}.
+     * Depending on `callStatus`: the revertData with which either the call or the
+     * `IAccount.execute` function reverted, or the rejection reason (encoded error) returned by
+     * `IAccount.execute`.
      */
     revertData: Bytes
 }
