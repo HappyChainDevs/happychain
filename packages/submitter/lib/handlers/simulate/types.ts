@@ -44,7 +44,7 @@ export type SimulateSuccess = EntryPointOutput & {
     /** Estimated max fee per gas (in wei) for the Boop. */
     maxFeePerGas: bigint
 
-    /** Total fee requested by the submitter for submitting this Boop (in wei). */
+    /** Total fee requested by the submitter for submitting this boop (in wei). */
     submitterFee: bigint
 }
 
