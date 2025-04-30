@@ -20,8 +20,14 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         await submitterService.add(entryPoint, boop, boopHash)
 
         let simulation = await simulate(input)
-
         if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+
+        if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
+            return {
+                status: Onchain.ValidationReverted,
+                description: "More information needed for the boop to pass validation — most likely a signature.",
+                stage: "submit",
+            }
 
         // If future nonce, wait until ready.
         const isFutureNonce = simulation.futureNonceDuringSimulation
@@ -77,6 +83,13 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
             status: Onchain.Success,
             hash: boopHash,
             txHash,
+            entryPoint: input.entryPoint ?? deployment.EntryPoint,
+            gasLimit: updatedBoop.gasLimit,
+            validateGasLimit: updatedBoop.validateGasLimit,
+            validatePaymentGasLimit: updatedBoop.validatePaymentGasLimit,
+            executeGasLimit: updatedBoop.executeGasLimit,
+            maxFeePerGas: updatedBoop.maxFeePerGas,
+            submitterFee: updatedBoop.submitterFee,
         }
     } catch (error) {
         return {

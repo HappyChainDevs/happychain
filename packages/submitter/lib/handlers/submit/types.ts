@@ -47,7 +47,7 @@ export type SubmitSimulationFailed = {
     status: Exclude<OnchainStatus, typeof Onchain.Success>
 
     /** Whether the error occurred at the simulation stage or at the submit stage. */
-    stage: "simulate"
+    stage: "simulate" | "submit"
 
     /**
      * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted` status, or

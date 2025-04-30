@@ -7,6 +7,13 @@ export const Onchain = {
     Success: "onchainSuccess",
 
     /**
+     * The boop passes simulation but can't be submitted onchain because either validation or payment validation has
+     * indicated that the status is unknown during validation. This typically means they need a signature, which could
+     * only be obtained once simulation was used to get the gas values to sign over (for self-paying transactions).
+     */
+    MissingValidationInformation: "onchainMissingValidationInformation",
+
+    /**
      * The boop got rejected because the gas price was above the maxFeePerGas.
      */
     GasPriceTooHigh: "onchainGasPriceTooHigh",
