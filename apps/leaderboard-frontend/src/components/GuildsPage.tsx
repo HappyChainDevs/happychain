@@ -55,7 +55,7 @@ const GuildsPage = () => {
     useEffect(() => {
         if (!profile?.id) return
         setLoading(true)
-        fetch(`/api/guilds?creator_id=${Number(profile.id)}`)
+        fetch(`/api/guilds?creator_id=${profile.id}`)
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (data?.ok && Array.isArray(data.data)) {
@@ -130,7 +130,7 @@ const GuildsPage = () => {
                     guilds.map((guild) => <GuildCard key={guild.id} guild={guild} onManage={setShowDetails} />)
                 )}
             </div>
-            {showDetails && <GuildDetails guild={showDetails} onClose={() => setShowDetails(null)} profile={profile} />}
+            {showDetails && <GuildDetails guild={showDetails} onClose={() => setShowDetails(null)} />}
         </div>
     )
 }

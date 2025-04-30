@@ -6,9 +6,9 @@ export default function ScoreList({ scores }: { scores: Score[] }) {
         <div className="score-list">
             <h4>Scores</h4>
             <ul>
-                {scores.map((score) => (
-                    <li key={score.id}>
-                        <strong>{score.username}</strong>: {score.value}
+                {scores.map((score, idx) => (
+                    <li key={`${score.id}-${score.username}-${idx}`}>
+                        <strong>{score.username}</strong>: {score.score}
                     </li>
                 ))}
             </ul>
