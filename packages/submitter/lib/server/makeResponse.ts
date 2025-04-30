@@ -30,6 +30,7 @@ export function makeResponse<T extends { status: string }>(output: T): [BigIntSe
         case Onchain.InvalidExtensionValue:
         case Onchain.ExecuteRejected:
             return [response, 400] // Bad Request
+        case Onchain.MissingValidationInformation:
         case CreateAccount.Failed:
         case Onchain.ValidationReverted:
         case Onchain.PaymentValidationReverted:
