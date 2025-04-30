@@ -1,9 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
+import type { ClientResponse } from "hono/client"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import type { ExecuteFailedOnchain } from "#lib/handlers/execute/types"
+import type { SimulateFailed } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
+import { publicClient } from "#lib/utils/clients"
 import {
     createMockTokenAMintBoop,
     fundAccount,
@@ -40,7 +44,7 @@ describe("submitter_execute", () => {
             await fundAccount(smartAccount)
         })
 
-        it.skip("mints tokens", async () => {
+        it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             // be your own payer! define your own gas!
             unsignedTx.gasLimit = 25_000_000
@@ -246,6 +250,21 @@ describe("submitter_execute", () => {
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(422)
             expect(response.status).toBe(Onchain.ValidationReverted)
+        })
+
+        // TODO: this should fail, yet it passes for some reason
+        it("reverts on unfunded self-sponsored", async () => {
+            unsignedTx.payer = smartAccount
+            console.log(await publicClient.getBalance({ address: smartAccount }))
+            unsignedTx.executeGasLimit = 0
+            unsignedTx.gasLimit = 0
+            signedTx = await sign(unsignedTx)
+            const json = { json: { boop: serializeBigInt(signedTx) } }
+            const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateFailed>
+            const response = (await results.json()) as ExecuteFailedOnchain
+            console.log(response)
+            expect(results.status).toBe(402)
+            expect(response.status).toBe(Onchain.PayoutFailed)
         })
     })
 })
