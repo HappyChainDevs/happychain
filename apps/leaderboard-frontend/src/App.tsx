@@ -2,6 +2,7 @@ import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom"
 import GamesPage from "./components/GamesPage"
 import GuildsPage from "./components/GuildsPage"
 import HomeLogoButton from "./components/HomeLogoButton"
+import Leaderboards from "./components/Leaderboards"
 import ProfilePage from "./components/ProfilePage"
 import WalletConnect from "./components/WalletConnect"
 import "./index.css"
@@ -34,7 +35,7 @@ function App() {
                             element={
                                 <div className="home-welcome-box">
                                     <h1 className="home-welcome-title">Welcome to HappyChain Leaderboard!</h1>
-                                    {/* Future: leaderboard grid/list goes here */}
+                                    <Leaderboards />
                                 </div>
                             }
                         />
