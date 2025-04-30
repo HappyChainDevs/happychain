@@ -1,4 +1,5 @@
 import { useAtomValue } from "jotai"
+import { RequestDisabled } from "#src/components/requests/common/RequestDisabled"
 import { chainsAtom, currentChainAtom } from "#src/state/chains"
 import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
@@ -12,29 +13,19 @@ export const WalletSwitchEthereumChain = ({
     const chains = useAtomValue(chainsAtom)
     const currentChain = useAtomValue(currentChainAtom)
     const chain = chains[params[0].chainId]
+    const headline = "Switch chain"
 
-    if (import.meta.env.PROD) {
-        return (
-            <Layout
-                headline="Switch chain"
-                description="This feature is not available in production."
-                actions={{
-                    accept: {
-                        children: "Go back",
-                        onClick: reject,
-                    },
-                    reject: {
-                        children: "Go back",
-                        onClick: reject,
-                    },
-                }}
+    // biome-ignore format: save space
+    if (import.meta.env.PROD)
+        return <RequestDisabled
+                headline={headline}
+                description="The Happy Wallet is an HappyChain exclusive 🤠"
+                reject={reject}
             />
-        )
-    }
 
     return (
         <Layout
-            headline="Switch chain"
+            headline={headline}
             description={
                 !chain ? (
                     <>
