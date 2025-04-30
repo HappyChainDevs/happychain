@@ -43,15 +43,16 @@ export const boopSchema = z.object({
     extraData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
 })
 
+export const entryPointSchema = z
+    .string()
+    .refine(isAddress)
+    .optional()
+    .default(deployment.EntryPoint)
+    .transform((a) => getAddress(a))
+
 export const inputSchema = z.object({
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z
-        .string()
-        .refine(isAddress)
-        .optional()
-        .default(deployment.EntryPoint)
-        .transform((a) => getAddress(a)),
-
+    entryPoint: entryPointSchema,
     /** Boop to execute. */
     boop: boopSchema,
 })

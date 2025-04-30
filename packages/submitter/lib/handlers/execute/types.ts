@@ -32,12 +32,12 @@ export type ExecuteSuccess = {
     receipt: BoopReceipt
 }
 
-/** Output of `execute` calls that fail "onchain", either during simulation or execution. */
+/** Output of `execute` calls that fail for "onchain" reasons. */
 export type ExecuteFailedOnchain = {
     status: Exclude<OnchainStatus, typeof Onchain.Success>
 
     /** Whether the error occurred at the simulation or execution stages. */
-    stage: "simulate" | "execute"
+    stage: "simulate" | "submit" | "execute"
 
     /**
      * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted` status, or
