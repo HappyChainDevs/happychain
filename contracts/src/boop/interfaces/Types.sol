@@ -132,7 +132,7 @@ struct SubmitOutput {
      */
     CallStatus callStatus;
     /**
-     * Depending on {callstatus}: the revertData with which either the call or the
+     * Depending on {callStatus}: the revertData with which either the call or the
      * {IAccount.execute} function reverted, or the rejection reason (encoded error) returned by
      * {IAccount.execute}.
      */

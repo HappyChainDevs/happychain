@@ -2,7 +2,8 @@
     "extends": ["@happy.tech/configs/tsconfig.base.json"],
     "compilerOptions": {
         "paths": {
-            "#lib/*": ["./lib/*"]
+            // Without this the docs are unable to resolve the #lib/ links within the submitter package.
+            "#lib/*": ["../submitter/lib/*"]
         }
     },
     "include": ["*.ts", "lib", "./package.json"]
