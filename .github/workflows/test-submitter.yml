@@ -19,6 +19,7 @@ env:
   APP_PORT: 3001
   LIMITS_EXECUTE_BUFFER_LIMIT: 50
   LIMITS_EXECUTE_MAX_CAPACITY: 100
+  DATABASE_URL: "submitter.sqlite"
 
 jobs:
   test-submitter:
