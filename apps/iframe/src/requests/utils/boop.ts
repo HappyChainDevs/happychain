@@ -98,13 +98,12 @@ export async function sendBoop(
 
         if (!isSponsored) {
             const output = (await boopClient.simulate({ entryPoint, boop })).unwrap()
-
             if (output.status === Onchain.Success) {
                 // TODO: this should be the correct types inside of the SDK
-                boop.gasLimit = Number(output.gasLimit)
-                boop.validateGasLimit = Number(output.validateGasLimit)
-                boop.validatePaymentGasLimit = Number(output.validatePaymentGasLimit)
-                boop.executeGasLimit = Number(output.executeGasLimit)
+                boop.gasLimit = Number(output.gas)
+                boop.validateGasLimit = Number(output.validateGas)
+                boop.validatePaymentGasLimit = Number(output.paymentValidateGas)
+                boop.executeGasLimit = Number(output.executeGas)
                 boop.maxFeePerGas = BigInt(output.maxFeePerGas)
                 boop.submitterFee = BigInt(output.submitterFee)
             } else {
