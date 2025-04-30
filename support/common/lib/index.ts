@@ -123,6 +123,8 @@ export { getUrlProtocol } from "./utils/urlProtocol"
 export { type UUID, createUUID } from "./utils/uuid"
 export { formatMs } from "./utils/time"
 
+export { hexSchema } from "./utils/zod"
+
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"

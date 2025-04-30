@@ -1,0 +1,21 @@
+{
+    "name": "@happy.tech/fund-monitor",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "exports": {
+        ".": "./dist/index.es.js",
+        "./migrate": "./dist/migrate.es.js"
+    },
+    "dependencies": {
+        "viem": "^2.21.53",
+        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/txm": "workspace:0.1.0"
+    },
+    "devDependencies": {
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "typescript": "^5.6.2"
+    }
+}
