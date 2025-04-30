@@ -44,7 +44,7 @@ jobs:
           strip_components: 1   
           rm: true
 
-      - name: Deploy randomness to server
+      - name: Deploy fund monitor to server
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -57,11 +57,11 @@ jobs:
             chmod -R o+rX /home/deployer/fund-monitor
             mv /home/deployer/fund-monitor /tmp
             sudo -u fund_monitor bash -c '
-              rm -rf /home/fund-monitor/build
-              rm -rf /home/fund-monitor/node_modules
-              cp -r /tmp/fund-monitor/fund-monitor/build /home/fund-monitor/build
+              rm -rf /home/fund_monitor/build
+              rm -rf /home/fund_monitor/node_modules
+              cp -r /tmp/fund-monitor/fund-monitor/build /home/fund_monitor/build
 
-              mkdir -p /home/fund-monitor/node_modules
+              mkdir -p /home/fund_monitor/node_modules
               cp -r /tmp/fund-monitor/better-sqlite3 /home/fund_monitor/node_modules/better-sqlite3
               cp -r /tmp/fund-monitor/bindings /home/fund_monitor/node_modules/bindings
               cp -r /tmp/fund-monitor/file-uri-to-path /home/fund_monitor/node_modules/file-uri-to-path
