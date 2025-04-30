@@ -34,7 +34,7 @@ ACCOUNT_PKGS := $(IFRAME_PKGS),$(SDK_ONLY_PKGS)
 DEMOS_PKGS := demos/js,demos/react,demos/vue
 
 # packages only used in the backend services
-BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
+BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet,apps/fund-monitor
 
 # packages needed to build the backend services
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
@@ -397,10 +397,17 @@ txm.build: setup shared.build
 	cd packages/txm && make build
 .PHONY: txm.build
 
+<<<<<<< HEAD
 faucet.build: setup shared.build
 	cd packages/txm && make build
 	cd apps/faucet && make build
 .PHONY: faucet.build
+=======
+fund-monitor.build: setup.ts shared.build
+	cd packages/txm && make build
+	cd apps/fund-monitor && make build
+.PHONY: fund-monitor.build
+>>>>>>> 4b8a17120 (feat: deploy fund monitor)
 
 # ==================================================================================================
 ##@ Docs
