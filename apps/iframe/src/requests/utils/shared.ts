@@ -118,5 +118,5 @@ export async function eth_estimateGas(
     // TODO need robust error handling
     if (output.status !== Onchain.Success) throw new Error("can't simulate lol")
 
-    return toHex(output.executeGasLimit)
+    return toHex(output.executeGas)
 }
