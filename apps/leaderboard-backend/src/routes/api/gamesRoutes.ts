@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { GameIdParamSchema, GameUserParamSchema } from "../../validation/schema/gameSchema"
 import {
+    AdminIdParamSchema,
     GameCreateRequestSchema,
     GameQuerySchema,
     GameScoresQuerySchema,
@@ -47,6 +48,19 @@ export default new Hono()
         }
     })
 
+    // GET /games/admin/:admin_id - List games by admin_id
+    .get("/admin/:admin_id", zValidator("param", AdminIdParamSchema), async (c) => {
+        try {
+            const { admin_id } = c.req.valid("param")
+            const { gameRepo } = c.get("repos")
+            const games = await gameRepo.findByAdmin(admin_id)
+            return c.json({ ok: true, data: games })
+        } catch (err) {
+            console.error("Error listing games by admin:", err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
+    })
+
     // POST /games - Create new game
     .post("/", zValidator("json", GameCreateRequestSchema), async (c) => {
         try {
@@ -54,8 +68,8 @@ export default new Hono()
             const { gameRepo, userRepo } = c.get("repos")
 
             // Check if game name already exists
-            const existingGames = await gameRepo.findByName(gameData.name)
-            if (existingGames.length > 0) {
+            const existingGame = await gameRepo.findByExactName(gameData.name)
+            if (existingGame) {
                 return c.json({ ok: false, error: "Game name already exists" }, 409)
             }
 
@@ -94,8 +108,8 @@ export default new Hono()
 
             // Check if name is being changed and is unique
             if (updateData.name && updateData.name !== game.name) {
-                const existingGames = await gameRepo.findByName(updateData.name)
-                if (existingGames.length > 0) {
+                const existingGame = await gameRepo.findByExactName(updateData.name)
+                if (existingGame) {
                     return c.json({ ok: false, error: "Game name already exists" }, 409)
                 }
             }

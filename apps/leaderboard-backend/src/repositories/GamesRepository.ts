@@ -10,8 +10,13 @@ export class GameRepository {
     }
 
     /// Find games by name (partial match)
-    async findByName(name: string): Promise<Game[]> {
+    async findByNameLike(name: string): Promise<Game[]> {
         return await this.db.selectFrom("games").where("name", "like", `%${name}%`).selectAll().execute()
+    }
+
+    /// Find a game by exact name
+    async findByExactName(name: string): Promise<Game | undefined> {
+        return await this.db.selectFrom("games").where("name", "=", name).selectAll().executeTakeFirst()
     }
 
     /// Find games by admin

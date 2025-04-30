@@ -189,6 +189,16 @@ export const GameIdParamSchema = z
     })
     .strict()
 
+// Admin ID path parameter schema
+export const AdminIdParamSchema = z
+    .object({
+        admin_id: z
+            .string()
+            .regex(/^\d+$/, { message: "Admin ID must be a number" })
+            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+    })
+    .strict()
+
 // Combined Game ID and User ID parameter schema
 export const GameUserParamSchema = z
     .object({
