@@ -40,7 +40,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all the swarm leaderboard packages
-LEADERBOARD_PKGS := apps/leaderboard-backend,apps/leaderboard-frontend
+LEADERBOARD_PKGS := apps/leaderboard-backend
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/leaderboard-backend,apps/leaderboard-frontend
@@ -172,8 +172,6 @@ submitter.prod: submitter.build
 	cd apps/submitter && make prod;
 .PHONY: submitter.prod
 
-<<<<<<< HEAD
-=======
 leaderboard-backend.dev: setup.ts shared.dev
 	cd apps/leaderboard-backend && make migrate;
 	cd apps/leaderboard-backend && make dev;
@@ -202,7 +200,6 @@ leaderboard-frontend.prod:
 	$(call with_optional_iframe, 'leaderboard-frontend', 'apps/leaderboard-frontend', 'preview')
 .PHONY: leaderboard-frontend.prod
 
->>>>>>> 026344e35 (update app names for frontend and backend [skip ci])
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
