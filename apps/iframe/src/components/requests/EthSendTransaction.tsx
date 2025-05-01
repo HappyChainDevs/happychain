@@ -102,20 +102,12 @@ export const EthSendTransaction = ({
         to: tx.to,
     })
 
-    // at the top of your component
-    const isFetching = useMemo(
-        () => isBalanceDataPending || isEstimateGasDataPending || isEstimateDataPending,
-        [isBalanceDataPending, isEstimateGasDataPending, isEstimateDataPending],
-    )
+    const isFetching = isBalanceDataPending || isEstimateGasDataPending || isEstimateDataPending
 
-    const isConfirmActionDisabled = useMemo(() => {
-        if (isFetching) return true
-        if (balanceData?.value === undefined) return true
-
-        // NOTE: estimateGasData is a bigint
-        const needed = BigInt(tx.value ?? "0") + (estimateGasData ?? 0n)
-        return balanceData.value < needed
-    }, [isFetching, balanceData?.value, estimateGasData, tx.value])
+    const isConfirmActionDisabled =
+        isFetching ||
+        balanceData?.value === undefined ||
+        balanceData.value < BigInt(tx.value ?? "0") + (estimateGasData ?? 0n)
 
     /**
      * If the maxFee/Gas and / or maxPriorityFee/Gas is not
