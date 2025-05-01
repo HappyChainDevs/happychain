@@ -38,7 +38,7 @@ export const WalletRequestPermissions = ({
             actions={{
                 accept: {
                     children: `Grant permission${requestingMultiplePermissions ? "s" : ""}`,
-                    onClick: () => accept({ eip1193RequestParams: { method, params } }),
+                    onClick: () => accept({ method, params }),
                 },
                 reject: {
                     children: "Go back",

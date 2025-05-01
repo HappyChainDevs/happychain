@@ -27,10 +27,8 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
         const request = makePayload<ApprovedRequestPayload>(iframeID, {
-            eip1193RequestParams: {
-                method: "wallet_requestPermissions",
-                params: [{ eth_accounts: {} }],
-            },
+            method: "wallet_requestPermissions",
+            params: [{ eth_accounts: {} }],
         })
         const response = await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL)).toStrictEqual(response)
@@ -48,16 +46,14 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
         const request = makePayload<ApprovedRequestPayload>(iframeID, {
-            eip1193RequestParams: {
-                method: "wallet_requestPermissions",
-                params: [
-                    {
-                        eth_accounts: {
-                            requiredMethods: ["signTypedData_v3"],
-                        },
+            method: "wallet_requestPermissions",
+            params: [
+                {
+                    eth_accounts: {
+                        requiredMethods: ["signTypedData_v3"],
                     },
-                ],
-            },
+                },
+            ],
         })
         const response = await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL)).toStrictEqual(response)

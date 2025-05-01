@@ -238,14 +238,11 @@ export type RequestExtraData<Method extends EIP1193RequestMethods> = Method exte
 /**
  * Payload structure for approved EIP1193 requests.
  * Combines required EIP1193 parameters with optional method-specific extra data.
- * @template Method - EIP1193 method name
- * @property eip1193RequestParams - Required EIP1193 request parameters
- * @property extraData - Optional method-specific additional data
  */
-export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
-    eip1193RequestParams: EIP1193RequestParameters<Method>
-    extraData?: RequestExtraData<Method>
-}
+export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> =
+    EIP1193RequestParameters<Method> & {
+        extraData?: RequestExtraData<Method>
+    }
 
 /**
  * Schema for messages that can be sent from the popup to the iframe.
