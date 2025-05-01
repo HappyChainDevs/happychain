@@ -10,7 +10,7 @@ import {
     formatGwei,
     isAddress,
 } from "viem"
-import { useBalance, useEstimateFeesPerGas } from "wagmi"
+import { useBalance, useEstimateFeesPerGas, useEstimateGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
@@ -73,7 +73,11 @@ export const EthSendTransaction = ({
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
 
-    const { data: balanceData, isPending: isBalanceDataPending } = useBalance({
+    const {
+        data: balanceData,
+        isPending: isBalanceDataPending,
+        queryKey: userBalanceQueryKey,
+    } = useBalance({
         address: user?.address,
         query: {
             enabled: user?.address && isAddress(user?.address),
@@ -84,8 +88,34 @@ export const EthSendTransaction = ({
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
         isError,
         isPending: isEstimateDataPending,
-        queryKey,
+        queryKey: gasFeesQueryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
+
+    const {
+        data: estimateGasData,
+        isPending: isEstimateGasDataPending,
+        queryKey: gasEstimateQueryKey,
+    } = useEstimateGas({
+        account: user?.address,
+        data: tx.data,
+        value: BigInt(tx.value ?? 0n),
+        to: tx.to,
+    })
+
+    // at the top of your component
+    const isFetching = useMemo(
+        () => isBalanceDataPending || isEstimateGasDataPending || isEstimateDataPending,
+        [isBalanceDataPending, isEstimateGasDataPending, isEstimateDataPending],
+    )
+
+    const isConfirmActionDisabled = useMemo(() => {
+        if (isFetching) return true
+        if (balanceData?.value === undefined) return true
+
+        // NOTE: estimateGasData is a bigint
+        const needed = BigInt(tx.value ?? "0") + (estimateGasData ?? 0n)
+        return balanceData.value < needed
+    }, [isFetching, balanceData?.value, estimateGasData, tx.value])
 
     /**
      * If the maxFee/Gas and / or maxPriorityFee/Gas is not
@@ -149,15 +179,17 @@ export const EthSendTransaction = ({
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
-                        children:
-                            balanceData?.value && balanceData.value !== 0n ? "Confirm" : "Not enough funds present!",
-                        "aria-disabled": isEstimateDataPending || balanceData?.value === 0n,
+                        children: balanceData?.value && estimateGasData ? "Confirm" : "Not enough funds!",
+                        "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
-                            if (isEstimateDataPending || isBalanceDataPending) return
+                            if (isConfirmActionDisabled) return
                             accept({ method, params })
-                            void queryClient.invalidateQueries({ queryKey })
+                            void queryClient.invalidateQueries({
+                                queryKey: [gasFeesQueryKey, gasEstimateQueryKey, userBalanceQueryKey],
+                            })
                         },
                     },
+
                     reject: {
                         children: "Go back",
                         onClick: reject,
