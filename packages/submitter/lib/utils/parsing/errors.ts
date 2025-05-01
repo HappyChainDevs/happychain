@@ -42,6 +42,7 @@ export function getRevertError(err: unknown): RevertErrorInfo {
     // However, let's keep going, because we can. The approach that follows is pulled from Viem's `call` implementation.
     // `err.walk()` follow the `.cause` chain until the end. The cast is unsafe but we validate access.
     const rawErr = err.walk() as RawContractError
+
     const raw = typeof rawErr?.data === "object" ? rawErr.data?.data : rawErr.data
     return {
         decoded: raw && decodeRawError(raw),

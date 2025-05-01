@@ -46,9 +46,11 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const tx = checkedTx(request.payload.params[0])
             const account = user.address
-            return isSessionKeyAuthorized(app, tx.to)
-                ? await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(user.address, tx.to)) })
-                : await sendBoop({ account, tx, signer: eoaSigner })
+            const signer = isSessionKeyAuthorized(app, tx.to)
+                ? sessionKeySigner(getSessionKey(user.address, tx.to))
+                : eoaSigner
+
+            return await sendBoop({ account, tx, signer })
         }
 
         case "eth_getTransactionByHash": {

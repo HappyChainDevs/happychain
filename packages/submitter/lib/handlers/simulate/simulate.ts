@@ -10,7 +10,7 @@ import { CallStatus } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import { getRevertError } from "#lib/utils/parsing"
+import { decodeRawError, getRevertError } from "#lib/utils/parsing"
 import type { SimulateInput, SimulateOutput } from "./types"
 
 export async function simulate({ entryPoint = deployment.EntryPoint, boop }: SimulateInput): Promise<SimulateOutput> {
@@ -42,7 +42,7 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
         const status = getEntryPointStatusFromCallStatus(submitOutput.callStatus)
 
         // biome-ignore format: pretty
-        const output = status === Onchain.Success
+        const output = (status === Onchain.Success
             ? {
                 ...submitOutput,
                 status,
@@ -55,7 +55,8 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
             } : {
                 status,
                 revertData: submitOutput.revertData,
-            }
+                description: getDescriptionFromRevertData(boop, boopHash, submitOutput.revertData),
+            }) satisfies SimulateOutput
 
         if (output.status === Onchain.Success && balance !== null) {
             // During simulation the gas price is usually 0, so we check here instead.
@@ -73,8 +74,9 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
     } catch (error) {
         const revert = getRevertError(error)
         const output = revert.isContractRevert
-            ? outputForRevertError(boop, boopHash, revert)
+            ? outputForRevertError(boop, boopHash, revert.decoded)
             : outputForGenericError(error)
+
         noteSimulationMisbehaviour(boop, output)
         return output
     }
@@ -97,6 +99,13 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
         default:
             throw new Error(`implementation error: unknown call status: ${callStatus}`)
     }
+}
+
+function getDescriptionFromRevertData(boop: Boop, boopHash: `0x${string}`, revertData: `0x${string}`): string {
+    if (!revertData || revertData === "0x") return "Unknown error"
+    const decoded = decodeRawError(revertData)
+    if (!decoded) return "Unknown error"
+    return outputForRevertError(boop, boopHash, decoded).description || "Unknown error"
 }
 
 // TODO fill in

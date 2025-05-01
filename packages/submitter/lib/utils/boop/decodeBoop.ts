@@ -1,10 +1,10 @@
 import type { Hex } from "@happy.tech/common"
 import type { Boop } from "#lib/types"
 
-import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "../bytes"
+import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "@happy.tech/common"
 
 export function decodeBoop(encoded: Hex): Boop {
-    const encodedBytes = encoded.slice(2)
+    const encodedBytes = encoded.replace(/^0x/, "")
 
     // Read static fields (204 bytes total)
     const account = bytesToAddress(getBytes(encodedBytes, 0, 20))

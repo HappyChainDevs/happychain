@@ -1,6 +1,8 @@
 export { BoopClient } from "./client"
 export type { BoopClientConfig } from "./client"
 
+export { ExtensionType, encodeExtraData, ExtraDataKey } from "./boops"
+
 export {
     type PendingBoopInput,
     type PendingBoopOutput,

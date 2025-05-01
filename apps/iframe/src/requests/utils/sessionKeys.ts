@@ -2,6 +2,7 @@
  * Utilities to work with the session key boop extension.
  */
 
+import { ExtensionType, ExtraDataKey, encodeExtraData } from "@happy.tech/boop-sdk"
 import { type Address, PermissionNames } from "@happy.tech/common"
 import { EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { type Hex, encodeFunctionData } from "viem"
@@ -14,9 +15,7 @@ import { getPermissions, grantPermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getWalletClient } from "#src/state/walletClient.ts"
 import type { AppURL } from "#src/utils/appURL"
-
-// TODO must expose from boop-sdk
-const EXTENSION_TYPE_VALIDATOR = 0
+import { sessionKeyLogger } from "#src/utils/logger"
 
 /**
  * Creates extraData for custom validator according to Boop spec
@@ -24,23 +23,18 @@ const EXTENSION_TYPE_VALIDATOR = 0
  *
  * @param validatorAddress - Validator contract address
  * @returns Hex string containing encoded extraData
- *
- * TODO a generic helper for this must be exposed from boop-sdk
  */
-export function createValidatorExtraData(validatorAddress: Address): Hex {
-    // extraData is structured as a packed list of (key, length, value) triplets
-    const keyBytes = "000001" // key for the validator extension (1) encoded over 3 bytes
-    const lengthBytes = "000014" // length 20 in 3 bytes (address is 20 bytes)
-    const validatorAddressBytes = validatorAddress.slice(2).toLowerCase() // remove 0x prefix
-    return ("0x" + keyBytes + lengthBytes + validatorAddressBytes) as Hex
+export function createValidatorExtraData(account: Address, target: Address): `0x${string}` {
+    const extraData = hasSessionKey(account, target) ? { [ExtraDataKey.Validator]: sessionKeyValidator } : {}
+    return encodeExtraData(extraData)
 }
 
-export async function isSessionKeyValidatorInstalled(accountAddress: Address): Promise<boolean> {
+async function isSessionKeyValidatorInstalled(accountAddress: Address): Promise<boolean> {
     return await getPublicClient().readContract({
         address: accountAddress,
         abi: extensibleAccountAbi,
         functionName: "isExtensionRegistered",
-        args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR],
+        args: [sessionKeyValidator, ExtensionType.Validator],
     })
 }
 
@@ -48,7 +42,8 @@ export async function isSessionKeyValidatorInstalled(accountAddress: Address): P
  * Install the SessionKeyValidator extension on the account. If the target address and session key
  * address are passed, register this initial session key as part of the extension installation.
  */
-export async function installSessionKeyExtension(account: Address, target?: Address, sessionKeyAddress?: Address) {
+async function installSessionKeyExtension(account: Address, target?: Address, sessionKeyAddress?: Address) {
+    sessionKeyLogger.trace("installSessionKeyExtension", { account, target, sessionKeyAddress })
     const walletClient = getWalletClient()
     if (!walletClient) throw new EIP1193DisconnectedError()
     // If a session key is provided, the installData of the `addExtension` call is an encoded
@@ -61,22 +56,24 @@ export async function installSessionKeyExtension(account: Address, target?: Addr
                   args: [target, sessionKeyAddress],
               })
             : "0x"
+
     await sendBoop({
         account,
         tx: {
             to: account,
-            from: walletClient.account.address,
+            from: account,
             data: encodeFunctionData({
                 abi: extensibleAccountAbi,
                 functionName: "addExtension",
-                args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR, installData],
+                args: [sessionKeyValidator, ExtensionType.Validator, installData],
             }),
         },
         signer: eoaSigner,
     })
 }
 
-export async function registerSessionKey(account: Address, target: Address, sessionKeyAddress: Address) {
+async function registerSessionKey(account: Address, target: Address, sessionKeyAddress: Address) {
+    sessionKeyLogger.trace("registerSessionKey", { account, target, sessionKeyAddress })
     const walletClient = getWalletClient()
     if (!walletClient) throw new EIP1193DisconnectedError()
     return await sendBoop({
@@ -84,7 +81,7 @@ export async function registerSessionKey(account: Address, target: Address, sess
         signer: eoaSigner,
         tx: {
             to: sessionKeyValidator,
-            from: walletClient.account.address,
+            from: account,
             data: encodeFunctionData({
                 abi: sessionKeyValidatorAbi,
                 functionName: "addSessionKey",
@@ -95,6 +92,7 @@ export async function registerSessionKey(account: Address, target: Address, sess
 }
 
 export async function removeSessionKey(account: Address, target: Address) {
+    sessionKeyLogger.trace("removeSessionKey", { account, target })
     const walletClient = getWalletClient()
     if (!walletClient) throw new EIP1193DisconnectedError()
     await sendBoop({
@@ -102,7 +100,7 @@ export async function removeSessionKey(account: Address, target: Address) {
         signer: eoaSigner,
         tx: {
             to: sessionKeyValidator,
-            from: walletClient.account.address,
+            from: account,
             data: encodeFunctionData({
                 abi: sessionKeyValidatorAbi,
                 functionName: "removeSessionKey",
@@ -113,6 +111,7 @@ export async function removeSessionKey(account: Address, target: Address) {
 }
 
 export async function uninstallSessionKeyExtension(account: Address) {
+    sessionKeyLogger.trace("uninstallSessionKeyExtension", { account })
     const walletClient = getWalletClient()
     if (!walletClient) throw new EIP1193DisconnectedError()
     await sendBoop({
@@ -120,33 +119,30 @@ export async function uninstallSessionKeyExtension(account: Address) {
         signer: eoaSigner,
         tx: {
             to: account,
-            from: walletClient.account.address,
+            from: account,
             data: encodeFunctionData({
                 abi: extensibleAccountAbi,
                 functionName: "removeExtension",
-                args: [sessionKeyValidator, EXTENSION_TYPE_VALIDATOR, "0x"],
+                args: [sessionKeyValidator, ExtensionType.Validator, "0x"],
             }),
         },
     })
 }
 
 /**
- * Returns true iff the user has any session key registered.
- */
-export function hasExistingSessionKeys(account: Address): boolean {
-    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-    return Boolean(storedSessionKeys[account])
-}
-
-/**
  * Returns true iff the user has session key authorization for the target address.
  */
 export function isSessionKeyAuthorized(app: AppURL, target: Address): boolean {
-    return (
-        getPermissions(app, {
-            [PermissionNames.SESSION_KEY]: { target },
-        }).length > 0
-    )
+    const permissionRequest = { [PermissionNames.SESSION_KEY]: { target } }
+    return getPermissions(app, permissionRequest).length > 0
+}
+
+/**
+ * Returns true iff the user has a session key registered for the target address.
+ */
+export function hasSessionKey(account: Address, target: Address): boolean {
+    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+    return Boolean(storedSessionKeys[account]?.[target])
 }
 
 /**
@@ -176,16 +172,19 @@ export function getSessionKey(account: Address, target: Address): Address {
  * Installs and authorizes a new session key for the target address.
  *
  * @returns the session key address
- * @throws TODO generic onchain interaction error
+ * @throws TODO: generic onchain interaction error
  */
 export async function installNewSessionKey(app: AppURL, account: Address, target: Address): Promise<Address> {
     const sessionKey = generatePrivateKey()
     const sessionAccount = privateKeyToAccount(sessionKey)
 
-    !hasExistingSessionKeys(account) && !(await isSessionKeyValidatorInstalled(account))
-        ? await installSessionKeyExtension(account, target, sessionAccount.address)
-        : await registerSessionKey(account, target, sessionAccount.address)
-
+    // Always check validator installation onchain, as the validator contract
+    // address may change in the future.
+    if (await isSessionKeyValidatorInstalled(account)) {
+        await registerSessionKey(account, target, sessionAccount.address)
+    } else {
+        await installSessionKeyExtension(account, target, sessionAccount.address)
+    }
     authorizeSessionKey(app, account, target, sessionKey)
     return sessionAccount.address
 }

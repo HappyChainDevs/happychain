@@ -66,6 +66,17 @@ export { throttle } from "./utils/throttle"
 
 export { promiseWithResolvers } from "./utils/promises"
 
+export {
+    toBytes,
+    toDynamicLengthBytes,
+    getBytes,
+    getDynamicLengthBytes,
+    bytesToAddress,
+    bytesToBigInt,
+    bytesToNumber,
+    bytesToHex,
+} from "./utils/bytes"
+
 export { sleep } from "./utils/sleep"
 
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises"
