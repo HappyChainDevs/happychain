@@ -26,9 +26,7 @@ export class CloudflareService {
             (error) => mapFetchError(error),
         )
 
-        if (verifyRes.isErr()) {
-            return err(verifyRes.error)
-        }
+        if (verifyRes.isErr()) return err(verifyRes.error)
 
         const verifyData = await verifyRes.value.json()
         const parsedData = siteVerifyResponseSchema.safeParse(verifyData)

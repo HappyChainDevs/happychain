@@ -54,7 +54,6 @@ const FaucetView = () => {
     return (
         <div className="p-4 max-w-md mx-auto w-full overflow-hidden">
             <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-                <div ref={widgetRef} />
                 {status !== "idle" && (
                     <p
                         className={`mt-2 rounded px-2 py-1 w-full break-words whitespace-normal overflow-hidden text-xs ${
@@ -71,6 +70,8 @@ const FaucetView = () => {
                 <Button type="submit" disabled={disabled}>
                     {status === "loading" ? "Sending..." : "Request Tokens"}
                 </Button>
+
+                <div ref={widgetRef} />
             </form>
         </div>
     )

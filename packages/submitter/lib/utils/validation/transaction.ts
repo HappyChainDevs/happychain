@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isAddress } from "#lib/utils/validation/isAddress"
+import { isAddress } from "@happy.tech/common"
 import { isHexString } from "#lib/utils/validation/isHexString"
 
 export const transactionSchema = z.object({

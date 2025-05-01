@@ -1,3 +1,4 @@
+import { isAddress } from "@happy.tech/common"
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
@@ -5,7 +6,6 @@ import { checksum } from "ox/Address"
 import { z } from "zod"
 import { SubmitterError } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/validation/isAddress"
 import { isHexString } from "#lib/utils/validation/isHexString"
 import { CreateAccount } from "./types"
 
