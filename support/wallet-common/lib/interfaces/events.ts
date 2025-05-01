@@ -233,7 +233,7 @@ type RequestExtraDataTypeMap = {
  */
 export type RequestExtraData<Method extends EIP1193RequestMethods> = Method extends keyof RequestExtraDataTypeMap
     ? RequestExtraDataTypeMap[Method]
-    : Record<string, never>
+    : undefined
 
 /**
  * Payload structure for approved EIP1193 requests.
