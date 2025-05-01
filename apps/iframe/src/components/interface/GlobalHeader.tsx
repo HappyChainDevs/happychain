@@ -12,6 +12,8 @@ function signalClosed() {
 const GlobalHeader = () => {
     const location = useLocation()
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
+    const optionsLabel = isVisible ? "Close options menu" : "Open options menu"
+
     return (
         <div className="relative max-w-prose mx-auto items-center w-full py-1.5 hidden lg:flex">
             {location.pathname !== "/embed" && (
@@ -26,12 +28,14 @@ const GlobalHeader = () => {
 
             <div className="flex flex-row gap-1 items-center absolute end-2">
                 <button
-                    title={isVisible ? "Close this menu" : "Open this menu"}
+                    title={optionsLabel}
                     type="button"
-                    aria-label="Click to open options menu"
+                    aria-label={optionsLabel}
                     className="dark:opacity-60 text-lg"
                     onClick={() => {
-                        setVisibility(!isVisible)
+                        // Don't toggle visibility: the menu will close if clicking the gear while the menu is open
+                        // via the menu's own `onInteractOutsideHandler`.
+                        if (!isVisible) setVisibility(true)
                     }}
                 >
                     <GearSix weight="bold" />
