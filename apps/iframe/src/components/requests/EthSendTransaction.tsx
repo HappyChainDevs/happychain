@@ -12,7 +12,6 @@ import FieldLoader from "../loaders/FieldLoader"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
-import { GasFieldName } from "./common/GasFieldDisplay"
 import {
     FormattedDetailsLine,
     Layout,
@@ -25,6 +24,7 @@ import {
 import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 import { useTxFees } from "./utils/useTxFees"
+import { GasFieldName } from "./common/GasFieldDisplay"
 
 export const EthSendTransaction = ({
     method,
@@ -193,7 +193,6 @@ export const EthSendTransaction = ({
                         <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
                     </div>
                 </DisclosureSection>
-
                 {tx.type === TransactionType.EIP4844 && (
                     <SectionBlock>
                         <BlobTxWarning onReject={reject} />
