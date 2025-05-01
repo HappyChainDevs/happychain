@@ -22,9 +22,15 @@ export const useTurnstile = (sitekey: string) => {
                 sitekey,
                 callback: (token) => {
                     setToken(token)
-                    if (widgetRef.current) {
-                        widgetRef.current.innerHTML = ""
-                    }
+                },
+            })
+        } else if (widgetRef.current) {
+            widgetRef.current.innerHTML = ""
+            setToken("")
+            window.turnstile.render(widgetRef.current, {
+                sitekey,
+                callback: (token) => {
+                    setToken(token)
                 },
             })
         }
@@ -38,7 +44,7 @@ export const useTurnstile = (sitekey: string) => {
             const script = document.createElement("script")
             script.id = SCRIPT_ID
             script.async = true
-            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
             script.onload = renderCaptcha
             document.body.appendChild(script)
         } else if (window.turnstile) {

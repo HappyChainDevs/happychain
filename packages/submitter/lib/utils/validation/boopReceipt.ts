@@ -1,6 +1,6 @@
+import { isAddress } from "@happy.tech/common"
 import { z } from "zod"
 import { Onchain } from "#lib/types"
-import { isAddress } from "#lib/utils/validation/isAddress"
 import { isHexString } from "#lib/utils/validation/isHexString"
 import { receiptSchema } from "./receipt"
 import { transactionSchema } from "./transaction"

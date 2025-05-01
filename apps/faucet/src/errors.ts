@@ -12,24 +12,24 @@ export abstract class HappyFaucetError extends Error {
 
 export class FaucetUnexpectedError extends HappyFaucetError {
     constructor(message?: string, options?: ErrorOptions) {
-        super(500, message, options)
+        super(500, message || "Unexpected error", options)
     }
 }
 
 export class FaucetFetchError extends HappyFaucetError {
     constructor(message?: string, options?: ErrorOptions) {
-        super(500, message, options)
+        super(500, message || "Unexpected error", options)
     }
 }
 
 export class FaucetRateLimitError extends HappyFaucetError {
     constructor(message?: string, options?: ErrorOptions) {
-        super(429, message, options)
+        super(429, message || "Rate limit exceeded", options)
     }
 }
 
 export class FaucetCaptchaError extends HappyFaucetError {
     constructor(message?: string, options?: ErrorOptions) {
-        super(403, message, options)
+        super(403, message || "Captcha verification failed", options)
     }
 }

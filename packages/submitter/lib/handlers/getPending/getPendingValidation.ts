@@ -1,10 +1,10 @@
+import { isAddress } from "@happy.tech/common"
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
 import { isProduction } from "#lib/utils/isProduction"
-import { isAddress } from "#lib/utils/validation/isAddress"
 import { pendingTxSchema } from "#lib/utils/validation/pendingTx"
 
 const inputSchema = z.object({
