@@ -4,20 +4,20 @@ import type { Address } from "viem"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
 import { FaucetUsage } from "../faucet-usage.entity"
-import type { FaucetUsageRepository } from "../faucet-usage.repository"
+import { FaucetUsageRepository } from "../faucet-usage.repository"
 
 export class FaucetService {
     private txm: TransactionManager
     private faucetUsageRepository: FaucetUsageRepository
 
-    constructor(faucetUsageRepository: FaucetUsageRepository) {
+    constructor() {
         this.txm = new TransactionManager({
             rpc: { url: env.RPC_URL },
             chainId: env.CHAIN_ID,
             blockTime: env.BLOCK_TIME,
             privateKey: env.PRIVATE_KEY,
         })
-        this.faucetUsageRepository = faucetUsageRepository
+        this.faucetUsageRepository = new FaucetUsageRepository()
     }
 
     async start() {
@@ -47,3 +47,5 @@ export class FaucetService {
         return ok(undefined)
     }
 }
+
+export const faucetService = new FaucetService()
