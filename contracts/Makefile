@@ -74,6 +74,7 @@ clean: ## Removes build output
 	@# Avoid failures when trying to clean after a preceding `make nuke`.
 	forge clean > /dev/null 2> /dev/null || true
 	rm -rf node_modules/.tmp
+	rm -rf docs
 .PHONY: clean
 
 nuke: clean ## Removes build output and dependencies
@@ -265,30 +266,50 @@ format: forge-fmt solhint ## Formats & lint (autofixes)
 
 DOCS_OUT=docs/boop
 
-.PHONY: docs docs-serve
-
 BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
+patch-transient:
+	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol;
+	@rm -f src/boop/happychain/HappyAccount.sol.bak
+.PHONY: patch-transient
+
+unpatch-transient:
+	@sed -i.bak 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol;
+	@rm -f src/boop/happychain/HappyAccount.sol.bak
+.PHONY: unpatch-transient
+
+patch-docs: patch-transient
+	@for file in $(BOOP_SOL_FILES); do \
+		cp $$file $$file.bak; bun run scripts/utils/postProcessDocLinks.ts $$file.bak > $$file; \
+	done
+.PHONY: patch-docs
+
+unpatch-docs:
+	@for file in $(BOOP_SOL_FILES); \
+		do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi;  \
+	done
+	@make unpatch-transient; # after or the loop will overwrite it
+	@rm -f src/boop/happychain/HappyAccount.sol.bak
+.PHONY: unpatch-docs
+
+# Note on traps: EXIT doesn't catch ctrl+c, but using INT EXIT makes the trap trigger twice on ctrl+c (the
+# trap triggers EXIT after handling INT). So we set an empty INT TERM HUP trap, which will trigger EXIT and
+# run our logic only once. Note that this doesn't work if the process is interrupted with kill -9 (SIGKILL).
+
 docs:
-	sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
-	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/utils/postProcessDocLinks.ts $$file.bak > $$file; done; \
-	forge doc --out docs/boop; \
-	for file in $(BOOP_SOL_FILES); do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; done; \
-	sed -i.bak 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
-	rm -f src/boop/happychain/HappyAccount.sol.bak
+	@make unpatch-docs # cleanup previously aborted run, just in case
+	@trap 'make unpatch-docs; echo "Docs cleanup complete."' EXIT; \
+	trap 'exit' INT TERM HUP; \
+	make patch-docs; \
+	forge doc --out docs/boop;
 .PHONY: docs
 
-docs-serve:
-	sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol; \
-	trap 'echo "Cleaning up..."; \
-	  for file in $(BOOP_SOL_FILES); do \
-	    if [ -f $$file.bak ]; then mv $$file.bak $$file; fi; \
-	  done; \
-	  sed -i.bak "s/address private dispatchedExecutor;/address transient private dispatchedExecutor;/" src/boop/happychain/HappyAccount.sol; \
-	  rm -f src/boop/happychain/HappyAccount.sol.bak; \
-	  echo "Cleanup complete.";' EXIT INT TERM; \
-	for file in $(BOOP_SOL_FILES); do cp $$file $$file.bak; bun run scripts/utils/postProcessDocLinks.ts $$file.bak > $$file; done; \
-	forge doc --out docs/boop --serve --port $${DOCS_PORT}
+docs-serve: unpatch-docs
+	@make unpatch-docs # cleanup previously aborted run, just in case
+	@trap 'make unpatch-docs; echo "Docs cleanup complete."' EXIT; \
+	trap 'exit' INT TERM HUP; \
+	make patch-docs; \
+	forge doc --out docs/boop --serve --port $(DOCS_PORT);
 .PHONY: docs-serve
 
 ####################################################################################################
