@@ -68,20 +68,31 @@ export class Logger {
      * Returns the single instance of the logger.
      */
     public static get instance(): Logger {
-        if (!Logger._instance) {
-            Logger._instance = new Logger()
+        /**
+         * 'this' here refers to the class itself. this class may be extended, so we can't use Logger directly
+         */
+
+        // biome-ignore lint/complexity/noThisInStatic: see note above
+        if (!this._instance) {
+            // biome-ignore lint/complexity/noThisInStatic: see note above
+            this._instance = new Logger()
         }
-        return Logger._instance
+
+        // biome-ignore lint/complexity/noThisInStatic: see note above
+        return this._instance
     }
 
     public static create(tag: LogTag, logLevel?: LogLevel): TaggedLogger {
-        Logger.instance.enableTags(tag)
-        if (logLevel) Logger.instance.setLogLevel(logLevel)
+        // Create a new instance of the logger with the specified tag and log level.
+        const newLogger = class extends Logger {}
+        Object.defineProperty(newLogger, "_instance", { value: new newLogger() })
+        newLogger.instance.enableTags(tag)
+        newLogger.instance.setLogLevel(logLevel ?? Logger.instance.minLevel)
 
-        return new Proxy(Logger.instance, {
+        return new Proxy(newLogger.instance, {
             get(target, prop, receiver) {
                 const value = Reflect.get(target, prop, receiver)
-                if (typeof value === "function") {
+                if (typeof value === "function" && ["log", "error", "warn", "info", "trace"].includes(prop as string)) {
                     return (...args: unknown[]) => {
                         const method = value as (tag: LogTag, ...args: unknown[]) => unknown
                         return method.call(target, tag, ...args)
@@ -128,13 +139,9 @@ export class Logger {
      */
     private shouldLog(level: LogLevel, inputTags: LogTag[]): boolean {
         // we skip logging. For example, if minLevel=ERROR, then WARN/INFO/TRACE won't show.
-        if (level > this.minLevel) {
-            return false
-        }
+        if (level > this.minLevel) return false
         // If no tags are enabled, skip everything.
-        if (this.enabledTags.size === 0) {
-            return false
-        }
+        if (this.enabledTags.size === 0) return false
         // Check if any of the log's tags is in the enabled set.
         return inputTags.some((tag) => this.enabledTags.has(tag))
     }
