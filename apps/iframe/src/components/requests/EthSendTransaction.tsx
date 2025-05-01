@@ -164,7 +164,6 @@ export const EthSendTransaction = ({
             value: formatEther(txValue),
             maxFeePerGas: formatGwei(parseBigInt(tx.maxFeePerGas ?? "0") ?? 0n),
             maxPriorityFeePerGas: formatGwei(parseBigInt(tx.maxPriorityFeePerGas ?? "0") ?? 0n),
-            type: classifyTxType(tx),
         }
     }, [tx, txValue])
 
@@ -213,10 +212,6 @@ export const EthSendTransaction = ({
                 </SectionBlock>
                 <SectionBlock>
                     <SubsectionBlock>
-                        <SubsectionContent>
-                            <SubsectionTitle>Transaction type</SubsectionTitle>
-                            <FormattedDetailsLine>{formatted.type}</FormattedDetailsLine>
-                        </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
                             <FormattedDetailsLine>{formatted.maxFeePerGas}</FormattedDetailsLine>
