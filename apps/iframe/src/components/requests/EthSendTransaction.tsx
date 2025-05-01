@@ -139,10 +139,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": status === "pending",
                         onClick: () => {
                             if (status === "pending") return
-                            accept({
-                                eip1193RequestParams: { method, params },
-                                extraData: {},
-                            })
+                            accept({ method, params, extraData: {} })
                             void queryClient.invalidateQueries({ queryKey })
                         },
                     },

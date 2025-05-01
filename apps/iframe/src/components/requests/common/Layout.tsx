@@ -28,7 +28,6 @@ export const Layout = ({
 }: LayoutProps) => {
     const user = useAtomValue(userAtom)
     const appURL = getAppURL()
-    console.log(reject)
     return (
         <main className="flex flex-col min-h-dvh bg-base-300">
             <header className="w-full fixed z-10 bg-base-300 border-b border-neutral/10 dark:border-neutral/50 p-2 text-center font-bold text-xs">

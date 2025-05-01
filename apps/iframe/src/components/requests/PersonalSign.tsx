@@ -27,7 +27,7 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
             actions={{
                 accept: {
                     children: "Sign",
-                    onClick: () => accept({ eip1193RequestParams: { method, params } }),
+                    onClick: () => accept({ method, params }),
                 },
                 reject: {
                     children: "Go back",

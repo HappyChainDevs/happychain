@@ -34,7 +34,7 @@ export const EthRequestAccounts = ({
             actions={{
                 accept: {
                     children: "Allow",
-                    onClick: () => accept({ eip1193RequestParams: getRequestPayload() }),
+                    onClick: () => accept(getRequestPayload()),
                 },
                 reject: {
                     children: "Go back",

@@ -36,7 +36,7 @@ export const WalletAddEthereumChain = ({
             actions={{
                 accept: {
                     children: "Add chain",
-                    onClick: () => accept({ eip1193RequestParams: { method, params } }),
+                    onClick: () => accept({ method, params }),
                 },
                 reject: {
                     children: "Go back",

@@ -34,7 +34,7 @@ export const HappyLoadAbi = ({
             actions={{
                 accept: {
                     children: "Import ABI",
-                    onClick: () => accept({ eip1193RequestParams: { method, params } }),
+                    onClick: () => accept({ method, params }),
                 },
                 reject: {
                     children: "Go back",
