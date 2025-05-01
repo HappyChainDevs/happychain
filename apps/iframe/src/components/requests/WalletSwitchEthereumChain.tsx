@@ -47,7 +47,7 @@ export const WalletSwitchEthereumChain = ({
                     children: "Switch chain",
                     "aria-disabled": !chain,
                     onClick: () => {
-                        if (chain) accept({ eip1193RequestParams: { method, params } })
+                        if (chain) accept({ method, params })
                     },
                 },
                 reject: {
