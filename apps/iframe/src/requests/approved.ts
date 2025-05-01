@@ -55,7 +55,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         // TODO: refactor once we have a better plan on how to maintain separation while reducing
         // code duplication here
         case "eth_sendTransaction": {
-            console.log(request.payload.extraData)
             try {
                 if (!user) throw new EIP1193UnauthorizedError()
                 return await sendUserOp({
@@ -125,7 +124,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "wallet_watchAsset": {
-            console.log(request.payload.extraData)
             return user ? addWatchedAsset(user.address, requestParams) : false
         }
 

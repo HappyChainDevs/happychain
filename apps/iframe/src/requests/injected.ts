@@ -3,6 +3,7 @@ import { deployment as contractAddresses } from "@happy.tech/contracts/account-a
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
+    type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
@@ -346,7 +347,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     payload: {
                         method: "eth_requestAccounts",
                         params: undefined,
-                    },
+                    } as EIP1193RequestParameters<"eth_requestAccounts">,
                 })
                 if (!resp.length) return []
             }
