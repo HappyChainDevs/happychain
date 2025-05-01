@@ -1,17 +1,18 @@
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { z } from "zod"
+import { env } from "../env"
 import { FaucetCaptchaError, type FaucetFetchError } from "../errors"
 import { mapFetchError } from "../utils"
 
 export const siteVerifyResponseSchema = z.object({
-    success: z.boolean(),
+    success: z.literal(true),
 })
 
 export class CloudflareService {
     private readonly secret: string
 
-    constructor(secret: string) {
-        this.secret = secret
+    constructor() {
+        this.secret = env.TURNSTILE_SECRET
     }
 
     async verifyTurnstile(token: string): Promise<Result<undefined, FaucetCaptchaError | FaucetFetchError>> {
@@ -38,3 +39,5 @@ export class CloudflareService {
         return ok(undefined)
     }
 }
+
+export const cloudflareService = new CloudflareService()
