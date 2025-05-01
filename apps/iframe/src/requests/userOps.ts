@@ -71,7 +71,7 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
         // - we do local nonce management to be able to have multiple userOps in flight
         // - prepareUserOperation cannot request nonces for custom nonceKeys (needed for session keys)
         const nonce = await getNextNonce(account, validator)
-        console.log(preparedOp)
+
         const _preparedUserOp =
             preparedOp ??
             (await smartAccountClient.prepareUserOperation({
