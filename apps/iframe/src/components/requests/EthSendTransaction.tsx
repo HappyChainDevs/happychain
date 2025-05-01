@@ -1,4 +1,4 @@
-import { TransactionType } from "@happy.tech/common"
+import { TransactionType, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -72,6 +72,9 @@ export const EthSendTransaction = ({
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
+    const txValue = parseBigInt(tx.value) ?? 0n
+    const hasValue = !!txValue
+    const isSelfPaying = false // currently we always sponsor
 
     const {
         data: balanceData,
@@ -80,34 +83,34 @@ export const EthSendTransaction = ({
     } = useBalance({
         address: user?.address,
         query: {
-            enabled: user?.address && isAddress(user?.address),
+            enabled: user?.address && hasValue,
         },
     })
 
     const {
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
-        isError,
+        isError: isFeeError,
         isPending: isEstimateDataPending,
         queryKey: gasFeesQueryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
 
     const {
-        data: estimateGasData,
+        data: estimatedGas,
         isPending: isEstimateGasDataPending,
         queryKey: gasEstimateQueryKey,
     } = useEstimateGas({
         account: user?.address,
         data: tx.data,
-        value: BigInt(tx.value ?? 0n),
+        value: txValue,
         to: tx.to,
     })
 
-    const isFetching = isBalanceDataPending || isEstimateGasDataPending || isEstimateDataPending
-
     const isConfirmActionDisabled =
-        isFetching ||
+        ((hasValue || isSelfPaying) && isBalanceDataPending) ||
+        (isSelfPaying && isEstimateGasDataPending) ||
+        isEstimateDataPending ||
         balanceData?.value === undefined ||
-        balanceData.value < BigInt(tx.value ?? "0") + (estimateGasData ?? 0n)
+        balanceData.value < txValue + (estimatedGas ?? 0n)
 
     /**
      * If the maxFee/Gas and / or maxPriorityFee/Gas is not
@@ -119,8 +122,8 @@ export const EthSendTransaction = ({
     useEffect(() => {
         setTx((prevTx) => {
             // Handle partial errors by falling back to existing values or defaults
-            const safeMaxFeePerGas = isError ? (prevTx.maxFeePerGas ?? "0") : maxFeePerGas
-            const safeMaxPriorityFeePerGas = isError ? (prevTx.maxPriorityFeePerGas ?? "0") : maxPriorityFeePerGas
+            const safeMaxFeePerGas = isFeeError ? (prevTx.maxFeePerGas ?? "0") : maxFeePerGas
+            const safeMaxPriorityFeePerGas = isFeeError ? (prevTx.maxPriorityFeePerGas ?? "0") : maxPriorityFeePerGas
 
             // If gasPrice is defined (~ legacy tx),
             // set it as maxFeePerGas and reset gasLimit to null
@@ -134,7 +137,7 @@ export const EthSendTransaction = ({
                 gasPrice: updatedGasLimit,
             } as RpcTransactionRequest
         })
-    }, [maxFeePerGas, maxPriorityFeePerGas, isError])
+    }, [maxFeePerGas, maxPriorityFeePerGas, isFeeError])
 
     const abiForContract =
         user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
@@ -156,14 +159,15 @@ export const EthSendTransaction = ({
     }, [abiForContract, tx.data])
 
     // memo-ed values formatted for display
-    const formattedTxInfo = useMemo(() => {
+    const formatted = useMemo(() => {
         return {
-            value: formatEther(BigInt(tx.value ?? "0")),
-            maxFeePerGas: formatGwei(BigInt(tx.maxFeePerGas ?? "0")),
-            maxPriorityFeePerGas: formatGwei(BigInt(tx.maxPriorityFeePerGas ?? "0")),
+            value: formatEther(txValue),
+            maxFeePerGas: formatGwei(parseBigInt(tx.maxFeePerGas ?? "0") ?? 0n),
+            maxPriorityFeePerGas: formatGwei(parseBigInt(tx.maxPriorityFeePerGas ?? "0") ?? 0n),
             type: classifyTxType(tx),
         }
-    }, [tx])
+    }, [tx, txValue])
+
     return (
         <>
             <Layout
@@ -171,7 +175,7 @@ export const EthSendTransaction = ({
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
-                        children: balanceData?.value && estimateGasData ? "Confirm" : "Not enough funds!",
+                        children: balanceData?.value && estimatedGas ? "Confirm" : "Not enough funds!",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
@@ -199,10 +203,10 @@ export const EthSendTransaction = ({
                             </SubsectionContent>
                         )}
 
-                        {Number(formattedTxInfo.value) > 0 && (
+                        {txValue > 0n && (
                             <SubsectionContent>
                                 <SubsectionTitle>Amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formattedTxInfo.value} HAPPY</FormattedDetailsLine>
+                                <FormattedDetailsLine>{formatted.value} HAPPY</FormattedDetailsLine>
                             </SubsectionContent>
                         )}
                     </SubsectionBlock>
@@ -211,15 +215,15 @@ export const EthSendTransaction = ({
                     <SubsectionBlock>
                         <SubsectionContent>
                             <SubsectionTitle>Transaction type</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.type}</FormattedDetailsLine>
+                            <FormattedDetailsLine>{formatted.type}</FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.maxFeePerGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine>{formatted.maxFeePerGas}</FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.maxPriorityFeePerGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine>{formatted.maxPriorityFeePerGas}</FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
