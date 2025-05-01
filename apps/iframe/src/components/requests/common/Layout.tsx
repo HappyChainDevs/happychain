@@ -102,14 +102,18 @@ export const SubsectionContent = ({ children }: PropsWithChildren) => {
 
 interface FormattedDetailsLineProps extends PropsWithChildren {
     isCode?: boolean
+    formatAsNumber?: boolean
 }
 
-export const FormattedDetailsLine = ({ children, isCode }: FormattedDetailsLineProps) => {
+export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: FormattedDetailsLineProps) => {
+    const formattedContent =
+        formatAsNumber && typeof children === "string" ? new Intl.NumberFormat().format(Number(children)) : children
+
     return (
         <pre
             className={`overflow-auto tabular-nums text-ellipsis text-sm [scrollbar-width:thin] ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
         >
-            {children}
+            {formattedContent}
         </pre>
     )
 }
