@@ -14,13 +14,14 @@ import {
 import { Map2, Mutex } from "@happy.tech/common"
 import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress } from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
-import { reqLogger } from "#src/logger"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopHistory"
 import { boopClient } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
+import { reqLogger } from "#src/utils/logger"
+import { createValidatorExtraData } from "./sessionKeys"
 
 /**
  * Local cache of nonces to avoid repeated
@@ -135,6 +136,7 @@ export async function sendBoop(
 
 export async function boopFromTransaction(account: Address, tx: ValidRpcTransactionRequest): Promise<Boop> {
     // TODO bigint casts need validation
+
     return {
         account: tx.from,
         dest: tx.to,
@@ -144,8 +146,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
         nonceValue: tx.nonce ? BigInt(tx.nonce) : await getNextNonce(account),
         callData: tx.data ?? "0x",
         validatorData: "0x", // we will fill after signing
-        extraData: "0x", // TODO
-
+        extraData: createValidatorExtraData(account, tx.to),
         // For sponsored boops, gas & limits will be filled by the submitter.
         // For self-paying boops, we will fill this after calling `simulate`.
         maxFeePerGas: 0n,
@@ -261,6 +262,10 @@ const boopErrorMessages: Record<SubmitStatus, string> = {
         "The paymaster rejected the boop.",
     [Onchain.PayoutFailed]:
         "When self-paying and the payment from the account fails, either because IAccount.payout reverts, consumes too much gas, or does not transfer the full cost to the submitter.",
+    [Onchain.ExtensionAlreadyRegistered]:
+        "The extension has already been registered.",
+    [Onchain.ExtensionNotRegistered]:
+        "The extension has not been registered.",   
     [Onchain.UnexpectedReverted]:
         "Unexpected revert of the submission, most likely out-of-gas.",
 

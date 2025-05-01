@@ -10,11 +10,13 @@ import type { ExecuteInput, ExecuteOutput } from "./types"
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })
     const submission = await submit(data)
+
     if (submission.status !== Onchain.Success) return submission
 
     logger.trace("Waiting for receipt", boopHash)
     // TODO allow specifying a custom timeout
     const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, env.RECEIPT_TIMEOUT)
+
     if (!receipt)
         return {
             status: SubmitterError.ReceiptTimeout,

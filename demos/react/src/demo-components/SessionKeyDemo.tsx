@@ -64,7 +64,7 @@ const SessionKeyDemo = () => {
     async function addSessionKeyToCounterContract() {
         await requestSessionKey(deployment.HappyCounter)
         toast.success(
-            `Session Key recorded successfully for ${deployment.HappyCounter}. Try sending a transaction to the counter with the button below!`,
+            `Session Key will be used when interacting with ${deployment.HappyCounter} Try sending a transaction to the counter with the button below!`,
         )
     }
 

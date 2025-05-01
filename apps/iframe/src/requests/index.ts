@@ -1,9 +1,9 @@
 import type { Msgs, PopupMsgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
-import { reqLogger } from "#src/logger"
 import { dispatchApprovedRequest } from "#src/requests/handlers/approved"
 import { dispatchInjectedRequest } from "#src/requests/handlers/injected"
 import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissionless"
 import { sendResponse } from "#src/requests/utils/sendResponse"
+import { reqLogger } from "#src/utils/logger"
 
 export { handleRejectedRequest } from "./handlers/rejected"
 

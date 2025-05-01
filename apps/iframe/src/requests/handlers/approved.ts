@@ -1,6 +1,5 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
-import { reqLogger } from "#src/logger"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
@@ -13,6 +12,7 @@ import { checkUser, getUser } from "#src/state/user"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
+import { reqLogger } from "#src/utils/logger"
 
 export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse

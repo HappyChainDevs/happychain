@@ -10,6 +10,7 @@ describe("error-codes", () => {
     it("should decode error selectors predictably", () => {
         expect(getErrorNameFromSelector("0x8baa579f")).toBe("InvalidSignature")
         expect(getErrorNameFromSelector("0x2c5ca398")).toBe("UnknownDuringSimulation")
+        expect(getErrorNameFromSelector("0xfeaac5ab")).toBe("ExtensionNotRegistered")
     })
 
     it("should not decode unknown errors", () => {

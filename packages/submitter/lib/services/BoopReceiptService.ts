@@ -33,7 +33,6 @@ export class BoopReceiptService {
 
     async findByBoopHashWithTimeout(boopHash: Hash, timeout: number, pollInterval = 250) {
         const end = Date.now() + timeout
-
         while (true) {
             const receipt = await this.findByBoopHash(boopHash)
             if (receipt) return receipt

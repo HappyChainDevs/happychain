@@ -32,9 +32,27 @@ export class BoopReceiptRepository {
 
     async insert(state: Insertable<BoopReceipt>): Promise<BoopReceipt | undefined> {
         const { gasCost, gasUsed, boopHash, revertData, status, transactionHash } = state
+
         const response = await this.db //
             .insertInto("boop_receipts")
             .values({ gasCost, gasUsed, boopHash, revertData, status, transactionHash })
+            // TODO: This should not be on conflict
+            // BoopHash is not unique here! (boopHash+txHash maybe?)
+            .onConflict((oc) =>
+                // If the previous tx failed, and is retried with the exact same data,
+                // this will be a conflict on txHash, all signed data will be the same
+                // but we should update the unsigned data
+                oc
+                    .column("boopHash")
+                    .doUpdateSet({
+                        gasCost,
+                        gasUsed,
+                        boopHash,
+                        revertData,
+                        status,
+                        transactionHash,
+                    }),
+            )
             .returningAll()
             .executeTakeFirst()
 

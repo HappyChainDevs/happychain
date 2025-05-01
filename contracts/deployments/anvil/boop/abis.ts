@@ -2377,7 +2377,7 @@ export const deployment = ({
   "HappyAccountImpl": "0x3D516CA996975Ecd0777631f48D9005512DeB53F",
   "HappyAccountRegistry": "0xD170D0f841D1bb6BE34cb134fC0a35A1df434A5D",
   "HappyPaymaster": "0xfD08D83643aa6332a331217934A08d7fab8F271B",
-  "SessionKeyValidator": "0x83534D99fFF2619776D7A42DE4851e41B01767E8"
+  "SessionKeyValidator": "0x8aEc5956437C0d605fe1a679dA27De5d697d8F49"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
