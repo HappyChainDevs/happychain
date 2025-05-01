@@ -68,9 +68,8 @@ export class Logger {
      * Returns the single instance of the logger.
      */
     public static get instance(): Logger {
-        /**
-         * 'this' here refers to the class itself. this class may be extended, so we can't use Logger directly
-         */
+        // 'this' here refers to the static class itself. The `Logger`  class may be extended, so we can't
+        // use Logger.xxx to interact with static methods directly.
 
         // biome-ignore lint/complexity/noThisInStatic: see note above
         if (!this._instance) {

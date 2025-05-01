@@ -39,6 +39,16 @@ export const Onchain = {
     InvalidExtensionValue: "onchainInvalidExtensionValue",
 
     /**
+     * The account or the paymaster rejected the boop because the extension is already registered.
+     */
+    ExtensionAlreadyRegistered: "onchainExtensionAlreadyRegistered",
+
+    /**
+     * The account or the paymaster rejected the boop because the extension hash not been registered.
+     */
+    ExtensionNotRegistered: "onchainExtensionNotRegistered",
+
+    /**
      * The account validation of the Boop reverted.
      * This indicates either a dysfunctional account or a dysfunctional submitter.
      */

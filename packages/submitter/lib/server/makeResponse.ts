@@ -34,6 +34,8 @@ export function makeResponse<T extends { status: string }>(output: T): [BigIntSe
         case CreateAccount.Failed:
         case Onchain.ValidationReverted:
         case Onchain.PaymentValidationReverted:
+        case Onchain.ExtensionNotRegistered:
+        case Onchain.ExtensionAlreadyRegistered:
         case Onchain.ExecuteReverted:
         case Onchain.CallReverted:
         case Onchain.GasPriceTooHigh:
@@ -60,9 +62,9 @@ export function makeResponse<T extends { status: string }>(output: T): [BigIntSe
         case SubmitterError.SubmitTimeout:
         case SubmitterError.ReceiptTimeout:
             return [response, 408] // Request Timeout
+        default:
+            return [response, 500]
     }
-
-    return [serializeBigInt(output), 200]
 
     // TODO 404 (Not Found) for boop not found
 }

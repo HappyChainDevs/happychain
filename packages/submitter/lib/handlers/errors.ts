@@ -4,7 +4,12 @@ import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate"
 import { boopNonceManager } from "#lib/services"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import { type RevertErrorInfo, decodeRawError, extractErrorMessage } from "#lib/utils/parsing"
+import {
+    type DecodedRevertError,
+    decodeRawError,
+    extractErrorMessage,
+    getErrorNameFromSelector,
+} from "#lib/utils/parsing"
 
 /**
  * Return error information for a generic error.
@@ -29,7 +34,7 @@ export function outputForGenericError(error: unknown): SimulateError {
 export function outputForRevertError(
     boop: Boop,
     boopHash: Hash,
-    { decoded }: RevertErrorInfo,
+    decoded?: DecodedRevertError,
 ): SimulateFailed | SimulateError {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
@@ -62,7 +67,11 @@ export function outputForRevertError(
             }
         }
         case "ValidationRejected": {
-            const decodedReason = decodeRawError(decoded.args[0] as Hex)
+            const decodedReason = decodeRawError(decoded.args[0] as Hex) ?? {
+                errorName: getErrorNameFromSelector(decoded.args[0] as Hex),
+            }
+
+            // ExtensionAlreadyRegistered
             switch (decodedReason?.errorName) {
                 case "InvalidSignature":
                     return {
@@ -74,10 +83,17 @@ export function outputForRevertError(
                         status: Onchain.InvalidExtensionValue,
                         description: "Account rejected the boop because an extension value in the extraData is invalid",
                     }
+                case "ExtensionNotRegistered":
+                    return {
+                        status: Onchain.ExtensionNotRegistered,
+                        description:
+                            "Account rejected the boop because it requested an extension that was not registered.",
+                    }
                 case "UnknownDuringSimulation": {
                     logger.error("escaped UnknownDuringSimulation — BIG BUG")
                 }
             }
+
             return {
                 status: Onchain.ValidationRejected,
                 // TODO provide a utility function for this
@@ -151,6 +167,13 @@ export function outputForRevertError(
             return {
                 status: Onchain.UnexpectedReverted,
                 description: `${decoded.errorName} during simulation — this is an implementation bug, please report!`,
+            }
+        }
+
+        case "ExtensionAlreadyRegistered": {
+            return {
+                status: Onchain.ExtensionAlreadyRegistered,
+                description: `Extension ${decoded.args[0]} of type ${decoded.args[1]} has already been registered for this account.`,
             }
         }
         default: {

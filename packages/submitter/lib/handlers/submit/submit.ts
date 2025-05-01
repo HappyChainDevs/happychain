@@ -20,14 +20,21 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         await submitterService.add(entryPoint, boop, boopHash)
 
         let simulation = await simulate(input)
-        if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
 
-        if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
+        if (simulation.status !== Onchain.Success) {
+            return {
+                ...simulation,
+                stage: "simulate",
+            }
+        }
+
+        if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation) {
             return {
                 status: Onchain.ValidationReverted,
                 description: "More information needed for the boop to pass validation — most likely a signature.",
                 stage: "submit",
             }
+        }
 
         // If future nonce, wait until ready.
         const isFutureNonce = simulation.futureNonceDuringSimulation

@@ -1,6 +1,6 @@
 import type { Hex } from "@happy.tech/common"
+import { toBytes, toDynamicLengthBytes } from "@happy.tech/common"
 import type { Boop } from "#lib/types"
-import { toBytes, toDynamicLengthBytes } from "#lib/utils/bytes"
 
 /**
  * Encodes a Boop to encoded form for onchain submission.

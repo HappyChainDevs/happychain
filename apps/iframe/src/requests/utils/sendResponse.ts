@@ -10,11 +10,11 @@ import {
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import { RpcError, type UnauthorizedProviderError } from "viem"
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
-import { reqLogger } from "#src/logger"
 import { happyProviderBus } from "#src/services/eventBus"
 import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user.ts"
 import { appForSourceID, isIframe } from "#src/utils/appURL"
+import { reqLogger } from "#src/utils/logger"
 import { iframeProvider } from "#src/wagmi/provider"
 
 /**
