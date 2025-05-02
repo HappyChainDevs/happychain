@@ -1,7 +1,7 @@
 import { TransactionType, ifdef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { type Address, type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
+import { type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
@@ -83,15 +83,16 @@ export const EthSendTransaction = ({
         }
     }, [txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
 
+    const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
+
+    const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
+
     const isConfirmActionDisabled =
         !isValidTransaction ||
         (shouldQueryBalance && isBalancePending) ||
         areFeesPending ||
         isGasLimitPending ||
-        userBalance?.value === undefined ||
-        userBalance.value < txValue + (txGasLimit ?? 0n)
-
-    const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
+        notEnoughFunds
 
     if (!isValidTransaction) {
         const description = !isSupportedTxType
@@ -121,7 +122,7 @@ export const EthSendTransaction = ({
                 headline="Confirm transaction"
                 actions={{
                     accept: {
-                        children: userBalance?.value && txGasLimit ? "Confirm" : "Not enough funds!",
+                        children: notEnoughFunds ? "Not enough funds!" : "Confirm",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
@@ -139,11 +140,11 @@ export const EthSendTransaction = ({
             >
                 <SectionBlock>
                     <SubsectionBlock>
-                        {tx?.to && (
+                        {txTo && (
                             <SubsectionContent>
                                 <SubsectionTitle>Receiver address</SubsectionTitle>
                                 <FormattedDetailsLine>
-                                    <LinkToAddress address={tx.to as Address}>{tx.to}</LinkToAddress>
+                                    <LinkToAddress address={txTo}>{txTo}</LinkToAddress>
                                 </FormattedDetailsLine>
                             </SubsectionContent>
                         )}
