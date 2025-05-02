@@ -56,8 +56,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         // code duplication here
         case "eth_sendTransaction": {
             try {
-                const preparedUserOpFromPopup =
-                request.payload.extraData satisfies ApprovedRequestPayload<"eth_sendTransaction">["extraData"]
+                const preparedUserOpFromPopup = request.payload
+                    .extraData satisfies ApprovedRequestPayload<"eth_sendTransaction">["extraData"]
                 if (!user) throw new EIP1193UnauthorizedError()
                 return await sendUserOp({
                     user,
