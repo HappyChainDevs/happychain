@@ -75,3 +75,18 @@ export function getProp<K extends string, V extends keyof Exclude<TypeMap, "unde
 ): TypeMap[V] | undefined {
     return hasKey(value, key, type) ? value[key] : undefined
 }
+
+/**
+ * Takes a possibly undefined or nullvalue and a function, and returns the result of applying the function to the
+ * value if the value is not undefined. If more parameters are passed, they are passed along to to the function.
+ *
+ * Example: `ifdef(myHexString, parseInt, 16)` which is equivalent
+ * to `(myHexString !== undefined && myHexString !== null) ? parseInt(myHexString, 16) : undefined`.
+ */
+export function ifdef<T, R, Rest extends unknown[]>(
+    value: T | undefined | null,
+    f: (arg: T, ...rest: Rest) => R,
+    ...rest: Rest
+): R | undefined {
+    return value !== undefined && value !== null ? f(value, ...rest) : undefined
+}
