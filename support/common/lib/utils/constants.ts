@@ -18,7 +18,7 @@ export enum TransactionType {
      */
     Legacy = "0x0",
     /**
-     * Defined ain EIP2930, but few people know that number, hence "access list".
+     * Defined in EIP2930, but few people know that number, hence "access list".
      */
     AccessList = "0x1",
     EIP1559 = "0x2",

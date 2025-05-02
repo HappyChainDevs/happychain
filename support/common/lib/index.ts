@@ -98,7 +98,7 @@ export { FIFOCache } from "./collections/fifo-cache"
 
 export { fetchWithRetry } from "./utils/fetch"
 
-export { hasKey, hasDefinedKey, getProp, ifdef } from "./utils/objects"
+export { hasKey, hasDefinedKey, getProp, ifDef } from "./utils/objects"
 
 export { stringify } from "./utils/string"
 
