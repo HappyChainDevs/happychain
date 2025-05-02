@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
-import type { ApprovedRequestPayload, HappyUser } from "@happy.tech/wallet-common"
+import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { dispatchApprovedRequest } from "#src/requests/handlers/approved"
 import { setAuthState } from "#src/state/authState"
@@ -44,7 +44,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
 
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
-        const request = makePayload<ApprovedRequestPayload>(parentID, {
+        const request = makePayload(parentID, {
             method: "wallet_requestPermissions",
             params: [
                 {
@@ -76,10 +76,17 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+<<<<<<< HEAD
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
+=======
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
+>>>>>>> 550f2a863 (remove unneeded changes)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(getAllPermissions(iframeURL).length).toBe(1)
     })

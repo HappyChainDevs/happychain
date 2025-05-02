@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
-import type { ApprovedRequestPayload, HappyUser } from "@happy.tech/wallet-common"
+import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { setAuthState } from "#src/state/authState"
 import { setUser } from "#src/state/user"
@@ -24,7 +24,7 @@ describe("walletClient wallet_watchAsset", () => {
 
     test("adds token", async () => {
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
-        const request = makePayload<ApprovedRequestPayload>(iframeID, {
+        const request = makePayload(iframeID, {
             method: "wallet_watchAsset",
             params: {
                 type: "ERC20",
