@@ -1,0 +1,2 @@
+[test]
+preload = ["./lib/utils/test/setup-migrations.ts"]

@@ -54,6 +54,7 @@ describe("submitter_execute", () => {
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
+            if (result.status !== 200) console.log(response)
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
@@ -163,9 +164,6 @@ describe("submitter_execute", () => {
         })
 
         it("can't use a too-low nonce", async () => {
-            // execute tx with nonce, then another with nonce+1, wait for both to complete
-            // this is to ensure that the nonce value is above `0` so that we don't fail for having a
-            // _negative_ nonce
             const tx1 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack))
             await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx1) } })
 
