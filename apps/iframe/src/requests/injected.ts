@@ -492,8 +492,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
-        default:
+        default: {
             return await sendToInjectedClient(app, request)
+        }
     }
 }
 
