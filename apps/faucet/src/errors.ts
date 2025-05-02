@@ -30,6 +30,6 @@ export class FaucetRateLimitError extends HappyFaucetError {
 
 export class FaucetCaptchaError extends HappyFaucetError {
     constructor(message?: string, options?: ErrorOptions) {
-        super(403, message || "Captcha verification failed", options)
+        super(403, message || "Captcha verification failed on the faucet service", options)
     }
 }
