@@ -1,19 +1,11 @@
 import { TransactionType, ifdef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import {
-    type AbiFunction,
-    type Address,
-    type RpcTransactionRequest,
-    decodeFunctionData,
-    formatEther,
-    formatGwei,
-    isAddress,
-    toHex,
-} from "viem"
-import { type UseEstimateFeesPerGasReturnType, useBalance, useEstimateFeesPerGas, useEstimateGas } from "wagmi"
+import { type Address, type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
+import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
-import { abiContractMappingAtom } from "#src/state/loadedAbis"
+import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
+import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import { BlobTxWarning } from "./BlobTxWarning"
@@ -30,6 +22,7 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
+import { useTxFees } from "./utils/useTxFees"
 
 export const EthSendTransaction = ({
     method,
@@ -39,7 +32,6 @@ export const EthSendTransaction = ({
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
     const tx = params[0]
     const user = useAtomValue(userAtom)
-    const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
     const txType = classifyTxType(tx)
@@ -54,59 +46,21 @@ export const EthSendTransaction = ({
         queryKey: balanceQueryKey,
     } = useBalance({
         address: user?.address,
-        query: {
-            enabled: shouldQueryBalance,
-        },
+        query: { enabled: shouldQueryBalance },
     })
 
-    const parsedTxMaxFeePerGas = parseBigInt(tx.maxFeePerGas)
-    const parsedTxMaxPriorityFeePerGas = parseBigInt(tx.maxPriorityFeePerGas)
-    const parsedTxGasPrice = parseBigInt(tx.gasPrice)
-    const shouldQueryFees = !parsedTxMaxFeePerGas && !parsedTxGasPrice && isValidTransaction
+    const { txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, areFeesPending, feesQueryKey } = useTxFees({
+        tx,
+        txType,
+        enabled: isValidTransaction,
+    })
 
-    const {
-        data: {
-            maxFeePerGas: fetchedMaxFeePerGas,
-            maxPriorityFeePerGas: fetchedMaxPriorityFeePerGas,
-            gasPrice: fetchedGasPrice,
-        } = {},
-        isPending: areFeesPending,
-        queryKey: feesQueryKey,
-    } = useEstimateFeesPerGas({
-        type: txType === TransactionType.EIP1559 ? "eip1559" : "legacy",
-        query: {
-            enabled: shouldQueryFees,
-        },
-    }) as UseEstimateFeesPerGasReturnType<"eip1559"> & {
-        data: {
-            maxFeePerGas?: bigint
-            maxPriorityFeePerGas?: bigint
-            gasPrice?: bigint
-        }
-    }
-
-    const txMaxFeePerGas = parsedTxMaxPriorityFeePerGas ?? fetchedMaxFeePerGas
-    const txMaxPriorityFeePerGas = parsedTxMaxPriorityFeePerGas ?? fetchedMaxPriorityFeePerGas
-    const txGasPrice = parsedTxGasPrice ?? fetchedGasPrice
-
-    const parsedGasLimit = parseBigInt(tx.gas)
-    const shouldQueryGasLimit = !parsedGasLimit && isValidTransaction
-
-    const {
-        data: gasLimit,
-        isPending: isGasLimitPending,
-        queryKey: gasLimitQueryKey,
-    } = useEstimateGas({
+    const { txGasLimit, isGasLimitPending, gasLimitQueryKey } = useTxGasLimit({
+        tx,
+        txValue,
         account: user?.address,
-        data: tx.data,
-        value: txValue,
-        to: tx.to,
-        query: {
-            enabled: shouldQueryGasLimit,
-        },
+        enabled: isValidTransaction,
     })
-
-    const txGasLimit = parsedGasLimit ?? gasLimit
 
     const updatedTx = useMemo(
         () =>
@@ -132,28 +86,12 @@ export const EthSendTransaction = ({
     const isConfirmActionDisabled =
         !isValidTransaction ||
         (shouldQueryBalance && isBalancePending) ||
-        (shouldQueryFees && areFeesPending) ||
-        (shouldQueryGasLimit && isGasLimitPending) ||
+        areFeesPending ||
+        isGasLimitPending ||
         userBalance?.value === undefined ||
-        userBalance.value < txValue + (gasLimit ?? 0n)
+        userBalance.value < txValue + (txGasLimit ?? 0n)
 
-    const abiForContract = user?.address && txTo && recordedAbisForUser[user.address]?.[txTo]
-
-    // Decodes the function call data for the given contract ABI and transaction data.
-    const decodedData = useMemo(() => {
-        if (!abiForContract || !tx.data) return undefined
-
-        const { functionName, args } = decodeFunctionData({
-            abi: abiForContract,
-            data: tx.data,
-        })
-
-        const abiFuncDef = abiForContract.find(
-            (item) => item.type === "function" && item.name === functionName,
-        ) as AbiFunction
-
-        return { args, abiFuncDef }
-    }, [abiForContract, tx.data])
+    const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
 
     if (!isValidTransaction) {
         const description = !isSupportedTxType
@@ -183,7 +121,7 @@ export const EthSendTransaction = ({
                 headline="Confirm transaction"
                 actions={{
                     accept: {
-                        children: userBalance?.value && gasLimit ? "Confirm" : "Not enough funds!",
+                        children: userBalance?.value && txGasLimit ? "Confirm" : "Not enough funds!",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
