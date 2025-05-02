@@ -16,7 +16,7 @@ type UseTxDecodedDataReturn = {
 }
 
 /**
- * Looks up to tsee if there is a recorded ABI for the destination addres ({@link txTo}) and if so attempts decoding
+ * Looks up to see if there is a recorded ABI for the destination addres ({@link txTo}) and if so attempts decoding
  * the transaction's calldata according to the ABI, returning the results.
  */
 export function useTxDecodedData({ tx, txTo, account }: UseTxDecodedDataArgs): UseTxDecodedDataReturn | undefined {
