@@ -4,7 +4,7 @@ import type { RpcTransactionRequest } from "viem"
 /**
  * Classify a transaction into its type.
  *
- * The type of requests a wallet can received is not actually super well specified,
+ * The type of requests a wallet can receive is not actually super well specified,
  * with Metamask setting the de facto standard for what other wallet should support:
  * https://docs.metamask.io/wallet/reference/json-rpc-methods/eth_sendtransaction/
  *
