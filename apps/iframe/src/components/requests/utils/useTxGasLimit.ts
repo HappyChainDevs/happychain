@@ -15,6 +15,12 @@ export type UseTxGasLimitReturn = {
     gasLimitQueryKey: readonly unknown[]
 }
 
+/**
+ * Estimates the gas limit for a {@link RpcTransactionRequest} using `useEstimateGas`,
+ * unless a `gas` value is already explicitly provided.
+ *
+ * Falls back to the `tx.gas` value if present; otherwise, fetches an estimate.
+ */
 export function useTxGasLimit({ tx, txValue, account, enabled }: UseTxGasLimitArgs): UseTxGasLimitReturn {
     const parsedGasLimit = parseBigInt(tx.gas)
     const shouldQueryGasLimit = !parsedGasLimit && enabled

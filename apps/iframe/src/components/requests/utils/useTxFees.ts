@@ -16,6 +16,12 @@ export type UseTxFeesReturn = {
     feesQueryKey: readonly unknown[]
 }
 
+/**
+ * Estimates gas pricing details (EIP-1559 or Legacy) for a transaction using `useEstimateFeesPerGas`,
+ * unless fee values (`gasPrice` or `maxFeePerGas`) are already provided in the transaction.
+ *
+ * Supports both legacy and EIP-1559 transaction types.
+ */
 export function useTxFees({ tx, txType, enabled }: UseTxFeesArgs): UseTxFeesReturn {
     const parsedTxMaxFeePerGas = parseBigInt(tx.maxFeePerGas)
     const parsedTxMaxPriorityFeePerGas = parseBigInt(tx.maxPriorityFeePerGas)
