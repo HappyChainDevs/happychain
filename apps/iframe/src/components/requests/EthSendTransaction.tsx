@@ -1,4 +1,4 @@
-import { TransactionType, ifdef, parseBigInt } from "@happy.tech/common"
+import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
@@ -66,10 +66,10 @@ export const EthSendTransaction = ({
         () =>
             ({
                 ...tx,
-                maxFeePerGas: ifdef(txMaxFeePerGas, toHex),
-                maxPriorityFeePerGas: ifdef(txMaxPriorityFeePerGas, toHex),
-                gasPrice: ifdef(txGasPrice, toHex),
-                gas: ifdef(txGasLimit, toHex),
+                maxFeePerGas: ifDef(txMaxFeePerGas, toHex),
+                maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
+                gasPrice: ifDef(txGasPrice, toHex),
+                gas: ifDef(txGasLimit, toHex),
                 type: txType,
             }) as RpcTransactionRequest,
         [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType],
@@ -78,10 +78,12 @@ export const EthSendTransaction = ({
     const formatted = useMemo(() => {
         return {
             value: formatEther(txValue),
+            gasLimit: formatGwei(txGasLimit ?? 0n),
+            gasPrice: formatGwei(txGasPrice ?? 0n),
             maxFeePerGas: formatGwei(txMaxFeePerGas ?? 0n),
             maxPriorityFeePerGas: formatGwei(txMaxPriorityFeePerGas ?? 0n),
         }
-    }, [txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
+    }, [txGasLimit, txGasPrice, txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
 
     const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
 
@@ -159,6 +161,14 @@ export const EthSendTransaction = ({
                 </SectionBlock>
                 <SectionBlock>
                     <SubsectionBlock>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.GasLimit}</SubsectionTitle>
+                            <FormattedDetailsLine>{formatted.gasLimit}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.GasPrice}</SubsectionTitle>
+                            <FormattedDetailsLine>{formatted.gasPrice}</FormattedDetailsLine>
+                        </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
                             <FormattedDetailsLine>{formatted.maxFeePerGas}</FormattedDetailsLine>

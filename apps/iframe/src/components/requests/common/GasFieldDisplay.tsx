@@ -1,6 +1,8 @@
 import FieldLoader from "#src/components/loaders/FieldLoader"
 
 export enum GasFieldName {
+    GasLimit = "GasLimit",
+    GasPrice = "GasPrice",
     MaxFeePerGas = "MaxFeePerGas",
     MaxPriorityFeePerGas = "MaxPriorityFeePerGas",
 }
