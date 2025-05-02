@@ -28,6 +28,6 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
  * TODO precision on where and when approval happens (popup vs injected wallet window)
  */
 export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
-    reqLogger.trace("handle permissionless request", request)
+    reqLogger.trace("handle injected request", request)
     void sendResponse(request, dispatchInjectedRequest)
 }

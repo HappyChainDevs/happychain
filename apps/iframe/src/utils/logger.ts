@@ -1,4 +1,4 @@
-import { LogLevel, Logger, logLevel } from "@happy.tech/common"
+import { Logger, logLevel } from "@happy.tech/common"
 
 /**
  * Default at which all logger's log level are set by default if not changed programmatically.
@@ -20,4 +20,4 @@ export const reqLogger = Logger.create("Requests")
 /**
  * Logger facade for Session Keys
  */
-export const sessionKeyLogger = Logger.create("SessionKeys", LogLevel.TRACE)
+export const sessionKeyLogger = Logger.create("SessionKeys")

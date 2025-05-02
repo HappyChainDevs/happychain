@@ -4,17 +4,18 @@ import { useAtomValue } from "jotai"
 import type { Hash } from "viem"
 import { currentChainAtom } from "#src/state/chains"
 
-interface TxLoadingSkeletonProps {
-    tx: Hash
+interface BoopEntrySkeletonProps {
+    boopHash: Hash
 }
 
 /**
  * Placeholder component to show loading status of a
  * transaction being confirmed in a block.
  */
-const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
+const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls : ""
+    const hash = shortenAddress(boopHash)
 
     return (
         <article className="focus-within:bg-primary/10 hover:bg-primary/5 p-2 rounded-md grid gap-1.5 relative">
@@ -23,21 +24,19 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
                     <CircleNotch weight="bold" size="0.95em" />
                 </div>
                 <div className="font-medium text-base-content/80">Pending transaction</div>
-                <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">
-                    {shortenAddress(tx)}
-                </div>
+                <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">{hash}</div>
             </div>
             <a
-                href={`${blockExplorerUrl}/op/${tx}`}
+                href={`${blockExplorerUrl}/op/${boopHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="View on explorer"
                 className="absolute size-full inset opacity-0"
             >
-                {shortenAddress(tx)}
+                {hash}
             </a>
         </article>
     )
 }
 
-export default TxLoadingSkeleton
+export default BoopEntrySkeleton

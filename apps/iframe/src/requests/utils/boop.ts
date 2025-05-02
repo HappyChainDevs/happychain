@@ -2,7 +2,6 @@ import {
     type Boop,
     type BoopReceipt,
     type ExecuteOutput,
-    type ExecuteSuccess,
     type Log,
     Onchain,
     type Receipt,
@@ -16,8 +15,8 @@ import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
-import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopHistory"
 import { boopClient } from "#src/state/boopClient"
+import { addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
 import { reqLogger } from "#src/utils/logger"
@@ -89,7 +88,7 @@ export type SendBoopArgs = {
 
 export async function sendBoop(
     { account, tx, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
-    retry = 0, // TODO temp 0, should be 2
+    retry = 0, // TODO: temp 0, should be 2
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
     const value = tx.value ? BigInt(tx.value) : 0n
@@ -115,13 +114,12 @@ export async function sendBoop(
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
-        addPendingBoop(account, { boopHash, value })
+        addPendingBoop({ boopHash, value })
         const output = (await boopClient.execute({ entryPoint, boop: signedBoop })).unwrap()
 
         if (output.status === Onchain.Success) {
-            markBoopAsConfirmed(account, value, output)
-            // TODO: types are broken
-            return (output as ExecuteSuccess).receipt.boopHash
+            markBoopAsSuccess(output)
+            return output.receipt.boopHash
         } else {
             throw new BoopExecutionError(output)
         }
@@ -129,8 +127,20 @@ export async function sendBoop(
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
-        if (boopHash) markBoopAsFailed(account, { value, boopHash })
+        if (boopHash) markBoopAsFailure({ boopHash }, serializeError(error))
         throw error
+    }
+}
+
+function serializeError(err: unknown) {
+    if (!err) return
+    if (typeof err !== "object") return
+    if (!("message" in err) || !err.message) return
+
+    return {
+        message: err.message.toString(),
+        code:
+            "code" in err && ["number", "string"].includes(typeof err.code) ? (err.code as number | string) : undefined,
     }
 }
 
@@ -286,14 +296,12 @@ const boopErrorMessages: Record<SubmitStatus, string> = {
  */
 export class BoopExecutionError extends Error {
     constructor(public readonly output: ExecuteOutput) {
-        // TODO: broken types
-        super(boopErrorMessages[output.status as SubmitStatus])
+        super(boopErrorMessages[output.status])
     }
 }
 
 export class BoopSimulationError extends Error {
     constructor(public readonly output: SimulateOutput) {
-        // TODO: broken types
-        super(boopErrorMessages[output.status as SubmitStatus])
+        super(boopErrorMessages[output.status])
     }
 }
