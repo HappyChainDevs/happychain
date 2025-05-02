@@ -21,6 +21,7 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
+import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 import { useTxFees } from "./utils/useTxFees"
 
@@ -101,21 +102,10 @@ export const EthSendTransaction = ({
             ? `Invalid transaction type: ${txType}`
             : !tx.to
               ? "Invalid transaction: missing receiver address"
-              : `Invalid receiver address: ${tx.to}`
-        return (
-            <>
-                <Layout
-                    headline="Confirm transaction"
-                    description={description}
-                    actions={{
-                        reject: {
-                            children: "Go back",
-                            onClick: reject,
-                        },
-                    }}
-                />
-            </>
-        )
+              : !isAddress(tx.to)
+                ? `Invalid receiver address: ${tx.to}`
+                : "Invalid request body, please try again."
+        return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
     }
 
     return (
