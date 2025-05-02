@@ -380,7 +380,8 @@ define run-deploy-script-key
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG) \
 		$(VERIFIER_FLAG) \
-		$(VERIFIER_URL) -vvvv
+		$(VERIFIER_URL) \
+		$(METADATA_FLAG) -vvvv
 endef
 
 # Deploys using a private key supplied by a Foundry account. The account name and password file
@@ -388,7 +389,7 @@ endef
 define run-deploy-script-account
 	@$(eval DEPLOY_SENDER := `cast wallet address \
 		--account $(ACCOUNT_$(CONFIG)) \
-		--password-file $(PASSFILE_$(CONFIG))`)
+		--password-file $(PASSFILE_$(CONFIG))`)  
 	@# Command intentionally output.
 	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
@@ -398,7 +399,8 @@ define run-deploy-script-account
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG) \
 		$(VERIFIER_FLAG) \
-		$(VERIFIER_URL)
+		$(VERIFIER_URL) \
+		$(METADATA_FLAG) -vvvv
 endef
 
 # Post-processes the deployment output.
