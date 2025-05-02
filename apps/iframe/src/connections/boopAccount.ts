@@ -1,4 +1,4 @@
-import type { CreateAccountSuccess } from "@happy.tech/boop-sdk"
+import { CreateAccount } from "@happy.tech/boop-sdk"
 import type { Address } from "viem"
 import { boopClient } from "#src/state/boopClient"
 
@@ -13,8 +13,11 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
         })
 
         const value = result.unwrap()
-        // TODO: types are broken?
-        return (value as CreateAccountSuccess).address
+        if (value.status === CreateAccount.Success || value.status === CreateAccount.AlreadyCreated) {
+            return value.address
+        }
+
+        throw value
     } catch (error) {
         console.error("Failed to create Boop account:", error)
         throw error

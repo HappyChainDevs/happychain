@@ -1,7 +1,7 @@
-import { useMemo } from "react"
+import { Onchain } from "@happy.tech/boop-sdk"
 import { type Address, type Log, erc20Abi, isAddress, keccak256, stringToHex } from "viem"
 import { useReadContracts } from "wagmi"
-import type { UserOpInfo } from "#src/state/userOpsHistory"
+import { BoopStatus, type StoredBoop } from "#src/state/boopHistory"
 
 export enum OperationType {
     NativeTransfer = "native-transfer",
@@ -84,13 +84,13 @@ function _decodeERC20TransferLog(log: Log) {
 
 /**
  * Classifies a user operation based on its logs and properties
- * @param transaction - The user operation to classify
+ * @param boop - The user operation to classify
  * @returns The classified activity details
  */
-function classifyUserOperation(transaction: UserOpInfo): ActivityDetails {
-    if (!transaction?.userOpReceipt?.success) return { type: OperationType.Failed }
-
-    const logs = transaction.userOpReceipt.receipt.logs
+function classifyUserOperation(boop: StoredBoop): ActivityDetails {
+    if (boop?.status !== BoopStatus.Success || boop.boopReceipt.status !== Onchain.Success)
+        return { type: OperationType.Failed }
+    const logs = boop.boopReceipt.receipt.logs
 
     for (const log of logs) {
         switch (log.topics[0]?.toLowerCase()) {
@@ -103,7 +103,7 @@ function classifyUserOperation(transaction: UserOpInfo): ActivityDetails {
         }
     }
 
-    if (transaction.value > 0n) {
+    if (boop.value > 0n) {
         return {
             type: OperationType.NativeTransfer,
         }
@@ -119,8 +119,8 @@ function classifyUserOperation(transaction: UserOpInfo): ActivityDetails {
  * @param transaction - The user operation/transaction to classify
  * @returns Classified activity with token details (if applicable)
  */
-export function useClassifyActivity(transaction: UserOpInfo): ActivityDetails {
-    const activity = useMemo(() => classifyUserOperation(transaction), [transaction])
+export function useClassifyActivity(boop: StoredBoop): ActivityDetails {
+    const activity = classifyUserOperation(boop)
 
     const { data: tokenDetails } = useReadContracts({
         contracts:
@@ -143,17 +143,16 @@ export function useClassifyActivity(transaction: UserOpInfo): ActivityDetails {
         },
     })
 
-    return useMemo(() => {
-        if (activity.type === OperationType.ERC20Transfer && tokenDetails) {
-            return {
-                ...activity,
-                details: {
-                    ...activity.details,
-                    symbol: tokenDetails[0].result as string,
-                    decimals: tokenDetails[1].result as number,
-                },
-            } as ERC20TransferDetails
-        }
-        return activity
-    }, [activity, tokenDetails])
+    if (activity.type === OperationType.ERC20Transfer && tokenDetails) {
+        return {
+            ...activity,
+            details: {
+                ...activity.details,
+                symbol: tokenDetails[0].result as string,
+                decimals: tokenDetails[1].result as number,
+            },
+        } as ERC20TransferDetails
+    }
+
+    return activity
 }

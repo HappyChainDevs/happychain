@@ -29,7 +29,7 @@ export function createValidatorExtraData(account: Address, target: Address): `0x
     return encodeExtraData(extraData)
 }
 
-async function isSessionKeyValidatorInstalled(accountAddress: Address): Promise<boolean> {
+export async function isSessionKeyValidatorInstalled(accountAddress: Address): Promise<boolean> {
     return await getPublicClient().readContract({
         address: accountAddress,
         abi: extensibleAccountAbi,

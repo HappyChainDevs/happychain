@@ -22,7 +22,7 @@ export type UserOpInfo = {
 /**
  * List of all user ops that are pending, successful, or failed.
  */
-export const userOpsRecordAtom = atomWithStorage<Record<Address, UserOpInfo[]>>(
+const userOpsRecordAtom = atomWithStorage<Record<Address, UserOpInfo[]>>(
     StorageKey.UserOps,
     {},
     createBigIntStorage(),

@@ -1,10 +1,10 @@
 import { Clock } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
+import { BoopStatus, boopsAtom } from "#src/state/boopHistory"
 import { userAtom } from "#src/state/user"
-import { UserOpStatus, userOpsAtom } from "#src/state/userOpsHistory"
 import UserNotFoundWarning from "../UserNotFoundWarning"
-import TxLoadingSkeleton from "./TxLoadingSkeleton"
-import { TxLogEntry } from "./TxLogEntry"
+import { BoopEntry } from "./BoopEntry"
+import BoopEntrySkeleton from "./BoopEntrySkeleton"
 
 /**
  * Displays HappyUser's recent 4337 transaction history.
@@ -15,11 +15,11 @@ import { TxLogEntry } from "./TxLogEntry"
  */
 export const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const userOps = useAtomValue(userOpsAtom)
+    const boops = useAtomValue(boopsAtom)
 
     if (!user) return <UserNotFoundWarning />
 
-    if (!userOps.length) {
+    if (!boops.length) {
         return (
             <div className="flex flex-col gap-3 items-center justify-center pt-6">
                 <Clock className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
@@ -32,11 +32,11 @@ export const ActivityView = () => {
 
     return (
         <div className="grid gap-4">
-            {userOps.map((op) =>
-                op.status === UserOpStatus.Pending ? (
-                    <TxLoadingSkeleton key={`op_pending_${op.userOpHash}`} tx={op.userOpHash} />
+            {boops.map((boop) =>
+                boop.status === BoopStatus.Pending ? (
+                    <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
                 ) : (
-                    <TxLogEntry key={`op_confirmed_${op.userOpHash}`} tx={op} />
+                    <BoopEntry key={`boop_confirmed_${boop.boopHash}`} boop={boop} />
                 ),
             )}
         </div>

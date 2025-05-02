@@ -83,7 +83,6 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
 
     private hooks: ReturnType<typeof registerListeners>
 
-    private initialized = false
     private iframeReady = false
 
     private user: HappyUser | undefined
