@@ -2,8 +2,8 @@ import { shortenAddress } from "@happy.tech/wallet-common"
 import { ArrowUp, Lightning, LightningSlash, PencilSimple, WarningOctagon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { formatEther, formatUnits } from "viem"
+import { BoopStatus, type StoredBoop } from "#src/state/boopHistory"
 import { currentChainAtom } from "#src/state/chains"
-import type { UserOpInfo } from "#src/state/userOpsHistory"
 import { OperationType, useClassifyActivity } from "./useClassifyActivity"
 
 const ACTIVITY_HEADLINE = {
@@ -33,22 +33,24 @@ const ACTIVITY_HEADLINE = {
     },
 }
 
-interface TxLogEntryProps {
-    tx: UserOpInfo
+interface BoopEntryProps {
+    boop: StoredBoop
 }
 
-export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    const { details, type } = useClassifyActivity(tx)
+export const BoopEntry = ({ boop }: BoopEntryProps) => {
+    const { details, type } = useClassifyActivity(boop)
+
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
-    const { userOpReceipt, userOpHash, value } = tx
+    const { value, boopHash, status } = boop
     const Icon = ACTIVITY_HEADLINE[type].icon
+    const shortHash = shortenAddress(boopHash)
 
     return (
         <article className="focus-within:bg-primary/10 hover:bg-primary/5 p-2 rounded-md grid gap-1 relative">
             <div className="flex items-baseline text-xs gap-3">
                 <div
-                    className={`${userOpReceipt?.success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
+                    className={`${status === BoopStatus.Success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
                 >
                     <Icon weight="bold" size="0.95em" />
                 </div>
@@ -58,9 +60,7 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                         : ACTIVITY_HEADLINE[type].label(details?.symbol)}
                 </h1>
 
-                <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">
-                    {shortenAddress(userOpHash)}
-                </div>
+                <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">{shortHash}</div>
             </div>
             {type === OperationType.NativeTransfer && value !== 0n && (
                 <p className="flex px-0.5 gap-[0.75ex] items-baseline">
@@ -81,13 +81,13 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                 </p>
             )}
             <a
-                href={`${blockExplorerUrl}/op/${userOpHash}`}
+                href={`${blockExplorerUrl}/op/${boopHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="View on explorer"
                 className="absolute size-full inset opacity-0"
             >
-                {shortenAddress(userOpHash)}
+                {shortHash}
             </a>
         </article>
     )

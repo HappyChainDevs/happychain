@@ -1,10 +1,42 @@
-import type { ExecuteOutput } from "@happy.tech/boop-sdk"
+import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
 import { createBigIntStorage } from "@happy.tech/common"
 import { atom } from "jotai"
+import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash } from "viem"
 import { StorageKey } from "../services/storage"
 import { userAtom } from "./user"
+
+// Store Instantiation
+const store = getDefaultStore()
+
+/**
+ * List of all boops that are pending, successful, or failed.
+ */
+const boopsRecordAtom = atomWithStorage<Record<Address, StoredBoop[]>>(StorageKey.Boops, {}, createBigIntStorage(), {
+    getOnInit: true,
+})
+
+/**
+ * Atom that returns the boops for the current user
+ */
+export const boopsAtom = atom(
+    (get) => {
+        const user = get(userAtom)
+        return user ? (get(boopsRecordAtom)[user?.address] ?? []) : []
+    },
+    (get, set, boops: StoredBoop[]) => {
+        const user = get(userAtom)
+        if (!user) return
+
+        set(boopsRecordAtom, (stored) => {
+            stored[user.address] = boops.sort((a, b) => b.createdAt - a.createdAt)
+            return stored
+        })
+    },
+)
+
+// === Interfaces ==============================================================================
 
 export enum BoopStatus {
     Pending = "pending",
@@ -12,27 +44,96 @@ export enum BoopStatus {
     Failure = "failure",
 }
 
-export type BoopInfo = {
+interface IStoredBoop {
     boopHash: Hash
+    confirmedAt?: number
+    createdAt: number
     value: bigint
+    error?: { message: string; code?: number | string }
+    failedAt?: number
     boopReceipt?: ExecuteOutput
     status: BoopStatus
 }
+export type StoredBoop = PendingBoop | ConfirmedBoop | FailedBoop
+export interface PendingBoop extends IStoredBoop {
+    error?: never
+    boopReceipt?: never
+    status: BoopStatus.Pending
+}
 
-/**
- * List of all boops that are pending, successful, or failed.
- */
-export const boopsRecordAtom = atomWithStorage<Record<Address, BoopInfo[]>>(
-    StorageKey.Boops,
-    {},
-    createBigIntStorage(),
-    { getOnInit: true },
-)
+export interface ConfirmedBoop extends IStoredBoop {
+    confirmedAt: number
+    error?: never
+    failedAt?: never
+    boopReceipt: ExecuteOutput
+    status: BoopStatus.Success
+}
 
-/**
- * Atom that returns the boops for the current user
- */
-export const boopsAtom = atom<BoopInfo[]>((get) => {
-    const user = get(userAtom)
-    return user ? (get(boopsRecordAtom)[user?.address] ?? []) : []
-})
+export interface FailedBoop extends IStoredBoop {
+    confirmedAt?: never
+    error?: { message: string; code?: number | string }
+    failedAt: number
+    boopReceipt?: never
+    status: BoopStatus.Failure
+}
+
+export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
+
+// === State Mutators ==============================================================================
+
+export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">): void {
+    const entry = {
+        boopHash: boop.boopHash,
+        value: boop.value,
+        createdAt: Date.now(),
+        status: BoopStatus.Pending,
+    } satisfies PendingBoop
+
+    const accountBoops = store.get(boopsAtom) || []
+    const existing = accountBoops.find((boop) => boop.boopHash === entry.boopHash)
+    if (existing) existing.createdAt = Date.now()
+    else accountBoops.push(entry)
+    store.set(boopsAtom, accountBoops)
+}
+
+export function markBoopAsSuccess(receipt: ExecuteSuccess): void {
+    if (receipt.status !== Onchain.Success) {
+        console.error("Cannot mark boop as confirmed: Boop hash is missing.")
+        return
+    }
+
+    updateBoopStatus(receipt.receipt.boopHash, {
+        status: BoopStatus.Success,
+        confirmedAt: Date.now(),
+        boopReceipt: receipt,
+    } satisfies Omit<ConfirmedBoop, "boopHash" | "createdAt" | "value">)
+}
+
+export function markBoopAsFailure(
+    failedBoop: Omit<PendingBoop, "createdAt" | "status" | "value">,
+    error?: {
+        message: string
+        code?: number | string
+    },
+): void {
+    updateBoopStatus(failedBoop.boopHash, {
+        status: BoopStatus.Failure,
+        failedAt: Date.now(),
+        error,
+    } satisfies Omit<FailedBoop, "boopHash" | "createdAt" | "value">)
+}
+
+function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
+    const accountBoops = store.get(boopsAtom) || []
+    const existing = accountBoops.find((boop) => boop.boopHash === boopHash)
+    if (!existing) {
+        console.warn("Boop not found in history, cannot update status", { boopHash, update })
+        return
+    }
+
+    const rest = accountBoops.filter((boop) => boop.boopHash !== boopHash)
+    // TODO check this works
+    const _update = { ...existing, ...update } as StoredBoop
+
+    store.set(boopsAtom, [...rest, _update])
+}

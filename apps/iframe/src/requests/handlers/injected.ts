@@ -7,6 +7,13 @@ import {
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
 import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { sendToInjectedClient, sendToPublicClient } from "#src/requests/utils/sendToClient"
+import {
+    getSessionKey,
+    installNewSessionKey,
+    isSessionKeyAuthorized,
+    isSessionKeyValidatorInstalled,
+} from "#src/requests/utils/sessionKeys"
 import {
     FORWARD,
     eth_estimateGas,
@@ -23,8 +30,6 @@ import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendBoop } from "../utils/boop"
-import { sendToInjectedClient, sendToPublicClient } from "../utils/sendToClient"
-import { getSessionKey, installNewSessionKey, isSessionKeyAuthorized } from "../utils/sessionKeys"
 
 export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
@@ -77,7 +82,11 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             checkUser(user)
             const target = checkedAddress(request.payload.params[0])
-            if (isSessionKeyAuthorized(app, target)) {
+
+            const isAuthorized =
+                isSessionKeyAuthorized(app, target) && (await isSessionKeyValidatorInstalled(user.address))
+
+            if (isAuthorized) {
                 const sessionKey = getSessionKey(user.address, target)
                 return privateKeyToAccount(sessionKey).address
             }
