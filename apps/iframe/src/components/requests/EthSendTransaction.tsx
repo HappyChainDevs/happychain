@@ -1,6 +1,6 @@
-import { TransactionType, parseBigInt } from "@happy.tech/common"
+import { TransactionType, ifdef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import {
     type AbiFunction,
     type Address,
@@ -9,8 +9,10 @@ import {
     formatEther,
     formatGwei,
     isAddress,
+    toHex,
 } from "viem"
-import { useBalance, useEstimateFeesPerGas, useEstimateGas } from "wagmi"
+import { type UseEstimateFeesPerGasReturnType, useBalance, useEstimateFeesPerGas, useEstimateGas } from "wagmi"
+import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
@@ -29,118 +31,113 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-/**
- * This is used since specifying a type in a `useSendTransaction` call
- * doesn't propagate to the `request` function of the EIP1193Provider -
- * hence, we determine the type from the gas fields present in the tx object.
- */
-function classifyTxType(tx: RpcTransactionRequest) {
-    switch (tx.type) {
-        case TransactionType.Legacy:
-            return "EIP-1559 (converted from legacy)"
-        case TransactionType.EIP1559OptionalAccessList:
-            return "EIP-1559 (optional access lists)"
-        case TransactionType.EIP1559:
-            return "EIP-1559"
-        case TransactionType.EIP4844:
-            return "EIP-4844 (unsupported)"
-        case TransactionType.EIP7702:
-            return "EIP-7702 (unsupported)"
-        default:
-            // these fields will be set by the wagmi hook if not
-            // already present in the tx object
-            if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
-                return "EIP-1559"
-            }
-
-            if (tx.gasPrice) {
-                return "EIP-1559 (converted from legacy)"
-            }
-    }
-}
-
 export const EthSendTransaction = ({
     method,
     params,
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    // useState + useEffect paradigm works here (over useMemo) since we will have
-    // user interactions for sliders / options for setting gas manually
-    const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
-
+    const tx = params[0]
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
-    const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
+    const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
-    const hasValue = !!txValue
+    const txType = classifyTxType(tx)
+    const isSupportedTxType = isSupported(txType)
+    const isValidTransaction = (!!user?.address && !isSupportedTxType) || !!txTo
     const isSelfPaying = false // currently we always sponsor
+    const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
 
     const {
-        data: balanceData,
-        isPending: isBalanceDataPending,
-        queryKey: userBalanceQueryKey,
+        data: userBalance,
+        isPending: isBalancePending,
+        queryKey: balanceQueryKey,
     } = useBalance({
         address: user?.address,
         query: {
-            enabled: user?.address && hasValue,
+            enabled: shouldQueryBalance,
         },
     })
 
-    const {
-        data: { maxFeePerGas, maxPriorityFeePerGas } = {},
-        isError: isFeeError,
-        isPending: isEstimateDataPending,
-        queryKey: gasFeesQueryKey,
-    } = useEstimateFeesPerGas({ type: "eip1559" })
+    const parsedTxMaxFeePerGas = parseBigInt(tx.maxFeePerGas)
+    const parsedTxMaxPriorityFeePerGas = parseBigInt(tx.maxPriorityFeePerGas)
+    const parsedTxGasPrice = parseBigInt(tx.gasPrice)
+    const shouldQueryFees = !parsedTxMaxFeePerGas && !parsedTxGasPrice && isValidTransaction
 
     const {
-        data: estimatedGas,
-        isPending: isEstimateGasDataPending,
-        queryKey: gasEstimateQueryKey,
+        data: {
+            maxFeePerGas: fetchedMaxFeePerGas,
+            maxPriorityFeePerGas: fetchedMaxPriorityFeePerGas,
+            gasPrice: fetchedGasPrice,
+        } = {},
+        isPending: areFeesPending,
+        queryKey: feesQueryKey,
+    } = useEstimateFeesPerGas({
+        type: txType === TransactionType.EIP1559 ? "eip1559" : "legacy",
+        query: {
+            enabled: shouldQueryFees,
+        },
+    }) as UseEstimateFeesPerGasReturnType<"eip1559"> & {
+        data: {
+            maxFeePerGas?: bigint
+            maxPriorityFeePerGas?: bigint
+            gasPrice?: bigint
+        }
+    }
+
+    const txMaxFeePerGas = parsedTxMaxPriorityFeePerGas ?? fetchedMaxFeePerGas
+    const txMaxPriorityFeePerGas = parsedTxMaxPriorityFeePerGas ?? fetchedMaxPriorityFeePerGas
+    const txGasPrice = parsedTxGasPrice ?? fetchedGasPrice
+
+    const parsedGasLimit = parseBigInt(tx.gas)
+    const shouldQueryGasLimit = !parsedGasLimit && isValidTransaction
+
+    const {
+        data: gasLimit,
+        isPending: isGasLimitPending,
+        queryKey: gasLimitQueryKey,
     } = useEstimateGas({
         account: user?.address,
         data: tx.data,
         value: txValue,
         to: tx.to,
+        query: {
+            enabled: shouldQueryGasLimit,
+        },
     })
 
+    const txGasLimit = parsedGasLimit ?? gasLimit
+
+    const updatedTx = useMemo(
+        () =>
+            ({
+                ...tx,
+                maxFeePerGas: ifdef(txMaxFeePerGas, toHex),
+                maxPriorityFeePerGas: ifdef(txMaxPriorityFeePerGas, toHex),
+                gasPrice: ifdef(txGasPrice, toHex),
+                gas: ifdef(txGasLimit, toHex),
+                type: txType,
+            }) as RpcTransactionRequest,
+        [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType],
+    )
+
+    const formatted = useMemo(() => {
+        return {
+            value: formatEther(txValue),
+            maxFeePerGas: formatGwei(txMaxFeePerGas ?? 0n),
+            maxPriorityFeePerGas: formatGwei(txMaxPriorityFeePerGas ?? 0n),
+        }
+    }, [txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
+
     const isConfirmActionDisabled =
-        ((hasValue || isSelfPaying) && isBalanceDataPending) ||
-        (isSelfPaying && isEstimateGasDataPending) ||
-        isEstimateDataPending ||
-        balanceData?.value === undefined ||
-        balanceData.value < txValue + (estimatedGas ?? 0n)
+        !isValidTransaction ||
+        (shouldQueryBalance && isBalancePending) ||
+        (shouldQueryFees && areFeesPending) ||
+        (shouldQueryGasLimit && isGasLimitPending) ||
+        userBalance?.value === undefined ||
+        userBalance.value < txValue + (gasLimit ?? 0n)
 
-    /**
-     * If the maxFee/Gas and / or maxPriorityFee/Gas is not
-     * defined in the wagmi hook / call, we get the estimates from the namesake
-     * wagmi hook and roll them into the tx object.
-     *
-     * cf: https://viem.sh/docs/actions/public/estimateFeesPerGas
-     */
-    useEffect(() => {
-        setTx((prevTx) => {
-            // Handle partial errors by falling back to existing values or defaults
-            const safeMaxFeePerGas = isFeeError ? (prevTx.maxFeePerGas ?? "0") : maxFeePerGas
-            const safeMaxPriorityFeePerGas = isFeeError ? (prevTx.maxPriorityFeePerGas ?? "0") : maxPriorityFeePerGas
-
-            // If gasPrice is defined (~ legacy tx),
-            // set it as maxFeePerGas and reset gasLimit to null
-            const updatedMaxFeePerGas = prevTx.gasPrice ? prevTx.gasPrice : safeMaxFeePerGas
-            const updatedGasLimit = prevTx.gasPrice ? null : prevTx.gasPrice
-
-            return {
-                ...prevTx,
-                maxFeePerGas: updatedMaxFeePerGas,
-                maxPriorityFeePerGas: safeMaxPriorityFeePerGas,
-                gasPrice: updatedGasLimit,
-            } as RpcTransactionRequest
-        })
-    }, [maxFeePerGas, maxPriorityFeePerGas, isFeeError])
-
-    const abiForContract =
-        user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
+    const abiForContract = user?.address && txTo && recordedAbisForUser[user.address]?.[txTo]
 
     // Decodes the function call data for the given contract ABI and transaction data.
     const decodedData = useMemo(() => {
@@ -158,33 +155,44 @@ export const EthSendTransaction = ({
         return { args, abiFuncDef }
     }, [abiForContract, tx.data])
 
-    // memo-ed values formatted for display
-    const formatted = useMemo(() => {
-        return {
-            value: formatEther(txValue),
-            maxFeePerGas: formatGwei(parseBigInt(tx.maxFeePerGas ?? "0") ?? 0n),
-            maxPriorityFeePerGas: formatGwei(parseBigInt(tx.maxPriorityFeePerGas ?? "0") ?? 0n),
-        }
-    }, [tx, txValue])
+    if (!isValidTransaction) {
+        const description = !isSupportedTxType
+            ? `Invalid transaction type: ${txType}`
+            : !tx.to
+              ? "Invalid transaction: missing receiver address"
+              : `Invalid receiver address: ${tx.to}`
+        return (
+            <>
+                <Layout
+                    headline="Confirm transaction"
+                    description={description}
+                    actions={{
+                        reject: {
+                            children: "Go back",
+                            onClick: reject,
+                        },
+                    }}
+                />
+            </>
+        )
+    }
 
     return (
         <>
             <Layout
-                headline={<>Confirm transaction</>}
-                hideActions={tx.type === TransactionType.EIP4844}
+                headline="Confirm transaction"
                 actions={{
                     accept: {
-                        children: balanceData?.value && estimatedGas ? "Confirm" : "Not enough funds!",
+                        children: userBalance?.value && gasLimit ? "Confirm" : "Not enough funds!",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
-                            accept({ method, params })
+                            accept({ method, params: [updatedTx] })
                             void queryClient.invalidateQueries({
-                                queryKey: [gasFeesQueryKey, gasEstimateQueryKey, userBalanceQueryKey],
+                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey],
                             })
                         },
                     },
-
                     reject: {
                         children: "Go back",
                         onClick: reject,
@@ -204,7 +212,7 @@ export const EthSendTransaction = ({
 
                         {txValue > 0n && (
                             <SubsectionContent>
-                                <SubsectionTitle>Amount</SubsectionTitle>
+                                <SubsectionTitle>Sending amount</SubsectionTitle>
                                 <FormattedDetailsLine>{formatted.value} HAPPY</FormattedDetailsLine>
                             </SubsectionContent>
                         )}

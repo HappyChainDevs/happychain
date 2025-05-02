@@ -18,14 +18,7 @@ interface LayoutProps extends PropsWithChildren {
     }
 }
 
-export const Layout = ({
-    labelHeader,
-    headline,
-    description,
-    actions: { accept, reject },
-    hideActions,
-    children,
-}: LayoutProps) => {
+export const Layout = ({ labelHeader, headline, description, actions: { accept, reject }, children }: LayoutProps) => {
     const user = useAtomValue(userAtom)
     const appURL = getAppURL()
     return (
@@ -69,20 +62,14 @@ export const Layout = ({
                 </section>
                 <div className="pb-6">{children}</div>
 
-                {!hideActions && (
-                    <div className="mt-auto px-2 py-6 border-t border-neutral/10 dark:border-neutral/50">
-                        <div className="w-full max-w-prose mx-auto grid gap-2 sm:grid-cols-2 ">
-                            {accept && (
-                                <Button {...accept} intent="primary" className="text-neutral-content justify-center" />
-                            )}
-                            <Button
-                                {...reject}
-                                intent="outline-negative"
-                                className="text-base-content justify-center"
-                            />
-                        </div>
+                <div className="mt-auto px-2 py-6 border-t border-neutral/10 dark:border-neutral/50">
+                    <div className="w-full max-w-prose mx-auto grid gap-2 sm:grid-cols-2 ">
+                        {accept && (
+                            <Button {...accept} intent="primary" className="text-neutral-content justify-center" />
+                        )}
+                        <Button {...reject} intent="outline-negative" className="text-base-content justify-center" />
                     </div>
-                )}
+                </div>
             </div>
         </main>
     )
