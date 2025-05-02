@@ -2,7 +2,7 @@ import { Layout } from "./Layout"
 
 export type RequestDisabledProps = {
     headline: string
-    description: string
+    description?: string
     reject: () => void
 }
 
