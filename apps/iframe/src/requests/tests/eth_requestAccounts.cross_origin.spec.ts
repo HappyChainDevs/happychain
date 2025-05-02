@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } from "@happy.tech/wallet-common"
-import type { EIP1193RequestParameters, HappyUser } from "@happy.tech/wallet-common"
+import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissionless"
 import { setAuthState } from "#src/state/authState"
