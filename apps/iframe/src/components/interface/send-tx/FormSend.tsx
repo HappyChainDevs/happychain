@@ -128,7 +128,7 @@ export const FormSend = () => {
                 <div className="flex items-start bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
                     <WarningCircle size="1.25em" className="shrink-0 mt-[0.15em]" />
                     <p>
-                        {`${!queryWaitForTransactionReceipt.isLoading ? "Once sent, the" : "the".replace(/^./, "T")} transaction will not be cancelled!`}
+                        {`${!queryWaitForTransactionReceipt.isLoading ? "Once sent, the" : "The"} transaction will not be cancelled!`}
                     </p>
                 </div>
             )}
