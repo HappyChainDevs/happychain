@@ -4,6 +4,7 @@ import { formatAbiItem } from "abitype"
 import { blockExplorerKeys, useSmartContract } from "#src/hooks/useBlockExplorer"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
 import { queryClient } from "#src/tanstack-query/config"
+import FieldLoader from "../loaders/FieldLoader"
 import {
     FormattedDetailsLine,
     Layout,
@@ -22,7 +23,13 @@ export const HappyLoadAbi = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.LOAD_ABI>) => {
     const classifiedAbi = useClassifyAbi(params.abi)
-    const { data: contractData, error: contractDataFetchError, isPending } = useSmartContract(params.address)
+    const {
+        data: contractData,
+        error: contractDataFetchError,
+        isPending: nameIsPending,
+    } = useSmartContract(params.address)
+
+    console.log({ contractData, contractDataFetchError, nameIsPending })
 
     return (
         <Layout
@@ -60,14 +67,18 @@ export const HappyLoadAbi = ({
                             </FormattedDetailsLine>
                         </div>
                     </SubsectionContent>
-                    {!isPending && !contractDataFetchError && (
-                        <SubsectionContent>
-                            <SubsectionTitle>Contract Name</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                {contractData?.name ?? "Unverified contract - name data not available"}
+                    <SubsectionContent>
+                        <SubsectionTitle>Contract Name</SubsectionTitle>
+                        {nameIsPending ? (
+                            <FieldLoader />
+                        ) : (
+                            <FormattedDetailsLine isCode>
+                                {contractDataFetchError
+                                    ? "Failed to fetch contract data."
+                                    : (contractData?.name ?? "Unverified contract")}
                             </FormattedDetailsLine>
-                        </SubsectionContent>
-                    )}
+                        )}
+                    </SubsectionContent>
                     {classifiedAbi.map(({ label, items }) => (
                         <SubsectionContent key={`ABI-${label}`}>
                             <SubsectionTitle>{label}</SubsectionTitle>
