@@ -1,10 +1,5 @@
 import { z } from "zod"
 
-/**
- * cf: https://explorer.testnet.happy.tech/api-docs
- * (search for -- /smart-contracts/{address_hash} --)
- */
-
 const ethAddress = z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid address")
 
 export const externalLibrarySchema = z.object({
@@ -24,6 +19,8 @@ export const compilerSettingsSchema = z.object({
     metadata: z
         .object({
             bytecodeHash: z.string(),
+            appendCBOR: z.boolean().optional(),
+            useLiteralContent: z.boolean().optional(),
         })
         .optional(),
     optimizer: z
@@ -32,11 +29,13 @@ export const compilerSettingsSchema = z.object({
             runs: z.number(),
         })
         .optional(),
+    outputSelection: z.record(z.string(), z.unknown()).optional(),
     remappings: z.array(z.string()).optional(),
+    viaIR: z.boolean().optional(),
 })
 
 export const decodedConstructorArgSchema = z.tuple([
-    ethAddress,
+    z.unknown(), // relaxed because sometimes this isn't an address
     z.object({
         internalType: z.string(),
         name: z.string(),
@@ -69,8 +68,9 @@ export const contractMetadataSchema = z.object({
     constructor_args: z
         .string()
         .regex(/^0x[a-fA-F0-9]*$/)
+        .nullable()
         .optional(),
-    decoded_constructor_args: z.array(decodedConstructorArgSchema).optional(),
+    decoded_constructor_args: z.array(decodedConstructorArgSchema).nullable().optional(),
     deployed_bytecode: z
         .string()
         .regex(/^0x[a-fA-F0-9]*$/)
@@ -80,7 +80,29 @@ export const contractMetadataSchema = z.object({
         .regex(/^0x[a-fA-F0-9]*$/)
         .optional(),
     external_libraries: z.array(externalLibrarySchema).optional(),
-    language: z.string().optional(), // fallback if invalid enum
-    status: z.string().optional(), // fallback if invalid enum
+    language: z.string().optional(),
+    status: z.string().optional(),
     additional_sources: z.array(additionalSourceSchema).optional(),
+    license_type: z.string().optional(),
+    proxy_type: z.string().nullable().optional(),
+    implementations: z
+        .array(
+            z.union([
+                z.string(), // legacy or simplified form
+                z.object({
+                    address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+                    name: z.string(),
+                }),
+            ]),
+        )
+        .optional(),
+
+    is_verified_via_verifier_alliance: z.boolean().optional(),
+    has_methods_read: z.boolean().optional(),
+    has_methods_write: z.boolean().optional(),
+    has_methods_read_proxy: z.boolean().optional(),
+    has_methods_write_proxy: z.boolean().optional(),
+    is_blueprint: z.boolean().optional(),
+    is_vyper_contract: z.boolean().optional(),
+    certified: z.boolean().optional(),
 })
