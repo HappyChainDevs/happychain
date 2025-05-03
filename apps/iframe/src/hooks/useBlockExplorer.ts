@@ -85,7 +85,7 @@ export function useSmartContract(address: Address, options = {}) {
     return useQuery({
         queryKey: blockExplorerKeys.contracts.detail(address),
         queryFn: async () => {
-            const data = await fetchFromBlockExplorer<unknown>(`smart-contracts/${address}`)
+            const data = await fetchFromBlockExplorer(`smart-contracts/${address}`)
             return contractMetadataSchema.parse(data)
         },
         enabled: Boolean(address),
