@@ -1,7 +1,10 @@
 import type { HappyMethodNames } from "@happy.tech/common"
 import { shortenAddress } from "@happy.tech/wallet-common"
 import { formatAbiItem } from "abitype"
+import { blockExplorerKeys, useSmartContract } from "#src/hooks/useBlockExplorer"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
+import { queryClient } from "#src/tanstack-query/config"
+import FieldLoader from "../loaders/FieldLoader"
 import {
     FormattedDetailsLine,
     Layout,
@@ -12,7 +15,6 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
-
 export const HappyLoadAbi = ({
     method,
     params,
@@ -20,6 +22,11 @@ export const HappyLoadAbi = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.LOAD_ABI>) => {
     const classifiedAbi = useClassifyAbi(params.abi)
+    const {
+        data: contractData,
+        error: contractDataFetchError,
+        isPending: nameIsPending,
+    } = useSmartContract(params.address)
 
     return (
         <Layout
@@ -35,6 +42,9 @@ export const HappyLoadAbi = ({
                 accept: {
                     children: "Import ABI",
                     onClick: () => {
+                        queryClient.invalidateQueries({
+                            queryKey: blockExplorerKeys.contracts.detail(params.address),
+                        })
                         accept({ method, params })
                     },
                 },
@@ -54,7 +64,7 @@ export const HappyLoadAbi = ({
                             </FormattedDetailsLine>
                         </div>
                     </SubsectionContent>
-                    {/* <SubsectionContent>
+                    <SubsectionContent>
                         <SubsectionTitle>Contract Name</SubsectionTitle>
                         {nameIsPending ? (
                             <FieldLoader />
@@ -62,10 +72,10 @@ export const HappyLoadAbi = ({
                             <FormattedDetailsLine isCode>
                                 {contractDataFetchError
                                     ? "Failed to fetch contract data."
-                                    : (contractData?.name ?? "Unverified contract")}
+                                    : (contractData.name ?? "Unverified contract")}
                             </FormattedDetailsLine>
                         )}
-                    </SubsectionContent> */}
+                    </SubsectionContent>
                     {classifiedAbi.map(({ label, items }) => (
                         <SubsectionContent key={`ABI-${label}`}>
                             <SubsectionTitle>{label}</SubsectionTitle>
