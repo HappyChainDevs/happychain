@@ -29,8 +29,6 @@ export const HappyLoadAbi = ({
         isPending: nameIsPending,
     } = useSmartContract(params.address)
 
-    console.log({ contractData, contractDataFetchError, nameIsPending })
-
     return (
         <Layout
             headline={<>Import contract interface</>}
