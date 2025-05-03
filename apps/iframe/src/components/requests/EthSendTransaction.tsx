@@ -8,6 +8,7 @@ import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedDat
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
+import FieldLoader from "../loaders/FieldLoader"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
@@ -81,7 +82,7 @@ export const EthSendTransaction = ({
             value: formatEther(txValue),
             gasLimit: formatGwei(txGasLimit ?? 0n),
             gasPrice: formatGwei(txGasPrice ?? 0n),
-            maxFeePerGas: formatGwei(txMaxFeePerGas ?? 0n),
+            maxFeePerGas: formatGwei(txMaxFeePerGas ?? txGasPrice ?? 0n),
             maxPriorityFeePerGas: formatGwei(txMaxPriorityFeePerGas ?? 0n),
         }
     }, [txGasLimit, txGasPrice, txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
@@ -98,13 +99,12 @@ export const EthSendTransaction = ({
         notEnoughFunds
 
     if (!isValidTransaction) {
-        const description = !isSupportedTxType
-            ? `Invalid transaction type: ${txType}`
-            : !tx.to
-              ? "Invalid transaction: missing receiver address"
-              : !isAddress(tx.to)
-                ? `Invalid receiver address: ${tx.to}`
-                : "Invalid request body, please try again."
+        // biome-ignore format: compact
+        const description =
+                !user?.address ? "Disconnected from wallet" :
+                !isSupportedTxType ? `Invalid transaction type: ${txType}` :
+                !tx.to ? "Invalid transaction: missing receiver address" :
+                `Invalid receiver address: ${tx.to}`
         return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
     }
 
@@ -153,19 +153,15 @@ export const EthSendTransaction = ({
                     <SubsectionBlock>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.GasLimit}</SubsectionTitle>
-                            <FormattedDetailsLine>{formatted.gasLimit}</FormattedDetailsLine>
-                        </SubsectionContent>
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.GasPrice}</SubsectionTitle>
-                            <FormattedDetailsLine>{formatted.gasPrice}</FormattedDetailsLine>
+                            <FormattedDetailsLine>
+                                {isGasLimitPending ? <FieldLoader /> : formatted.gasLimit}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formatted.maxFeePerGas}</FormattedDetailsLine>
-                        </SubsectionContent>
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formatted.maxPriorityFeePerGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine>
+                                {areFeesPending ? <FieldLoader /> : formatted.maxFeePerGas}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
