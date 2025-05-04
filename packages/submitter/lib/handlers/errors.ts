@@ -151,7 +151,7 @@ export function outputForRevertError(
             if (simulation) {
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {
-                    status: Onchain.UnexpectedReverted,
+                    status: Onchain.GasPriceTooHigh,
                     description: "GasPriceTooHigh during simulation — this is an implementation bug, please report!",
                 }
             } else {
