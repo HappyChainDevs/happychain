@@ -1,23 +1,41 @@
 import { $, sleep } from "bun"
-import { http, createPublicClient } from "viem"
+import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
 import { anvil as anvilChain } from "viem/chains"
+import { env } from "#lib/env"
 
 const publicClient = createPublicClient({ chain: anvilChain, transport: http() })
 
+const walletClient = createWalletClient({
+    account: privateKeyToAccount(env.EXECUTOR_KEYS[0]),
+    chain: anvilChain,
+    transport: http(),
+})
+
 export async function waitBlocks(minBlocks = 1) {
-    const start = await publicClient.getBlockNumber()
-    while (true) {
-        const now = await publicClient.getBlockNumber()
-        if (now - start >= minBlocks) return
-        await sleep(500)
+    const startTime = Date.now()
+    try {
+        const start = await publicClient.getBlockNumber()
+        while (true) {
+            // empty tx to force mine a block
+            if (env.AUTOMINE_TESTS) await walletClient.sendTransaction({ to: zeroAddress })
+            const now = await publicClient.getBlockNumber()
+            if (now - start >= minBlocks) return
+            await sleep(500)
+        }
+    } catch {
+        // ignore errors, Anvil might not be up
+        if (Date.now() - startTime > 10000) throw new Error("Anvil not up after 10 seconds")
     }
 }
 
 const noop = () => {}
 
 async function startAnvil() {
+    const blockTime = env.AUTOMINE_TESTS ? "" : "--block-time 2"
     // As anvil is a long running process, we won't await.
     $`FOUNDRY_DISABLE_NIGHTLY_WARNING=true anvil --block-time 2`.quiet().then(noop).catch(noop)
+    $`FOUNDRY_DISABLE_NIGHTLY_WARNING=true anvil ${blockTime}`.quiet().then(noop).catch(noop)
     await waitBlocks() // ensure anvil is up and running at least block 1
     console.log("\n⚒️ Anvil Started")
 }

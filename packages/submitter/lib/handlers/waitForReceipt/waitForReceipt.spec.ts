@@ -62,16 +62,18 @@ describe("submitter_receipt", () => {
                 .then((a) => a.json()) as any,
         ])
 
-        expect(stateSimulated.status).toBe(StateRequestStatus.Success)
-        expect(stateSimulated.state.status).toBe(Onchain.Success)
-        expect(stateSimulated.state.included).toBe(false)
-        expect(stateSimulated.state.receipt).toBeUndefined()
-        expect(stateSimulated.state.simulation).toBeDefined()
-
         expect(stateResolved.status).toBe(StateRequestStatus.Success)
         expect(stateResolved.state.status).toBe(Onchain.Success)
         expect(stateResolved.state.included).toBe(true)
         expect(stateResolved.state.receipt.boopHash).toBe(boopHash)
         expect(stateResolved.state.simulation).toBeUndefined()
+
+        if (env.AUTOMINE_TESTS) return // instantly included with auto-mining, so the following will fail
+
+        expect(stateSimulated.status).toBe(StateRequestStatus.Success)
+        expect(stateSimulated.state.status).toBe(Onchain.Success)
+        expect(stateSimulated.state.included).toBe(false)
+        expect(stateSimulated.state.receipt).toBeUndefined()
+        expect(stateSimulated.state.simulation).toBeDefined()
     })
 })
