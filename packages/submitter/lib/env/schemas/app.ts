@@ -64,4 +64,10 @@ export const appSchema = z.object({
      * Default timeout for waiting for receipts in milliseconds. Defaults to 8 seconds.
      */
     RECEIPT_TIMEOUT: z.coerce.number().default(8000),
+
+    /**
+     * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time, but skipping some tests
+     * that are timing-dependent.
+     */
+    AUTOMINE_TESTS: z.coerce.boolean().default(false),
 })
