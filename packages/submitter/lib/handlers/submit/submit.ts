@@ -19,7 +19,7 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
         // Save original boop to the database for historic purposes and data recovery.
         await submitterService.add(entryPoint, boop, boopHash)
 
-        let simulation = await simulate(input)
+        let simulation = await simulate(input, true)
 
         if (simulation.status !== Onchain.Success) {
             return {

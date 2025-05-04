@@ -3,7 +3,7 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { ExecuteOutput } from "#lib/handlers/execute"
+import type { ExecuteError, ExecuteOutput } from "#lib/handlers/execute"
 import type { SimulateFailed } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
@@ -47,10 +47,9 @@ describe("submitter_execute", () => {
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             // be your own payer! define your own gas!
-            unsignedTx.gasLimit = 25_000_000
-            unsignedTx.executeGasLimit = 25_000_000
-            unsignedTx.validateGasLimit = 25_000_000
-            unsignedTx.validatePaymentGasLimit = 25_000_000
+            unsignedTx.gasLimit = 4_000_000
+            unsignedTx.executeGasLimit = 1_000_000
+            unsignedTx.validateGasLimit = 1_000_000
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
@@ -63,17 +62,17 @@ describe("submitter_execute", () => {
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
-        it.skip("foobar this fails somehow ??", async () => {
+        it("fails if signing over 0 gas values", async () => {
             unsignedTx.payer = smartAccount
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateFailed>
-            const response = (await results.json()) as ExecuteOutput
-            console.log(response)
-            expect(results.status).toBe(200)
-            expect(response.status).toBe(Onchain.Success)
+            const response = (await results.json()) as ExecuteError
+            expect(response.status).toBe(SubmitterError.InvalidGasValues)
+            expect(response.stage).toBe("simulate")
+            expect(results.status).toBe(400)
         })
     })
 
@@ -150,10 +149,10 @@ describe("submitter_execute", () => {
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
-        it("executes with 25_000_000n gas", async () => {
+        it("executes with 10_000_000n gas", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            unsignedTx.executeGasLimit = 25_000_000
-            unsignedTx.gasLimit = 25_000_000
+            unsignedTx.executeGasLimit = 8_000_000
+            unsignedTx.gasLimit = 10_000_000
             signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any

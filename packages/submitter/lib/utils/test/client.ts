@@ -10,7 +10,8 @@ export async function createSmartAccount(owner: Address): Promise<Address> {
         .$post({ json: { owner, salt: "0x1" } }) //
         .then((a) => a.json())
     if (response.status !== CreateAccount.Success) {
-        throw new Error("setup failed: could not create account")
+        console.error(response)
+        throw new Error("could not create account")
     }
     return response.address
 }

@@ -3,6 +3,9 @@
  * simulation or onchain execution).
  */
 export const SubmitterError = {
+    /** The provided gas values are invalid. */
+    InvalidGasValues: "submitterInvalidGasValues",
+
     /** The submitter rejected the request because of its Boop buffering policies. */
     BufferExceeded: "submitterBufferExceeded",
 
