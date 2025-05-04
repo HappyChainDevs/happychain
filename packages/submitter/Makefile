@@ -28,23 +28,23 @@ routes: ## Display all available routes
 .PHONY: routes
 
 test: ## Run the submitter tests
-	@bun test --preload ./lib/tests/setup-full.ts --bail
+	@bun test --preload ./lib/utils/test/setup-full.ts --bail
 .PHONY: test
 
 # We can't use the beforeAll/afterAll hooks in bun during watch mode, as we deploy the contracts
 # and start anvil in the beforeAll hook, which re-triggers the watch mode, resulting in an infinite loop.
 # here we will instead start anvil if its not running, deploy the contracts, and then run the tests.
-test-watch: ## Run the submitter tests in Watch mode
+test.watch: ## Run the submitter tests in Watch mode
 	if lsof -ti :$(ANVIL_PORT); then \
 		make deploy-support-contracts;\
-		bun test --preload ./lib/tests/setup-minimal.ts --watch;\
+		bun test --preload ./lib/utils/test/setup-minimal.ts --watch;\
 	else \
 		make start-anvil;\
 		make deploy-support-contracts;\
-		bun test --preload ./lib/tests/setup-minimal.ts --watch;\
+		bun test --preload ./lib/utils/test/setup-minimal.ts --watch;\
 		make kill-anvil;\
 	fi
-.PHONY: test-watch
+.PHONY: test.watch
 
 start-anvil: ## Start anvil
 	@cd ../../ && make anvil > /dev/null 2>&1 &
