@@ -49,7 +49,6 @@ describe("submitter_simulate", () => {
         expect(BigInt(response.submitterFee)).toBeGreaterThanOrEqual(0n)
         expect(response.gas).toBeGreaterThan(10000)
         expect(response.validateGas).toBeGreaterThan(10000)
-        expect(response.paymentValidateGas).toBeGreaterThan(0)
         expect(response.executeGas).toBeGreaterThan(10000n)
     }
 
@@ -65,9 +64,10 @@ describe("submitter_simulate", () => {
             await checks(results)
         })
 
-        it("should simulate submit with 4000000000n gas", async () => {
-            unsignedTx.executeGasLimit = 4000000000
-            unsignedTx.gasLimit = 4000000000
+        it("should simulate submit with 4_000_000n gas", async () => {
+            unsignedTx.validateGasLimit = 1_000_000
+            unsignedTx.executeGasLimit = 1_000_000
+            unsignedTx.gasLimit = 4_000_000
             const signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutput>

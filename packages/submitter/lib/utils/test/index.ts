@@ -42,6 +42,41 @@ export async function getMockTokenABalance(account: Address) {
     })
 }
 
+export type CreateMockTokenMintInput = {
+    account: Address
+    nonceValue: bigint
+    nonceTrack?: bigint
+    amount?: bigint
+    gasLimits?: {
+        total: number
+        execute: number
+        validate: number
+        validatePayment: number
+    }
+}
+
+const defaultGasLimits = {
+    total: 1_000_000,
+    execute: 100_000,
+    validate: 100_000,
+    validatePayment: 100_000,
+}
+
+export function createMockTokenMint({
+    account,
+    nonceValue = 0n,
+    nonceTrack = 0n,
+    amount = 10n ** 18n,
+    gasLimits = defaultGasLimits,
+}: CreateMockTokenMintInput): Boop {
+    const boop = createMockTokenAMintBoop(account, nonceValue, nonceTrack, amount)
+    boop.gasLimit = gasLimits.total
+    boop.executeGasLimit = gasLimits.execute
+    boop.validateGasLimit = gasLimits.validate
+    boop.validatePaymentGasLimit = gasLimits.validatePayment
+    return boop
+}
+
 export function createMockTokenAMintBoop(
     account: Address,
     nonceValue: bigint,
@@ -57,10 +92,10 @@ export function createMockTokenAMintBoop(
 
         // payer is default
         payer: zeroAddress,
-        executeGasLimit: 0, // 25_000_000,
         gasLimit: 0,
-        validatePaymentGasLimit: 0,
         validateGasLimit: 0,
+        validatePaymentGasLimit: 0,
+        executeGasLimit: 0, // 25_000_000,
         maxFeePerGas: 1_200_000_000n, // 1_000_000_007n,
         submitterFee: 0n,
 

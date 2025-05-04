@@ -2,7 +2,10 @@ import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import type { Result } from "neverthrow"
 import { HappyBaseError } from "#lib/errors"
-import { CreateAccount } from "#lib/handlers/createAccount"
+import { CreateAccount, type CreateAccountStatus } from "#lib/handlers/createAccount"
+import type { ExecuteStatus } from "#lib/handlers/execute"
+import type { SimulateStatus } from "#lib/handlers/simulate"
+import type { SubmitStatus } from "#lib/handlers/submit"
 import { Onchain, SubmitterError } from "#lib/types"
 
 export function makeResponseOld<TOk>(
@@ -18,7 +21,9 @@ export function makeResponseOld<TOk>(
     return [serializeBigInt(error), 422] as const
 }
 
-export function makeResponse<T extends { status: string }>(output: T): [BigIntSerialized<T>, ContentfulStatusCode] {
+type Status = SimulateStatus | SubmitStatus | ExecuteStatus | CreateAccountStatus
+
+export function makeResponse<T extends { status: Status }>(output: T): [BigIntSerialized<T>, ContentfulStatusCode] {
     const response = serializeBigInt(output)
     switch (output.status) {
         case Onchain.Success:
@@ -41,6 +46,7 @@ export function makeResponse<T extends { status: string }>(output: T): [BigIntSe
         case Onchain.GasPriceTooHigh:
         case Onchain.UnexpectedReverted:
         case SubmitterError.RpcError:
+        case Onchain.EntryPointOutOfGas:
             // signifying a correctly-formatted request, unable to process
             return [response, 422] // Unprocessable Content
         case Onchain.InsufficientStake:
@@ -51,6 +57,8 @@ export function makeResponse<T extends { status: string }>(output: T): [BigIntSe
         case Onchain.ValidationRejected:
         case Onchain.PaymentValidationRejected:
             return [response, 403] // Forbidden
+        case SubmitterError.InvalidGasValues:
+            return [response, 400] // Bad Request
         case SubmitterError.BufferExceeded:
             return [response, 429] // Too Many Requests
         case SubmitterError.OverCapacity:
