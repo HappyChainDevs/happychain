@@ -13,7 +13,6 @@ import type { Address, Hash, Hex } from "@happy.tech/common"
 export type Log = {
     // This is a simplification of the equivalent Viem type, with the following change:
     // - hardcode `index` and `quantity` type params to `number` and `bigint` (defaults)
-    // - remove `removed` field (filter related)
     // - remove ABI inference for log topics
 
     /** The address from which this log originated */
@@ -25,8 +24,8 @@ export type Log = {
     /** Number of block containing this log or `null` if pending */
     blockNumber: bigint
 
-    /** List of order-dependent topics */
-    topics: Hex[]
+    /** List of order-dependent topics — weird type formulation for compat with Viem type. */
+    topics: [] | [Hex] | [Hex, ...Hex[]]
 
     /** Contains the non-indexed arguments of the log */
     data: Hex
@@ -39,6 +38,9 @@ export type Log = {
 
     /** Index of the transaction that created this log or `null` if pending */
     transactionIndex: number
+
+    /** Whether this log has been removed from the chain (only for filters, included for compat with Viem type) */
+    removed: boolean
 }
 
 /** Possible EVM transaction types. */
