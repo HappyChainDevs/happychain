@@ -75,9 +75,12 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         }
     }
 
-    if (output.status === Onchain.UnexpectedReverted) logger.warn("Unexpected onchain revert", boopHash, output)
+    if (output.status === Onchain.UnexpectedReverted) {
+        logger.warn("Execute failed onchain with an unexpected revert", boopHash, output)
+    } else {
+        logger.trace("Execute failed onchain", boopHash)
+    }
 
-    logger.trace("Execute failed onchain", boopHash)
     return { ...output, stage: "execute" }
 }
 

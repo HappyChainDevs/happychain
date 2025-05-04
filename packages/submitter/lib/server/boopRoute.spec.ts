@@ -4,26 +4,33 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import { computeBoopHash } from "#lib/services"
 import type { Boop } from "#lib/types"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import {
+    client,
+    createMockTokenAMintBoop,
+    createMockTokenMint,
+    createSmartAccount,
+    getNonce,
+    signTx,
+} from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
 
 describe("routes: api/submitter", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMockTokenMint({ account, nonceTrack, nonceValue })
         signedTx = await sign(unsignedTx)
     })
 
@@ -57,7 +64,7 @@ describe("routes: api/submitter", () => {
             expect(result.status).toBe(200)
         })
         it("should fetch pending tx's by account", async () => {
-            const result = await client.api.v1.boop.pending[":account"].$get({ param: { account: smartAccount } })
+            const result = await client.api.v1.boop.pending[":account"].$get({ param: { account } })
             expect(result.status).toBe(200)
         })
     })

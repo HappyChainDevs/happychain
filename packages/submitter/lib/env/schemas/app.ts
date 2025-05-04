@@ -1,11 +1,19 @@
 import { z } from "zod"
 import { isHexString } from "#lib/utils/validation/isHexString"
 
-const DEFAULT_LOG_LEVEL = "INFO"
-const DEFAULT_NODE_ENV = "development"
-const DEFAULT_APP_PORT = 3001
-
+/**
+ * Schema for configuration options related to misc operational concerns.
+ */
 export const appSchema = z.object({
+    /**
+     * A list of private keys which are used to submit boops onchain.
+     *
+     * Having multiple keys enables lowering latency and increasing throughput, as any boop that fails to be included
+     * onchain will delay the boops queued after it on the same key.
+     *
+     * We guarantee that all boops for the same account that are in-flight at the same time will be queued on the same
+     * key, which avoids invalid nonce issues.
+     */
     EXECUTOR_KEYS: z.string().transform((str, ctx) => {
         const keys = str
             .split(",")
@@ -21,15 +29,39 @@ export const appSchema = z.object({
 
         return keys as `0x${string}`[]
     }),
-    // Defaults to first EXECUTOR_KEYS at runtime
+
+    /**
+     * The private key used to deploy user accounts on the `/api/v1/accounts/deploy` endpoint.
+     * Defaults to the first key in {@link EXECUTOR_KEYS}.
+     */
     PRIVATE_KEY_ACCOUNT_DEPLOYER: z.string().refine(isHexString).optional(),
-    APP_PORT: z.coerce.number().default(DEFAULT_APP_PORT),
-    NODE_ENV: z.enum(["production", "staging", "development", "test", "cli"]).default(DEFAULT_NODE_ENV),
+
+    /**
+     * Port the submitter will run on. Defaults to 3001.
+     */
+    APP_PORT: z.coerce.number().default(3001),
+
+    /**
+     * The node environment to run in. One of "production", "staging",
+     * "development", "test", or "cli". Defaults to "development".
+     */
+    NODE_ENV: z.enum(["production", "staging", "development", "test", "cli"]).default("development"),
+
+    /**
+     * The log level to use. One of "OFF", "TRACE", "INFO", "WARN", or "ERROR". Defaults to "INFO".
+     */
     LOG_LEVEL: z.preprocess(
         (level) => level && String(level).toUpperCase(),
-        z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default(DEFAULT_LOG_LEVEL),
+        z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default("INFO"),
     ),
+
+    /**
+     * URL for the SQLite database file this submitter is to use.
+     */
     DATABASE_URL: z.string(),
-    GAS_SAFETY_MARGIN: z.coerce.number().gt(100).lt(10000).default(120),
+
+    /**
+     * Default timeout for waiting for receipts in milliseconds. Defaults to 8 seconds.
+     */
     RECEIPT_TIMEOUT: z.coerce.number().default(8000),
 })

@@ -6,18 +6,27 @@ import { abis, deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
 import { simulationCache } from "#lib/services"
 import type { OnchainStatus } from "#lib/types"
-import { CallStatus } from "#lib/types"
+import { CallStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import { decodeRawError, getRevertError } from "#lib/utils/parsing"
+import { getRevertError } from "#lib/utils/parsing"
 import type { SimulateInput, SimulateOutput } from "./types"
 
-export async function simulate({ entryPoint = deployment.EntryPoint, boop }: SimulateInput): Promise<SimulateOutput> {
+export async function simulate(
+    { entryPoint = deployment.EntryPoint, boop }: SimulateInput,
+    forSubmit = false,
+): Promise<SimulateOutput> {
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
-    logger.trace("Simulating boop", boopHash, boop)
     const encodedBoop = encodeBoop(boop)
+    const selfPaying = boop.account === boop.payer
+
+    logger.trace("Simulating boop", boopHash, boop)
+    const invalidGasOutput = validateGasInput(boop, forSubmit, selfPaying)
+    if (invalidGasOutput) return invalidGasOutput
+
     try {
+        logger.trace("Submitting eth_call", boopHash)
         const simulatePromise = publicClient.simulateContract({
             address: entryPoint,
             args: [encodedBoop],
@@ -49,8 +58,9 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
             status,
             gas: boop.gasLimit || applyGasMargin(entryPointOutput.gas),
             validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
-            paymentValidateGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validateGas),
+            paymentValidateGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.paymentValidateGas),
             executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas),
+            // TODO this shouldn't be needed
             maxFeePerGas: (BigInt(applyGasMargin(Number(gasPrice))) / 100000000n) * 100000000n,
             submitterFee: getSubmitterFee(boop),
         }
@@ -76,6 +86,36 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
 
         noteSimulationMisbehaviour(boop, output)
         return output
+    }
+}
+
+/**
+ * Checks if the gas value are valid and consistent, and if not returns the output to be returned.
+ */
+function validateGasInput(boop: Boop, forSubmit: boolean, selfPaying: boolean): SimulateOutput | undefined {
+    function out(description: string) {
+        return { status: SubmitterError.InvalidGasValues, description }
+    }
+
+    if (forSubmit && selfPaying && (boop.gasLimit === 0 || boop.executeGasLimit === 0 || boop.validateGasLimit === 0)) {
+        return out("All non-paymaster gas limits must be specified when submitting a self-paying boop.")
+    }
+    if ((forSubmit && selfPaying) || boop.gasLimit > 0) {
+        const gasLimitSum = boop.executeGasLimit + boop.validateGasLimit + boop.validatePaymentGasLimit
+        if (boop.gasLimit < gasLimitSum + env.ENTRYPOINT_GAS_BUFFER)
+            return out("The total gas limit is less than the sum of entrypoint execution and inner gas limits.")
+    }
+    if (boop.executeGasLimit > 0 && boop.executeGasLimit < env.MINIMUM_EXECUTE_GAS) {
+        return out(`The execute gas limit is less than the minimum of ${env.MINIMUM_EXECUTE_GAS}.)`)
+    }
+    if (boop.validateGasLimit > 0 && boop.validateGasLimit > 0 && boop.validateGasLimit < env.MINIMUM_VALIDATE_GAS) {
+        return out(`The validate gas limit is less than the minimum of ${env.MINIMUM_VALIDATE_GAS}.`)
+    }
+    if (boop.validatePaymentGasLimit > 0 && boop.validatePaymentGasLimit < env.MINIMUM_VALIDATE_PAYMENT_GAS) {
+        return out(`The payment validate gas limit is less than the minimum of ${env.MINIMUM_VALIDATE_PAYMENT_GAS}.)`)
+    }
+    if (boop.gasLimit > env.MAX_GAS_LIMIT) {
+        return out(`The gas limit is greater than the maximum of ${env.MAX_GAS_LIMIT}.)`)
     }
 }
 
