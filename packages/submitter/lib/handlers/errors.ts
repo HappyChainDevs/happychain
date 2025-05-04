@@ -2,7 +2,7 @@ import type { Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
 import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate"
 import { boopNonceManager } from "#lib/services"
-import { type Boop, Onchain, SubmitterError } from "#lib/types"
+import { type Boop, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 import {
     type DecodedRevertError,
@@ -29,7 +29,7 @@ export function outputForGenericError(error: unknown): SimulateError {
 }
 
 /**
- * Return error information for an onchain revert from simulation.
+ * Return error information for an onchain revert (either during simulation or execution).
  */
 export function outputForRevertError(
     boop: Boop,
@@ -38,7 +38,7 @@ export function outputForRevertError(
 ): SimulateFailed | SimulateError {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
-            // We don't necessarily need to reset the nonce here in simulation, but we do it to be safe.
+            // We don't necessarily need to reset the nonce here if we're in simulation, but we do it anyway to be safe.
             boopNonceManager.resetLocalNonce(boop)
             return {
                 status: Onchain.InvalidNonce,
@@ -166,7 +166,7 @@ export function outputForRevertError(
         case "MalformedBoop": {
             return {
                 status: Onchain.UnexpectedReverted,
-                description: `${decoded.errorName} during simulation — this is an implementation bug, please report!`,
+                description: "Malformed boop simulated or submitted — this is an implementation bug, please report!",
             }
         }
 
@@ -186,3 +186,78 @@ export function outputForRevertError(
         // TODO later: extension stuff
     }
 }
+
+/**
+ * Returns error information for an `execute` error, which do not trigger a revert from the EntryPoint and are thus
+ * handled separately.
+ */
+export function outputForExecuteError(status: OnchainStatus, revertData: Hex): SimulateFailed {
+    switch (status) {
+        case Onchain.CallReverted:
+            return {
+                status,
+                revertData,
+                description: "The call made by the account's `execute` function reverted.\n" + tryParsing,
+            }
+        case Onchain.ExecuteRejected: {
+            const decodedReason = decodeRawError(revertData)
+            if (decodedReason?.errorName === "InvalidExtensionValue")
+                return {
+                    // TODO does this need to be a separate status?
+                    status: Onchain.InvalidExtensionValue,
+                    description:
+                        "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
+                }
+            if (decodedReason?.errorName === "ExtensionNotRegistered")
+                return {
+                    // TODO does this need to be a separate status?
+                    status: Onchain.ExtensionNotRegistered,
+                    description:
+                        "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",
+                }
+            if (decodedReason?.errorName)
+                return {
+                    status,
+                    revertData,
+                    description:
+                        `The account's \`execute\` function rejected the call with reason: ${decodedReason.errorName}.\n` +
+                        `${tryParsing}\n${unexpectedDecode}`,
+                }
+            return {
+                status: Onchain.ExecuteRejected,
+                revertData,
+                description: "The account's `execute` function rejected the call.\n" + tryParsing,
+            }
+        }
+        case Onchain.ExecuteReverted: {
+            // TODO note account misbehaviour
+            const decodedReason = decodeRawError(revertData)
+            if (decodedReason?.errorName)
+                return {
+                    status,
+                    revertData,
+                    description:
+                        `The account's \`execute\` function reverted with reason: ${decodedReason.errorName}.\n` +
+                        `${tryParsing}\n${faultyAccount}\n${unexpectedDecode}`,
+                }
+            return {
+                status,
+                revertData,
+                // TODO check our account implem handles the OOG scenario + add this requirement to the spec
+                description: "The account's `execute` function reverted.\n" + faultyAccount,
+            }
+        }
+        default:
+            throw new Error("Implementation error: invalid status passed to `outputForExecuteError`")
+    }
+}
+
+// TODO apply string sharing to `outputForRevertError` as well
+
+const tryParsing = "Try parsing the revertData to understand why."
+
+const unexpectedDecode =
+    "Implementation note: we did not expect to be able to decode the error here.\n" +
+    "This may be an account implementation issue, or reverting with an error with identical signature to a known error."
+
+const faultyAccount = "This is indicative of a faulty account implementation, which the submitter may penalize."

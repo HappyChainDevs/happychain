@@ -5,7 +5,30 @@ import { parseAbi } from "viem/utils"
 // Functions leveraging these lists are available in ./viem.ts
 
 export const eventsAbi = parseAbi([
-    // Factories
+    // EntryPoint (cf. EventsAndErrors.sol)
+    "event BoopExecutionStarted()",
+    "event BoopSubmitted(" +
+        "    address account," +
+        "    uint32 gasLimit," +
+        "    uint32 validateGasLimit," +
+        "    uint32 executeGasLimit," +
+        "    uint32 validatePaymentGasLimit," +
+        "    address dest," +
+        "    address payer," +
+        "    uint256 value," +
+        "    uint192 nonceTrack," +
+        "    uint64 nonceValue," +
+        "    uint256 maxFeePerGas," +
+        "    int256 submitterFee," +
+        "    bytes callData," +
+        "    bytes validatorData," +
+        "    bytes extraData" +
+        ")",
+    "event CallReverted(bytes revertData)",
+    "event ExecutionRejected(bytes reason)",
+    "event ExecutionReverted(bytes revertData)",
+
+    // Factories (cf. HappyAccountFactoryBase.sol)
     "event Deployed(address account, address owner)",
 ])
 

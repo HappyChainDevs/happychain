@@ -1,10 +1,13 @@
+import type { Hex } from "@happy.tech/common"
 import { env } from "#lib/env"
+import { outputForExecuteError } from "#lib/handlers/errors"
 import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/services/computeBoopHash"
-import { Onchain } from "#lib/types"
+import { Onchain, type OnchainStatus } from "#lib/types"
 import { SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
+import { decodeEvent } from "#lib/utils/parsing"
 import type { ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
@@ -27,21 +30,66 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         }
 
     if (receipt.txReceipt.status === "success") {
-        // TODO parse logs to ascertain that the boop actually succeeded — the tx can succeed with a failed call
-        // TODO make sure we haven't been griefed ... and take note
-        logger.trace("Successfully executed", boopHash)
-        return { status: Onchain.Success, receipt }
+        // TODO this should be only the boop's receipts
+        // TODO note misbehaviour
+        // TODO check contract originating the revert!
+        // EntryPoint.submit succeeded, but check that the execution actually succeeded.
+        let output: ExecuteOutput | undefined
+        for (const log of receipt.txReceipt.logs) {
+            const decoded = decodeEvent(log)
+            if (!decoded) continue
+            const status = getEntryPointStatusFromEventName(decoded?.eventName)
+            if (!status) continue
+            output = {
+                ...outputForExecuteError(status, decoded.args[0] as Hex),
+                stage: "execute",
+            }
+            break
+        }
+        if (output) {
+            logger.trace("Execute reverted onchain", boopHash)
+            return output
+        } else {
+            logger.trace("Successfully executed", boopHash)
+            return { status: Onchain.Success, receipt }
+        }
     }
 
-    // TODO what can we even gather from a failed receipt? I think we might be able to tell OOG vs non-OOG
-    // TODO provide a boop-sdk functiont that performs self simulation, and that can be automatically attempted to gather data on the client-side
-    logger.trace("Reverted onchain", boopHash)
+    if (receipt.txReceipt.gasUsed === BigInt(submission.gasLimit)) {
+        if (data.boop.payer === data.boop.account) {
+            logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
+            // TODO note account as problematic
+        } else {
+            logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
+        }
+        return {
+            status: Onchain.EntryPointOutOfGas,
+            stage: "execute",
+            receipt,
+            description:
+                "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
+                "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
+        }
+    }
+
+    logger.warn("Unexpected onchain revert", boopHash)
     return {
         status: Onchain.UnexpectedReverted,
         stage: "execute",
         receipt,
         description:
             "The boop was included onchain but reverted there.\n" +
-            "It previously passed simulation. It happens sometimes :')",
+            "This should never happen and indicates a fundamental issue.",
+    }
+}
+
+function getEntryPointStatusFromEventName(eventName: string): OnchainStatus | undefined {
+    switch (eventName) {
+        case "CallReverted":
+            return Onchain.CallReverted
+        case "ExecutionRejected":
+            return Onchain.ExecuteRejected
+        case "ExecutionReverted":
+            return Onchain.ExecuteReverted
     }
 }
