@@ -1,13 +1,13 @@
 import type { Hex } from "@happy.tech/common"
 import { env } from "#lib/env"
-import { outputForExecuteError } from "#lib/handlers/errors"
+import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
 import { computeBoopHash } from "#lib/services/computeBoopHash"
 import { Onchain, type OnchainStatus } from "#lib/types"
 import { SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import { decodeEvent } from "#lib/utils/parsing"
+import { decodeEvent, decodeRawError } from "#lib/utils/parsing"
 import type { ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
@@ -55,7 +55,10 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         }
     }
 
-    if (receipt.txReceipt.gasUsed === BigInt(submission.gasLimit)) {
+    const decoded = decodeRawError(receipt.revertData)
+    const output = outputForRevertError(data.boop, boopHash, decoded)
+
+    if (output.status === Onchain.UnexpectedReverted && receipt.txReceipt.gasUsed === BigInt(submission.gasLimit)) {
         if (data.boop.payer === data.boop.account) {
             logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
             // TODO note account as problematic
@@ -72,15 +75,10 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         }
     }
 
-    logger.warn("Unexpected onchain revert", boopHash)
-    return {
-        status: Onchain.UnexpectedReverted,
-        stage: "execute",
-        receipt,
-        description:
-            "The boop was included onchain but reverted there.\n" +
-            "This should never happen and indicates a fundamental issue.",
-    }
+    if (output.status === Onchain.UnexpectedReverted) logger.warn("Unexpected onchain revert", boopHash, output)
+
+    logger.trace("Execute failed onchain", boopHash)
+    return { ...output, stage: "execute" }
 }
 
 function getEntryPointStatusFromEventName(eventName: string): OnchainStatus | undefined {
