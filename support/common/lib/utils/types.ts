@@ -70,6 +70,11 @@ export type AssertCompatible<A extends B, B extends C, C = A> = never
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
 /**
+ * Returns the types of the values of T (where T is an object).
+ */
+export type Values<T> = T[keyof T]
+
+/**
  * A version of `Base` with `OptionalKeys` made optional.
  *
  * e.g. `Optional<{ a: string, b: number }, "b">` evaluates to `{ a: string, b?: number }`.
@@ -90,36 +95,37 @@ export type Optional<Base, OptionalKeys extends keyof Base> = Prettify<
  * ```
  */
 // biome-ignore format: readability
-export type TupleUnion<T, K = T> = [T] extends [never]
-    ? []
-    : K extends T
-        ? [K, ...TupleUnion<Exclude<T, K>>]
-        : never
-
-/**
- * Helper for {@link UnionToTuple}. No idea how this work, but trying to get rid of it results
- * in "Type instantiation is excessively deep and possibly infinite". It seems like the extra
- * never check in crucial for the recursion to work.
- */
-// biome-ignore format: readability
-type UnionToTupleHelper<F> =
-    (F extends never ? never : (arg: F) => never) extends (arg: infer I) => void
-        ? I
-        : never
+export type TupleUnion<T, K = T> =
+    [T] extends [never]
+        ? []
+        : K extends T
+            ? [K, ...TupleUnion<Exclude<T, K>>]
+            : never
 
 /**
  * Converts an union type into a tuple type, e.g. `A | B | C` becomes `[A, B, C]`.
- * The order of type arguments is respected.
- *
- * Lifted from https://stackoverflow.com/a/55858763/298664
+ * The order of type arguments is NOT guaranteed, but generally preserved.
  */
+// Adapted from https://stackoverflow.com/a/55858763/298664
+// Read here to understand some of the dark magic: https://gist.github.com/norswap/37f7dd715a986d0ce163b8d07bbe289a
 // biome-ignore format: readability
-export type UnionToTuple<U> =
-    UnionToTupleHelper<
-        U extends never ? never : (arg: U) => U
-    > extends (_: never) => infer W
-        ? [...UnionToTuple<Exclude<U, W>>, W]
-        : []
+export type UnionToTuple<Union> =
+    [Union] extends [never]
+        ? []
+        : Select<Union> extends infer Member
+            ? [...UnionToTuple<Exclude<Union, Member>>, Member]
+            : never
+
+/**
+ * Given an union U, selects one of its members. This is *generally* the
+ * last one, but sometimes it does weird things, e.g. `Select<1|2|3> == 2`.
+ */
+type Select<U> = ReturnOf<InferAsArg<RetFunc<U>>>
+
+type RetFunc<T> = T extends never ? never : () => T
+type ArgFunc<T> = T extends never ? never : (_: T) => void
+type ReturnOf<T> = T extends () => infer R ? R : never
+type InferAsArg<T> = ArgFunc<T> extends (_: infer A) => void ? A : never
 
 /**
  * Given the type of a tuple of keys (`KeyTuple`) and a type whose keys are a superset of the keys
