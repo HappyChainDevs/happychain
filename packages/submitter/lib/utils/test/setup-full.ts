@@ -11,12 +11,8 @@ beforeAll(async () => {
     const { error } = await migrator.migrateToLatest()
     if (error) throw new Error("[Submitter] Failed to run test migrations", { cause: error })
 
-    /**
-     * This works great for running the tests, however
-     * it breaks when using --watch mode. to run watch mode successfully
-     * you need to run anvil as a separate service and deploy the
-     * contracts manually.
-     */
+    // This doesn't work with watch mode, use `make test.watch`
+    // instead, which starts anvil and deploys the contracts separately.
 
     await anvil.start()
     await contracts.deploy()
