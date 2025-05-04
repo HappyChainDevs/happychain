@@ -35,7 +35,7 @@ make dev
 
 ### Testing
 - `make test` - Run all tests
-- `make test-watch` - Run tests in watch mode
+- `make test.watch` - Run tests in watch mode
 
 ## Project Structure
 
