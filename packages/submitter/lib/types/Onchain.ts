@@ -93,10 +93,23 @@ export const Onchain = {
     PayoutFailed: "onchainPayoutFailed",
 
     /**
-     * Unexpected revert of the boop, most likely out-of-gas. This is not supposed to happen and is
-     * indicative of a deep issue, as only the EntryPoint can revert, and because of simulation we should
-     * always be able to provide enough gas that this does not happen (third-parties like accounts and
-     * paymasters are provided their separate gas limits and so cannot trigger a paymaster OOG revert).
+     * The EntryPoint ran out of gas. This is not supposed to happen and indicates either:
+     *
+     * 1. In the case of a self-paying transaction, a `payout` function that consumes more gas during execution than
+     *    during simulation.
+     *
+     * 2. A submitter with a custom `receive` or `fallback` function that consumes more gas during execution than during
+     *    simulation.
+     *
+     * 3. An issue with the submitter, as only the EntryPoint can revert, and because of simulation we should always be
+     *    able to provide enough gas that this does not happen (third-parties like accounts and paymasters are provided
+     *    their separate gas limits and so cannot trigger an EntryPoint OOG revert).
+     */
+    EntryPointOutOfGas: "onchainEntryPointOutOfGas",
+
+    /**
+     * Unexpected revert of the boop, this is not supposed to happen and indicates a deep issue, in theory only possible
+     * if the EntryPoint contract itself is faulty.
      */
     UnexpectedReverted: "onchainUnexpectedReverted",
 } as const

@@ -289,6 +289,9 @@ const boopErrorMessages: Record<SubmitStatus, string> = {
     [Onchain.InsufficientStake]: "The submitter or paymaster has insufficient stake.",
     [Onchain.InvalidSignature]: "The account or the paymaster rejected the boop because of an invalid signature.",
     [Onchain.InvalidExtensionValue]: "The account or the paymaster rejected the boop because an extension value in the extraData is invalid.",
+
+    [Onchain.EntryPointOutOfGas]: "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
+        "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
 }
 
 /**

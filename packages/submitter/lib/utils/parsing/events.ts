@@ -17,7 +17,8 @@ export type DecodedEvent = {
  */
 export function decodeEvent(log: Log): DecodedEvent | undefined {
     try {
-        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: log.topics })
+        // the cast is safe: args may be `readonly string[]` but we always specify argument names in the ABI
+        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: log.topics }) as DecodedEvent
     } catch {
         return
     }

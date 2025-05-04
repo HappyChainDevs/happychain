@@ -3,7 +3,7 @@ import { parseAccount } from "viem/accounts"
 import { type Boop, Onchain, computeBoopHash } from "#lib/client"
 import { getSubmitterFee } from "#lib/custom/feePolicy"
 import { abis, deployment, env } from "#lib/env"
-import { outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
+import { outputForExecuteError, outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
 import { simulationCache } from "#lib/services"
 import type { OnchainStatus } from "#lib/types"
 import { CallStatus } from "#lib/types"
@@ -34,29 +34,26 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
 
         // TODO make sure nonce is gucci / prefetched?
         // TODO inline boop into return value
-        const [{ result: submitOutput }, gasPrice, balance] = await Promise.all([
+        const [{ result: entryPointOutput }, gasPrice, balance] = await Promise.all([
             simulatePromise,
             gasPricePromise,
             balancePromise,
         ])
-        const status = getEntryPointStatusFromCallStatus(submitOutput.callStatus)
+        const status = getEntryPointStatusFromCallStatus(entryPointOutput.callStatus)
 
-        // biome-ignore format: pretty
-        const output = (status === Onchain.Success
-            ? {
-                ...submitOutput,
-                status,
-                gas: boop.gasLimit || applyGasMargin(submitOutput.gas),
-                validateGas: boop.validateGasLimit || applyGasMargin(submitOutput.validateGas),
-                paymentValidateGas: boop.validatePaymentGasLimit || applyGasMargin(submitOutput.validateGas),
-                executeGas: boop.executeGasLimit || applyGasMargin(submitOutput.executeGas),
-                maxFeePerGas: BigInt(applyGasMargin(Number(gasPrice))) / 100000000n * 100000000n,
-                submitterFee: getSubmitterFee(boop),
-            } : {
-                status,
-                revertData: submitOutput.revertData,
-                description: getDescriptionFromRevertData(boop, boopHash, submitOutput.revertData),
-            }) satisfies SimulateOutput
+        // EntryPoint.submit succeeded, but the execution failed.
+        if (status !== Onchain.Success) return outputForExecuteError(status, entryPointOutput.revertData)
+
+        const output = {
+            ...entryPointOutput,
+            status,
+            gas: boop.gasLimit || applyGasMargin(entryPointOutput.gas),
+            validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
+            paymentValidateGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validateGas),
+            executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas),
+            maxFeePerGas: (BigInt(applyGasMargin(Number(gasPrice))) / 100000000n) * 100000000n,
+            submitterFee: getSubmitterFee(boop),
+        }
 
         if (output.status === Onchain.Success && balance !== null) {
             // During simulation the gas price is usually 0, so we check here instead.
@@ -69,7 +66,7 @@ export async function simulate({ entryPoint = deployment.EntryPoint, boop }: Sim
         }
 
         await simulationCache.insertSimulation({ entryPoint, boop }, output)
-        logger.trace("finished simulation with output", output)
+        logger.trace("Finished simulation with output", output)
         return output
     } catch (error) {
         const revert = getRevertError(error)
@@ -99,13 +96,6 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
         default:
             throw new Error(`implementation error: unknown call status: ${callStatus}`)
     }
-}
-
-function getDescriptionFromRevertData(boop: Boop, boopHash: `0x${string}`, revertData: `0x${string}`): string {
-    if (!revertData || revertData === "0x") return "Unknown error"
-    const decoded = decodeRawError(revertData)
-    if (!decoded) return "Unknown error"
-    return outputForRevertError(boop, boopHash, decoded).description || "Unknown error"
 }
 
 // TODO fill in
