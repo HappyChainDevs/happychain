@@ -36,6 +36,7 @@ export type {
     AssertCompatible,
     Optional,
     Prettify,
+    Values,
     TupleUnion,
     UnionToTuple,
     MapTuple,
