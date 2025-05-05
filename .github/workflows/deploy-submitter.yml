@@ -3,10 +3,6 @@ name: Deploy submitter
 on:
   workflow_dispatch:
 
-env:
-  PORT: 49534
-  LOG_LEVEL: info
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -58,7 +54,11 @@ jobs:
               cat > /home/submitter/build/.env <<-EOF
             EXECUTOR_KEYS=${{ secrets.SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
-            ${{vars.SUBMITTER_ENV}}
+            APP_PORT=49534
+            LOG_LEVEL=INFO
+            DATABASE_URL=/home/submitter/db.sqlite
+            CHAIN_ID=216
+            NODE_ENV=production
             EOF
               cd /home/submitter/build
               bun migrate.es.js
