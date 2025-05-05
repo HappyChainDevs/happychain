@@ -126,5 +126,3 @@ export {
 
     // TODO might miss some stuff
 } from "@happy.tech/submitter/client"
-
-export type { Result, Ok, Err } from "./utils/neverthrow"

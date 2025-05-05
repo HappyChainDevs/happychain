@@ -1,4 +1,4 @@
-import { type Result, err, ok } from "./neverthrow"
+import { SubmitterError } from "@happy.tech/submitter/client"
 import { type ProcessedRequestParams, processRequestParams } from "./requestParams"
 import { constructUrl } from "./urls"
 
@@ -18,35 +18,32 @@ export class ApiClient {
         this.#baseUrl = baseUrl
     }
 
-    async get(endpoint: string, query: unknown = {}): Promise<Result<unknown, Error>> {
+    async get(endpoint: string, query: unknown = {}): Promise<unknown> {
         return this.#request("GET", endpoint, processRequestParams({ query }))
     }
 
-    async post(endpoint: string, body: unknown = {}, query: unknown = {}): Promise<Result<unknown, Error>> {
+    async post(endpoint: string, body: unknown = {}, query: unknown = {}): Promise<unknown> {
         return this.#request("POST", endpoint, processRequestParams({ body, query }))
     }
 
-    async #request(
-        method: HttpMethod,
-        endpoint: string,
-        { body, query }: ProcessedRequestParams,
-    ): Promise<Result<unknown, Error>> {
+    async #request(method: HttpMethod, endpoint: string, { body, query }: ProcessedRequestParams): Promise<unknown> {
         const url = constructUrl(this.#baseUrl, endpoint, query)
         const init = { method, headers: this.#headers, body: body ? JSON.stringify(body) : null }
         const response = await fetch(url, init)
         return this.#handleResponse(response)
     }
 
-    async #handleResponse(response: Response): Promise<Result<unknown, Error>> {
-        if (!response.ok) {
-            const msg = `Request failed: ${response.status} ${response.statusText}`
-            const error: Error & { status?: number; response?: Response } = new Error(msg)
-            error.status = response.status
-            error.response = response
-            return err(error)
+    async #handleResponse(response: Response): Promise<unknown> {
+        try {
+            return await response.json()
+        } catch (error) {
+            return {
+                status: SubmitterError.ClientError,
+                // biome-ignore lint/suspicious/noExplicitAny:
+                description: `Something unexpected happened and the results could not be parsed: ${(error as any)?.message}`,
+                cause: error,
+                response: response,
+            }
         }
-
-        const data = await response.json()
-        return ok(data)
     }
 }

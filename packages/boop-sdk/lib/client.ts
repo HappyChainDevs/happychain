@@ -17,7 +17,6 @@ import type {
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
-import type { Result } from "./utils/neverthrow"
 
 export type BoopClientConfig = {
     baseUrl: string
@@ -43,9 +42,9 @@ export class BoopClient {
      * @param data.owner User EOA address
      * @param data.salt Salt for the account creation
      */
-    async createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
+    async createAccount(data: CreateAccountInput): Promise<CreateAccountOutput> {
         const response = await this.client.post("/api/v1/accounts/create", data)
-        return response as Result<CreateAccountOutput, Error>
+        return response as CreateAccountOutput
     }
 
     // == Submit API Routes ============================================================================
@@ -68,9 +67,9 @@ export class BoopClient {
      * impose additional restrictions, such as requesting a higher submitterFee for the replacement
      * transaction.
      */
-    async submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
+    async submit(data: SubmitInput): Promise<SubmitOutput> {
         const response = await this.client.post("/api/v1/boop/submit", serializeBigInt(data))
-        return response as Result<SubmitOutput, Error>
+        return response as SubmitOutput
     }
 
     /**
@@ -90,9 +89,9 @@ export class BoopClient {
      * @param data.entryPoint EntryPoint address (optional)
      * @param data.boop boop to be submitted
      */
-    async execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
+    async execute(data: ExecuteInput): Promise<ExecuteOutput> {
         const response = await this.client.post("/api/v1/boop/execute", serializeBigInt(data))
-        return response as Result<ExecuteOutput, Error>
+        return response as ExecuteOutput
     }
 
     /**
@@ -112,9 +111,9 @@ export class BoopClient {
      * @param data.entryPoint EntryPoint address (optional)
      * @param data.boop boop to be submitted
      */
-    async simulate(data: SimulateInput): Promise<Result<SimulateOutput, Error>> {
+    async simulate(data: SimulateInput): Promise<SimulateOutput> {
         const response = await this.client.post("/api/v1/boop/simulate", serializeBigInt(data))
-        return response as Result<SimulateOutput, Error>
+        return response as SimulateOutput
     }
 
     /**
@@ -124,9 +123,9 @@ export class BoopClient {
      * even if he did see the Boop before. In this case he should answer with a status of
      * {@link GetState.UnknownBoop}.
      */
-    async state({ hash }: GetStateInput): Promise<Result<GetStateOutput, Error>> {
+    async state({ hash }: GetStateInput): Promise<GetStateOutput> {
         const response = await this.client.get(`/api/v1/boop/state/${hash}`)
-        return response as Result<GetStateOutput, Error>
+        return response as GetStateOutput
     }
 
     /**
@@ -136,9 +135,9 @@ export class BoopClient {
      *
      * The submitter can return without a receipt if the Boop submission failed for other reasons.
      */
-    async receipt({ hash, timeout }: WaitForReceiptInput): Promise<Result<WaitForReceiptOutput, Error>> {
+    async receipt({ hash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
         const response = await this.client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
-        return response as Result<WaitForReceiptOutput, Error>
+        return response as WaitForReceiptOutput
     }
 
     /**
@@ -147,8 +146,8 @@ export class BoopClient {
      * @param data
      * @returns
      */
-    async pending({ account }: GetPendingInput): Promise<Result<GetPendingOutput, Error>> {
+    async pending({ account }: GetPendingInput): Promise<GetPendingOutput> {
         const response = await this.client.get(`/api/v1/boop/pending/${account}`)
-        return response as Result<GetPendingOutput, Error>
+        return response as GetPendingOutput
     }
 }

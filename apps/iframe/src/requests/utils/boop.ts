@@ -97,32 +97,30 @@ export async function sendBoop(
         const boop = await boopFromTransaction(account, tx)
 
         if (!isSponsored) {
-            const output = (await boopClient.simulate({ entryPoint, boop })).unwrap()
-            if (output.status === Onchain.Success) {
-                // TODO: this should be the correct types inside of the SDK
-                boop.gasLimit = Number(output.gas)
-                boop.validateGasLimit = Number(output.validateGas)
-                boop.validatePaymentGasLimit = Number(output.validatePaymentGas)
-                boop.executeGasLimit = Number(output.executeGas)
-                boop.maxFeePerGas = BigInt(output.maxFeePerGas)
-                boop.submitterFee = BigInt(output.submitterFee)
-            } else {
+            const output = await boopClient.simulate({ entryPoint, boop })
+            if (output.status !== Onchain.Success) {
                 // TODO which error?
                 throw new BoopSimulationError(output)
             }
+
+            // TODO: this should be the correct types inside of the SDK
+            boop.gasLimit = Number(output.gas)
+            boop.validateGasLimit = Number(output.validateGas)
+            boop.validatePaymentGasLimit = Number(output.validatePaymentGas)
+            boop.executeGasLimit = Number(output.executeGas)
+            boop.maxFeePerGas = BigInt(output.maxFeePerGas)
+            boop.submitterFee = BigInt(output.submitterFee)
         }
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop({ boopHash, value })
-        const output = (await boopClient.execute({ entryPoint, boop: signedBoop })).unwrap()
+        const output = await boopClient.execute({ entryPoint, boop: signedBoop })
 
-        if (output.status === Onchain.Success) {
-            markBoopAsSuccess(output)
-            return output.receipt.boopHash
-        } else {
-            throw new BoopExecutionError(output)
-        }
+        if (output.status !== Onchain.Success) throw new BoopExecutionError(output)
+
+        markBoopAsSuccess(output)
+        return output.receipt.boopHash
     } catch (error) {
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
@@ -238,9 +236,10 @@ export function formatTransaction(hash: Hash, boop?: Boop, receipt?: BoopReceipt
 // TODO: needs a better key type
 // biome-ignore format: consistency
 const boopErrorMessages: Record<SubmitStatus, string> = {
-    // TODO: names should change: s/Failed/Rejected
     [SubmitterError.UnexpectedError]:
-        "The submitter failed with an unexpected error.",
+    "The submitter failed with an unexpected error.",
+    [SubmitterError.ClientError]:
+        "The submitter could not be accessed due to a client-side error.",
     [SubmitterError.BufferExceeded]:
         "The submitter rejected the request because of its boop buffering policies.",
     [SubmitterError.OverCapacity]:
