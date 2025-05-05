@@ -55,22 +55,29 @@ const UserResponseSchema = z
 
 export const UserResponseSchemaObj = resolver(UserResponseSchema)
 
+export const UserListResponseSchemaObj = resolver(z.array(UserResponseSchema))
+
+export const UserWalletListResponseSchemaObj = resolver(z.array(UserWalletSchema))
+
+// Generic error schema
+export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
+
 // ====================================================================================================
 // Request Body Schemas
 
 export const UserQuerySchema = z
     .object({
-        wallet_address: z.string().refine(isHex).optional(),
+        primary_wallet: z.string().refine(isHex).optional(),
         username: z.string().optional(),
         include_wallets: z.boolean().optional().default(false),
     })
     .strict()
-    .refine((data) => data.wallet_address !== undefined || data.username !== undefined, {
-        message: "At least one filter (wallet_address or username) must be provided",
+    .refine((data) => data.primary_wallet !== undefined || data.username !== undefined, {
+        message: "At least one filter (primary_wallet or username) must be provided",
     })
     .openapi({
         example: {
-            wallet_address: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+            primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
             username: "username",
             include_wallets: true,
         },
@@ -100,16 +107,14 @@ export const UserUpdateRequestSchema = z
         },
     })
 
-export const UserWalletAddRequestSchema = z
+export const UserWalletRequestSchema = z
     .object({
         wallet_address: z.string().refine(isHex),
-        set_as_primary: z.boolean().optional().default(false),
     })
     .strict()
     .openapi({
         example: {
             wallet_address: "0x1a2b3c4d5e6f7A8B9C0D1E2F3a4b5c6d7e8f9a0b",
-            set_as_primary: false,
         },
     })
 
@@ -131,13 +136,17 @@ export const UserIdParamSchema = z
         },
     })
 
-export const WalletAddressParamSchema = z
+export const PrimaryWalletParamSchema = z
     .object({
-        addr: z.string().refine(isHex, { message: "Wallet address must be a valid hex string" }),
+        primary_wallet: z.string().refine(isHex, { message: "Primary wallet address must be a valid hex string" }),
     })
     .strict()
     .openapi({
+        param: {
+            name: "primary_wallet",
+            in: "path",
+        },
         example: {
-            addr: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+            primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
         },
     })

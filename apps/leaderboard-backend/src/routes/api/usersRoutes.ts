@@ -1,96 +1,185 @@
 import { Hono } from "hono"
 import type { UserTableId } from "../../db/types"
 import {
+    PrimaryWalletParamValidation,
     UserCreateDescription,
     UserCreateValidation,
+    UserDeleteByIdDescription,
+    UserDeleteByPrimaryWalletDescription,
+    UserGetByIdDescription,
+    UserGetByPrimaryWalletDescription,
     UserIdParamValidation,
     UserQueryDescription,
     UserQueryValidation,
+    UserUpdateByIdDescription,
+    UserUpdateByPrimaryWalletDescription,
     UserUpdateValidation,
-    UserWalletAddDescription,
-    UserWalletAddValidation,
-    WalletAddressParamValidation,
+    UserWalletAddByIdDescription,
+    UserWalletAddByPrimaryWalletDescription,
+    UserWalletRemoveByIdDescription,
+    UserWalletRemoveByPrimaryWalletDescription,
+    UserWalletSetPrimaryByIdDescription,
+    UserWalletSetPrimaryByPrimaryWalletDescription,
+    UserWalletValidation,
+    UserWalletsGetByIdDescription,
+    UserWalletsGetByPrimaryWalletDescription,
 } from "../../validation/users"
 
 export default new Hono()
 
-    // GET /users - Find user (with filtering)
+    // ====================================================================================================
+    // User Collection Routes
+
+    /**
+     * List users with optional filters (by primary_wallet or username).
+     * GET /users
+     */
     .get("/", UserQueryDescription, UserQueryValidation, async (c) => {
-        try {
-            const query = c.req.valid("query")
-            const { userRepo } = c.get("repos")
+        const query = c.req.valid("query")
+        const { userRepo } = c.get("repos")
 
-            const users = await userRepo.find({
-                wallet_address: query.wallet_address,
-                username: query.username,
-                includeWallets: query.include_wallets,
-            })
+        const users = await userRepo.find({
+            primary_wallet: query.primary_wallet,
+            username: query.username,
+            includeWallets: query.include_wallets,
+        })
 
-            return c.json({ ok: true, data: users })
-        } catch (err) {
-            console.error("Error listing users:", err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
+        return c.json({ ok: true, data: users })
     })
 
-    // GET /users/:id - Get user by ID
-    .get("/:id", UserQueryDescription, UserIdParamValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-            const { userRepo } = c.get("repos")
-
-            const userTableId = Number.parseInt(id, 10) as UserTableId
-            const user = await userRepo.findById(userTableId, true) // Include wallets
-            if (!user) {
-                return c.json({ ok: false, error: "User not found" }, 404)
-            }
-
-            return c.json({ ok: true, data: user })
-        } catch (err) {
-            console.error(`Error fetching user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
-
-    // POST /users - Create new user
+    /**
+     * Create a new user.
+     * POST /users
+     */
     .post("/", UserCreateDescription, UserCreateValidation, async (c) => {
-        try {
-            const userData = c.req.valid("json")
-            const { userRepo } = c.get("repos")
+        const userData = c.req.valid("json")
+        const { userRepo } = c.get("repos")
 
-            // Check if user with this wallet or username already exists
-            const existingByWallet = await userRepo.findByWalletAddress(userData.primary_wallet)
-            if (existingByWallet) {
-                return c.json({ ok: false, error: "Wallet address already registered" }, 409)
-            }
+        // Check if user with this wallet or username already exists
+        const existingByWallet = await userRepo.findByWalletAddress(userData.primary_wallet)
+        if (existingByWallet) {
+            return c.json({ ok: false, error: "Wallet address already registered" }, 409)
+        }
 
-            const existingByUsername = await userRepo.findByUsername(userData.username)
-            if (existingByUsername) {
+        const existingByUsername = await userRepo.findByUsername(userData.username)
+        if (existingByUsername) {
+            return c.json({ ok: false, error: "Username already taken" }, 409)
+        }
+
+        const newUser = await userRepo.create({
+            primary_wallet: userData.primary_wallet,
+            username: userData.username,
+        })
+
+        return c.json(newUser, 201)
+    })
+
+    // ====================================================================================================
+    // User Resource Routes (by ID)
+
+    /**
+     * Get user details by user ID.
+     * GET /users/:id
+     */
+    .get("/:id", UserGetByIdDescription, UserIdParamValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        const userTableId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userTableId, true) // Include wallets
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        return c.json({ ok: true, data: user })
+    })
+
+    /**
+     * Update user details by user ID.
+     * PATCH /users/:id
+     */
+    .patch("/:id", UserUpdateByIdDescription, UserIdParamValidation, UserUpdateValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const updateData = c.req.valid("json")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const userId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userId)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        // Check if username is being changed and is unique
+        if (updateData.username && updateData.username !== user.username) {
+            const existingUser = await userRepo.findByUsername(updateData.username)
+            if (existingUser) {
                 return c.json({ ok: false, error: "Username already taken" }, 409)
             }
-
-            const newUser = await userRepo.create({
-                primary_wallet: userData.primary_wallet,
-                username: userData.username,
-            })
-
-            return c.json(newUser, 201)
-        } catch (err) {
-            console.error("Error creating user:", err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
+
+        const updatedUser = await userRepo.update(userId, updateData)
+        return c.json({ ok: true, data: updatedUser })
     })
 
-    // PATCH /users/:id - Update user details
-    .patch("/:id", UserIdParamValidation, UserUpdateValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
+    /**
+     * Delete a user by user ID and all associated data.
+     * DELETE /users/:id
+     */
+    .delete("/:id", UserDeleteByIdDescription, UserIdParamValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const userId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userId)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        const success = await userRepo.delete(userId)
+        if (!success) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        return c.json({ ok: true, data: user })
+    })
+
+    // ====================================================================================================
+    // User Resource Routes (by Primary Wallet Address)
+
+    /**
+     * Get user details by primary wallet address.
+     * GET /users/pw/:primary_wallet
+     */
+    .get("/pw/:primary_wallet", UserGetByPrimaryWalletDescription, PrimaryWalletParamValidation, async (c) => {
+        const { primary_wallet } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        const user = await userRepo.findByWalletAddress(primary_wallet, true) // Include wallets
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        return c.json({ ok: true, data: user })
+    })
+
+    /**
+     * Update user details by primary wallet address.
+     * PATCH /users/pw/:primary_wallet
+     */
+    .patch(
+        "/pw/:primary_wallet",
+        UserUpdateByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        UserUpdateValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
             const updateData = c.req.valid("json")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const userId = Number.parseInt(id, 10) as UserTableId
-            const user = await userRepo.findById(userId)
+            const user = await userRepo.findByWalletAddress(primary_wallet)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
@@ -103,73 +192,166 @@ export default new Hono()
                 }
             }
 
-            const updatedUser = await userRepo.update(userId, updateData)
+            const updatedUser = await userRepo.update(user.id, updateData)
             return c.json({ ok: true, data: updatedUser })
-        } catch (err) {
-            console.error(`Error updating user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        },
+    )
+
+    /**
+     * Delete a user by primary wallet address and all associated wallets, guild memberships, and scores.
+     * DELETE /users/pw/:primary_wallet
+     */
+    .delete("/pw/:primary_wallet", UserDeleteByPrimaryWalletDescription, PrimaryWalletParamValidation, async (c) => {
+        const { primary_wallet } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const user = await userRepo.findByWalletAddress(primary_wallet)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
         }
+
+        const success = await userRepo.delete(user.id)
+        if (!success) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        return c.json({ ok: true, data: user })
     })
 
-    // GET /users/:id/wallets - Get user's wallets
-    .get("/:id/wallets", UserIdParamValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
+    // ====================================================================================================
+    // User Wallets Collection Routes
+
+    /**
+     * Get all wallets for a user by user ID.
+     * GET /users/:id/wallets
+     */
+    .get("/:id/wallets", UserWalletsGetByIdDescription, UserIdParamValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const userId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userId)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        const wallets = await userRepo.getUserWallets(userId)
+        return c.json({ ok: true, data: wallets })
+    })
+
+    /**
+     * Get all wallets for a user by primary wallet address.
+     * GET /users/pw/:primary_wallet/wallets
+     */
+    .get(
+        "/pw/:primary_wallet/wallets",
+        UserWalletsGetByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const userId = Number.parseInt(id, 10) as UserTableId
-            const user = await userRepo.findById(userId)
+            const user = await userRepo.findByWalletAddress(primary_wallet)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            const wallets = await userRepo.getUserWallets(userId)
+            const wallets = await userRepo.getUserWallets(user.id)
             return c.json({ ok: true, data: wallets })
-        } catch (err) {
-            console.error(`Error fetching wallets for user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        },
+    )
+
+    /**
+     * Add a wallet to a user by user ID.
+     * POST /users/:id/wallets
+     */
+    .post("/:id/wallets", UserWalletAddByIdDescription, UserIdParamValidation, UserWalletValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const { wallet_address } = c.req.valid("json")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const userId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userId)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
         }
+
+        // Check if wallet already belongs to another user
+        const existingUser = await userRepo.findByWalletAddress(wallet_address)
+        if (existingUser && existingUser.id !== userId) {
+            return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
+        }
+
+        const success = await userRepo.addWallet(userId, wallet_address)
+        if (!success) {
+            return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
+        }
+
+        // Get updated user with wallets
+        const updatedUser = await userRepo.findById(userId, true)
+        return c.json({ ok: true, data: updatedUser })
     })
 
-    // POST /users/:id/wallets - Add wallet to user
-    .post("/:id/wallets", UserWalletAddDescription, UserIdParamValidation, UserWalletAddValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-            const { wallet_address, set_as_primary } = c.req.valid("json")
+    /**
+     * Add a wallet to a user by primary wallet address.
+     * POST /users/pw/:primary_wallet/wallets
+     */
+    .post(
+        "/pw/:primary_wallet/wallets",
+        UserWalletAddByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
             const { userRepo } = c.get("repos")
 
+            if (primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Primary wallet already exists for this user" }, 400)
+            }
+
             // Check if user exists
-            const userId = Number.parseInt(id, 10) as UserTableId
-            const user = await userRepo.findById(userId)
+            const user = await userRepo.findByWalletAddress(primary_wallet)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
             // Check if wallet already belongs to another user
             const existingUser = await userRepo.findByWalletAddress(wallet_address)
-            if (existingUser && existingUser.id !== userId) {
+            if (existingUser && existingUser.id !== user.id) {
                 return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
             }
 
-            const success = await userRepo.addWallet(userId, wallet_address, set_as_primary || false)
+            const success = await userRepo.addWallet(user.id, wallet_address)
             if (!success) {
                 return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
             }
 
             // Get updated user with wallets
-            const updatedUser = await userRepo.findById(userId, true)
+            const updatedUser = await userRepo.findById(user.id, true)
             return c.json({ ok: true, data: updatedUser })
-        } catch (err) {
-            console.error(`Error adding wallet for user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )
 
-    // PATCH /users/:id/wallets/:addr - Set wallet as primary
-    .patch("/:id/wallets/:addr", UserIdParamValidation, WalletAddressParamValidation, async (c) => {
-        try {
-            const { id, addr } = c.req.valid("param")
+    // ====================================================================================================
+    // User Wallet Resource Routes (Set Primary, Remove)
+
+    /**
+     * Set a wallet as primary for a user by user ID.
+     * PATCH /users/:id/wallets
+     */
+    .patch(
+        "/:id/wallets",
+        UserWalletSetPrimaryByIdDescription,
+        UserIdParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { id } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
@@ -178,8 +360,11 @@ export default new Hono()
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
+            if (user.primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Wallet is already primary" }, 400)
+            }
 
-            const success = await userRepo.setWalletAsPrimary(userId, addr)
+            const success = await userRepo.setWalletAsPrimary(userId, wallet_address)
             if (!success) {
                 return c.json({ ok: false, error: "Wallet not found for this user" }, 404)
             }
@@ -187,26 +372,112 @@ export default new Hono()
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(userId, true)
             return c.json({ ok: true, data: updatedUser })
-        } catch (err) {
-            console.error(`Error setting primary wallet for user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )
 
-    // DELETE /users/:id/wallets/:addr - Remove wallet from user
-    .delete("/:id/wallets/:addr", UserIdParamValidation, WalletAddressParamValidation, async (c) => {
-        try {
-            const { id, addr } = c.req.valid("param")
+    /**
+     * Set a wallet as primary for a user by primary wallet address.
+     * PATCH /users/pw/:primary_wallet/wallets
+     */
+    .patch(
+        "/pw/:primary_wallet/wallets",
+        UserWalletSetPrimaryByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
             const { userRepo } = c.get("repos")
 
+            if (primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Primary wallet cannot be set as primary" }, 400)
+            }
+
             // Check if user exists
-            const userId = Number.parseInt(id, 10) as UserTableId
-            const user = await userRepo.findById(userId)
+            const user = await userRepo.findByWalletAddress(primary_wallet)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
+            if (user.primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Wallet is already primary" }, 400)
+            }
+
+            const success = await userRepo.setWalletAsPrimary(user.id, wallet_address)
+            if (!success) {
+                return c.json({ ok: false, error: "Wallet not found for this user" }, 404)
+            }
+
+            // Get updated user with wallets
+            const updatedUser = await userRepo.findById(user.id, true)
+            return c.json({ ok: true, data: updatedUser })
+        },
+    )
+
+    /**
+     * Remove a wallet from a user by user ID.
+     * DELETE /users/:id/wallets
+     */
+    .delete("/:id/wallets", UserWalletRemoveByIdDescription, UserIdParamValidation, UserWalletValidation, async (c) => {
+        const { id } = c.req.valid("param")
+        const { wallet_address } = c.req.valid("json")
+        const { userRepo } = c.get("repos")
+
+        // Check if user exists
+        const userId = Number.parseInt(id, 10) as UserTableId
+        const user = await userRepo.findById(userId)
+        if (!user) {
+            return c.json({ ok: false, error: "User not found" }, 404)
+        }
+
+        if (user.primary_wallet === wallet_address) {
+            return c.json({ ok: false, error: "Cannot remove primary wallet" }, 400)
+        }
+
+        const success = await userRepo.removeWallet(userId, wallet_address)
+        if (!success) {
+            return c.json(
+                {
+                    ok: false,
+                    error: "Cannot remove wallet: it may be the primary wallet or not found",
+                },
+                400,
+            )
+        }
+
+        // Get updated user with wallets
+        const updatedUser = await userRepo.findById(userId, true)
+        return c.json({ ok: true, data: updatedUser })
+    })
+
+    /**
+     * Remove a wallet from a user by primary wallet address.
+     * DELETE /users/pw/:primary_wallet/wallets
+     */
+    .delete(
+        "/pw/:primary_wallet/wallets",
+        UserWalletRemoveByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
+            const { userRepo } = c.get("repos")
+
+            if (primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Cannot remove primary wallet" }, 400)
+            }
+
+            // Check if user exists
+            const user = await userRepo.findByWalletAddress(primary_wallet)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            const success = await userRepo.removeWallet(userId, addr)
+            if (user.primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Cannot remove primary wallet" }, 400)
+            }
+
+            const success = await userRepo.removeWallet(user.id, wallet_address)
             if (!success) {
                 return c.json(
                     {
@@ -218,10 +489,7 @@ export default new Hono()
             }
 
             // Get updated user with wallets
-            const updatedUser = await userRepo.findById(userId, true)
+            const updatedUser = await userRepo.findById(user.id, true)
             return c.json({ ok: true, data: updatedUser })
-        } catch (err) {
-            console.error(`Error removing wallet for user ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )

@@ -73,15 +73,15 @@ export class UserRepository {
 
     /// Generic find method with search criteria
     async find(criteria: {
-        wallet_address?: Address
+        primary_wallet?: Address
         username?: string
         includeWallets?: boolean
     }): Promise<(User & { wallets: UserWallet[] })[]> {
-        const { wallet_address, username, includeWallets = false } = criteria
+        const { primary_wallet, username, includeWallets = false } = criteria
 
         // If searching by wallet, use specific method
-        if (wallet_address) {
-            const user = await this.findByWalletAddress(wallet_address, includeWallets)
+        if (primary_wallet) {
+            const user = await this.findByWalletAddress(primary_wallet, includeWallets)
             return user ? [user] : []
         }
 
