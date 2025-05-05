@@ -23,8 +23,13 @@ export PROXY_TYPE ?= BEACON
 # Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
 export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
 
-# Port at which Anvil will be running
+# Port at which Anvil will be running.
 export ANVIL_PORT ?= 8545
+
+# Block time for Anvil, automining if 0
+export ANVIL_BLOCK_TIME ?= 2
+
+ANVIL_BLOCK_TIME_ARG := $(if $(findstring '0','$(ANVIL_BLOCK_TIME)'),,--block-time $(ANVIL_BLOCK_TIME))
 
 # Deployment mode:
 # - "deploy" — deploy contracts normally
@@ -316,11 +321,11 @@ docs-serve: unpatch-docs
 ##@ Devnet
 
 anvil: ## Runs anvil at $ANVIL_PORT (blocking)
-	anvil --port $(ANVIL_PORT) --block-time 2
+	anvil --port $(ANVIL_PORT) $(ANVIL_BLOCK_TIME_ARG) --print-traces
 .PHONY: anvil
 
 anvil-background: ## Runs anvil at in the background at $ANVIL_PORT, logging to anvil.log
-	@make anvil --port $(ANVIL_PORT) --block-time 2 > anvil.log 2>&1 &
+	anvil --port $(ANVIL_PORT) $(ANVIL_BLOCK_TIME_ARG) > anvil.log 2>&1 &
 	@echo "Running Anvil at {http,ws}://localhost:$(ANVIL_PORT)"
 .PHONY: anvil-background
 
