@@ -255,6 +255,7 @@ const boopErrorMessages: Record<SubmitStatus, string> = {
         "Timed out while waiting for a receipt. This could indicate that the submitter tx is stuck in the mempool or an RPC issue.",
 
     [SubmitterError.RpcError]: "Error from the submitter node's JSON-RPC server.",
+    [SubmitterError.InvalidGasValues]: "Invalid gas values.",
 
     [Onchain.ValidationReverted]:
         "The account validation of the boop reverted. This indicates either a dysfunctional account or a dysfunctional submitter.",

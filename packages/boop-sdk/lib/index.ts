@@ -3,24 +3,6 @@ export type { BoopClientConfig } from "./client"
 
 export { ExtensionType, encodeExtraData, ExtraDataKey } from "./boops"
 
-export {
-    type PendingBoopInput,
-    type PendingBoopOutput,
-    type ReceiptRequestInput,
-    type ReceiptRequestOutput,
-    type StateRequestInput,
-    type StateRequestOutput,
-    type BoopStateSubmitterError,
-    type BoopStateEntryPointError,
-    type BoopStateSuccess,
-    type PendingBoopInfo,
-    StateRequestStatus,
-    type Boop,
-    type BoopState,
-    type BoopReceipt,
-    // TODO missing stuff now
-} from "@happy.tech/submitter/client"
-
 export type {
     Address,
     Hash,
@@ -97,15 +79,52 @@ export {
     type ExecuteFailedOnchain,
     type ExecuteError,
     //
+    // GetState
+    //
+    GetState,
+    type GetStateStatus,
+    type GetStateInput,
+    type GetStateOutput,
+    type GetStateReceipt,
+    type GetStateSimulated,
+    type GetStateError,
+    //
+    // WaitForReceipt
+    //
+    WaitForReceipt,
+    type WaitForReceiptInput,
+    type WaitForReceiptOutput,
+    type WaitForReceiptSuccess,
+    type WaitForReceiptError,
+    type WaitForReceiptUnknown,
+    //
+    // GetPending
+    //
+    GetPending,
+    type GetPendingStatus,
+    type GetPendingInput,
+    type GetPendingOutput,
+    type GetPendingSuccess,
+    type GetPendingError,
+    type PendingBoopInfo,
+    //
+    // Boop Generic Types
+    //
+    type Boop,
+    type BoopReceipt,
+    //
     // Ethereum Types
     //
     type Log,
     type Receipt,
-    TransactionTypeName,
+    type TransactionTypeName,
+    TransactionType,
     //
     // Utilities
     //
     computeBoopHash,
+
+    // TODO might miss some stuff
 } from "@happy.tech/submitter/client"
 
 export type { Result, Ok, Err } from "./utils/neverthrow"

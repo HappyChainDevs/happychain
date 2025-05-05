@@ -1,10 +1,24 @@
 import type { Address, Hash, UInt256 } from "@happy.tech/common"
+import { SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
-export type PendingBoopInput = {
+// TODO documentation
+
+export const GetPending = {
+    Success: "getPendingSuccess",
+    ...SubmitterError,
+} as const
+
+export type GetPendingStatus = (typeof GetPending)[keyof typeof GetPending]
+
+export type GetPendingInput = {
     account: Address
 }
 
-export type PendingBoopOutput = {
+export type GetPendingOutput = GetPendingSuccess | GetPendingError
+
+export type GetPendingSuccess = {
+    status: typeof GetPending.Success
+    account: Address
     pending: PendingBoopInfo[]
 }
 
@@ -13,4 +27,9 @@ export type PendingBoopInfo = {
     nonceTrack: UInt256
     nonceValue: UInt256
     submitted: boolean
+}
+
+export type GetPendingError = {
+    status: SubmitterErrorStatus
+    description?: string
 }

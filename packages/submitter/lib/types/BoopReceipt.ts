@@ -12,8 +12,10 @@ export type BoopReceipt = {
     /** Account that sent the Boop. */
     account: Address
 
-    /** The nonce of the Boop. */
+    /** Nonces are ordered within tracks; there is no ordering constraint across tracks. */
     nonceTrack: UInt256
+
+    /** Nonce sequence number within the nonce track. */
     nonceValue: UInt256
 
     /** EntryPoint to which the Boop was submitted onchain. */
@@ -26,8 +28,7 @@ export type BoopReceipt = {
     logs: Log[]
 
     /**
-     * The revertData carried by one of our custom error, or the raw deal for
-     * "otherReverted". Empty if `!status.endsWith("Reverted")`.
+     * The revertData carried by one of our custom error, or the raw deal for {@link Onchain.UnexpectedReverted}.
      */
     revertData: Hex
 
@@ -43,4 +44,5 @@ export type BoopReceipt = {
      * carrying the boop, and could potentially have carried multiple boops.
      */
     txReceipt: Receipt
+    // TODO omit stuff from here
 }

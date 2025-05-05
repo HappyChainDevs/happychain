@@ -1,31 +1,21 @@
-import { type Result, err, ok } from "neverthrow"
 import { env } from "#lib/env"
-import { type StateRequestOutput, StateRequestStatus } from "#lib/handlers/getState"
 import { boopReceiptService, simulationCache } from "#lib/services"
-import { Onchain } from "#lib/types"
-import type { ReceiptRequestInput } from "./types"
+import { SubmitterError } from "#lib/types"
+import { WaitForReceipt, type WaitForReceiptInput, type WaitForReceiptOutput } from "./types"
 
-export async function waitForReceipt({
-    hash,
-    timeout,
-}: ReceiptRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
-    const receipt = await boopReceiptService.findByBoopHashWithTimeout(hash, timeout ?? env.RECEIPT_TIMEOUT)
-    if (receipt?.status === Onchain.Success) {
-        return ok({
-            status: StateRequestStatus.Success,
-            state: { status: receipt.status, included: true, receipt: receipt },
-        } satisfies StateRequestOutput)
-    }
+export async function waitForReceipt({ hash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
+    // TODO this needs a try-catch for proper error handling, and probably the services need to be more aware of their own errors
+
+    const receipt = await boopReceiptService.find(hash, timeout ?? env.RECEIPT_TIMEOUT)
+    if (receipt) return { status: WaitForReceipt.Success, receipt }
 
     const simulation = await simulationCache.findSimulation(hash)
-    if (simulation) {
-        return ok({
-            status: StateRequestStatus.Success,
-            // TODO must check scenarios here
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            state: { status: simulation.status as any, included: false, simulation },
-        } satisfies StateRequestOutput)
-    }
+    if (simulation)
+        return {
+            status: SubmitterError.ReceiptTimeout,
+            simulation,
+            description: "Timed out while waiting for receipt.",
+        }
 
-    return err({ status: StateRequestStatus.UnknownBoop } satisfies StateRequestOutput)
+    return { status: WaitForReceipt.UnknownBoop }
 }
