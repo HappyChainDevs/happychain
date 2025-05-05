@@ -16,7 +16,7 @@ export const simulateOutputSchema = z.discriminatedUnion("status", [
         submitterFee: z.string().openapi({ example: (100).toString() }),
         gas: z.number().openapi({ example: 25_000_000 }),
         validateGas: z.number().openapi({ example: 25_000_000 }),
-        paymentValidateGas: z.number().openapi({ example: 25_000_000 }),
+        validatePaymentGas: z.number().openapi({ example: 25_000_000 }),
         executeGas: z.number().openapi({ example: 25_000_000 }),
         validityUnknownDuringSimulation: z.boolean().openapi({}),
         paymentValidityUnknownDuringSimulation: z.boolean().openapi({}),

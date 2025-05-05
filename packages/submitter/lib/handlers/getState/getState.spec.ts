@@ -3,11 +3,12 @@ import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
+import type { ExecuteSuccess } from "#lib/handlers/execute"
 import { computeBoopHash } from "#lib/services/computeBoopHash"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
-import { StateRequestStatus } from "./types"
+import { type BoopStateSuccess, type StateRequestOutputSuccess, StateRequestStatus } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -34,17 +35,18 @@ describe("submitter_state", () => {
         // submit all transactions, but only wait for the first to complete
         const response = (await client.api.v1.boop.execute
             .$post({ json: { boop: serializeBigInt(signedTx) } })
-            .then((a) => a.json())) as any
+            .then((a) => a.json())) as ExecuteSuccess
+        expect(response.status).toBe(Onchain.Success)
+        expect(response.receipt).toBeDefined()
         const state = (await client.api.v1.boop.state[":hash"]
             .$get({ param: { hash: response.receipt.boopHash } })
-            .then((a) => a.json())) as any
-        expect(response.error).toBeUndefined()
-        expect(state.error).toBeUndefined()
+            .then((a) => a.json())) as StateRequestOutputSuccess
         expect(state.status).toBe(StateRequestStatus.Success)
-        expect(state.state.status).toBe(Onchain.Success)
-        expect(state.state.included).toBe(true)
-        expect(state.state.receipt.boopHash).toBe(response.receipt.boopHash)
-        expect(state.state.simulation).toBeUndefined()
+        const innerState = state.state as BoopStateSuccess
+        expect(innerState.status).toBe(Onchain.Success)
+        expect(innerState.included).toBe(true)
+        expect(innerState.receipt.boopHash).toBe(response.receipt.boopHash)
+        expect(innerState.simulation).toBeUndefined()
     })
 
     it("fetches state of an unknown tx", async () => {

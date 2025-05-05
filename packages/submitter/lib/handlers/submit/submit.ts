@@ -61,7 +61,7 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
             ...input.boop,
             gasLimit: simulation.gas, // TODO should probably be lower than the gas limit
             validateGasLimit: simulation.validateGas,
-            validatePaymentGasLimit: simulation.paymentValidateGas,
+            validatePaymentGasLimit: simulation.validatePaymentGas,
             executeGasLimit: simulation.executeGas,
             maxFeePerGas: simulation.maxFeePerGas,
             submitterFee: simulation.submitterFee,

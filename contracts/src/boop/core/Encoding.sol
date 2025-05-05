@@ -111,12 +111,12 @@ library Encoding {
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
-            // Copy executeGasLimit (4 bytes)
+            // Copy validatePaymentGasLimit (4 bytes)
             mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
-            // Copy validatePaymentGasLimit (4 bytes)
+            // Copy executeGasLimit (4 bytes)
             mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
@@ -214,12 +214,12 @@ library Encoding {
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
-            // Copy executeGaslimit (4 bytes) + zero pad to 32 bytes
+            // Copy validatePaymentGasLimit (4 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
-            // Copy validatePaymentGasLimit (4 bytes) + zero pad to 32 bytes
+            // Copy executeGaslimit (4 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)

@@ -1,6 +1,6 @@
-import { deployment as deploymentAnvil } from "@happy.tech/contracts/boop/anvil"
+import { abis as abisAnvil, deployment as deploymentAnvil } from "@happy.tech/contracts/boop/anvil"
 import {
-    abis as abisHappyChainSepolia,
+    // abis as abisHappyChainSepolia,
     deployment as deploymentHappyChainSepolia,
 } from "@happy.tech/contracts/boop/sepolia"
 import { anvil, happychainTestnet } from "viem/chains"
@@ -27,4 +27,4 @@ export function getDeployment(env: Environment) {
     }
 }
 
-export const abis = abisHappyChainSepolia
+export const abis = abisAnvil // abisHappyChainSepolia // TODO temp

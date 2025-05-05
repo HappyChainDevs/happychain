@@ -102,7 +102,7 @@ export async function sendBoop(
                 // TODO: this should be the correct types inside of the SDK
                 boop.gasLimit = Number(output.gas)
                 boop.validateGasLimit = Number(output.validateGas)
-                boop.validatePaymentGasLimit = Number(output.paymentValidateGas)
+                boop.validatePaymentGasLimit = Number(output.validatePaymentGas)
                 boop.executeGasLimit = Number(output.executeGas)
                 boop.maxFeePerGas = BigInt(output.maxFeePerGas)
                 boop.submitterFee = BigInt(output.submitterFee)

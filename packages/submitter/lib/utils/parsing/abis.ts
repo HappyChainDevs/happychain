@@ -9,10 +9,6 @@ export const eventsAbi = parseAbi([
     "event BoopExecutionStarted()",
     "event BoopSubmitted(" +
         "    address account," +
-        "    uint32 gasLimit," +
-        "    uint32 validateGasLimit," +
-        "    uint32 executeGasLimit," +
-        "    uint32 validatePaymentGasLimit," +
         "    address dest," +
         "    address payer," +
         "    uint256 value," +
@@ -20,6 +16,10 @@ export const eventsAbi = parseAbi([
         "    uint64 nonceValue," +
         "    uint256 maxFeePerGas," +
         "    int256 submitterFee," +
+        "    uint32 gasLimit," +
+        "    uint32 validateGasLimit," +
+        "    uint32 validatePaymentGasLimit," +
+        "    uint32 executeGasLimit," +
         "    bytes callData," +
         "    bytes validatorData," +
         "    bytes extraData" +

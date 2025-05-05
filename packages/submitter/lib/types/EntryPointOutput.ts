@@ -22,9 +22,9 @@ export type EntryPointOutput = {
     validateGas: UInt32
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * `IPaymaster.paymentValidateGas` from `EntryPoint.submit`.
+     * `IPaymaster.validatePayment` from `EntryPoint.submit`.
      */
-    paymentValidateGas: UInt32
+    validatePaymentGas: UInt32
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
      * `IAccount.execute` from `EntryPoint.submit`.
