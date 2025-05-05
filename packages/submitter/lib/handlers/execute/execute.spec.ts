@@ -90,7 +90,7 @@ describe("submitter_execute", () => {
             expect(BigInt(response.receipt.nonceValue)).toBeGreaterThanOrEqual(0n)
             expect(response.receipt.entryPoint).toBeString()
             expect(response.receipt.status).toBe(Onchain.Success)
-            expect(response.receipt.logs.length).toBe(0) // only emits errors on failure currently // TODO populate
+            expect(response.receipt.logs.length).toBe(1)
             expect(response.receipt.revertData).toBe("0x")
             expect(BigInt(response.receipt.gasUsed)).toBeGreaterThan(0n)
             expect(BigInt(response.receipt.gasCost)).toBeGreaterThan(0n)

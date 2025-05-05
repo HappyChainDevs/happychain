@@ -1,5 +1,5 @@
 import type { Hex } from "@happy.tech/common"
-import { env } from "#lib/env"
+import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
@@ -19,6 +19,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     logger.trace("Waiting for receipt", boopHash)
     // TODO allow specifying a custom timeout
     const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, env.RECEIPT_TIMEOUT)
+    logger.trace("Found receipt", boopHash, receipt)
 
     if (!receipt)
         return {
@@ -30,18 +31,18 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         }
 
     if (receipt.txReceipt.status === "success") {
-        // TODO this should be only the boop's receipts
         // TODO note misbehaviour
-        // TODO check contract originating the revert!
         // EntryPoint.submit succeeded, but check that the execution actually succeeded.
         let output: ExecuteOutput | undefined
-        for (const log of receipt.txReceipt.logs) {
+        for (const log of receipt.logs) {
             const decoded = decodeEvent(log)
             if (!decoded) continue
             const status = getEntryPointStatusFromEventName(decoded?.eventName)
             if (!status) continue
+            // Don't get pranked by contracts emitting the same event.
+            if (log.address.toLowerCase() !== deployment.EntryPoint.toLowerCase()) continue
             output = {
-                ...outputForExecuteError(status, decoded.args[0] as Hex),
+                ...outputForExecuteError(status, decoded.args.revertData as Hex),
                 stage: "execute",
             }
             break
