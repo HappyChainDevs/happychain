@@ -19,18 +19,18 @@ export class ApiClient {
     }
 
     async get(endpoint: string, query: unknown = {}): Promise<unknown> {
-        return this.#request("GET", endpoint, processRequestParams({ query }))
+        return await this.#request("GET", endpoint, processRequestParams({ query }))
     }
 
     async post(endpoint: string, body: unknown = {}, query: unknown = {}): Promise<unknown> {
-        return this.#request("POST", endpoint, processRequestParams({ body, query }))
+        return await this.#request("POST", endpoint, processRequestParams({ body, query }))
     }
 
     async #request(method: HttpMethod, endpoint: string, { body, query }: ProcessedRequestParams): Promise<unknown> {
         const url = constructUrl(this.#baseUrl, endpoint, query)
         const init = { method, headers: this.#headers, body: body ? JSON.stringify(body) : null }
         const response = await fetch(url, init)
-        return this.#handleResponse(response)
+        return await this.#handleResponse(response)
     }
 
     async #handleResponse(response: Response): Promise<unknown> {

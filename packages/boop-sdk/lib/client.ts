@@ -1,19 +1,23 @@
 import { serializeBigInt } from "@happy.tech/common"
-import type {
-    CreateAccountInput,
-    CreateAccountOutput,
-    ExecuteInput,
-    ExecuteOutput,
-    GetPendingInput,
-    GetPendingOutput,
-    GetStateInput,
-    GetStateOutput,
-    SimulateInput,
-    SimulateOutput,
-    SubmitInput,
-    SubmitOutput,
-    WaitForReceiptInput,
-    WaitForReceiptOutput,
+import {
+    type BoopReceipt,
+    type CreateAccountInput,
+    type CreateAccountOutput,
+    type ExecuteInput,
+    type ExecuteOutput,
+    GetPending,
+    type GetPendingInput,
+    type GetPendingOutput,
+    type GetStateInput,
+    type GetStateOutput,
+    Onchain,
+    type Receipt,
+    type SimulateInput,
+    type SimulateOutput,
+    type SubmitInput,
+    type SubmitOutput,
+    type WaitForReceiptInput,
+    type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
@@ -69,7 +73,7 @@ export class BoopClient {
      */
     async submit(data: SubmitInput): Promise<SubmitOutput> {
         const response = await this.client.post("/api/v1/boop/submit", serializeBigInt(data))
-        return response as SubmitOutput
+        return this.#getSubmitOutput(response)
     }
 
     /**
@@ -91,7 +95,7 @@ export class BoopClient {
      */
     async execute(data: ExecuteInput): Promise<ExecuteOutput> {
         const response = await this.client.post("/api/v1/boop/execute", serializeBigInt(data))
-        return response as ExecuteOutput
+        return this.#getExecuteOutput(response)
     }
 
     /**
@@ -113,7 +117,7 @@ export class BoopClient {
      */
     async simulate(data: SimulateInput): Promise<SimulateOutput> {
         const response = await this.client.post("/api/v1/boop/simulate", serializeBigInt(data))
-        return response as SimulateOutput
+        return this.#getSimulateOutput(response)
     }
 
     /**
@@ -125,7 +129,7 @@ export class BoopClient {
      */
     async state({ hash }: GetStateInput): Promise<GetStateOutput> {
         const response = await this.client.get(`/api/v1/boop/state/${hash}`)
-        return response as GetStateOutput
+        return this.#getStateOutput(response)
     }
 
     /**
@@ -137,7 +141,7 @@ export class BoopClient {
      */
     async receipt({ hash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
         const response = await this.client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
-        return response as WaitForReceiptOutput
+        return this.#getReceiptOutput(response)
     }
 
     /**
@@ -148,6 +152,109 @@ export class BoopClient {
      */
     async pending({ account }: GetPendingInput): Promise<GetPendingOutput> {
         const response = await this.client.get(`/api/v1/boop/pending/${account}`)
-        return response as GetPendingOutput
+        return this.#getPendingOutput(response)
+    }
+
+    // == Formatting Utils =========================================================================
+
+    #getSubmitOutput(response: unknown): SubmitOutput {
+        const output = response as SubmitOutput
+        if (output?.status !== Onchain.Success) return output
+
+        return {
+            ...output,
+            maxFeePerGas: BigInt(output.maxFeePerGas),
+            submitterFee: BigInt(output.submitterFee),
+        }
+    }
+
+    #getExecuteOutput(response: unknown): ExecuteOutput {
+        const output = response as ExecuteOutput
+        if (!("receipt" in output) || !output.receipt) return output
+
+        return {
+            ...output,
+            receipt: this.#getBoopReceiptOutput(output.receipt),
+        }
+    }
+
+    #getSimulateOutput(response: unknown): SimulateOutput {
+        const output = response as SimulateOutput
+        if (output?.status !== Onchain.Success) return output
+        return {
+            ...output,
+            maxFeePerGas: BigInt(output.maxFeePerGas),
+            submitterFee: BigInt(output.submitterFee),
+        }
+    }
+
+    #getStateOutput(response: unknown): GetStateOutput {
+        const output = response as GetStateOutput
+
+        if ("receipt" in output && output.receipt) {
+            return {
+                ...output,
+                receipt: this.#getBoopReceiptOutput(output.receipt),
+            }
+        }
+
+        if ("simulation" in output && output.simulation) {
+            return {
+                ...output,
+                simulation: this.#getSimulateOutput(output.simulation),
+            }
+        }
+
+        return output
+    }
+
+    #getReceiptOutput(response: unknown): WaitForReceiptOutput {
+        const output = response as WaitForReceiptOutput
+
+        if ("receipt" in output && output.receipt) {
+            return {
+                ...output,
+                receipt: this.#getBoopReceiptOutput(output.receipt),
+            }
+        }
+
+        return output
+    }
+
+    #getPendingOutput(response: unknown): GetPendingOutput {
+        const output = response as GetPendingOutput
+        if (output?.status !== GetPending.Success) return output
+
+        return {
+            ...output,
+            pending: output.pending.map((pending) => ({
+                ...pending,
+                nonceTrack: BigInt(pending.nonceTrack),
+                nonceValue: BigInt(pending.nonceValue),
+            })),
+        }
+    }
+
+    #getBoopReceiptOutput(receipt: BoopReceipt): BoopReceipt {
+        return {
+            ...receipt,
+            nonceTrack: BigInt(receipt.nonceTrack),
+            nonceValue: BigInt(receipt.nonceValue),
+            gasUsed: BigInt(receipt.gasUsed),
+            gasCost: BigInt(receipt.gasCost),
+            txReceipt: this.#getTxReceiptOutput(receipt.txReceipt),
+        }
+    }
+
+    #getTxReceiptOutput(receipt: Receipt): Receipt {
+        return {
+            ...receipt,
+            blobGasPrice: receipt.blockNumber !== undefined ? BigInt(receipt.blockNumber) : undefined,
+            blobGasUsed: receipt.blockNumber !== undefined ? BigInt(receipt.blockNumber) : undefined,
+            blockNumber: BigInt(receipt.blockNumber),
+            cumulativeGasUsed: BigInt(receipt.cumulativeGasUsed),
+            effectiveGasPrice: BigInt(receipt.effectiveGasPrice),
+            gasUsed: BigInt(receipt.gasUsed),
+        }
     }
 }

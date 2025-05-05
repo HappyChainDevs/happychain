@@ -103,13 +103,12 @@ export async function sendBoop(
                 throw new BoopSimulationError(output)
             }
 
-            // TODO: this should be the correct types inside of the SDK
-            boop.gasLimit = Number(output.gas)
-            boop.validateGasLimit = Number(output.validateGas)
-            boop.validatePaymentGasLimit = Number(output.validatePaymentGas)
-            boop.executeGasLimit = Number(output.executeGas)
-            boop.maxFeePerGas = BigInt(output.maxFeePerGas)
-            boop.submitterFee = BigInt(output.submitterFee)
+            boop.gasLimit = output.gas
+            boop.validateGasLimit = output.validateGas
+            boop.validatePaymentGasLimit = output.validatePaymentGas
+            boop.executeGasLimit = output.executeGas
+            boop.maxFeePerGas = output.maxFeePerGas
+            boop.submitterFee = output.submitterFee
         }
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
