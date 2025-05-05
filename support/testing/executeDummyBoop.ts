@@ -1,3 +1,8 @@
+/**
+ * This script is intended to be run as part of a cron job to test boop's on testnet.
+ * It creates a new account, prepares a boop that mints a token, and calls execute on the Entrypoint.
+ */
+
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
 import { BoopClient, computeBoopHash } from "@happy.tech/boop-sdk"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
