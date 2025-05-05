@@ -2,7 +2,6 @@ name: Deploy Faucet
 
 on:
   workflow_dispatch:
-  pull_request:
 
 env:
   REGISTRY: ghcr.io
