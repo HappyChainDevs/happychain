@@ -9,6 +9,7 @@ import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
+import { err, ok, type Result } from "neverthrow"
 
 export enum TransactionStatus {
     /**
@@ -157,10 +158,7 @@ export class Transaction {
      * Stores promises that wait for the transaction to be finalized.
      * These promises are resolved when the transaction status changes to a finalized state.
      */
-    private waitingPromises: {
-        resolve: (transaction: Transaction) => void
-        reject: (error: Error) => void
-    }[]
+    private waitingPromises: ((transaction: Result<Transaction, Error>) => void)[]
 
     constructor(
         config: TransactionConstructorConfig & {
@@ -266,8 +264,8 @@ export class Transaction {
         if (!NotFinalizedStatuses.includes(status)) {
             TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
 
-            this.waitingPromises.forEach(({ resolve }) => {
-                resolve(this)
+            this.waitingPromises.forEach((resolve) => {
+                resolve(ok(this))
             })
 
             this.waitingPromises = []
@@ -284,10 +282,20 @@ export class Transaction {
         this.callbacks[status].push(callback)
     }
 
-    waitForFinalization(): Promise<Transaction> {
-        return new Promise((resolve: (transaction: Transaction) => void, reject: (error: Error) => void) => {
-            this.waitingPromises.push({ resolve, reject })
-        })
+    waitForFinalization(timeout?: number): Promise<Result<Transaction, Error>> {
+        return new Promise((resolve) => {
+            this.waitingPromises.push(resolve);
+            
+            if (timeout) {
+                setTimeout(() => {
+                    this.waitingPromises = this.waitingPromises.filter(
+                        p => p !== resolve
+                    );
+
+                    resolve(err(new Error(`Transaction finalization timed out after ${timeout}ms`)))
+                }, timeout);
+            }
+        });
     }
 
     get attemptCount(): number {
