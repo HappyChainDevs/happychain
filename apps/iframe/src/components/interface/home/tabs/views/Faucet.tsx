@@ -4,12 +4,15 @@ import { Button } from "#src/components/primitives/button/Button"
 import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
 import UserNotFoundWarning from "./UserNotFoundWarning"
+import { getBalanceQueryKey } from 'wagmi/query'
+import { useQueryClient } from '@tanstack/react-query'
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
 const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!
 
 const FaucetView = () => {
     const user = useAtomValue(userAtom)
+    const queryClient = useQueryClient()
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [message, setMessage] = useState("")
     const turnstileRef = useRef<HTMLDivElement | null>(null)
@@ -37,6 +40,11 @@ const FaucetView = () => {
                 if (!res.ok) throw new Error(data?.message || "Unknown error")
                 setStatus("success")
                 setMessage(data?.message || "Tokens sent!")
+
+                queryClient.invalidateQueries({
+                    queryKey: getBalanceQueryKey({ address: user.address }),
+                })
+
             } catch (err: unknown) {
                 if (err instanceof Error) {
                     setStatus("error")
@@ -47,7 +55,7 @@ const FaucetView = () => {
                 }
             }
         },
-        [getToken, user, turnstileLoading],
+        [getToken, user, turnstileLoading, queryClient],
     )
 
     if (!user) return <UserNotFoundWarning />
