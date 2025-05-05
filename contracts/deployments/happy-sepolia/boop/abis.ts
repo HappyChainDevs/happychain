@@ -100,12 +100,12 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "executeGasLimit",
+              "name": "validatePaymentGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
             {
-              "name": "validatePaymentGasLimit",
+              "name": "executeGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -322,7 +322,7 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "paymentValidateGas",
+              "name": "validatePaymentGas",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -737,12 +737,12 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "executeGasLimit",
+              "name": "validatePaymentGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
             {
-              "name": "validatePaymentGasLimit",
+              "name": "executeGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -1059,12 +1059,12 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "executeGasLimit",
+              "name": "validatePaymentGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
             {
-              "name": "validatePaymentGasLimit",
+              "name": "executeGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -1525,6 +1525,25 @@ const contractToAbi = ({
       "stateMutability": "view"
     },
     {
+      "type": "event",
+      "name": "Deployed",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "owner",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
       "type": "error",
       "name": "AlreadyDeployed",
       "inputs": []
@@ -1945,12 +1964,12 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "executeGasLimit",
+              "name": "validatePaymentGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
             {
-              "name": "validatePaymentGasLimit",
+              "name": "executeGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -2240,12 +2259,12 @@ const contractToAbi = ({
               "internalType": "uint32"
             },
             {
-              "name": "executeGasLimit",
+              "name": "validatePaymentGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
             {
-              "name": "validatePaymentGasLimit",
+              "name": "executeGasLimit",
               "type": "uint32",
               "internalType": "uint32"
             },
@@ -2351,14 +2370,14 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "BatchCallExecutor": "0x263A8E028b57b1C7F0d0786FA7163c2182eF5e53",
-  "EntryPoint": "0x47C2388fB87E25d287b868D976F8d2C1ce70F353",
-  "HappyAccountBeacon": "0xe708367be18762Cc24aF0e309EfE6F26Cbc7C480",
-  "HappyAccountBeaconProxyFactory": "0x704a55E1a66D9acC05E20851224d8d9566E7279a",
-  "HappyAccountImpl": "0xF03c3c8eC0a3744C8395353124c1D87255878ab1",
+  "BatchCallExecutor": "0xd502de7e1D4C99E60f7c121DaF2937b9e478EBF6",
+  "EntryPoint": "0xD8C81545948C0e6a608a4eD0f334a802124F8a1b",
+  "HappyAccountBeacon": "0xb75aFae3F247106ebC63D10dB4753c967Cab97CE",
+  "HappyAccountBeaconProxyFactory": "0x51099cE2c3Dd0Fe9891AbC2b809194Aa9A662384",
+  "HappyAccountImpl": "0xd7ae24Cda1b4bAf6b97A552d8Eb97A6a80832fE8",
   "HappyAccountRegistry": "0x1017A20321215ef5fAeAf4c8241075da3d881a15",
-  "HappyPaymaster": "0x428ED2B5D9002868faBb559cBe7058c1aEB02200",
-  "SessionKeyValidator": "0xB3e12069BE0aE1967129079445F9397A2810757a"
+  "HappyPaymaster": "0x0A0c4a4E2BC9251B76055b94578B015812eeEba0",
+  "SessionKeyValidator": "0xb4940646e118aFea6C9929A4857c4267daA023b9"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
