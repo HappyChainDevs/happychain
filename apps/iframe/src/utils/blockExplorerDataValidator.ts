@@ -2,17 +2,17 @@ import { z } from "zod"
 
 const ethAddress = z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid address")
 
-export const externalLibrarySchema = z.object({
+const externalLibrarySchema = z.object({
     name: z.string(),
     address_hash: ethAddress,
 })
 
-export const additionalSourceSchema = z.object({
+const additionalSourceSchema = z.object({
     file_path: z.string(),
     source_code: z.string(),
 })
 
-export const compilerSettingsSchema = z.object({
+const compilerSettingsSchema = z.object({
     compilationTarget: z.record(z.string(), z.string()).optional(),
     evmVersion: z.string().optional(),
     libraries: z.record(z.string(), z.string()).optional(),
@@ -34,7 +34,7 @@ export const compilerSettingsSchema = z.object({
     viaIR: z.boolean().optional(),
 })
 
-export const decodedConstructorArgSchema = z.tuple([
+const decodedConstructorArgSchema = z.tuple([
     z.unknown(), // relaxed because sometimes this isn't an address
     z.object({
         internalType: z.string(),
