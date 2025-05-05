@@ -8,9 +8,17 @@ export const gasSchema = z.object({
      * Gas safety margin (in percent) applied to the gas usage values observed during simulation to serve as
      * gas limits during onchain execution. This does not apply to gas limits explicitly supplied by users.
      *
-     * This defaults to 120%.
+     * This defaults to 120%, has a minimum of 100% and a max of 10_000%.
      */
-    GAS_SAFETY_MARGIN: z.coerce.number().gt(100).lt(10000).default(120),
+    GAS_SAFETY_MARGIN: z.coerce.number().gte(100).lte(10_000).default(120),
+
+    /**
+     * Fee safety margin (in percent) applied to the basefee observed during simulation, to serve as maxFeePerGas
+     * during onchain execution. This does not apply to maxFees explicitly supplied by users.
+     *
+     * This defaults to 120%, has a minimum of 100 and a max of 10_000%.
+     */
+    FEE_SAFETY_MARGIN: z.coerce.bigint().gte(100n).lte(10_000n).default(120n),
 
     /**
      * Gas reserved for entrypoint execution when validating gas values before simulation.
