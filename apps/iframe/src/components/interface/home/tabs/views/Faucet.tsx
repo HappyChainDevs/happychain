@@ -1,11 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useRef, useState } from "react"
+import { getBalanceQueryKey } from "wagmi/query"
 import { Button } from "#src/components/primitives/button/Button"
 import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
 import UserNotFoundWarning from "./UserNotFoundWarning"
-import { getBalanceQueryKey } from 'wagmi/query'
-import { useQueryClient } from '@tanstack/react-query'
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
 const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!
@@ -44,7 +44,6 @@ const FaucetView = () => {
                 queryClient.invalidateQueries({
                     queryKey: getBalanceQueryKey({ address: user.address }),
                 })
-
             } catch (err: unknown) {
                 if (err instanceof Error) {
                     setStatus("error")
