@@ -1,16 +1,16 @@
 import { Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
+import type { SubmitError } from "#lib/client.ts"
 import { abis, env } from "#lib/env"
-import { SubmitterError } from "#lib/errors"
 import type { PendingBoopInfo } from "#lib/handlers/getPending"
-import type { Boop } from "#lib/types"
+import { type Boop, SubmitterError } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { computeBoopHash } from "./computeBoopHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
-type BlockedBoop = { hash: `0x${string}`; resolve: (value: Result<undefined, SubmitterError>) => void }
+type BlockedBoop = { hash: `0x${string}`; resolve: (value: Result<undefined, SubmitError>) => void }
 
 const MAX_WAIT_TIMEOUT_MS = 30_000
 
@@ -45,22 +45,22 @@ export class BoopNonceManagerService {
         })
     }
 
-    public async checkIfBlocked(entryPoint: Address, boop: Boop): Promise<boolean> {
+    public async checkIfBlocked(entryPoint: Address, boop: Boop): Promise<Result<boolean, SubmitError>> {
+        if (this.trackExceedsBuffer(boop)) return err(this.#makeSubmitError("bufferExceeded"))
+        if (this.reachedMaxCapacity()) return err(this.#makeSubmitError("maxCapacity"))
+        if (await this.nonceOutOfRange(entryPoint, boop)) return err(this.#makeSubmitError("nonce out of range"))
         const localNonce = await this.getLocalNonce(entryPoint, boop.account, boop.nonceTrack)
-        return boop.nonceValue > localNonce
+        return ok(boop.nonceValue > localNonce)
     }
 
-    public async pauseUntilUnblocked(entrypoint: Address, boop: Boop): Promise<Result<undefined, SubmitterError>> {
-        if (this.trackExceedsBuffer(boop)) return err(new SubmitterError("bufferExceeded"))
-        if (this.reachedMaxCapacity()) return err(new SubmitterError("maxCapacity"))
-        if (await this.nonceOutOfRange(entrypoint, boop)) return err(new SubmitterError("nonce out of range"))
-
+    public pauseUntilUnblocked(_entrypoint: Address, boop: Boop): Promise<Result<undefined, SubmitError>> {
         const { account, nonceTrack, nonceValue } = boop
 
         const previouslyBlocked = this.blockedTxMap.get(account, nonceTrack)?.get(nonceValue)
-        if (previouslyBlocked) previouslyBlocked.resolve(err(new SubmitterError("transaction replaced")))
 
-        const { promise, resolve } = promiseWithResolvers<Result<undefined, SubmitterError>>()
+        if (previouslyBlocked) previouslyBlocked.resolve(err(this.#makeSubmitError("transaction replaced")))
+
+        const { promise, resolve } = promiseWithResolvers<Result<undefined, SubmitError>>()
 
         const timeout = setTimeout(() => {
             // remove the tx
@@ -72,14 +72,14 @@ export class BoopNonceManagerService {
                 this.nonces.delete(account, nonceTrack)
                 this.nonceMutexes.delete(account, nonceTrack)
             }
-            resolve(err(new SubmitterError("transaction timeout")))
+            resolve(err(this.#makeSubmitError("transaction timeout")))
         }, MAX_WAIT_TIMEOUT_MS)
 
         this.blockedTxMap
             .getOrSet(boop.account, boop.nonceTrack, () => new Map())
             .set(boop.nonceValue, {
                 hash: computeBoopHash(BigInt(env.CHAIN_ID), boop),
-                resolve: (response: Result<undefined, SubmitterError>) => {
+                resolve: (response: Result<undefined, SubmitError>) => {
                     clearTimeout(timeout)
                     resolve(response)
                 },
@@ -88,6 +88,14 @@ export class BoopNonceManagerService {
         this.totalCapacity++
 
         return promise
+    }
+
+    #makeSubmitError(message: string): SubmitError {
+        return {
+            status: SubmitterError.UnexpectedError,
+            description: message,
+            stage: "submit",
+        }
     }
 
     /**

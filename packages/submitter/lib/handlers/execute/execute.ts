@@ -3,6 +3,7 @@ import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
+import { simulationCache } from "#lib/services"
 import { computeBoopHash } from "#lib/services/computeBoopHash"
 import { Onchain, type OnchainStatus } from "#lib/types"
 import { SubmitterError } from "#lib/types"
@@ -59,7 +60,14 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const decoded = decodeRawError(receipt.revertData)
     const output = outputForRevertError(data.boop, boopHash, decoded)
 
-    if (output.status === Onchain.UnexpectedReverted && receipt.txReceipt.gasUsed === BigInt(submission.gasLimit)) {
+    const simulation = await simulationCache.findSimulation(boopHash)
+
+    if (
+        output.status === Onchain.UnexpectedReverted &&
+        simulation &&
+        simulation.status === Onchain.Success &&
+        receipt.txReceipt.gasUsed === BigInt(simulation.gas)
+    ) {
         if (data.boop.payer === data.boop.account) {
             logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
             // TODO note account as problematic
