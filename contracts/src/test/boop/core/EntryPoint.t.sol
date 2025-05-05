@@ -411,7 +411,7 @@ contract EntryPointTest is BoopTestUtils {
             getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas / 10;
         boop2.executeGasLimit = output.executeGas * 120 / 100;
-        boop2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100;
+        boop2.validatePaymentGasLimit = output.validatePaymentGas * 120 / 100;
         boop2.validatorData = signBoop(boop2, privKey);
 
         // This should revert with ValidationReverted since validate() will run out of gas
@@ -520,8 +520,8 @@ contract EntryPointTest is BoopTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = entryPoint.submit(boop.encode());
 
-        // The output.paymentValidateGas gives the gas usage for validatePayment() call
-        assertGt(output.paymentValidateGas, 0);
+        // The output.validatePaymentGas gives the gas usage for validatePayment() call
+        assertGt(output.validatePaymentGas, 0);
 
         vm.revertToState(id); // Revert the state to before the simulation
 
@@ -530,7 +530,7 @@ contract EntryPointTest is BoopTestUtils {
         Boop memory boop2 =
             getStubBoop(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
-        boop2.validatePaymentGasLimit = output.paymentValidateGas / 10; // Set to 1/10 of required gas
+        boop2.validatePaymentGasLimit = output.validatePaymentGas / 10; // Set to 1/10 of required gas
         boop2.executeGasLimit = output.executeGas * 120 / 100; // Set this higher to ensure it's not the issue
         boop2.validatorData = signBoop(boop2, privKey);
 
@@ -617,7 +617,7 @@ contract EntryPointTest is BoopTestUtils {
             getStubBoop(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas * 120 / 100;
         boop2.executeGasLimit = output.executeGas * 120 / 100;
-        boop2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100;
+        boop2.validatePaymentGasLimit = output.validatePaymentGas * 120 / 100;
         boop2.validatorData = signBoop(boop2, privKey);
 
         // This should succeed now if the execute-gas-limit estimation is accurate
@@ -648,7 +648,7 @@ contract EntryPointTest is BoopTestUtils {
             getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
         boop2.executeGasLimit = output.executeGas / 10; // Set to 1/10 of required gas
-        boop2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100; // Set this higher to ensure it's not the issue
+        boop2.validatePaymentGasLimit = output.validatePaymentGas * 120 / 100; // Set this higher to ensure it's not the issue
         boop2.validatorData = signBoop(boop2, privKey);
 
         // Execute the transaction - note that execute() running out of gas doesn't cause a revert

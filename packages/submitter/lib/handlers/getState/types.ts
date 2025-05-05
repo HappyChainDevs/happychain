@@ -53,10 +53,14 @@ export enum StateRequestStatus {
 
 /** Output of a request for {@link BoopState}. */
 // biome-ignore format: readability
-export type StateRequestOutput = {
+export type StateRequestOutput = StateRequestOutputSuccess | StateRequestOutputUnknown
+
+export type StateRequestOutputSuccess = {
     status: StateRequestStatus.Success
     state: BoopState
-} | {
+}
+
+export type StateRequestOutputUnknown = {
     status: StateRequestStatus.UnknownBoop
     state?: never
 }

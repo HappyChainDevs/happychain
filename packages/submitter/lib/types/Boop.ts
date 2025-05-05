@@ -14,8 +14,8 @@ export type Boop = {
     maxFeePerGas: UInt256
     submitterFee: Int256
     validateGasLimit: UInt32
-    executeGasLimit: UInt32
     validatePaymentGasLimit: UInt32
+    executeGasLimit: UInt32
     callData: Bytes
     validatorData: Bytes
     extraData: Bytes

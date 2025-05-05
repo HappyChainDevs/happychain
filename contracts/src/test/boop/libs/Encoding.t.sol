@@ -23,8 +23,8 @@ contract CoreLibsTest is Test {
             submitterFee: 100000000, // 0x5F5E100
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
-            executeGasLimit: 800001, // 0xC3501
-            validatePaymentGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800001, // 0xC3501
+            executeGasLimit: 800002, // 0xC3502
             callData: "",
             validatorData: "",
             extraData: ""
@@ -49,8 +49,8 @@ contract CoreLibsTest is Test {
             submitterFee: 100000000, // 0x5F5E100
             gasLimit: 1000000, // 0x000F4240
             validateGasLimit: 800000, // 0x000C3500
-            executeGasLimit: 800001, // 0x000C3501
-            validatePaymentGasLimit: 800002, // 0x000C3502
+            validatePaymentGasLimit: 800001, // 0x000C3501
+            executeGasLimit: 800002, // 0x000C3502
             callData: hex"1234",
             validatorData: hex"9abc",
             extraData: hex"def0"
@@ -75,8 +75,8 @@ contract CoreLibsTest is Test {
             submitterFee: 100000000, // 0x5F5E100
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
-            executeGasLimit: 800001, // 0xC3501
-            validatePaymentGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800001, // 0xC3501
+            executeGasLimit: 800002, // 0xC3502
             callData: hex"40c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c68000",
             validatorData: hex"827a29d9e7e5e37adc8ae5ead7993f7d354da82a35a05da3fef21d133e22082f376916126bfece3e226c3a9bfb55354783deb43b58989d0a29ec53b4f36560cc1b",
             extraData: hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"
@@ -108,8 +108,8 @@ contract CoreLibsTest is Test {
         assertEq(decoded.submitterFee, 100000000);
         assertEq(decoded.gasLimit, 1000000); // 000F4240
         assertEq(decoded.validateGasLimit, 800000); // 000C3500
-        assertEq(decoded.executeGasLimit, 800001); // 000C3501
-        assertEq(decoded.validatePaymentGasLimit, 800002); // 000C3502
+        assertEq(decoded.validatePaymentGasLimit, 800001); // 000C3501
+        assertEq(decoded.executeGasLimit, 800002); // 000C3502
         assertEq(decoded.callData, "");
         assertEq(decoded.validatorData, "");
         assertEq(decoded.extraData, "");
@@ -131,8 +131,8 @@ contract CoreLibsTest is Test {
         assertEq(decoded.submitterFee, 100000000);
         assertEq(decoded.gasLimit, 1000000);
         assertEq(decoded.validateGasLimit, 800000);
-        assertEq(decoded.executeGasLimit, 800001);
-        assertEq(decoded.validatePaymentGasLimit, 800002);
+        assertEq(decoded.validatePaymentGasLimit, 800001);
+        assertEq(decoded.executeGasLimit, 800002);
         assertEq(decoded.callData, hex"1234");
         assertEq(decoded.validatorData, hex"9abc");
         assertEq(decoded.extraData, hex"def0");
@@ -154,8 +154,8 @@ contract CoreLibsTest is Test {
         assertEq(decoded.submitterFee, 100000000);
         assertEq(decoded.gasLimit, 1000000);
         assertEq(decoded.validateGasLimit, 800000);
-        assertEq(decoded.executeGasLimit, 800001);
-        assertEq(decoded.validatePaymentGasLimit, 800002);
+        assertEq(decoded.validatePaymentGasLimit, 800001);
+        assertEq(decoded.executeGasLimit, 800002);
         assertEq(
             decoded.callData,
             hex"40c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c68000"
@@ -175,8 +175,8 @@ contract CoreLibsTest is Test {
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
-            executeGasLimit: 800001, // 0xC3501
-            validatePaymentGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800001, // 0xC3501
+            executeGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -194,6 +194,8 @@ contract CoreLibsTest is Test {
 
         assertEq(decoded.account, input.account);
         assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.validateGasLimit, input.validateGasLimit);
+        assertEq(decoded.validatePaymentGasLimit, input.validatePaymentGasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
         assertEq(decoded.payer, input.payer);
@@ -212,8 +214,8 @@ contract CoreLibsTest is Test {
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
-            executeGasLimit: 800001, // 0xC3501
-            validatePaymentGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800001, // 0xC3501
+            executeGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -231,6 +233,8 @@ contract CoreLibsTest is Test {
 
         assertEq(decoded.account, input.account);
         assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.validateGasLimit, input.validateGasLimit);
+        assertEq(decoded.validatePaymentGasLimit, input.validatePaymentGasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
         assertEq(decoded.payer, input.payer);
@@ -249,8 +253,8 @@ contract CoreLibsTest is Test {
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
-            executeGasLimit: 800001, // 0xC3501
-            validatePaymentGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800001, // 0xC3501
+            executeGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             payer: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -268,6 +272,8 @@ contract CoreLibsTest is Test {
 
         assertEq(decoded.account, input.account);
         assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.validateGasLimit, input.validateGasLimit);
+        assertEq(decoded.validatePaymentGasLimit, input.validatePaymentGasLimit);
         assertEq(decoded.executeGasLimit, input.executeGasLimit);
         assertEq(decoded.dest, input.dest);
         assertEq(decoded.payer, input.payer);

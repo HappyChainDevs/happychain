@@ -135,7 +135,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
             if (result == Validity.UNKNOWN_DURING_SIMULATION) {
                 output.paymentValidityUnknownDuringSimulation = true;
             }
-            output.paymentValidateGas = gasUsed;
+            output.validatePaymentGas = gasUsed;
         }
 
         // ==========================================================================================

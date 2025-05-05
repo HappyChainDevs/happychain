@@ -18,8 +18,8 @@ export function encodeBoop(boop: Boop): Hex {
     const submitterFeeHex = toBytes(boop.submitterFee, 32)
     const gasLimitHex = toBytes(boop.gasLimit, 4)
     const validateGasLimitHex = toBytes(boop.validateGasLimit, 4)
-    const executeGasLimitHex = toBytes(boop.executeGasLimit, 4)
     const validatePaymentGasLimitHex = toBytes(boop.validatePaymentGasLimit, 4)
+    const executeGasLimitHex = toBytes(boop.executeGasLimit, 4)
 
     // Dynamic fields with their 4-byte length prefixes
     const callDataHex = toDynamicLengthBytes(boop.callData.slice(2))
@@ -38,8 +38,8 @@ export function encodeBoop(boop: Boop): Hex {
         submitterFeeHex + // 32 bytes
         gasLimitHex + // 4 bytes
         validateGasLimitHex + // 4 bytes
-        executeGasLimitHex + // 4 bytes
         validatePaymentGasLimitHex + // 4 bytes
+        executeGasLimitHex + // 4 bytes
         callDataHex +
         validatorDataHex +
         extraDataHex

@@ -17,8 +17,8 @@ describe("encode", () => {
             submitterFee: 100000000n, // (10^8) wei
             gasLimit: 1000000,
             validateGasLimit: 800000,
-            executeGasLimit: 800001,
-            validatePaymentGasLimit: 800002,
+            validatePaymentGasLimit: 800001,
+            executeGasLimit: 800002,
             callData: "0x",
             validatorData: "0x",
             extraData: "0x",
@@ -44,8 +44,8 @@ describe("encode", () => {
             submitterFee: 100000000n, // (10^8) wei
             gasLimit: 1000000,
             validateGasLimit: 800000,
-            executeGasLimit: 800001,
-            validatePaymentGasLimit: 800002,
+            validatePaymentGasLimit: 800001,
+            executeGasLimit: 800002,
             callData: "0x0123456789",
             validatorData: "0x09abcd",
             extraData: "0xdef0",
@@ -70,8 +70,8 @@ describe("encode", () => {
             submitterFee: 100000000n, // (10^8) wei
             gasLimit: 1000000,
             validateGasLimit: 800000,
-            executeGasLimit: 800001,
-            validatePaymentGasLimit: 800002,
+            validatePaymentGasLimit: 800001,
+            executeGasLimit: 800002,
             callData:
                 "0x40c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c68000",
             validatorData:
@@ -98,8 +98,8 @@ describe("encode", () => {
             submitterFee: 0n,
             gasLimit: 0,
             validateGasLimit: 0,
-            executeGasLimit: 0,
             validatePaymentGasLimit: 0,
+            executeGasLimit: 0,
             callData: "0x",
             validatorData: "0x",
             extraData: "0x",
