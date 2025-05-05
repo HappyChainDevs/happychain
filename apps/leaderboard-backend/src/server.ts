@@ -91,10 +91,7 @@ app.onError(async (err, c) => {
     if (err instanceof HTTPException) return err.getResponse()
     return c.json(
         {
-            error:
-                process.env.NODE_ENV === "production"
-                    ? `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`
-                    : err.message,
+            error: err.message,
             requestId: c.get("requestId"),
             url: c.req.url,
         },

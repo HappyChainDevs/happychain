@@ -1,18 +1,21 @@
-import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
+import type { UserTableId } from "../../db/types"
 import {
-    UserCreateRequestSchema,
-    UserIdParamSchema,
-    UserQuerySchema,
-    UserUpdateRequestSchema,
-    UserWalletAddRequestSchema,
-    UserWalletParamSchema,
+    UserCreateDescription,
+    UserCreateValidation,
+    UserIdParamValidation,
+    UserQueryDescription,
+    UserQueryValidation,
+    UserUpdateValidation,
+    UserWalletAddDescription,
+    UserWalletAddValidation,
+    UserWalletParamValidation,
 } from "../../validation/schema/userSchema"
 
 export default new Hono()
 
-    // GET /users - List users (with filtering)
-    .get("/", zValidator("query", UserQuerySchema), async (c) => {
+    // GET /users - Find user (with filtering)
+    .get("/", UserQueryDescription, UserQueryValidation, async (c) => {
         try {
             const query = c.req.valid("query")
             const { userRepo } = c.get("repos")
@@ -31,12 +34,13 @@ export default new Hono()
     })
 
     // GET /users/:id - Get user by ID
-    .get("/:id", zValidator("param", UserIdParamSchema), async (c) => {
+    .get("/:id", UserQueryDescription, UserIdParamValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
             const { userRepo } = c.get("repos")
 
-            const user = await userRepo.findById(id, true) // Include wallets
+            const userTableId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userTableId, true) // Include wallets
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
@@ -49,7 +53,7 @@ export default new Hono()
     })
 
     // POST /users - Create new user
-    .post("/", zValidator("json", UserCreateRequestSchema), async (c) => {
+    .post("/", UserCreateDescription, UserCreateValidation, async (c) => {
         try {
             const userData = c.req.valid("json")
             const { userRepo } = c.get("repos")
@@ -78,14 +82,15 @@ export default new Hono()
     })
 
     // PATCH /users/:id - Update user details
-    .patch("/:id", zValidator("param", UserIdParamSchema), zValidator("json", UserUpdateRequestSchema), async (c) => {
+    .patch("/:id", UserIdParamValidation, UserUpdateValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
             const updateData = c.req.valid("json")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const user = await userRepo.findById(id)
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
@@ -98,7 +103,7 @@ export default new Hono()
                 }
             }
 
-            const updatedUser = await userRepo.update(id, updateData)
+            const updatedUser = await userRepo.update(userId, updateData)
             return c.json({ ok: true, data: updatedUser })
         } catch (err) {
             console.error(`Error updating user ${c.req.param("id")}:`, err)
@@ -107,18 +112,19 @@ export default new Hono()
     })
 
     // GET /users/:id/wallets - Get user's wallets
-    .get("/:id/wallets", zValidator("param", UserIdParamSchema), async (c) => {
+    .get("/:id/wallets", UserIdParamValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const user = await userRepo.findById(id)
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            const wallets = await userRepo.getUserWallets(id)
+            const wallets = await userRepo.getUserWallets(userId)
             return c.json({ ok: true, data: wallets })
         } catch (err) {
             console.error(`Error fetching wallets for user ${c.req.param("id")}:`, err)
@@ -127,62 +133,59 @@ export default new Hono()
     })
 
     // POST /users/:id/wallets - Add wallet to user
-    .post(
-        "/:id/wallets",
-        zValidator("param", UserIdParamSchema),
-        zValidator("json", UserWalletAddRequestSchema),
-        async (c) => {
-            try {
-                const { id } = c.req.valid("param")
-                const { wallet_address, set_as_primary } = c.req.valid("json")
-                const { userRepo } = c.get("repos")
+    .post("/:id/wallets", UserWalletAddDescription, UserIdParamValidation, UserWalletAddValidation, async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+            const { wallet_address, set_as_primary } = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
-                // Check if user exists
-                const user = await userRepo.findById(id)
-                if (!user) {
-                    return c.json({ ok: false, error: "User not found" }, 404)
-                }
-
-                // Check if wallet already belongs to another user
-                const existingUser = await userRepo.findByWalletAddress(wallet_address)
-                if (existingUser && existingUser.id !== id) {
-                    return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
-                }
-
-                const success = await userRepo.addWallet(id, wallet_address, set_as_primary || false)
-                if (!success) {
-                    return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
-                }
-
-                // Get updated user with wallets
-                const updatedUser = await userRepo.findById(id, true)
-                return c.json({ ok: true, data: updatedUser })
-            } catch (err) {
-                console.error(`Error adding wallet for user ${c.req.param("id")}:`, err)
-                return c.json({ ok: false, error: "Internal Server Error" }, 500)
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
             }
-        },
-    )
+
+            // Check if wallet already belongs to another user
+            const existingUser = await userRepo.findByWalletAddress(wallet_address)
+            if (existingUser && existingUser.id !== userId) {
+                return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
+            }
+
+            const success = await userRepo.addWallet(userId, wallet_address, set_as_primary || false)
+            if (!success) {
+                return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
+            }
+
+            // Get updated user with wallets
+            const updatedUser = await userRepo.findById(userId, true)
+            return c.json({ ok: true, data: updatedUser })
+        } catch (err) {
+            console.error(`Error adding wallet for user ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
+    })
 
     // PATCH /users/:id/wallets/:addr - Set wallet as primary
-    .patch("/:id/wallets/:addr", zValidator("param", UserWalletParamSchema), async (c) => {
+    .patch("/:id/wallets/:addr", UserWalletParamValidation, async (c) => {
         try {
             const { id, addr } = c.req.valid("param")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const user = await userRepo.findById(id)
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            const success = await userRepo.setWalletAsPrimary(id, addr)
+            const success = await userRepo.setWalletAsPrimary(userId, addr)
             if (!success) {
                 return c.json({ ok: false, error: "Wallet not found for this user" }, 404)
             }
 
             // Get updated user with wallets
-            const updatedUser = await userRepo.findById(id, true)
+            const updatedUser = await userRepo.findById(userId, true)
             return c.json({ ok: true, data: updatedUser })
         } catch (err) {
             console.error(`Error setting primary wallet for user ${c.req.param("id")}:`, err)
@@ -191,18 +194,19 @@ export default new Hono()
     })
 
     // DELETE /users/:id/wallets/:addr - Remove wallet from user
-    .delete("/:id/wallets/:addr", zValidator("param", UserWalletParamSchema), async (c) => {
+    .delete("/:id/wallets/:addr", UserWalletParamValidation, async (c) => {
         try {
             const { id, addr } = c.req.valid("param")
             const { userRepo } = c.get("repos")
 
             // Check if user exists
-            const user = await userRepo.findById(id)
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            const success = await userRepo.removeWallet(id, addr)
+            const success = await userRepo.removeWallet(userId, addr)
             if (!success) {
                 return c.json(
                     {
@@ -214,7 +218,7 @@ export default new Hono()
             }
 
             // Get updated user with wallets
-            const updatedUser = await userRepo.findById(id, true)
+            const updatedUser = await userRepo.findById(userId, true)
             return c.json({ ok: true, data: updatedUser })
         } catch (err) {
             console.error(`Error removing wallet for user ${c.req.param("id")}:`, err)

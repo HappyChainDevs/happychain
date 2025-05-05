@@ -1,20 +1,14 @@
-import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
+import { describeRoute } from "hono-openapi"
+import { resolver, validator as zValidator } from "hono-openapi/zod"
 import { isHex } from "viem"
-import type { UserTableId } from "../../db/types"
 
 // User wallet schema
-export const UserWalletSchema = z
+const UserWalletSchema = z
     .object({
         id: z.number().int(),
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
-        wallet_address: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        user_id: z.number().int(),
+        wallet_address: z.string().refine(isHex),
         is_primary: z.boolean(),
         created_at: z.string().datetime(),
     })
@@ -30,16 +24,10 @@ export const UserWalletSchema = z
     })
 
 // User API response schema (for GET, POST responses)
-export const UserResponseSchema = z
+const UserResponseSchema = z
     .object({
-        id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
-        primary_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        id: z.number().int(),
+        primary_wallet: z.string().refine(isHex),
         username: z.string(),
         created_at: z.string().datetime(),
         updated_at: z.string().datetime(),
@@ -66,7 +54,7 @@ export const UserResponseSchema = z
     })
 
 // User query schema for GET /users (query params)
-export const UserQuerySchema = z
+const UserQuerySchema = z
     .object({
         wallet_address: z.string().refine(isHex).optional(),
         username: z.string().optional(),
@@ -84,13 +72,27 @@ export const UserQuerySchema = z
         },
     })
 
+export const UserQueryDescription = describeRoute({
+    validateResponse: true,
+    description: "Get a list of users",
+    responses: {
+        200: {
+            description: "Successfully retrieved users",
+            content: {
+                "application/json": {
+                    schema: resolver(UserResponseSchema),
+                },
+            },
+        },
+    },
+})
+
+export const UserQueryValidation = zValidator("query", UserQuerySchema)
+
 // User creation request schema (for POST /users)
-export const UserCreateRequestSchema = z
+const UserCreateRequestSchema = z
     .object({
-        primary_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        primary_wallet: z.string().refine(isHex),
         username: z.string(),
     })
     .strict()
@@ -101,8 +103,34 @@ export const UserCreateRequestSchema = z
         },
     })
 
+export const UserCreateDescription = describeRoute({
+    validateResponse: true,
+    description: "Create a new user",
+    requestBody: {
+        description: "User creation request",
+        required: true,
+        content: {
+            "application/json": {
+                schema: {},
+            },
+        },
+    },
+    responses: {
+        201: {
+            description: "Successfully created a user",
+            content: {
+                "application/json": {
+                    schema: resolver(UserResponseSchema),
+                },
+            },
+        },
+    },
+})
+
+export const UserCreateValidation = zValidator("json", UserCreateRequestSchema)
+
 // User update request schema (for PATCH /users/:id)
-export const UserUpdateRequestSchema = z
+const UserUpdateRequestSchema = z
     .object({
         username: z.string().optional(),
     })
@@ -113,13 +141,27 @@ export const UserUpdateRequestSchema = z
         },
     })
 
+export const UserUpdateDescription = describeRoute({
+    validateResponse: true,
+    description: "Update a user's details",
+    responses: {
+        200: {
+            description: "Successfully updated a user",
+            content: {
+                "application/json": {
+                    schema: resolver(UserResponseSchema),
+                },
+            },
+        },
+    },
+})
+
+export const UserUpdateValidation = zValidator("json", UserUpdateRequestSchema)
+
 // User wallet add request schema (for POST /users/:id/wallets)
-export const UserWalletAddRequestSchema = z
+const UserWalletAddRequestSchema = z
     .object({
-        wallet_address: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        wallet_address: z.string().refine(isHex),
         set_as_primary: z.boolean().optional().default(false),
     })
     .strict()
@@ -129,6 +171,23 @@ export const UserWalletAddRequestSchema = z
             set_as_primary: false,
         },
     })
+
+export const UserWalletAddDescription = describeRoute({
+    validateResponse: true,
+    description: "Add a wallet to a user",
+    responses: {
+        201: {
+            description: "Successfully added a wallet to a user",
+            content: {
+                "application/json": {
+                    schema: resolver(UserResponseSchema),
+                },
+            },
+        },
+    },
+})
+
+export const UserWalletAddValidation = zValidator("json", UserWalletAddRequestSchema)
 
 // User wallet update request schema (for PATCH /users/:id/wallets/:addr)
 export const UserWalletUpdateRequestSchema = z
@@ -165,10 +224,7 @@ export const UserWalletsResponseSchema = z.array(UserWalletSchema).openapi({
 // Wallet path parameter schema (for endpoints with :addr)
 export const WalletAddressParamSchema = z
     .object({
-        addr: z
-            .string()
-            .refine(isHex, { message: "Wallet address must be a valid hex string" })
-            .transform((val) => val as Address),
+        addr: z.string().refine(isHex, { message: "Wallet address must be a valid hex string" }),
     })
     .strict()
     .openapi({
@@ -178,19 +234,22 @@ export const WalletAddressParamSchema = z
     })
 
 // User ID path parameter schema (for endpoints with :id)
-export const UserIdParamSchema = z
+const UserIdParamSchema = z
     .object({
-        id: z
-            .string()
-            .regex(/^\d+$/, { message: "User ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+        id: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
     })
     .strict()
     .openapi({
+        param: {
+            name: "id",
+            in: "path",
+        },
         example: {
             id: "1",
         },
     })
+
+export const UserIdParamValidation = zValidator("param", UserIdParamSchema)
 
 // Combined user ID and wallet address parameter schema (for endpoints with :id/wallets/:addr)
 export const UserWalletParamSchema = z
@@ -205,3 +264,5 @@ export const UserWalletParamSchema = z
             addr: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
         },
     })
+
+export const UserWalletParamValidation = zValidator("param", UserWalletParamSchema)
