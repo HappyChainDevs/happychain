@@ -3,7 +3,7 @@ import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepol
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
-import { computeBoopHash, BoopClient } from "../lib/index"
+import { BoopClient, computeBoopHash } from "../lib/index"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
@@ -60,7 +60,7 @@ async function run() {
 
     const tx = await createAndSignMintTx(createAccountResult.value.address)
     const executeRes = await boopClient.execute({ tx })
-    
+
     if (!executeRes.isOk()) {
         throw new Error(executeRes.error.message)
     }
