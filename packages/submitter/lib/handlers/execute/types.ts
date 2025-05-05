@@ -1,8 +1,12 @@
 import type { Address } from "@happy.tech/common"
-import type { BoopReceipt } from "#lib/types"
-import { Onchain, type OnchainStatus } from "#lib/types"
-import { SubmitterError, type SubmitterErrorStatus } from "#lib/types"
-import type { Boop } from "../../types/Boop"
+import {
+    type Boop,
+    type BoopReceipt,
+    Onchain,
+    type OnchainStatus,
+    SubmitterError,
+    type SubmitterErrorStatus,
+} from "#lib/types"
 
 /**
  * Possible results of a `submit` call.

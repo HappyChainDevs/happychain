@@ -18,7 +18,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
 
     logger.trace("Waiting for receipt", boopHash)
     // TODO allow specifying a custom timeout
-    const receipt = await boopReceiptService.findByBoopHashWithTimeout(boopHash, env.RECEIPT_TIMEOUT)
+    const receipt = await boopReceiptService.find(boopHash, env.RECEIPT_TIMEOUT)
     logger.trace("Found receipt", boopHash, receipt)
 
     if (!receipt)

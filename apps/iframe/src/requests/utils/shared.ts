@@ -2,7 +2,7 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { Onchain, type Receipt, StateRequestStatus } from "@happy.tech/boop-sdk"
+import { GetState, Onchain, type Receipt } from "@happy.tech/boop-sdk"
 import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
 import { type Address, type Transaction, toHex } from "viem"
@@ -27,7 +27,7 @@ export type Forward = typeof FORWARD
  * tries to fetch it. If the hash is not found, the function returns {@link FORWARD} to signal that the request should
  * be passed to the public client to find an actual Ethereum transaction.
  */
-export async function getTransactionByHash(hash: Hash): Promise<Transaction | Forward> {
+export async function getTransactionByHash(hash: Hash): Promise<Transaction | Forward | null> {
     const cached = boopCache.get(hash)
 
     // If the receipt is present, the entry is final. If not, try to fetch a more up-to-date state.
@@ -35,17 +35,17 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
 
     try {
         const output = (await boopClient.state({ hash })).unwrap()
+        if (output.status === GetState.Receipt) {
+            const receipt = output.receipt
+            const boop = undefined
+            // const { receipt, boop } = output.state // TODO
 
-        // Unknown boop: this might be an EVM tx hash instead, signal caller to forward to the public client.
-        if (output.status === StateRequestStatus.UnknownBoop) return FORWARD
-
-        const receipt = output.state?.receipt
-        const boop = undefined
-        // const { receipt, boop } = output.state // TODO
-
-        boopCache.put(hash, { boop, receipt })
-        return formatTransaction(hash, boop, receipt)
-        //
+            boopCache.put(hash, { boop, receipt })
+            return formatTransaction(hash, boop, receipt)
+        } else {
+            // TODO can we get something useful out of the simulation result — yes, most likely
+            return output.status === GetState.Simulated ? null : FORWARD
+        }
     } catch (_err) {
         // We had a cache hit without receipt, so this is a boop, just use that.
         if (cached) return formatTransaction(hash, cached.boop, cached.receipt)
@@ -67,15 +67,14 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
 
     try {
-        const { status, state } = (await boopClient.state({ hash })).unwrap()
-
-        if (!state?.receipt)
+        const state = (await boopClient.state({ hash })).unwrap()
+        if (state.status === GetState.Receipt) {
+            boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
+            return formatTransactionReceipt(hash, state.receipt)
+        } else {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
-            return cached || status === StateRequestStatus.Success ? null : FORWARD
-
-        boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
-        return formatTransactionReceipt(hash, state.receipt)
-        //
+            return cached || state.status === GetState.Simulated ? null : FORWARD
+        }
     } catch (_err) {
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.

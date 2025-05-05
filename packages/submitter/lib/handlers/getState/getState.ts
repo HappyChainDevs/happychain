@@ -1,27 +1,14 @@
-import { type Result, err, ok } from "neverthrow"
 import { boopReceiptService, simulationCache } from "#lib/services"
-import { Onchain } from "#lib/types"
-import { type StateRequestInput, type StateRequestOutput, StateRequestStatus } from "./types"
+import { GetState, type GetStateInput, type GetStateOutput } from "./types"
 
-export async function getState({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
-    const receipt = await boopReceiptService.findByBoopHash(hash)
+export async function getState({ hash }: GetStateInput): Promise<GetStateOutput> {
+    // TODO this needs a try-catch for proper error handling, and probably the services need to be more aware of their own errors
 
-    if (receipt?.status === Onchain.Success) {
-        return ok({
-            status: StateRequestStatus.Success,
-            state: { status: receipt.status, included: true, receipt: receipt },
-        })
-    }
+    const receipt = await boopReceiptService.find(hash)
+    if (receipt) return { status: GetState.Receipt, receipt }
 
     const simulation = await simulationCache.findSimulation(hash)
+    if (simulation) return { status: GetState.Simulated, simulation }
 
-    if (simulation?.status) {
-        return ok({
-            status: StateRequestStatus.Success,
-            // TODO big hack cast for compile
-            state: { status: simulation.status as typeof Onchain.Success, included: false, simulation },
-        })
-    }
-
-    return err({ status: StateRequestStatus.UnknownBoop })
+    return { status: GetState.UnknownBoop }
 }

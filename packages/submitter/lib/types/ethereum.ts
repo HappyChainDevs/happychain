@@ -44,13 +44,15 @@ export type Log = {
 }
 
 /** Possible EVM transaction types. */
-export enum TransactionTypeName {
-    LEGACY = "legacy",
-    EIP1559 = "eip1559",
-    EIP2930 = "eip2930",
-    EIP4844 = "eip4844",
-    EIP7702 = "eip7702",
+export const TransactionType = {
+    LEGACY: "legacy",
+    EIP1559: "eip1559",
+    EIP2930: "eip2930",
+    EIP4844: "eip4844",
+    EIP7702: "eip7702",
 }
+
+export type TransactionTypeName = (typeof TransactionType)[keyof typeof TransactionType]
 
 /**
  * Type of EVM transaction receipts.

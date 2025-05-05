@@ -1,66 +1,40 @@
 import type { Hash } from "@happy.tech/common"
-import type { SimulateOutput } from "#lib/handlers/simulate"
-import type { BoopReceipt } from "#lib/types"
-import type { Onchain, OnchainStatus } from "#lib/types"
-import type { SubmitterErrorStatus } from "#lib/types"
+import type { SimulateOutput } from "#lib/handlers/simulate/types"
+import { type BoopReceipt, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
-export type StateRequestInput = {
-    hash: Hash
-}
+// TODO documentation
 
 /**
- * Describes the current state of a Boop that might or might not have
- * been included onchain yet.
+ * Possible results of a `state` call.
  */
-// biome-ignore format: readability
-export type BoopStateSubmitterError = {
-    status: SubmitterErrorStatus
-    included?: never,
-    receipt?: never
-    simulation?: never
-}
-export type BoopStateEntryPointError = {
-    status: OnchainStatus | SubmitterErrorStatus
+export const GetState = {
+    Receipt: "getStateReceipt",
+    Simulated: "getStateSimulated",
+    UnknownBoop: "getStateUnknownBoop",
+    ...SubmitterError,
+} as const
 
-    /** Whether the Boop was included and executed onchain. */
-    included: false
+export type GetStateStatus = (typeof GetState)[keyof typeof GetState]
 
-    receipt?: never
-    /**
-     * The result of simulation. Not guaranteed to be available, as a submitter does not have
-     * to presimulate a tx before submitting, nor does he have to persist the simulation result.
-     */
-    simulation?: SimulateOutput | undefined
-}
+export type GetStateInput = { hash: Hash }
 
-export type BoopStateSuccess = {
-    status: typeof Onchain.Success
-    included: true
+export type GetStateOutput = GetStateReceipt | GetStateSimulated | GetStateUnknown | GetStateError
+
+export type GetStateReceipt = {
+    status: typeof GetState.Receipt
     receipt: BoopReceipt
-    simulation?: never
 }
 
-export type BoopState = BoopStateSubmitterError | BoopStateEntryPointError | BoopStateSuccess
-
-/** Status result of a request for {@link BoopState}. */
-export enum StateRequestStatus {
-    /** The state request succeeded — this does not mean the state is available! */
-    Success = "receiptSuccess",
-
-    /** The boop is unknown to the submitter. */
-    UnknownBoop = "receiptUnknownBoop",
+export type GetStateSimulated = {
+    status: typeof GetState.Simulated
+    simulation: SimulateOutput
 }
 
-/** Output of a request for {@link BoopState}. */
-// biome-ignore format: readability
-export type StateRequestOutput = StateRequestOutputSuccess | StateRequestOutputUnknown
-
-export type StateRequestOutputSuccess = {
-    status: StateRequestStatus.Success
-    state: BoopState
+export type GetStateUnknown = {
+    status: typeof GetState.UnknownBoop
 }
 
-export type StateRequestOutputUnknown = {
-    status: StateRequestStatus.UnknownBoop
-    state?: never
+export type GetStateError = {
+    status: SubmitterErrorStatus
+    description?: string
 }

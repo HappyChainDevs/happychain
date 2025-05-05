@@ -73,6 +73,7 @@ export class SubmitterService {
             entryPoint: receipt.to,
 
             /** Result of onchain submission of the Boop. */
+            // TODO that needs much more complex logic, which currently lives in execute.ts
             status: receipt.status === "success" ? Onchain.Success : Onchain.UnexpectedReverted,
 
             /** Logs emitted by Boop. */

@@ -4,16 +4,16 @@ import type {
     CreateAccountOutput,
     ExecuteInput,
     ExecuteOutput,
-    PendingBoopInput,
-    PendingBoopOutput,
-    ReceiptRequestInput,
-    ReceiptRequestOutput,
+    GetPendingInput,
+    GetPendingOutput,
+    GetStateInput,
+    GetStateOutput,
     SimulateInput,
     SimulateOutput,
-    StateRequestInput,
-    StateRequestOutput,
     SubmitInput,
     SubmitOutput,
+    WaitForReceiptInput,
+    WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
@@ -122,11 +122,11 @@ export class BoopClient {
      *
      * Depending on the submitter's state retention policies, he might not be able to answer this query,
      * even if he did see the Boop before. In this case he should answer with a status of
-     * {@link StateRequestStatus.UnknownBoop}.
+     * {@link GetState.UnknownBoop}.
      */
-    async state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
+    async state({ hash }: GetStateInput): Promise<Result<GetStateOutput, Error>> {
         const response = await this.client.get(`/api/v1/boop/state/${hash}`)
-        return response as Result<StateRequestOutput, Error>
+        return response as Result<GetStateOutput, Error>
     }
 
     /**
@@ -136,9 +136,9 @@ export class BoopClient {
      *
      * The submitter can return without a receipt if the Boop submission failed for other reasons.
      */
-    async receipt({ hash, timeout }: ReceiptRequestInput): Promise<Result<ReceiptRequestOutput, Error>> {
+    async receipt({ hash, timeout }: WaitForReceiptInput): Promise<Result<WaitForReceiptOutput, Error>> {
         const response = await this.client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
-        return response as Result<ReceiptRequestOutput, Error>
+        return response as Result<WaitForReceiptOutput, Error>
     }
 
     /**
@@ -147,8 +147,8 @@ export class BoopClient {
      * @param data
      * @returns
      */
-    async pending({ account }: PendingBoopInput): Promise<Result<PendingBoopOutput, Error>> {
+    async pending({ account }: GetPendingInput): Promise<Result<GetPendingOutput, Error>> {
         const response = await this.client.get(`/api/v1/boop/pending/${account}`)
-        return response as Result<PendingBoopOutput, Error>
+        return response as Result<GetPendingOutput, Error>
     }
 }
