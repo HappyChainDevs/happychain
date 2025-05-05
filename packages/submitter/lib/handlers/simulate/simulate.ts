@@ -60,8 +60,7 @@ export async function simulate(
             validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
             validatePaymentGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validatePaymentGas),
             executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas) * 3,
-            // TODO this shouldn't be needed
-            maxFeePerGas: (BigInt(applyGasMargin(Number(gasPrice))) / 100000000n) * 100000000n,
+            maxFeePerGas: boop.maxFeePerGas || (gasPrice * env.FEE_SAFETY_MARGIN) / 100n,
             submitterFee: getSubmitterFee(boop),
         }
 
