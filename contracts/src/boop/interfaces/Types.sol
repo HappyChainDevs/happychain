@@ -33,8 +33,8 @@ struct Boop {
 
     uint32 gasLimit;            // Global gas limit (maximum gas the account will pay for)
     uint32 validateGasLimit;    // Gas limit for {interfaces/IAccount.validate}
-    uint32 executeGasLimit;     // Gas limit for {interfaces/IAccount.execute}
     uint32 validatePaymentGasLimit; // Gas limit for {interfaces/IPaymaster.validatePayment}
+    uint32 executeGasLimit;     // Gas limit for {interfaces/IAccount.execute}
 
     bytes callData;             // Call data for the call carried by the boop
     bytes validatorData;        // Extra data for validation (e.g., signatures)
@@ -99,7 +99,7 @@ struct SubmitOutput {
      * An overestimation of the minimum gas limit necessary to successfully call
      * {interfaces/IPaymaster.validatePayment} from {core/EntryPoint.submit}.
      */
-    uint32 paymentValidateGas;
+    uint32 validatePaymentGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
      * {interfaces/IAccount.execute} from {core/EntryPoint.submit}.

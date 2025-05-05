@@ -29,6 +29,5 @@ export function decodeEvent(log: Log): DecodedEvent | undefined {
  */
 export function getSelectorFromEventName(name: string): Hex | undefined {
     const item = eventsAbi.find((a) => a.name === name)
-    // toErrorSelector? who needs that? :')
     return item ? toEventSelector(item) : undefined
 }

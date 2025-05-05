@@ -19,13 +19,13 @@ event BoopExecutionStarted();
  * @dev We deliberately choose to separate all the fields into dedicated arguments instead of
  * having a single argument with the struct — this enables better display on some block explorers
  * like Blockscout.
+ *
+ * @dev It is crucial that the fields here be identical to those in the {interfaces/Types.Boop} struct. Because
+ * Solidity refuses to emit events with more than 15 arguments, we simply use the abi-encoding of the struct to emit
+ * this event.
  */
 event BoopSubmitted(
     address account,
-    uint32 gasLimit,
-    uint32 validateGasLimit,
-    uint32 executeGasLimit,
-    uint32 validatePaymentGasLimit,
     address dest,
     address payer,
     uint256 value,
@@ -33,6 +33,10 @@ event BoopSubmitted(
     uint64 nonceValue,
     uint256 maxFeePerGas,
     int256 submitterFee,
+    uint32 gasLimit,
+    uint32 validateGasLimit,
+    uint32 validatePaymentGasLimit,
+    uint32 executeGasLimit,
     bytes callData,
     bytes validatorData,
     bytes extraData

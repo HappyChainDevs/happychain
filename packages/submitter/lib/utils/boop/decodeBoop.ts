@@ -17,8 +17,8 @@ export function decodeBoop(encoded: Hex): Boop {
     const submitterFee = bytesToBigInt(getBytes(encodedBytes, 156, 32))
     const gasLimit = bytesToNumber(getBytes(encodedBytes, 188, 4))
     const validateGasLimit = bytesToNumber(getBytes(encodedBytes, 192, 4))
-    const executeGasLimit = bytesToNumber(getBytes(encodedBytes, 196, 4))
-    const validatePaymentGasLimit = bytesToNumber(getBytes(encodedBytes, 200, 4))
+    const validatePaymentGasLimit = bytesToNumber(getBytes(encodedBytes, 196, 4))
+    const executeGasLimit = bytesToNumber(getBytes(encodedBytes, 200, 4))
 
     // Read dynamic fields with their 4-byte length prefixes
     const [callData, callDataEndOffset] = getDynamicLengthBytes(encodedBytes, 204)
