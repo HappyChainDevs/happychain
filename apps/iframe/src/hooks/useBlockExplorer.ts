@@ -4,10 +4,37 @@ import { getCurrentChain } from "#src/state/chains"
 import { contractMetadataSchema } from "#src/utils/blockExplorerDataValidator"
 
 /**
- * Query key factory for block explorer data
+ * This module provides React Query hooks for fetching and caching data from the Blockscout API.
+ * It offers a standardized way to access data including
+ * smart contract information, transaction details, and address data.
+ *
+ * Key features:
+ * - Query key management for React Query caching
+ * - Dynamic Blockscout block explorer URL generation based on the current chain
+ * - Type-safe data fetching with response validation
+ * - Hooks for common blockchain data needs:
+ *   - useSmartContract: Fetch and validate smart contract metadata
+ *   - useTransaction: Retrieve transaction details
+ *   - useAddressDetails: Get information about an address/wallet
+ *
+ * Usage:
+ * ```
+ * import { useSmartContract, useTransaction, useAddressDetails } from './path/to/this/file'
+ *
+ * // In a component:
+ * const { data: contractData, isLoading } = useSmartContract('0x123...abc')
+ * const { data: txData } = useTransaction('0xabc...123')
+ * const { data: addressData } = useAddressDetails('0x456...def')
+ * ```
+ *
+ * All hooks support standard React Query options for customization.
+ */
+
+/**
+ * Query key factory for Blockscout block explorer data
  */
 export const blockExplorerKeys = {
-    /** Base key for all block explorer related queries */
+    /** Base key for all Blockscout explorer related queries */
     all: [Symbol("blockExplorer")] as const,
 
     /** Smart contract related query keys */
@@ -30,7 +57,7 @@ export const blockExplorerKeys = {
 
     /** Address related query keys */
     addresses: {
-        /** Base key for all block explorer related queries */
+        /** Base key for all Blockscout block explorer related queries */
         all: () => [...blockExplorerKeys.all, "addresses"] as const,
 
         /** Key for address details */
@@ -39,11 +66,11 @@ export const blockExplorerKeys = {
 }
 
 /**
- * Creates a URL for the block explorer API
+ * Creates a URL for the Blockscout API
  * @param path - API endpoint path (without leading slash)
- * @returns Full URL to the block explorer API endpoint
+ * @returns Full URL to the Blockscout block explorer API endpoint
  */
-export const blockExplorerUrl = (path: string): string => {
+const blockExplorerUrl = (path: string): string => {
     const currentChain = getCurrentChain()
     const baseUrl = currentChain.blockExplorerUrls?.[0]
 
@@ -55,7 +82,7 @@ export const blockExplorerUrl = (path: string): string => {
 }
 
 /**
- * Generic function to fetch data from block explorer API
+ * Generic function to fetch data from Blockscout block explorer API
  * @param path - API endpoint path (without leading slash)
  * @returns Promise resolving to the parsed JSON response
  * @throws Error with descriptive message on failure
