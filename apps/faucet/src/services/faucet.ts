@@ -1,5 +1,5 @@
+import { TransactionManager, TransactionStatus } from "@happy.tech/txm"
 import type { Address } from "@happy.tech/common"
-import { TransactionManager } from "@happy.tech/txm"
 import { type Result, err, ok } from "neverthrow"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
@@ -43,6 +43,16 @@ export class FaucetService {
         })
 
         await this.txm.sendTransactions([tx])
+
+        const result = await tx.waitForFinalization(10_000)
+
+        if (result.isErr()) {
+            return err(result.error)
+        }
+
+        if (result.value.status !== TransactionStatus.Success) {
+            return err(new Error("Transaction failed"))
+        }
 
         return ok(undefined)
     }
