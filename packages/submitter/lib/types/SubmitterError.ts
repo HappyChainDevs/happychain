@@ -24,6 +24,9 @@ export const SubmitterError = {
     /** Error from the node's JSON-RPC server. */
     RpcError: "submitterRpcError",
 
+    /** Unrecoverable client-side error. */
+    ClientError: "submitterClientError",
+
     /**
      * Timed out while waiting for a receipt.
      * This could indicate that the submitter tx is stuck in the mempool or an RPC issue.

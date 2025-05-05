@@ -12,12 +12,11 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
             salt,
         })
 
-        const value = result.unwrap()
-        if (value.status === CreateAccount.Success || value.status === CreateAccount.AlreadyCreated) {
-            return value.address
+        if (result.status === CreateAccount.Success || result.status === CreateAccount.AlreadyCreated) {
+            return result.address
         }
 
-        throw value
+        throw result
     } catch (error) {
         console.error("Failed to create Boop account:", error)
         throw error

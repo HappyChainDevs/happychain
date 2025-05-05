@@ -24,6 +24,7 @@ describe("submitter_pending", () => {
     })
 
     it("fetches pending transactions for a user", async () => {
+        if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
         const count = 10
 
         // test only works if submitter is configured to allow more than 50
