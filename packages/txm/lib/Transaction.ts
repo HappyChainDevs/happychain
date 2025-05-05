@@ -3,13 +3,13 @@ import type { Address, Hex, UUID } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
 import { type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
+import { type Result, err, ok } from "neverthrow"
 import type { ABIManager } from "./AbiManager"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
-import { err, ok, type Result } from "neverthrow"
 
 export enum TransactionStatus {
     /**
@@ -284,18 +284,16 @@ export class Transaction {
 
     waitForFinalization(timeout?: number): Promise<Result<Transaction, Error>> {
         return new Promise((resolve) => {
-            this.waitingPromises.push(resolve);
-            
+            this.waitingPromises.push(resolve)
+
             if (timeout) {
                 setTimeout(() => {
-                    this.waitingPromises = this.waitingPromises.filter(
-                        p => p !== resolve
-                    );
+                    this.waitingPromises = this.waitingPromises.filter((p) => p !== resolve)
 
                     resolve(err(new Error(`Transaction finalization timed out after ${timeout}ms`)))
-                }, timeout);
+                }, timeout)
             }
-        });
+        })
     }
 
     get attemptCount(): number {
