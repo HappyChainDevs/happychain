@@ -525,9 +525,12 @@ test("Use transaction.waitForFinalization() to wait for a transaction to be fina
     let promiseResolved = false
     const transaction = await createCounterTransaction()
 
-    transaction.waitForFinalization().then((transaction) => {
+    transaction.waitForFinalization().then((result) => {
+        if (result.isErr()) {
+            throw result.error
+        }
         promiseResolved = true
-        expect(transaction.status).toBe(TransactionStatus.Success)
+        expect(result.value.status).toBe(TransactionStatus.Success)
     })
 
     transactionQueue.push(transaction)
