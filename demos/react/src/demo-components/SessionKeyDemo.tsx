@@ -1,4 +1,4 @@
-import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
+import { requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
@@ -39,7 +39,6 @@ const SessionKeyDemo = () => {
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "increment",
-            chain: happyChainSepolia,
         })
     }
 

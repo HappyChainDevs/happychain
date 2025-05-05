@@ -1,4 +1,4 @@
-import { happyChainSepolia, loadAbi, showSendScreen } from "@happy.tech/core"
+import { loadAbi, showSendScreen } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 import { walletClient } from "../clients"
@@ -36,7 +36,6 @@ const WalletFunctionalityDemo = () => {
                 abi: abis.MockTokenA,
                 functionName: "mint",
                 args: [user.address, 1000000000000000000n],
-                chain: happyChainSepolia,
             })
             if (writeCallResult) {
                 console.log("[mintTokens] success:", writeCallResult)

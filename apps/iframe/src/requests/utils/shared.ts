@@ -34,18 +34,18 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
     if (cached?.receipt) return formatTransaction(hash, cached.boop, cached.receipt)
 
     try {
-        const output = (await boopClient.state({ hash })).unwrap()
-        if (output.status === GetState.Receipt) {
-            const receipt = output.receipt
-            const boop = undefined
-            // const { receipt, boop } = output.state // TODO
-
-            boopCache.put(hash, { boop, receipt })
-            return formatTransaction(hash, boop, receipt)
-        } else {
-            // TODO can we get something useful out of the simulation result — yes, most likely
+        const output = await boopClient.state({ hash })
+        if (output.status !== GetState.Receipt) {
+            // TODO: can we get something useful out of the simulation result — yes, most likely
             return output.status === GetState.Simulated ? null : FORWARD
         }
+
+        const receipt = output.receipt
+        const boop = undefined
+        // const { receipt, boop } = output.state // TODO
+
+        boopCache.put(hash, { boop, receipt })
+        return formatTransaction(hash, boop, receipt)
     } catch (_err) {
         // We had a cache hit without receipt, so this is a boop, just use that.
         if (cached) return formatTransaction(hash, cached.boop, cached.receipt)
@@ -67,14 +67,14 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
 
     try {
-        const state = (await boopClient.state({ hash })).unwrap()
-        if (state.status === GetState.Receipt) {
-            boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
-            return formatTransactionReceipt(hash, state.receipt)
-        } else {
+        const state = await boopClient.state({ hash })
+        if (state.status !== GetState.Receipt) {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
             return cached || state.status === GetState.Simulated ? null : FORWARD
         }
+
+        boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
+        return formatTransactionReceipt(hash, state.receipt)
     } catch (_err) {
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.
@@ -112,10 +112,10 @@ export async function eth_estimateGas(
     if (user?.address !== tx.from) return FORWARD
 
     const boop = await boopFromTransaction(user?.address, tx)
-    const output = (await boopClient.simulate({ entryPoint, boop })).unwrap()
+    const output = await boopClient.simulate({ entryPoint, boop })
 
     // TODO need robust error handling
-    if (output.status !== Onchain.Success) throw new Error("can't simulate lol")
+    if (output.status !== Onchain.Success) throw new Error("can't simulate lol", { cause: output })
 
     return toHex(output.executeGas)
 }
