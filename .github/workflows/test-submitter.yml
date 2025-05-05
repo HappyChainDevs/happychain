@@ -21,6 +21,7 @@ env:
   LIMITS_EXECUTE_MAX_CAPACITY: 100
   DATABASE_URL: "submitter.sqlite"
   AUTOMINE_TESTS: true
+  LOG_LEVEL: "TRACE"
 
 jobs:
   test-submitter:
