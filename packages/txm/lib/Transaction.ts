@@ -147,6 +147,21 @@ export class Transaction {
      */
     readonly metadata: Record<string, unknown>
 
+    /**
+     * Stores callback functions for each transaction status.
+     * These callbacks are triggered when the transaction status changes.
+     */
+    private callbacks: Record<TransactionStatus, ((transaction: Transaction) => void)[]>
+
+    /**
+     * Stores promises that wait for the transaction to be finalized.
+     * These promises are resolved when the transaction status changes to a finalized state.
+     */
+    private waitingPromises: {
+        resolve: (transaction: Transaction) => void
+        reject: (error: Error) => void
+    }[]
+
     constructor(
         config: TransactionConstructorConfig & {
             intentId?: UUID
@@ -192,6 +207,16 @@ export class Transaction {
             this.contractName = config.contractName
             this.args = config.args
         }
+
+        this.callbacks = Object.values(TransactionStatus).reduce(
+            (acc, status) => {
+                acc[status] = []
+                return acc
+            },
+            {} as Record<TransactionStatus, ((transaction: Transaction) => void)[]>,
+        )
+
+        this.waitingPromises = []
     }
 
     addAttempt(attempt: Attempt): void {
@@ -240,10 +265,28 @@ export class Transaction {
 
         if (!NotFinalizedStatuses.includes(status)) {
             TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
+
+            this.waitingPromises.forEach(({ resolve }) => {
+                resolve(this)
+            })
+
+            this.waitingPromises = []
         }
+
+        this.callbacks[status].forEach((callback) => callback(this))
 
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
+        })
+    }
+
+    on(status: TransactionStatus, callback: (transaction: Transaction) => void): void {
+        this.callbacks[status].push(callback)
+    }
+
+    waitForFinalization(): Promise<Transaction> {
+        return new Promise((resolve: (transaction: Transaction) => void, reject: (error: Error) => void) => {
+            this.waitingPromises.push({ resolve, reject })
         })
     }
 

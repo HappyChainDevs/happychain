@@ -521,6 +521,44 @@ test("Transaction failed for out of gas", async () => {
     expect(transactionReverted.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
+test("Use transaction.waitForFinalization() to wait for a transaction to be finalized", async () => {
+    let promiseResolved = false
+    const transaction = await createCounterTransaction()
+
+    transaction.waitForFinalization().then((transaction) => {
+        promiseResolved = true
+        expect(transaction.status).toBe(TransactionStatus.Success)
+    })
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    expect(promiseResolved).toBe(true)
+})
+
+test("Use transaction.on() to register a callback which is triggered when the transaction changes to a specific status", async () => {
+    let promiseResolved = false
+
+    const transaction = await txm.createTransaction({
+        address: deployment.MockRevert,
+        functionName: "intentionalRevert",
+        contractName: "MockRevert",
+        args: [],
+    })
+
+    transaction.on(TransactionStatus.Failed, (transaction) => {
+        promiseResolved = true
+        expect(transaction.status).toBe(TransactionStatus.Failed)
+    })
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    expect(promiseResolved).toBe(true)
+})
+
 test("Transaction cancelled due to deadline passing", async () => {
     const previousLivenessThreshold = txm.livenessThreshold
     Object.defineProperty(txm, "livenessThreshold", {
