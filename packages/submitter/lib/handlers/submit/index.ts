@@ -1,3 +1,3 @@
 export * from "./types"
 export { submit } from "./submit"
-export { submitValidation, submitDescription } from "./submitValidation"
+export { submitValidation, submitDescription } from "./validation"
