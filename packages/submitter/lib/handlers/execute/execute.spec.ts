@@ -3,7 +3,7 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { ExecuteError } from "#lib/handlers/execute"
+import type { ExecuteError, ExecuteFailedOnchain, ExecuteOutput } from "#lib/handlers/execute"
 import type { SimulateFailed } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
@@ -172,9 +172,7 @@ describe("submitter_execute", () => {
             // mints a different amount of tokens, computes a difference hash, same nonce though
             const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack, 5n * 10n ** 18n))
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
-            const response = (await result.json()) as any
-
-            expect(response.error).toBeUndefined()
+            const response = (await result.json()) as ExecuteFailedOnchain
             expect(result.status).toBe(400)
             expect(response.stage).toBe("simulate")
             expect(response.status).toBe(Onchain.InvalidNonce)
