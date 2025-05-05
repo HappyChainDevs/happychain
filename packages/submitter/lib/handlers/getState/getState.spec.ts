@@ -8,7 +8,7 @@ import { computeBoopHash } from "#lib/services/computeBoopHash"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
-import { type BoopStateSuccess, type StateRequestOutputSuccess, StateRequestStatus } from "./types"
+import { GetState, type GetStateReceipt, type GetStateSimulated, type GetStateUnknown } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -40,23 +40,17 @@ describe("submitter_state", () => {
         expect(response.receipt).toBeDefined()
         const state = (await client.api.v1.boop.state[":hash"]
             .$get({ param: { hash: response.receipt.boopHash } })
-            .then((a) => a.json())) as StateRequestOutputSuccess
-        expect(state.status).toBe(StateRequestStatus.Success)
-        const innerState = state.state as BoopStateSuccess
-        expect(innerState.status).toBe(Onchain.Success)
-        expect(innerState.included).toBe(true)
-        expect(innerState.receipt.boopHash).toBe(response.receipt.boopHash)
-        expect(innerState.simulation).toBeUndefined()
+            .then((a) => a.json())) as GetStateReceipt
+        expect(state.status).toBe(GetState.Receipt)
+        expect(state.receipt.boopHash).toBe(response.receipt.boopHash)
+        expect((state as any).simulation).toBeUndefined()
     })
 
     it("fetches state of an unknown tx", async () => {
         const state = (await client.api.v1.boop.state[":hash"]
             .$get({ param: { hash: smartAccount } })
-            .then((a) => a.json())) as any
-
-        expect(state.error).toBeUndefined()
-        expect(state.status).toBe(StateRequestStatus.UnknownBoop)
-        expect(state.state).toBeUndefined()
+            .then((a) => a.json())) as GetStateUnknown
+        expect(state.status).toBe(GetState.UnknownBoop)
     })
 
     it("fetches state of simulated (unconfirmed) future tx", async () => {
@@ -71,14 +65,11 @@ describe("submitter_state", () => {
 
         const state = (await client.api.v1.boop.state[":hash"]
             .$get({ param: { hash: boopHash } })
-            .then((a) => a.json())) as any
+            .then((a) => a.json())) as GetStateSimulated
 
-        expect(state.error).toBeUndefined()
-        expect(state.status).toBe(StateRequestStatus.Success)
-        expect(state.state.status).toBe(Onchain.Success)
-        expect(state.state.included).toBe(false)
-        expect(state.state.receipt).toBeUndefined()
-        expect(state.state.simulation).toBeDefined()
+        expect(state.status).toBe(GetState.Simulated)
+        expect(state.simulation).toBeDefined()
+        expect((state as any).receipt).toBeUndefined()
 
         await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         await blockedTx // wait for the transaction to complete so CI isn't grumpy

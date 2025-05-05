@@ -1,7 +1,7 @@
 import { isAddress } from "@happy.tech/common"
 import { z } from "zod"
 import { env } from "#lib/env"
-import { TransactionTypeName } from "#lib/types"
+import { TransactionType } from "#lib/types"
 import { isHexString } from "#lib/utils/validation/isHexString"
 import { transactionSchema } from "./transaction"
 
@@ -22,5 +22,5 @@ export const receiptSchema = z.object({
     to: z.string().refine(isAddress).openapi({ example: env.DEPLOYMENT_ENTRYPOINT }),
     transactionHash: z.string().refine(isHexString).openapi({ example: "0x" }),
     transactionIndex: z.number().openapi({ example: 0 }),
-    type: z.string().openapi({ example: TransactionTypeName.EIP1559 }),
+    type: z.string().openapi({ example: TransactionType.EIP1559 }),
 })

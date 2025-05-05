@@ -1,13 +1,8 @@
 import { Hono } from "hono"
 import { executeDescription, executeValidation } from "#lib/handlers/execute"
 import { execute } from "#lib/handlers/execute/execute"
-import {
-    type PendingBoopOutput,
-    getPending,
-    getPendingDescription,
-    getPendingValidation,
-} from "#lib/handlers/getPending"
-import { type StateRequestOutput, getState, getStateDescription, getStateValidation } from "#lib/handlers/getState"
+import { getPending, getPendingDescription, getPendingValidation } from "#lib/handlers/getPending"
+import { getState, getStateDescription, getStateValidation } from "#lib/handlers/getState"
 import { simulate, simulateDescription, simulateValidation } from "#lib/handlers/simulate"
 import { submit, submitDescription, submitValidation } from "#lib/handlers/submit"
 import {
@@ -16,7 +11,7 @@ import {
     waitForReceiptParamValidation,
     waitForReceiptQueryValidation,
 } from "#lib/handlers/waitForReceipt"
-import { makeResponse, makeResponseOld } from "#lib/server/makeResponse"
+import { makeResponse } from "#lib/server/makeResponse"
 
 export default new Hono()
     .post(
@@ -56,7 +51,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getState(input)
-            const [response, code] = makeResponseOld<StateRequestOutput>(output)
+            const [response, code] = makeResponse(output)
             return c.json(response, code)
         },
     )
@@ -69,7 +64,7 @@ export default new Hono()
             const { hash } = c.req.valid("param")
             const { timeout } = c.req.valid("query")
             const output = await waitForReceipt({ hash, timeout })
-            const [response, code] = makeResponseOld<StateRequestOutput>(output)
+            const [response, code] = makeResponse(output)
             return c.json(response, code)
         },
     )
@@ -80,7 +75,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getPending(input)
-            const [response, code] = makeResponseOld<PendingBoopOutput>(output)
+            const [response, code] = makeResponse(output)
             return c.json(response, code)
         },
     )
