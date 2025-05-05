@@ -9,7 +9,7 @@ import {
     GuildMemberUpdateRequestSchema,
     GuildQuerySchema,
     GuildUpdateRequestSchema,
-} from "../../validation/schema/guildSchema"
+} from "../../validation/guildSchema"
 
 export default new Hono()
 

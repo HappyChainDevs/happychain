@@ -9,8 +9,8 @@ import {
     UserUpdateValidation,
     UserWalletAddDescription,
     UserWalletAddValidation,
-    UserWalletParamValidation,
-} from "../../validation/schema/userSchema"
+    WalletAddressParamValidation,
+} from "../../validation/users"
 
 export default new Hono()
 
@@ -74,7 +74,7 @@ export default new Hono()
                 username: userData.username,
             })
 
-            return c.json({ ok: true, data: newUser }, 201)
+            return c.json(newUser, 201)
         } catch (err) {
             console.error("Error creating user:", err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -167,7 +167,7 @@ export default new Hono()
     })
 
     // PATCH /users/:id/wallets/:addr - Set wallet as primary
-    .patch("/:id/wallets/:addr", UserWalletParamValidation, async (c) => {
+    .patch("/:id/wallets/:addr", UserIdParamValidation, WalletAddressParamValidation, async (c) => {
         try {
             const { id, addr } = c.req.valid("param")
             const { userRepo } = c.get("repos")
@@ -194,7 +194,7 @@ export default new Hono()
     })
 
     // DELETE /users/:id/wallets/:addr - Remove wallet from user
-    .delete("/:id/wallets/:addr", UserWalletParamValidation, async (c) => {
+    .delete("/:id/wallets/:addr", UserIdParamValidation, WalletAddressParamValidation, async (c) => {
         try {
             const { id, addr } = c.req.valid("param")
             const { userRepo } = c.get("repos")

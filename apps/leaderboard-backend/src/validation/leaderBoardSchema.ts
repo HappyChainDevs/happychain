@@ -1,7 +1,7 @@
 import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
 import { isHex } from "viem"
-import type { GameTableId, GuildTableId, UserTableId } from "../../db/types"
+import type { GameTableId, GuildTableId, UserTableId } from "../db/types"
 
 // Global leaderboard entry schema (user-based)
 export const GlobalLeaderboardEntrySchema = z
