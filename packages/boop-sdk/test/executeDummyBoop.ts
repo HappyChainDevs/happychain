@@ -3,7 +3,7 @@ import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepol
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
-import { computeBoopHash, createAccount, execute } from "../lib/index"
+import { computeBoopHash, BoopClient } from "../lib/index"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
@@ -48,7 +48,8 @@ async function createAndSignMintTx(account: `0x${string}`) {
 }
 
 async function run() {
-    const createAccountResult = await createAccount({
+    const boopClient = new BoopClient()
+    const createAccountResult = await boopClient.createAccount({
         owner: testAccount.address,
         salt: "0x01",
     })
@@ -58,13 +59,15 @@ async function run() {
     }
 
     const tx = await createAndSignMintTx(createAccountResult.value.address)
-    const executeRes = await execute({ tx })
-
+    const executeRes = await boopClient.execute({ tx })
+    
     if (!executeRes.isOk()) {
         throw new Error(executeRes.error.message)
     }
-
-    console.log("tx status", executeRes.value.status)
+    if (executeRes.value.status !== "submitSuccess") {
+        throw new Error("submit failed")
+    }
+    console.log(`https://explorer.testnet.happy.tech/tx/${executeRes.value.state.receipt.txReceipt.transactionHash}`)
 }
 
 run().then(() => {

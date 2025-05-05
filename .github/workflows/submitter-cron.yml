@@ -6,7 +6,7 @@ on:
     - cron: '*/30 * * * *'       # every 30 min
 env:
     CHAIN_ID: 216
-    SUBMITTER_URL: "https://submitter.happy.tech/api"
+    SUBMITTER_URL: "https://submitter.happy.tech"
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,11 +21,11 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.2.4
-      - name: Build submitter & submitter client code
+      - name: Build submitter & boop sdk
         run: |
             make submitter.build
       - name: Execute boop
         run: |
-          cd packages/submitter-client
-          bun test/executeBoop.ts
+          cd packages/boop-sdk
+          bun test/executeDummyBoop.ts
 
