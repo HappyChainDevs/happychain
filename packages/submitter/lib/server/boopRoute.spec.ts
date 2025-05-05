@@ -4,14 +4,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import { computeBoopHash } from "#lib/services"
 import type { Boop } from "#lib/types"
-import {
-    client,
-    createMockTokenAMintBoop,
-    createMockTokenMint,
-    createSmartAccount,
-    getNonce,
-    signTx,
-} from "#lib/utils/test"
+import { client, createMockTokenMint, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
