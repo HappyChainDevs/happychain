@@ -1,9 +1,9 @@
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
+import { BoopClient, computeBoopHash } from "@happy.tech/boop-sdk"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
-import { BoopClient, computeBoopHash } from "../lib/index"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
