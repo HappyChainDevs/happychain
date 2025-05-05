@@ -16,12 +16,6 @@ const outputSchema = z.discriminatedUnion("status", [
             .refine(isHexString)
             .openapi({ example: "0xa972fee74164415894187e2bdc820b38d3cca7786aa58db903b6bce7c5b535d7" }),
         entryPoint: z.string().refine(isAddress).optional(),
-        gasLimit: z.coerce.number(),
-        validateGasLimit: z.coerce.number(),
-        validatePaymentGasLimit: z.coerce.number(),
-        executeGasLimit: z.coerce.number(),
-        maxFeePerGas: z.string().openapi({ example: "0" }),
-        submitterFee: z.string().openapi({ example: "0" }),
     }),
     z.object({
         status: z.nativeEnum(OnchainFail),

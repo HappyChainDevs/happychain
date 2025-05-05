@@ -1,4 +1,4 @@
-import type { Address, Bytes, Hash, UInt32 } from "@happy.tech/common"
+import type { Address, Bytes, Hash } from "@happy.tech/common"
 import { type Boop, Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
 export type SubmitInput = {
@@ -34,23 +34,8 @@ export type SubmitSuccess = {
     status: typeof Onchain.Success
     /** Hash of the submitted Boop */
     hash: Hash
-    /** Hash of the transaction carrying the Boop */
-    // TODO: I refuse
-    txHash: Hash
     /** EntryPoint to which the boop was submitted onchain. */
     entryPoint: Address
-    /** The total gas limit that was provided for the submitted boop. */
-    gasLimit: UInt32
-    /** The validation gas that was provided for the submitted boop. */
-    validateGasLimit: UInt32
-    /** The payment validation gas that was provided for the submitted boop. */
-    validatePaymentGasLimit: UInt32
-    /** The execute gas that was provided for the submitted boop. */
-    executeGasLimit: UInt32
-    /** The max fee per gas (in wei) that was provided for the submitted boop. */
-    maxFeePerGas: bigint
-    /** The total submitter fee (in wei) that was requested/provided for this boop. */
-    submitterFee: bigint
 }
 
 /** Output type of `submit` who failed simulation "onchain". */

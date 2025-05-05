@@ -25,6 +25,7 @@ describe("submitter_pending", () => {
 
     it("fetches pending transactions for a user", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
+
         const count = 10
 
         // test only works if submitter is configured to allow more than 50
@@ -40,7 +41,7 @@ describe("submitter_pending", () => {
 
         // submit all transactions, but only wait for the first to complete
         await Promise.race(
-            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
+            transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
         const pending = (await client.api.v1.boop.pending[":account"]

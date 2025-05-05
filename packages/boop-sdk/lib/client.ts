@@ -159,13 +159,7 @@ export class BoopClient {
 
     #getSubmitOutput(response: unknown): SubmitOutput {
         const output = response as SubmitOutput
-        if (output?.status !== Onchain.Success) return output
-
-        return {
-            ...output,
-            maxFeePerGas: BigInt(output.maxFeePerGas),
-            submitterFee: BigInt(output.submitterFee),
-        }
+        return output
     }
 
     #getExecuteOutput(response: unknown): ExecuteOutput {
