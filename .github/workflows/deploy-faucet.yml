@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: faucet
   FAUCET_DB_PATH: /home/faucet/faucet.sqlite
   TXM_DB_PATH: /home/faucet/txm.sqlite

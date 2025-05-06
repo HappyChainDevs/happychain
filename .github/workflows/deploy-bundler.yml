@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: happy-bundler
   PORT: 49531
   RPC_URL: https://rpc.testnet.happy.tech/http
