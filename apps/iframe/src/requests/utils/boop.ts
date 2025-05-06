@@ -117,7 +117,6 @@ export async function sendBoop(
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
 
         if (output.status !== Onchain.Success) throw new BoopExecutionError(output)
-
         markBoopAsSuccess(output)
         return output.receipt.boopHash
     } catch (error) {
