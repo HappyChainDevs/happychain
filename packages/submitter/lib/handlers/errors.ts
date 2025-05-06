@@ -4,12 +4,7 @@ import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate"
 import { boopNonceManager } from "#lib/services"
 import { type Boop, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import {
-    type DecodedRevertError,
-    decodeRawError,
-    extractErrorMessage,
-    getErrorNameFromSelector,
-} from "#lib/utils/parsing"
+import { type DecodedRevertError, decodeRawError, extractErrorMessage } from "#lib/utils/parsing"
 
 /**
  * Return error information for a generic error.
@@ -67,9 +62,7 @@ export function outputForRevertError(
             }
         }
         case "ValidationRejected": {
-            const decodedReason = decodeRawError(decoded.args[0] as Hex) ?? {
-                errorName: getErrorNameFromSelector(decoded.args[0] as Hex),
-            }
+            const decodedReason = decodeRawError(decoded.args[0] as Hex)
 
             // ExtensionAlreadyRegistered
             switch (decodedReason?.errorName) {

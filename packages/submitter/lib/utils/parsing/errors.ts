@@ -77,7 +77,11 @@ export function decodeRawError(data: Hex): DecodedRevertError | undefined {
             args: (err.args as readonly unknown[]) ?? [],
         }
     } catch {
-        return
+        if (data.length !== 10) return
+        // `decodeErrorResult` can't decode a selector on its own (resulting from `abiEncodeWithSelector`
+        // with no arguments), which we want to support for efficiency (less returned data) and robustness.
+        const errorName = getErrorNameFromSelector(data)
+        if (errorName) return { errorName, args: [] }
     }
 }
 
