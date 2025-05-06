@@ -517,10 +517,13 @@ deploy-boop: ## Deploys the Boop contracts.
 	make deploy DEPLOY_SCRIPT=DeployBoop.s.sol
 .PHONY: deploy-boop
 
-deploy-aa: ## Deploys the AA contracts.
-	$(eval $(call set-deployment-name,aa))
-	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
-.PHONY: deploy-aa
+deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
+	make deploy \
+		DEPLOY_SCRIPT=DeployBoop.s.sol \
+		CONFIG=TEST \
+		METADATA_FLAG="--no-metadata" \
+		DEPLOYMENT_NAME=happy-sepolia/boop-staging
+.PHONY: deploy-boop-staging
 
 deploy-mocks: ## Deploys the mock contracts.
 	$(eval $(call set-deployment-name,mocks))

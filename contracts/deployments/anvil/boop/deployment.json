@@ -1,10 +1,10 @@
 {
-  "BatchCallExecutor": "0xC639b1D65a935d35033Edff88D3587F8420bfc55",
-  "EntryPoint": "0x37CBcde602F8deAb58B8737fa485805525451c25",
-  "HappyAccountBeacon": "0xbcFD2C4A23658099160b640351317f09df0d60d5",
-  "HappyAccountBeaconProxyFactory": "0x153bEE7d37b89bDe6C2B78Fb21d6c3900BE3abb4",
-  "HappyAccountImpl": "0x8FdC0A69A4a330a4e8fe0990dE227F5691aefB7E",
-  "HappyAccountRegistry": "0xD170D0f841D1bb6BE34cb134fC0a35A1df434A5D",
-  "HappyPaymaster": "0xA4B0B9E9F69E0D6dae751C56dC640cF314628Ba7",
-  "SessionKeyValidator": "0x232A78aD1B4926E8740340f3a9aaA4754caA1827"
+  "BatchCallExecutor": "0x3473ac298B0A1dCa9d6832a35eBdf4CCe1c2e2e5",
+  "EntryPoint": "0xA745b33E6a6CaF538682995fE103cA4E0698e277",
+  "HappyAccountBeacon": "0xcAAC02003913dE79e71Ed1651b8DA014471b1441",
+  "HappyAccountBeaconProxyFactory": "0x5300e9eB996Db884dA9f02f6E7Ec30c20139A0dC",
+  "HappyAccountImpl": "0x7aD44DdA44283643FcaFD8c6ee288F63E1E121cf",
+  "HappyAccountRegistry": "0x460307fBB79987d94B0B80aF7321A58cA664Fdd8",
+  "HappyPaymaster": "0xEc8F70D1384977085F4eE0eE8B10e6151a9E964E",
+  "SessionKeyValidator": "0x44c2Fd82dD7368cD20DA01c1aC4CcF9a341FFDEC"
 }
