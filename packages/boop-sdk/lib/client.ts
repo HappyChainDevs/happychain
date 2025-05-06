@@ -158,8 +158,7 @@ export class BoopClient {
     // == Formatting Utils =========================================================================
 
     #getSubmitOutput(response: unknown): SubmitOutput {
-        const output = response as SubmitOutput
-        return output
+        return response as SubmitOutput
     }
 
     #getExecuteOutput(response: unknown): ExecuteOutput {
