@@ -29,8 +29,11 @@ export class FaucetService {
         if (faucetUsageResult.isErr()) {
             return err(faucetUsageResult.error)
         }
-        if (faucetUsageResult.value.length >= env.FAUCET_RATE_LIMIT_MAX_REQUESTS) {
-            return err(new FaucetRateLimitError())
+        if (faucetUsageResult.value.length >= 1) {
+            const lastRequest = faucetUsageResult.value[0]
+            const timeToWait =
+                lastRequest.occurredAt.getTime() + env.FAUCET_RATE_LIMIT_WINDOW_SECONDS * 1000 - Date.now()
+            return err(new FaucetRateLimitError(timeToWait))
         }
 
         const faucetUsage = FaucetUsage.create(address)

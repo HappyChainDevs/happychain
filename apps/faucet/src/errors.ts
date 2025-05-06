@@ -1,4 +1,5 @@
 import type { ContentfulStatusCode } from "hono/utils/http-status"
+import ms from "ms"
 
 export abstract class HappyFaucetError extends Error {
     public readonly statusCode: ContentfulStatusCode
@@ -23,8 +24,13 @@ export class FaucetFetchError extends HappyFaucetError {
 }
 
 export class FaucetRateLimitError extends HappyFaucetError {
-    constructor(message?: string, options?: ErrorOptions) {
-        super(429, message || "Rate limit exceeded", options)
+    constructor(timeToWait: number, message?: string, options?: ErrorOptions) {
+        super(
+            429,
+            message ||
+                "Rate limit exceeded, please wait " + ms(timeToWait, { long: true }) + " before requesting again",
+            options,
+        )
     }
 }
 
