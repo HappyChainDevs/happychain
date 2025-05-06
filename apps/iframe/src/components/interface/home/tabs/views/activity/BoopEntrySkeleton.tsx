@@ -22,17 +22,6 @@ const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
                 <div className="font-medium text-base-content/80">Pending transaction</div>
                 <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">{hash}</div>
             </div>
-
-            {/* Transaction Hash is not available while boop is pending... */}
-            {/* <a
-                href={`${blockExplorerUrl}/tx/${transactionHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View on explorer"
-                className="absolute size-full inset opacity-0"
-            >
-                {hash}
-            </a> */}
         </article>
     )
 }
