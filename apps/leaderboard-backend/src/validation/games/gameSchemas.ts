@@ -1,7 +1,6 @@
 import { z } from "@hono/zod-openapi"
 import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
-import type { UserTableId } from "../../db/types"
 
 // ====================================================================================================
 // Response Schemas
@@ -150,21 +149,21 @@ export const GameScoresQuerySchema = z
 
 export const GameIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Game ID must be a number" }),
+        id: z.coerce.number().int().positive(),
     })
     .strict()
     .openapi({
-        example: { id: "1" },
+        example: { id: 1 },
     })
 
 export const AdminIdParamSchema = z
     .object({
-        admin_id: z
-            .string()
-            .regex(/^\d+$/, { message: "Admin ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+        admin_id: z.coerce.number().int().positive(),
     })
     .strict()
+    .openapi({
+        example: { admin_id: 1 },
+    })
 
 export const AdminWalletParamSchema = z
     .object({

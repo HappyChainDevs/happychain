@@ -148,24 +148,22 @@ export const GuildMemberUpdateRequestSchema = z
 
 export const GuildIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Guild ID must be a number" }),
+        id: z.coerce.number().int().positive(),
     })
     .strict()
     .openapi({
         example: {
-            id: "1",
+            id: 1,
         },
     })
 
-export const GuildMemberParamSchema = z
+export const GuildMemberIdParamSchema = z
     .object({
-        id: GuildIdParamSchema.shape.id,
-        user_id: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
+        member_id: z.coerce.number().int().positive(),
     })
     .strict()
     .openapi({
         example: {
-            id: "1",
-            user_id: "2",
+            member_id: 1,
         },
     })

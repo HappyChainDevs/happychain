@@ -9,7 +9,7 @@ import {
     GuildMemberAddDescription,
     GuildMemberAddValidation,
     GuildMemberDeleteDescription,
-    GuildMemberParamValidation,
+    GuildMemberIdParamValidation,
     GuildMemberUpdateDescription,
     GuildMemberUpdateValidation,
     GuildQueryDescription,
@@ -84,7 +84,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
             const includeMembers = c.req.query("include_members") === "true"
 
-            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guildId = id as GuildTableId
             const guild = await guildRepo.findById(guildId, includeMembers)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -109,7 +109,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guildId = id as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -145,7 +145,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guildId = id as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -170,7 +170,7 @@ export default new Hono()
             const { guildRepo, userRepo } = c.get("repos")
 
             // Ensure guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guildId = id as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -210,23 +210,24 @@ export default new Hono()
 
     /**
      * Update a guild member's role (admin only).
-     * PATCH /guilds/:id/members/:user_id
+     * PATCH /guilds/:id/members/:member_id
      */
     .patch(
-        "/:id/members/:user_id",
+        "/:id/members/:member_id",
         GuildMemberUpdateDescription,
-        GuildMemberParamValidation,
+        GuildIdParamValidation,
+        GuildMemberIdParamValidation,
         GuildMemberUpdateValidation,
         async (c) => {
             try {
-                const { id, user_id } = c.req.valid("param")
+                const { id, member_id } = c.req.valid("param")
 
                 const { is_admin } = c.req.valid("json")
                 const { guildRepo } = c.get("repos")
 
                 // Check if guild exists
-                const guildId = Number.parseInt(id, 10) as GuildTableId
-                const userId = Number.parseInt(user_id, 10) as UserTableId
+                const guildId = id as GuildTableId
+                const userId = member_id as UserTableId
                 const guild = await guildRepo.findById(guildId)
                 if (!guild) {
                     return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -248,37 +249,43 @@ export default new Hono()
 
     /**
      * Remove a member from a guild (admin only).
-     * DELETE /guilds/:id/members/:user_id
+     * DELETE /guilds/:id/members/:member_id
      */
-    .delete("/:id/members/:user_id", GuildMemberDeleteDescription, GuildMemberParamValidation, async (c) => {
-        try {
-            const { id, user_id } = c.req.valid("param")
+    .delete(
+        "/:id/members/:member_id",
+        GuildMemberDeleteDescription,
+        GuildIdParamValidation,
+        GuildMemberIdParamValidation,
+        async (c) => {
+            try {
+                const { id, member_id } = c.req.valid("param")
 
-            const { guildRepo } = c.get("repos")
+                const { guildRepo } = c.get("repos")
 
-            // Check if guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
-            const userId = Number.parseInt(user_id, 10) as UserTableId
-            const guild = await guildRepo.findById(guildId)
-            if (!guild) {
-                return c.json({ ok: false, error: "Guild not found" }, 404)
+                // Check if guild exists
+                const guildId = id as GuildTableId
+                const userId = member_id as UserTableId
+                const guild = await guildRepo.findById(guildId)
+                if (!guild) {
+                    return c.json({ ok: false, error: "Guild not found" }, 404)
+                }
+
+                // Remove member from guild
+                const removedMember = await guildRepo.removeMember(guildId, userId)
+                if (!removedMember) {
+                    return c.json(
+                        {
+                            ok: false,
+                            error: "Cannot remove member: user may be the guild creator or not a member",
+                        },
+                        400,
+                    )
+                }
+
+                return c.json({ removed: true }, 200)
+            } catch (err) {
+                console.error(`Error removing member from guild ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
             }
-
-            // Remove member from guild
-            const removedMember = await guildRepo.removeMember(guildId, userId)
-            if (!removedMember) {
-                return c.json(
-                    {
-                        ok: false,
-                        error: "Cannot remove member: user may be the guild creator or not a member",
-                    },
-                    400,
-                )
-            }
-
-            return c.json({ removed: true }, 200)
-        } catch (err) {
-            console.error(`Error removing member from guild ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )

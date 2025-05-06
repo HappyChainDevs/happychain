@@ -55,8 +55,7 @@ export default new Hono()
             const { id } = c.req.valid("param")
             const { gameRepo } = c.get("repos")
 
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
+            const game = await gameRepo.findById(id as GameTableId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
             }
@@ -142,8 +141,7 @@ export default new Hono()
             const { gameRepo } = c.get("repos")
 
             // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
+            const game = await gameRepo.findById(id as GameTableId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
             }
@@ -156,7 +154,7 @@ export default new Hono()
                 }
             }
 
-            const updatedGame = await gameRepo.update(gameId, updateData)
+            const updatedGame = await gameRepo.update(id as GameTableId, updateData)
             return c.json({ ok: true, data: updatedGame }, 200)
         } catch (err) {
             console.error(`Error updating game ${c.req.param("id")}:`, err)
@@ -178,8 +176,7 @@ export default new Hono()
             const { gameRepo, userRepo } = c.get("repos")
 
             // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
+            const game = await gameRepo.findById(id as GameTableId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
             }
@@ -192,7 +189,7 @@ export default new Hono()
 
             // Submit score
             const { gameScoreRepo } = c.get("repos")
-            const newScore = await gameScoreRepo.submitScore(user.id, gameId, score, metadata)
+            const newScore = await gameScoreRepo.submitScore(user.id, id as GameTableId, score, metadata)
             return c.json({ ok: true, data: newScore }, 201)
         } catch (err) {
             console.error(`Error submitting score for game ${c.req.param("id")}:`, err)
@@ -211,15 +208,14 @@ export default new Hono()
             const { gameRepo } = c.get("repos")
 
             // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
+            const game = await gameRepo.findById(id as GameTableId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
             }
 
             // Get scores for the game
             const { gameScoreRepo } = c.get("repos")
-            const scores = await gameScoreRepo.findGameScores(gameId, top)
+            const scores = await gameScoreRepo.findGameScores(id as GameTableId, top)
             return c.json({ ok: true, data: scores }, 200)
         } catch (err) {
             console.error(`Error fetching scores for game ${c.req.param("id")}:`, err)
@@ -242,8 +238,7 @@ export default new Hono()
                 const { gameRepo, userRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
-                const game = await gameRepo.findById(gameId)
+                const game = await gameRepo.findById(id as GameTableId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
                 }
@@ -256,7 +251,7 @@ export default new Hono()
 
                 // Get user's scores for the game
                 const { gameScoreRepo } = c.get("repos")
-                const scores = await gameScoreRepo.findUserScores(user.id, gameId)
+                const scores = await gameScoreRepo.findUserScores(user.id, id as GameTableId)
                 return c.json({ ok: true, data: scores }, 200)
             } catch (err) {
                 console.error(`Error fetching user ${c.req.param("userId")} scores for game ${c.req.param("id")}:`, err)

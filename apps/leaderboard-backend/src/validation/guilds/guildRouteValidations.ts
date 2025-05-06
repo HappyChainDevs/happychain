@@ -3,7 +3,7 @@ import {
     GuildCreateRequestSchema,
     GuildIdParamSchema,
     GuildMemberAddRequestSchema,
-    GuildMemberParamSchema,
+    GuildMemberIdParamSchema,
     GuildMemberUpdateRequestSchema,
     GuildQuerySchema,
     GuildUpdateRequestSchema,
@@ -21,4 +21,4 @@ export const GuildMemberUpdateValidation = zValidator("json", GuildMemberUpdateR
 
 export const GuildIdParamValidation = zValidator("param", GuildIdParamSchema)
 
-export const GuildMemberParamValidation = zValidator("param", GuildMemberParamSchema)
+export const GuildMemberIdParamValidation = zValidator("param", GuildMemberIdParamSchema)

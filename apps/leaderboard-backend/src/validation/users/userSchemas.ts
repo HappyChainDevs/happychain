@@ -123,7 +123,7 @@ export const UserWalletRequestSchema = z
 
 export const UserIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
+        id: z.coerce.number().int().positive(),
     })
     .strict()
     .openapi({
@@ -132,7 +132,7 @@ export const UserIdParamSchema = z
             in: "path",
         },
         example: {
-            id: "1",
+            id: 1,
         },
     })
 
