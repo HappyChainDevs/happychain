@@ -9,45 +9,28 @@ import {
     GuildMemberUpdateRequestSchema,
     GuildQuerySchema,
     GuildUpdateRequestSchema,
-} from "../../validation/guildSchema"
+} from "../../validation/guilds"
 
 export default new Hono()
 
-    // GET /guilds - List guilds (with filtering)
+    // ====================================================================================================
+    // Guild Collection Routes
+
+    // GET /guilds - List guilds
     .get("/", zValidator("query", GuildQuerySchema), async (c) => {
         try {
-            const query = c.req.valid("query")
+            const { name, creator_id, include_members } = c.req.valid("query")
             const { guildRepo } = c.get("repos")
 
             const guilds = await guildRepo.find({
-                name: query.name,
-                creator_id: query.creator_id,
-                includeMembers: query.include_members,
+                name: name ? name : undefined,
+                creator_id: creator_id ? (Number.parseInt(creator_id, 10) as UserTableId) : undefined,
+                includeMembers: include_members ? include_members : false,
             })
 
             return c.json({ ok: true, data: guilds })
         } catch (err) {
             console.error("Error listing guilds:", err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
-
-    // GET /guilds/:id - Get guild by ID
-    .get("/:id", zValidator("param", GuildIdParamSchema), async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-
-            const { guildRepo } = c.get("repos")
-            const includeMembers = c.req.query("include_members") === "true"
-
-            const guild = await guildRepo.findById(id as GuildTableId, includeMembers)
-            if (!guild) {
-                return c.json({ ok: false, error: "Guild not found" }, 404)
-            }
-
-            return c.json({ ok: true, data: guild })
-        } catch (err) {
-            console.error(`Error fetching guild ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
     })
@@ -75,6 +58,32 @@ export default new Hono()
             console.error("Error creating guild:", err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
+    })
+
+    // GET /guilds/:id - Get guild by ID
+    .get("/:id", zValidator("param", GuildIdParamSchema), async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+
+            const { guildRepo } = c.get("repos")
+            const includeMembers = c.req.query("include_members") === "true"
+
+            const guild = await guildRepo.findById(Number.parseInt(id, 10) as GuildTableId, includeMembers)
+            if (!guild) {
+                return c.json({ ok: false, error: "Guild not found" }, 404)
+            }
+
+            return c.json({ ok: true, data: guild })
+        } catch (err) {
+            console.error(`Error fetching guild ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
+    })
+
+    // DELETE /guilds/:id - Delete a guild (admin/owner only)
+    .delete("/:id", zValidator("param", GuildIdParamSchema), async (c) => {
+        // TODO: Implement guild deletion (admin/owner only)
+        return c.json({ ok: false, error: "Not implemented" }, 501)
     })
 
     // PATCH /guilds/:id - Update guild details (admin only)
@@ -107,6 +116,11 @@ export default new Hono()
         }
     })
 
+    /**
+     * =============================================
+     * Guild Members
+     * =============================================
+     */
     // GET /guilds/:id/members - List guild members
     .get("/:id/members", zValidator("param", GuildIdParamSchema), async (c) => {
         try {
@@ -126,6 +140,12 @@ export default new Hono()
             console.error(`Error fetching members for guild ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
+    })
+
+    // GET /guilds/:id/members/:userId - Get a specific member in a guild
+    .get("/:id/members/:userId", zValidator("param", GuildMemberParamSchema), async (c) => {
+        // TODO: Implement fetch of specific member in a guild
+        return c.json({ ok: false, error: "Not implemented" }, 501)
     })
 
     // POST /guilds/:id/members - Add member to guild (admin only)
@@ -178,7 +198,8 @@ export default new Hono()
         },
     )
 
-    // PATCH /guilds/:id/members/:userId - Update member role (admin only)
+// PATCH /guilds/:id/members/:userId - Update member role (admin only)
+guildsRoutes
     .patch(
         "/:id/members/:userId",
         zValidator("param", GuildMemberParamSchema),
@@ -242,6 +263,29 @@ export default new Hono()
         }
     })
 
+    // GET /guilds/:id/admins - List only admin members (optional, stub)
+    .get("/:id/admins", zValidator("param", GuildIdParamSchema), async (c) => {
+        // TODO: Implement admin member listing
+        return c.json({ ok: false, error: "Not implemented" }, 501)
+    })
+
+    // GET /guilds/:id/invites - List invites for a guild (optional, stub)
+    .get("/:id/invites", zValidator("param", GuildIdParamSchema), async (c) => {
+        // TODO: Implement invite listing
+        return c.json({ ok: false, error: "Not implemented" }, 501)
+    })
+
+    // GET /guilds/:id/activity - Get guild activity log (optional, stub)
+    .get("/:id/activity", zValidator("param", GuildIdParamSchema), async (c) => {
+        // TODO: Implement activity log
+        return c.json({ ok: false, error: "Not implemented" }, 501)
+    })
+
+    /**
+     * =============================================
+     * User's Guilds (Reverse Lookup)
+     * =============================================
+     */
     // GET /users/:id/guilds - Get guilds a user belongs to
     .get("/users/:id/guilds", async (c) => {
         try {

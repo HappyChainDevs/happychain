@@ -1,23 +1,18 @@
-import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
-import { isHex } from "viem"
-import type { GuildTableId, UserTableId } from "../db/types"
+import { resolver } from "hono-openapi/zod"
+import { type Address, isHex } from "viem"
 
-// Guild API response schema (for GET, POST responses)
-export const GuildResponseSchema = z
+// ====================================================================================================
+// Response Schemas
+
+const GuildResponseSchema = z
     .object({
-        id: z
-            .number()
-            .int()
-            .transform((val) => val as GuildTableId),
+        id: z.number().int(),
         name: z.string(),
         icon_url: z.string().nullable(),
-        creator_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
-        created_at: z.string().datetime(),
-        updated_at: z.string().datetime(),
+        creator_id: z.number().int(),
+        created_at: z.string(),
+        updated_at: z.string(),
     })
     .strict()
     .openapi({
@@ -31,20 +26,13 @@ export const GuildResponseSchema = z
         },
     })
 
-// Guild member response schema
-export const GuildMemberResponseSchema = z
+const GuildMemberResponseSchema = z
     .object({
         id: z.number().int(),
-        guild_id: z
-            .number()
-            .int()
-            .transform((val) => val as GuildTableId),
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
+        guild_id: z.number().int(),
+        user_id: z.number().int(),
         is_admin: z.boolean(),
-        joined_at: z.string().datetime(),
+        joined_at: z.string(),
         // Extended properties when including user details
         username: z.string().optional(),
         primary_wallet: z
@@ -66,14 +54,24 @@ export const GuildMemberResponseSchema = z
         },
     })
 
-// Guild query schema for GET /guilds (query params)
+export const GuildResponseSchemaObj = resolver(GuildResponseSchema)
+
+export const GuildListResponseSchemaObj = resolver(z.array(GuildResponseSchema))
+
+export const GuildMemberResponseSchemaObj = resolver(GuildMemberResponseSchema)
+
+export const GuildMemberListResponseSchemaObj = resolver(z.array(GuildMemberResponseSchema))
+
+// Generic error schema
+export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
+
+// ====================================================================================================
+// Request Body Schemas
+
 export const GuildQuerySchema = z
     .object({
         name: z.string().optional(),
-        creator_id: z
-            .string()
-            .transform((val) => Number.parseInt(val, 10) as UserTableId)
-            .optional(),
+        creator_id: z.string().optional(),
         include_members: z.boolean().default(false).optional(),
     })
     .strict()
@@ -85,15 +83,11 @@ export const GuildQuerySchema = z
         },
     })
 
-// Guild creation request schema (for POST /guilds)
 export const GuildCreateRequestSchema = z
     .object({
         name: z.string().min(3).max(50),
         icon_url: z.string().url().nullable().optional(),
-        creator_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
+        creator_id: z.number().int(),
     })
     .strict()
     .openapi({
@@ -104,7 +98,6 @@ export const GuildCreateRequestSchema = z
         },
     })
 
-// Guild update request schema (for PATCH /guilds/:id)
 export const GuildUpdateRequestSchema = z
     .object({
         name: z.string().min(3).max(50).optional(),
@@ -121,14 +114,9 @@ export const GuildUpdateRequestSchema = z
         },
     })
 
-// Guild member add request schema (for POST /guilds/:id/members)
 export const GuildMemberAddRequestSchema = z
     .object({
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId)
-            .optional(),
+        user_id: z.number().int().optional(),
         username: z.string().min(1).optional(),
         is_admin: z.boolean().default(false).optional(),
     })
@@ -155,13 +143,12 @@ export const GuildMemberUpdateRequestSchema = z
         },
     })
 
-// Guild ID path parameter schema (for endpoints with :id)
+// ====================================================================================================
+// Request Param Schemas
+
 export const GuildIdParamSchema = z
     .object({
-        id: z
-            .string()
-            .regex(/^\d+$/, { message: "Guild ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as GuildTableId),
+        id: z.string().regex(/^\d+$/, { message: "Guild ID must be a number" }),
     })
     .strict()
     .openapi({
@@ -170,14 +157,10 @@ export const GuildIdParamSchema = z
         },
     })
 
-// Combined guild ID and user ID parameter schema (for endpoints with :id/members/:userId)
 export const GuildMemberParamSchema = z
     .object({
         id: GuildIdParamSchema.shape.id,
-        userId: z
-            .string()
-            .regex(/^\d+$/, { message: "User ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+        userId: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
     })
     .strict()
     .openapi({

@@ -1,6 +1,9 @@
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
-import { LeaderboardGameIdParamSchema, LeaderboardLimitQuerySchema } from "../../validation/leaderBoardSchema"
+import {
+    LeaderboardGameIdParamSchema,
+    LeaderboardLimitQuerySchema,
+} from "../../validation/leaderboard/leaderBoardSchema"
 
 export default new Hono()
 

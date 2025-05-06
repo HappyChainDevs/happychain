@@ -1,7 +1,7 @@
 import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
 import { isHex } from "viem"
-import type { GameTableId, UserTableId } from "../db/types"
+import type { GameTableId, UserTableId } from "../../db/types"
 
 // Game API response schema (for GET, POST responses)
 export const GameResponseSchema = z

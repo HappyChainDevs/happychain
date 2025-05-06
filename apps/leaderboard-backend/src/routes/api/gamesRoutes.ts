@@ -2,14 +2,14 @@ import type { Address } from "@happy.tech/common"
 
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
-import { AdminWalletParamSchema, GameIdParamSchema, UserWalletParamSchema } from "../../validation/gameSchema"
+import { AdminWalletParamSchema, GameIdParamSchema, UserWalletParamSchema } from "../../validation/games/gameSchema"
 import {
     GameCreateRequestSchema,
     GameQuerySchema,
     GameScoresQuerySchema,
     GameUpdateRequestSchema,
     ScoreSubmitRequestSchema,
-} from "../../validation/gameSchema"
+} from "../../validation/games/gameSchema"
 
 export default new Hono()
 
