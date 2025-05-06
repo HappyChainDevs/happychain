@@ -42,15 +42,15 @@ const WalletFunctionalityDemo = () => {
                 console.log("[mintTokens] success:", writeCallResult)
                 toast.success(
                     <div>
-                        Tokens minted successfully!{" "}
-                        <a
-                            href={`https://explorer.testnet.happy.tech/op/${writeCallResult}`}
+                        Tokens minted successfully! {/* BoopHash URL unavailable */}
+                        {/* <a
+                            href={`https://explorer.testnet.happy.tech/boop/${writeCallResult}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ textDecoration: "underline" }}
                         >
                             View on Explorer
-                        </a>
+                        </a> */}
                     </div>,
                 )
             } else {
