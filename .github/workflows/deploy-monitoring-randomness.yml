@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: randomness-monitor
 
 jobs:
