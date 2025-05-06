@@ -17,7 +17,6 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
     try {
         logger.trace("Submitting boop with hash", boopHash)
 
-        // TODO: do we also save the simulated boops?
         // Save original boop to the database for historic purposes and data recovery.
         await submitterService.add(entryPoint, boop, boopHash)
 
