@@ -1,6 +1,6 @@
 import { abis as boopAnvilAbis, deployment as boopAnvilDeployment } from "@happy.tech/contracts/boop/anvil"
 import { abis as boopSepoliaAbis, deployment as boopSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
-import { devnet, happyChainSepolia } from "@happy.tech/wallet-common"
+import { anvil, happyChainSepolia } from "@happy.tech/wallet-common"
 
 // Default chain ID, used for deployment addresses and ABIs — however the iframe is still able to work with
 // other chains as long as they feature the same addresses and ABIs.
@@ -12,7 +12,7 @@ function getBoopDeployment(chainId: number) {
     switch (chainId) {
         case happyChainSepolia.id:
             return boopSepoliaDeployment
-        case devnet.id:
+        case anvil.id:
             return boopAnvilDeployment
         default:
             throw new Error(`Unsupported chainId: ${chainId}. Failed to fetch deployments`)
@@ -23,7 +23,7 @@ function getBoopAbis(chainId: number) {
     switch (chainId) {
         case happyChainSepolia.id:
             return boopSepoliaAbis
-        case devnet.id:
+        case anvil.id:
             return boopAnvilAbis
         default:
             throw new Error(`Unsupported chainId: ${chainId}. Failed to fetch abis`)
