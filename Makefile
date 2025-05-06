@@ -528,15 +528,15 @@ define update_env
 endef
 
 select-submitter-local:
-	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,http://localhost:3001)
+	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,http://localhost:3001)
 .PHONY: select-submitter-local
 
 select-submitter-staging:
-	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,https://submitter-staging.happy.tech)
+	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter-staging.happy.tech)
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
-	$(call update_env,apps/iframe/.env,VITE_SUBITTER_URL,https://submitter.happy.tech)
+	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter.happy.tech)
 .PHONY: select-submitter-prod
 
 select-iframe-local:
