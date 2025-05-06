@@ -76,17 +76,10 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-<<<<<<< HEAD
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
-=======
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
-        await dispatchHandlers(request)
->>>>>>> 550f2a863 (remove unneeded changes)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(getAllPermissions(iframeURL).length).toBe(1)
     })
