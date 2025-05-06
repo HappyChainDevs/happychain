@@ -550,6 +550,8 @@ select-iframe-testnet:
 select-chain-local:
 	$(call update_env,apps/submitter/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
+	$(call update_env,packages/submitter/.env,CHAIN_ID,31337)
+	$(call update_env,packages/submitter/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
@@ -563,6 +565,8 @@ select-chain-local:
 select-chain-testnet:
 	$(call update_env,apps/submitter/.env,CHAIN_ID,216)
 	$(call update_env,apps/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
+	$(call update_env,packages/submitter/.env,CHAIN_ID,216)
+	$(call update_env,packages/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
 	$(call update_env,apps/randomness/.env,RPC_URL,wss://rpc.testnet.happy.tech/ws)
@@ -575,7 +579,7 @@ select-chain-testnet:
 
 setup-local-chain: select-chain-local
 	@cd contracts && make anvil-background
-	@sleep 5
+	@until cast chain-id; do sleep 1; done;
 	@CONFIG=LOCAL cd contracts && make deploy-boop
 	@CONFIG=LOCAL cd contracts && make deploy-mocks
 	@CONFIG=LOCAL cd contracts && make deploy-random
