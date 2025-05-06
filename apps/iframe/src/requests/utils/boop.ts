@@ -98,6 +98,7 @@ export async function sendBoop(
 
         if (!isSponsored) {
             const output = await boopClient.simulate({ entryPoint, boop })
+            console.log("boop/simulate output", output)
             if (output.status !== Onchain.Success) {
                 // TODO which error?
                 throw new BoopSimulationError(output)
@@ -115,6 +116,7 @@ export async function sendBoop(
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop({ boopHash, value })
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
+        reqLogger.trace("boop/execute output", output)
 
         if (output.status !== Onchain.Success) throw new BoopExecutionError(output)
 

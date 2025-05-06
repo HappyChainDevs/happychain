@@ -11,7 +11,7 @@ export { handleRejectedRequest } from "./handlers/rejected"
  * Handles requests approved by the user in the pop-up, when connected to a social wallet (e.g. Google Auth).
  */
 export async function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): Promise<void> {
-    reqLogger.trace("handle approved request", request)
+    reqLogger.trace("approved request:", request.payload.method, request)
     return await sendResponse(request, dispatchApprovedRequest)
 }
 
@@ -19,7 +19,7 @@ export async function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove
  * Handles requests that do not require user approval, when connected to a social wallet (e.g. Google Auth).
  */
 export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
-    reqLogger.trace("handle permissionless request", request)
+    reqLogger.trace("permissionless request:", request.payload.method, request)
     void sendResponse(request, dispatchedPermissionlessRequest)
 }
 
@@ -28,6 +28,6 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
  * TODO precision on where and when approval happens (popup vs injected wallet window)
  */
 export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
-    reqLogger.trace("handle injected request", request)
+    reqLogger.trace("injected request:", request.payload.method, request)
     void sendResponse(request, dispatchInjectedRequest)
 }

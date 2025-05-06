@@ -11,6 +11,11 @@ import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
 
 const app = new Hono() //
+    .use(async (c, next) => {
+        await next()
+        // TODO don't await json here if not tracing
+        logger.trace("sending response", c.res.status, await c.res.clone().json())
+    })
     .use(requestIdMiddleware())
     .route("/api/v1/accounts", accountsApi)
     .route("/api/v1/boop", boopApi)
