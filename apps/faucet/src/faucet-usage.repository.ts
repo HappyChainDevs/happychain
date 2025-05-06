@@ -28,7 +28,12 @@ export class FaucetUsageRepository {
 
     async findAllByAddress(address: Address): Promise<Result<FaucetUsage[], Error>> {
         const result = await ResultAsync.fromPromise(
-            db.selectFrom("faucetUsage").selectAll().where("address", "=", address).execute(),
+            db
+                .selectFrom("faucetUsage")
+                .selectAll()
+                .where("address", "=", address)
+                .orderBy("occurredAt", "desc")
+                .execute(),
             unknownToError,
         )
 

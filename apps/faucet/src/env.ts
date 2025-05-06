@@ -24,7 +24,6 @@ const envSchema = z.object({
     TOKEN_AMOUNT: z.string().transform((s) => BigInt(s)),
     FAUCET_DB_PATH: z.string().trim(),
     FAUCET_RATE_LIMIT_WINDOW_SECONDS: z.string().transform((s) => Number(s)),
-    FAUCET_RATE_LIMIT_MAX_REQUESTS: z.string().transform((s) => Number(s)),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
