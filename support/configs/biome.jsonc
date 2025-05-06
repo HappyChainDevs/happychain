@@ -53,7 +53,8 @@
                 "noNamespace": "error",
                 "noNonNullAssertion": "off",
                 "useTemplate": "off",
-                "noUselessElse": "off"
+                "noUselessElse": "off",
+                "noParameterAssign": "off"
             },
             "complexity": {
                 "noForEach": "off"
