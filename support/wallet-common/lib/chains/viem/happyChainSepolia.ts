@@ -1,5 +1,5 @@
 import { chainConfig } from "viem/op-stack"
-import { happyChainSepoliaDefinition as addChainDefinition } from "../definitions/happyChainSepolia"
+import { happyChainSepoliaDefinition } from "../definitions/happyChainSepolia"
 import type { Chain } from "./type"
 
 /**
@@ -86,19 +86,19 @@ const contracts = {
  */
 export const happyChainSepolia = {
     ...chainConfig,
-    id: Number(addChainDefinition.chainId),
-    name: addChainDefinition.chainName,
-    nativeCurrency: addChainDefinition.nativeCurrency,
+    id: Number(happyChainSepoliaDefinition.chainId),
+    name: happyChainSepoliaDefinition.chainName,
+    nativeCurrency: happyChainSepoliaDefinition.nativeCurrency,
     rpcUrls: {
         default: {
-            http: addChainDefinition.rpcUrls.filter((a) => a.startsWith("https")),
-            webSocket: addChainDefinition.rpcUrls.filter((a) => a.startsWith("ws")),
+            http: happyChainSepoliaDefinition.rpcUrls.filter((a) => a.startsWith("https")),
+            webSocket: happyChainSepoliaDefinition.rpcUrls.filter((a) => a.startsWith("ws")),
         },
     },
     blockExplorers: {
         default: {
-            name: `${addChainDefinition.chainName} Explorer`,
-            url: addChainDefinition.blockExplorerUrls[0],
+            name: `${happyChainSepoliaDefinition.chainName} Explorer`,
+            url: happyChainSepoliaDefinition.blockExplorerUrls[0],
         },
     },
     contracts: {

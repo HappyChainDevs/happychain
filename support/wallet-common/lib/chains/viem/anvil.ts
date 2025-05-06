@@ -1,4 +1,4 @@
-import { devnetDefinition as addChainDefinition } from "../definitions/devnet"
+import { anvilDefinition } from "../definitions/anvil"
 import { convertToViemChain } from "../utils"
 import type { Chain } from "./type"
 
@@ -7,4 +7,4 @@ import type { Chain } from "./type"
  *
  * Type: {@link Chain}
  */
-export const devnet: Chain = convertToViemChain(addChainDefinition)
+export const anvil: Chain = convertToViemChain(anvilDefinition)

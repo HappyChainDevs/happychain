@@ -1,7 +1,7 @@
-import { devnet } from "./devnet"
+import { anvil } from "./anvil"
 import { happyChainSepolia } from "./happyChainSepolia"
 import type { Chain } from "./type"
-export { devnet, happyChainSepolia }
+export { anvil, happyChainSepolia }
 
 /**
  * The default chain to use. Right now this is Happy Chain Sepolia.
@@ -11,7 +11,7 @@ export const defaultChain: Chain = happyChainSepolia
 /**
  * Array of all supported HappyChain chains.
  */
-export const chains: Chain[] = [devnet, happyChainSepolia]
+export const chains: Chain[] = [anvil, happyChainSepolia]
 
 /**
  * Map of supported chain IDs to chain objects.

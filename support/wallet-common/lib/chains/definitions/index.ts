@@ -1,5 +1,5 @@
 // Internal use only
-import { devnetDefinition } from "./devnet"
+import { anvilDefinition } from "./anvil"
 import { ethereumDefinition } from "./ethereum"
 import { happyChainSepoliaDefinition } from "./happyChainSepolia"
 // export { happyChainSepoliaDefinition as happyChainSepolia }
@@ -10,7 +10,7 @@ export const chainDefinitions = {
 
     // Internal use only
     ethereum: ethereumDefinition,
-    devnet: devnetDefinition,
+    devnet: anvilDefinition,
     from: happyChainSepoliaDefinition,
     happyChainSepolia: happyChainSepoliaDefinition,
 }
