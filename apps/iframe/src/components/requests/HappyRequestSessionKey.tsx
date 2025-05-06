@@ -1,8 +1,5 @@
 import type { HappyMethodNames } from "@happy.tech/common"
-import { shortenAddress } from "@happy.tech/wallet-common"
-import { useAtomValue } from "jotai"
 import type { Address } from "viem"
-import { currentChainAtom } from "#src/state/chains"
 import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
@@ -22,8 +19,6 @@ export const HappyRequestSessionKey = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) => {
     const targetAddress: Address = params[0]
-    const currentChain = useAtomValue(currentChainAtom)
-    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const appURL = getAppURL()
 
     return (
@@ -34,15 +29,7 @@ export const HappyRequestSessionKey = ({
                     <div className="mb-4">
                         <p className="mb-2">
                             The app will be able to send transactions to{" "}
-                            <a
-                                href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary border-b border-dashed hover:bg-primary/40"
-                            >
-                                {shortenAddress(targetAddress)}
-                            </a>{" "}
-                            without approval.
+                            <LinkToAddress address={targetAddress} shorten /> without approval.
                         </p>
                         <p>You can revoke automatic approvals from the wallet.</p>
                     </div>
@@ -72,7 +59,7 @@ export const HappyRequestSessionKey = ({
                     <SubsectionContent>
                         <SubsectionTitle>Authorized contract address</SubsectionTitle>
                         <FormattedDetailsLine>
-                            <LinkToAddress address={targetAddress}> {targetAddress}</LinkToAddress>
+                            <LinkToAddress address={targetAddress}>{targetAddress}</LinkToAddress>
                         </FormattedDetailsLine>
                     </SubsectionContent>
                 </SubsectionBlock>

@@ -1,3 +1,4 @@
+import { shortenAddress } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import type React from "react"
 import type { PropsWithChildren } from "react"
@@ -115,8 +116,9 @@ export const FormattedDetailsLine = ({ children, isCode }: FormattedDetailsLineP
 
 interface LinkToAddressProps extends PropsWithChildren {
     address: Address
+    shorten?: boolean
 }
-export const LinkToAddress = ({ children, address }: LinkToAddressProps) => {
+export const LinkToAddress = ({ address, shorten }: LinkToAddressProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     return (
@@ -125,8 +127,9 @@ export const LinkToAddress = ({ children, address }: LinkToAddressProps) => {
             href={`${blockExplorerUrl}/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
+            className="text-primary border-b border-dashed hover:bg-primary/40"
         >
-            {children}
+            {shorten ? shortenAddress(address) : address}
         </a>
     )
 }

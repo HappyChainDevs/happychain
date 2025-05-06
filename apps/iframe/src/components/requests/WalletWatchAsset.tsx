@@ -42,7 +42,7 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
                     <SubsectionContent>
                         <SubsectionTitle>Contract address</SubsectionTitle>
                         <FormattedDetailsLine>
-                            <LinkToAddress address={options.address as Address}>{options.address}</LinkToAddress>
+                            <LinkToAddress address={options.address as Address} />
                         </FormattedDetailsLine>
                     </SubsectionContent>
                     <SubsectionContent>
