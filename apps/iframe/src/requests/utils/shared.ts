@@ -18,6 +18,7 @@ import { boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import type { BlockParam } from "#src/requests/utils/eip1474"
 import { boopClient } from "#src/state/boopClient"
+import { reqLogger } from "#src/utils/logger"
 
 export const FORWARD = Symbol("FORWARD")
 export type Forward = typeof FORWARD
@@ -30,25 +31,32 @@ export type Forward = typeof FORWARD
 export async function getTransactionByHash(hash: Hash): Promise<Transaction | Forward | null> {
     const cached = boopCache.get(hash)
 
+    // TODO we must NOT store receipts where the nonce was not incremented
     // If the receipt is present, the entry is final. If not, try to fetch a more up-to-date state.
-    if (cached?.receipt) return formatTransaction(hash, cached.boop, cached.receipt)
+    if (cached?.receipt) return formatTransaction(hash, cached)
 
     try {
         const output = await boopClient.state({ hash })
-        if (output.status !== GetState.Receipt) {
-            // TODO: can we get something useful out of the simulation result — yes, most likely
-            return output.status === GetState.Simulated ? null : FORWARD
+        if (output.status === GetState.Receipt) {
+            const receipt = output.receipt
+            const cached = boopCache.putReceipt(hash, receipt)
+            return formatTransaction(hash, cached)
+        } else if (output.status === GetState.Simulated) {
+            if (!cached?.boop) {
+                reqLogger.warn("boop was simulated, but its data is missing", hash)
+                return null
+            } else if (output.simulation.status === Onchain.Success) {
+                return formatTransaction(hash, cached, output.simulation)
+            } else {
+                return null
+            }
+        } else {
+            // Not sure this hash is a boop, try getting an EVM tx by this hash.
+            return FORWARD
         }
-
-        const receipt = output.receipt
-        const boop = undefined
-        // const { receipt, boop } = output.state // TODO
-
-        boopCache.put(hash, { boop, receipt })
-        return formatTransaction(hash, boop, receipt)
     } catch (_err) {
         // We had a cache hit without receipt, so this is a boop, just use that.
-        if (cached) return formatTransaction(hash, cached.boop, cached.receipt)
+        if (cached) return formatTransaction(hash, cached)
 
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.

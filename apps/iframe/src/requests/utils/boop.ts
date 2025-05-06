@@ -6,6 +6,7 @@ import {
     Onchain,
     type Receipt,
     type SimulateOutput,
+    type SimulateSuccess,
     type SubmitStatus,
     SubmitterError,
     computeBoopHash,
@@ -13,6 +14,7 @@ import {
 import { Map2, Mutex } from "@happy.tech/common"
 import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress } from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
+import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { boopClient } from "#src/state/boopClient"
@@ -194,7 +196,11 @@ export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): Rece
  * Given a boop and an optional receipt, returns an EIP1559-style transaction object, which is what is returned
  * for RPC calls to `eth_getTransactionByHash` when it is passed a boop receipt.
  */
-export function formatTransaction(hash: Hash, boop?: Boop, receipt?: BoopReceipt): TransactionEIP1559 {
+export function formatTransaction(
+    hash: Hash,
+    { boop, receipt }: BoopCacheEntry,
+    simulation?: SimulateSuccess,
+): TransactionEIP1559 {
     const currentChain = getCurrentChain()
 
     // NOTES(norswap)
@@ -211,7 +217,7 @@ export function formatTransaction(hash: Hash, boop?: Boop, receipt?: BoopReceipt
         to: boop?.dest ?? null, // TODO should be in the receipt too!
         gas: boop?.gasLimit ?? receipt?.gasUsed, // TODO boop in receipt
         maxPriorityFeePerGas: 0n,
-        maxFeePerGas: boop?.maxFeePerGas ?? receipt?.txReceipt.effectiveGasPrice,
+        maxFeePerGas: boop?.maxFeePerGas ?? receipt?.txReceipt.effectiveGasPrice ?? simulation?.maxFeePerGas,
         nonce: receipt?.nonceValue ? Number(receipt.nonceValue) : -1,
         input: boop?.callData || "0x",
         value: boop?.value ?? 0n,
