@@ -50,7 +50,7 @@ export const TransactionType = {
     EIP2930: "eip2930",
     EIP4844: "eip4844",
     EIP7702: "eip7702",
-}
+} as const
 
 export type TransactionTypeName = (typeof TransactionType)[keyof typeof TransactionType]
 
