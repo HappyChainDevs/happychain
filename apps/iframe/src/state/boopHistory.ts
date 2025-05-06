@@ -23,15 +23,19 @@ const boopsRecordAtom = atomWithStorage<Record<Address, StoredBoop[]>>(StorageKe
 export const boopsAtom = atom(
     (get) => {
         const user = get(userAtom)
-        return user ? (get(boopsRecordAtom)[user?.address] ?? []) : []
+        if (!user) return []
+        return get(boopsRecordAtom)[user.address] ?? []
     },
     (get, set, boops: StoredBoop[]) => {
         const user = get(userAtom)
         if (!user) return
 
         set(boopsRecordAtom, (stored) => {
-            stored[user.address] = boops.sort((a, b) => b.createdAt - a.createdAt)
-            return stored
+            return {
+                // Must spread here for Jotai to trigger rerender
+                ...stored,
+                [user.address]: boops.toSorted((a, b) => b.createdAt - a.createdAt),
+            }
         })
     },
 )
@@ -93,6 +97,7 @@ export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">):
     const existing = accountBoops.find((boop) => boop.boopHash === entry.boopHash)
     if (existing) existing.createdAt = Date.now()
     else accountBoops.push(entry)
+
     store.set(boopsAtom, accountBoops)
 }
 
