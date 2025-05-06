@@ -1,5 +1,5 @@
 import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
-import { createBigIntStorage } from "@happy.tech/common"
+import { binaryPartition, createBigIntStorage } from "@happy.tech/common"
 import { atom } from "jotai"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
@@ -124,16 +124,14 @@ export function markBoopAsFailure(
 }
 
 function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
-    const accountBoops = store.get(boopsAtom) || []
-    const existing = accountBoops.find((boop) => boop.boopHash === boopHash)
+    const [[existing], rest] = binaryPartition(
+        store.get(boopsAtom) ?? [], //
+        (boop) => boop.boopHash === boopHash,
+    )
     if (!existing) {
         console.warn("Boop not found in history, cannot update status", { boopHash, update })
         return
     }
-
-    const rest = accountBoops.filter((boop) => boop.boopHash !== boopHash)
-    // TODO check this works
-    const _update = { ...existing, ...update } as StoredBoop
-
-    store.set(boopsAtom, [...rest, _update])
+    const updated = { ...existing, ...update } as StoredBoop
+    store.set(boopsAtom, [...rest, updated])
 }
