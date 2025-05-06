@@ -106,6 +106,8 @@ export { getUrlProtocol } from "./utils/urlProtocol"
 
 export { isAddress } from "./utils/address"
 
+export { binaryPartition, partition } from "./utils/iterables"
+
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
