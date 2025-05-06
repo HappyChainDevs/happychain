@@ -99,3 +99,6 @@ export { formatMs } from "./utils/time"
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
 export { blankIcon, happyLogo128x128 } from "./data/icons"
+
+// === DEBUG =======================================================================================
+export { tracer, Tracer } from "./debug/Tracer"

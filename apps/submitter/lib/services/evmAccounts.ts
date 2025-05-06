@@ -1,3 +1,4 @@
+import type { Address, Hex } from "@happy.tech/common"
 import { type Account, type PrivateKeyAccount, createNonceManager } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { jsonRpc } from "viem/nonce"
@@ -44,9 +45,11 @@ export const defaultAccount: Account = evmAccounts[0]
 
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
+    return findBoopExecutionAccount(computeHash(tx), tx.account, tx.nonceTrack)
+}
 
-    const hash = computeHash(tx)
-    return executorService.get(hash, tx.account, tx.nonceTrack)
+export function findBoopExecutionAccount(boopHash: Hex, boopAccount: Address, boopNonceTrack: bigint): Account {
+    return executorService.get(boopHash, boopAccount, boopNonceTrack)
 }
 
 function getAccountDeployer(): Account {

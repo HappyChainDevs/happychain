@@ -10,7 +10,7 @@ Logger.instance.setLogLevel(defaultLogLevel)
 /**
  * Default logger instance. Also accessible in the browser console via `window.happyLogger`.
  */
-export const logger = Logger.instance
+export const logger = Logger.create("Iframe")
 
 /**
  * Logger facade for tracing requests.

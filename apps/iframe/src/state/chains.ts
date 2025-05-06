@@ -4,15 +4,23 @@ import type { ChainParameters } from "@happy.tech/wallet-common"
 import { type WritableAtom, atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
+import { logger } from "#src/utils/logger.ts"
 import { StorageKey } from "../services/storage"
 
 export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
     const chainKey = chainId && `0x${BigInt(chainId).toString(16)}`
     const chains = getChains()
-    return chainKey && chainKey in chains //
-        ? chains[chainKey]
-        : defaultChains.defaultChain
+
+    const chain = chainKey && chainKey in chains && chains[chainKey]
+
+    if (!chain) {
+        logger.warn(
+            `Could not find chain in search params, using default chain: ${defaultChains.defaultChain.chainName}`,
+        )
+    }
+
+    return chain || defaultChains.defaultChain
 }
 
 function getDefaultChainsRecord() {

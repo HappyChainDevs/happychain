@@ -1,0 +1,207 @@
+import type { Address, Hash } from "@happy.tech/common"
+import type { Account, Hex } from "viem"
+import type { BoopTransaction } from "#lib/database/generated"
+import { abis, env } from "#lib/env"
+import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
+import { Onchain } from "#lib/types"
+import { encodeBoop } from "#lib/utils/boop/encodeBoop"
+import { publicClient, walletClient } from "#lib/utils/clients"
+import { logger } from "#lib/utils/logger"
+import { simulate } from "../handlers/simulate"
+import type { BoopReceiptService } from "./BoopReceiptService"
+import type { BoopStateService } from "./BoopStateService"
+import type { BoopTransactionService } from "./BoopTransactionService"
+import { computeBoopHash } from "./computeBoopHash"
+import { findBoopExecutionAccount } from "./evmAccounts"
+
+export class SubmitterService {
+    constructor(
+        private boopTransactionService: BoopTransactionService,
+        private boopStateService: BoopStateService,
+        private boopReceiptService: BoopReceiptService,
+    ) {}
+
+    async add(entryPoint: Address, boop: Boop, boopHash: Hash) {
+        logger.trace("Saving boop to db", boopHash)
+        // TODO yolo db is broken
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
+    }
+
+    async monitorReceipt(boop: Boop, nonce: number, txHash: Hash) {
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
+        try {
+            const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
+            if (!persisted?.id) {
+                const logData = { txHash, boopHash, boop }
+                logger.warn("Persisted Boop not found. Could not finalize.", logData)
+                return
+            }
+
+            const receipt = await this.waitForSubmitReceipt({ boopHash, nonce, txHash })
+
+            const { id: boopReceiptId } = receipt ? await this.boopReceiptService.insertOrThrow(receipt) : { id: null }
+
+            return await this.boopStateService.insert({
+                status: receipt.status,
+                boopTransactionId: persisted.id,
+                boopReceiptId: boopReceiptId as number,
+                included: !!receipt.txReceipt.transactionHash,
+            })
+        } catch (err) {
+            logger.warn("Error while monitoring receipt", boopHash, err)
+        }
+    }
+
+    private async replaceOrCancelTransaction({
+        txHash,
+        nonce,
+        boop,
+        account,
+    }: { txHash: Hash; nonce: number; boop: BoopTransaction; account: Account }) {
+        const stuckTx = await publicClient.getTransaction({ hash: txHash })
+
+        const simulation = await simulate({
+            entryPoint: boop.entryPoint,
+            boop: {
+                ...boop,
+                gasLimit: Number(boop.gasLimit),
+                validateGasLimit: Number(boop.validateGasLimit),
+                validatePaymentGasLimit: Number(boop.validatePaymentGasLimit),
+                executeGasLimit: Number(boop.executeGasLimit),
+            },
+        })
+
+        if (simulation.status !== Onchain.Success) {
+            // cancel if re-simulation failed
+            await walletClient.sendTransaction({
+                to: account.address,
+                value: 0n,
+                nonce,
+                maxFeePerGas: this.reprice(stuckTx.maxFeePerGas!),
+                maxPriorityFeePerGas: this.reprice(stuckTx.maxPriorityFeePerGas!),
+                data: stuckTx.input,
+                account,
+            })
+            return
+        }
+
+        const updatedBoop = {
+            ...boop,
+            gasLimit: simulation.gas, // TODO should probably be lower than the gas limit
+            validateGasLimit: simulation.validateGas,
+            validatePaymentGasLimit: simulation.validatePaymentGas,
+            executeGasLimit: simulation.executeGas,
+            maxFeePerGas: simulation.maxFeePerGas,
+            submitterFee: simulation.submitterFee,
+        } satisfies Boop
+
+        await walletClient.writeContract({
+            address: boop.entryPoint,
+            args: [encodeBoop(updatedBoop)],
+            abi: abis.EntryPoint,
+            functionName: "submit",
+            type: "eip1559",
+            nonce,
+            gas: BigInt(simulation.gas),
+            maxFeePerGas: this.reprice(simulation.maxFeePerGas!),
+            maxPriorityFeePerGas: this.reprice(stuckTx.maxPriorityFeePerGas!),
+            account,
+        })
+    }
+
+    private reprice(gas: bigint) {
+        return (gas * 110n) / 100n
+    }
+
+    private createReplaceTimeout(txHash: Hex, nonce: number, boopHash: Hex, boop: BoopTransaction): NodeJS.Timeout {
+        return setTimeout(() => {
+            logger.warn("Transaction timed out. Cancelling transaction.", { txHash, boopHash })
+            const account = findBoopExecutionAccount(boopHash, boop.account, boop.nonceTrack)
+            this.replaceOrCancelTransaction({ txHash, nonce, boop, account })
+        }, 5_000) // wait for a little over 2 blocks before replacing
+    }
+
+    private async waitForSubmitReceipt(params: { txHash: Hex; nonce: number; boopHash: Hex }): Promise<BoopReceipt> {
+        const { txHash, nonce, boopHash } = params
+
+        const boop = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
+
+        let cancelTimer = this.createReplaceTimeout(txHash, nonce, boopHash, boop)
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            pollingInterval: 250,
+            timeout: 20_000, // 5s for original tx to try, then 15s for the replacement attempts
+            confirmations: 1,
+            onReplaced: (replacement) => {
+                logger.info(`Transaction ${replacement.reason}`, { txHash })
+                clearTimeout(cancelTimer)
+                // restart the timer to try again
+                cancelTimer = this.createReplaceTimeout(txHash, nonce, boopHash, boop)
+            },
+        })
+        clearTimeout(cancelTimer)
+
+        if (typeof receipt.to !== "string")
+            throw new Error(`Invalid transaction recipient for boop with hash ${boopHash}`)
+
+        return {
+            boopHash,
+
+            /** Account that sent the Boop. */
+            account: boop.account,
+
+            /** The nonce of the Boop. */
+            nonceTrack: boop.nonceTrack,
+            nonceValue: boop.nonceValue,
+
+            /** EntryPoint to which the Boop was submitted onchain. */
+            entryPoint: receipt.to,
+
+            /** Result of onchain submission of the Boop. */
+            // TODO that needs much more complex logic, which currently lives in execute.ts
+            status: receipt.status === "success" ? Onchain.Success : Onchain.UnexpectedReverted,
+
+            /** Logs emitted by Boop. */
+            logs: receipt.logs.filter((l) => l.address === receipt.to),
+
+            /**
+             * The revertData carried by one of our custom error, or the raw deal for
+             * "otherReverted". Empty if `!status.endsWith("Reverted")`.
+             */
+            revertData: "0x",
+
+            /** Gas used by the Boop */
+            gasUsed: receipt.gasUsed,
+
+            /** Total gas cost for the Boop in wei (inclusive submitter fee) */
+            gasCost: receipt.gasUsed * receipt.effectiveGasPrice,
+
+            /**
+             * Receipt for the transaction that carried the Boop.
+             * Note that this transaction is allowed to do other things besides
+             * carrying the boop, and could potentially have carried multiple boops.
+             */
+            txReceipt: {
+                blobGasPrice: receipt.blobGasPrice,
+                blobGasUsed: receipt.blobGasUsed,
+                blockHash: receipt.blockHash,
+                blockNumber: receipt.blockNumber,
+                contractAddress: receipt.contractAddress || null,
+                cumulativeGasUsed: receipt.cumulativeGasUsed,
+                effectiveGasPrice: receipt.effectiveGasPrice,
+                from: receipt.from,
+                gasUsed: receipt.gasUsed,
+                logs: receipt.logs.map((l) => ({ ...l, blockNumber: l.blockNumber })),
+                logsBloom: receipt.logsBloom,
+                root: receipt.root,
+                status: receipt.status,
+                to: receipt.to,
+                transactionHash: receipt.transactionHash,
+                transactionIndex: receipt.transactionIndex,
+                type: receipt.type as TransactionTypeName,
+            },
+        }
+    }
+}
