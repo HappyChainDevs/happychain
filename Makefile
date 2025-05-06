@@ -369,11 +369,6 @@ randomness-monitor.build: setup.ts shared.build
 	cd apps/randomness-monitor && make build
 .PHONY: randomness-monitor.build
 
-faucet.build: setup.ts shared.build
-	cd packages/txm && make build
-	cd apps/faucet && make build
-.PHONY: faucet.build
-
 txm.build: setup.ts shared.build
 	cd packages/txm && make build
 .PHONY: txm.build
