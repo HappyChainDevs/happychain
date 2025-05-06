@@ -160,12 +160,12 @@ export const GuildIdParamSchema = z
 export const GuildMemberParamSchema = z
     .object({
         id: GuildIdParamSchema.shape.id,
-        userId: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
+        user_id: z.string().regex(/^\d+$/, { message: "User ID must be a number" }),
     })
     .strict()
     .openapi({
         example: {
             id: "1",
-            userId: "2",
+            user_id: "2",
         },
     })

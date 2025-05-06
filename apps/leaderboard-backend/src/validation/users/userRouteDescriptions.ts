@@ -533,3 +533,34 @@ export const UserWalletRemoveByPrimaryWalletDescription = describeRoute({
         },
     },
 })
+
+export const UserGuildsListDescription = describeRoute({
+    validateResponse: false,
+    description: "Get all guilds a user belongs to.",
+    responses: {
+        200: {
+            description: "Successfully retrieved user guilds.",
+            content: {
+                "application/json": {
+                    schema: {},
+                },
+            },
+        },
+        404: {
+            description: "User not found.",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
+        400: {
+            description: "Invalid user ID parameter.",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
+    },
+})

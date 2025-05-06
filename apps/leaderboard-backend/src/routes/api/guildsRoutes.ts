@@ -1,23 +1,35 @@
-import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import type { GuildTableId, UserTableId } from "../../db/types"
 import {
-    GuildCreateRequestSchema,
-    GuildIdParamSchema,
-    GuildMemberAddRequestSchema,
-    GuildMemberParamSchema,
-    GuildMemberUpdateRequestSchema,
-    GuildQuerySchema,
-    GuildUpdateRequestSchema,
-} from "../../validation/guilds"
+    GuildCreateDescription,
+    GuildGetByIdDescription,
+    GuildListMembersDescription,
+    GuildMemberAddDescription,
+    GuildMemberDeleteDescription,
+    GuildMemberUpdateDescription,
+    GuildQueryDescription,
+    GuildUpdateDescription,
+} from "../../validation/guilds/guildRouteDescriptions"
+import {
+    GuildCreateValidation,
+    GuildIdParamValidation,
+    GuildMemberAddValidation,
+    GuildMemberParamValidation,
+    GuildMemberUpdateValidation,
+    GuildQueryValidation,
+    GuildUpdateValidation,
+} from "../../validation/guilds/guildRouteValidations"
 
 export default new Hono()
 
     // ====================================================================================================
     // Guild Collection Routes
 
-    // GET /guilds - List guilds
-    .get("/", zValidator("query", GuildQuerySchema), async (c) => {
+    /**
+     * List all guilds (optionally filter by name, creator, or include members).
+     * GET /guilds
+     */
+    .get("/", GuildQueryDescription, GuildQueryValidation, async (c) => {
         try {
             const { name, creator_id, include_members } = c.req.valid("query")
             const { guildRepo } = c.get("repos")
@@ -35,8 +47,11 @@ export default new Hono()
         }
     })
 
-    // POST /guilds - Create new guild (creator becomes admin)
-    .post("/", zValidator("json", GuildCreateRequestSchema), async (c) => {
+    /**
+     * Create a new guild (creator becomes admin).
+     * POST /guilds
+     */
+    .post("/", GuildCreateDescription, GuildCreateValidation, async (c) => {
         try {
             const guildData = c.req.valid("json")
             const { guildRepo } = c.get("repos")
@@ -50,7 +65,7 @@ export default new Hono()
             const newGuild = await guildRepo.create({
                 name: guildData.name,
                 icon_url: guildData.icon_url || null,
-                creator_id: guildData.creator_id,
+                creator_id: guildData.creator_id as UserTableId,
             })
 
             return c.json({ ok: true, data: newGuild }, 201)
@@ -60,15 +75,19 @@ export default new Hono()
         }
     })
 
-    // GET /guilds/:id - Get guild by ID
-    .get("/:id", zValidator("param", GuildIdParamSchema), async (c) => {
+    /**
+     * Get a guild by ID (optionally include members).
+     * GET /guilds/:id
+     */
+    .get("/:id", GuildGetByIdDescription, GuildIdParamValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
 
             const { guildRepo } = c.get("repos")
             const includeMembers = c.req.query("include_members") === "true"
 
-            const guild = await guildRepo.findById(Number.parseInt(id, 10) as GuildTableId, includeMembers)
+            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guild = await guildRepo.findById(guildId, includeMembers)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
             }
@@ -80,14 +99,11 @@ export default new Hono()
         }
     })
 
-    // DELETE /guilds/:id - Delete a guild (admin/owner only)
-    .delete("/:id", zValidator("param", GuildIdParamSchema), async (c) => {
-        // TODO: Implement guild deletion (admin/owner only)
-        return c.json({ ok: false, error: "Not implemented" }, 501)
-    })
-
-    // PATCH /guilds/:id - Update guild details (admin only)
-    .patch("/:id", zValidator("param", GuildIdParamSchema), zValidator("json", GuildUpdateRequestSchema), async (c) => {
+    /**
+     * Update guild details (admin only).
+     * PATCH /guilds/:id
+     */
+    .patch("/:id", GuildUpdateDescription, GuildIdParamValidation, GuildUpdateValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
 
@@ -95,7 +111,8 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guild = await guildRepo.findById(id as GuildTableId)
+            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
             }
@@ -108,7 +125,7 @@ export default new Hono()
                 }
             }
 
-            const updatedGuild = await guildRepo.update(id as GuildTableId, updateData)
+            const updatedGuild = await guildRepo.update(guildId, updateData)
             return c.json({ ok: true, data: updatedGuild })
         } catch (err) {
             console.error(`Error updating guild ${c.req.param("id")}:`, err)
@@ -116,25 +133,27 @@ export default new Hono()
         }
     })
 
+    // ====================================================================================================
+    // Guild Member Routes
+
     /**
-     * =============================================
-     * Guild Members
-     * =============================================
+     * List all members of a guild.
+     * GET /guilds/:id/members
      */
-    // GET /guilds/:id/members - List guild members
-    .get("/:id/members", zValidator("param", GuildIdParamSchema), async (c) => {
+    .get("/:id/members", GuildListMembersDescription, GuildIdParamValidation, async (c) => {
         try {
             const { id } = c.req.valid("param")
 
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guild = await guildRepo.findById(id as GuildTableId)
+            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
             }
 
-            const members = await guildRepo.getGuildMembersWithUserDetails(id as GuildTableId)
+            const members = await guildRepo.getGuildMembersWithUserDetails(guildId)
             return c.json({ ok: true, data: members })
         } catch (err) {
             console.error(`Error fetching members for guild ${c.req.param("id")}:`, err)
@@ -142,83 +161,81 @@ export default new Hono()
         }
     })
 
-    // GET /guilds/:id/members/:userId - Get a specific member in a guild
-    .get("/:id/members/:userId", zValidator("param", GuildMemberParamSchema), async (c) => {
-        // TODO: Implement fetch of specific member in a guild
-        return c.json({ ok: false, error: "Not implemented" }, 501)
+    /**
+     * Add a member to a guild (admin only).
+     * POST /guilds/:id/members
+     */
+    .post("/:id/members", GuildMemberAddDescription, GuildIdParamValidation, GuildMemberAddValidation, async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+            let { user_id, username, is_admin } = c.req.valid("json")
+            const { guildRepo, userRepo } = c.get("repos")
+
+            // Ensure guild exists
+            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const guild = await guildRepo.findById(guildId)
+            if (!guild) {
+                return c.json({ ok: false, error: "Guild not found" }, 404)
+            }
+
+            // Resolve user_id from username if needed
+            if (!user_id && username) {
+                const userByName = await userRepo.findByUsername(username)
+                if (!userByName) {
+                    return c.json({ ok: false, error: "User not found by username" }, 404)
+                }
+                user_id = userByName.id
+            }
+
+            if (!user_id) {
+                return c.json({ ok: false, error: "User ID or username required" }, 400)
+            }
+
+            // Ensure user exists
+            const user = await userRepo.findById(user_id as UserTableId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
+
+            // Add member to guild
+            const member = await guildRepo.addMember(guildId, user_id as UserTableId, is_admin || false)
+            if (!member) {
+                return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
+            }
+
+            return c.json({ ok: true, data: member }, 201)
+        } catch (err) {
+            console.error(`Error adding member to guild ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
     })
 
-    // POST /guilds/:id/members - Add member to guild (admin only)
-    .post(
-        "/:id/members",
-        zValidator("param", GuildIdParamSchema),
-        zValidator("json", GuildMemberAddRequestSchema),
-        async (c) => {
-            try {
-                const { id } = c.req.valid("param")
-                let { user_id, username, is_admin } = c.req.valid("json")
-                const { guildRepo, userRepo } = c.get("repos")
-
-                // Ensure guild exists
-                const guild = await guildRepo.findById(id as GuildTableId)
-                if (!guild) {
-                    return c.json({ ok: false, error: "Guild not found" }, 404)
-                }
-
-                // Resolve user_id from username if needed
-                if (!user_id && username) {
-                    const userByName = await userRepo.findByUsername(username)
-                    if (!userByName) {
-                        return c.json({ ok: false, error: "User not found by username" }, 404)
-                    }
-                    user_id = userByName.id
-                }
-
-                if (user_id === undefined) {
-                    return c.json({ ok: false, error: "User ID or username required" }, 400)
-                }
-
-                // Ensure user exists
-                const user = await userRepo.findById(user_id)
-                if (!user) {
-                    return c.json({ ok: false, error: "User not found" }, 404)
-                }
-
-                // Add member to guild
-                const member = await guildRepo.addMember(id as GuildTableId, user_id, is_admin || false)
-                if (!member) {
-                    return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
-                }
-
-                return c.json({ ok: true, data: member }, 201)
-            } catch (err) {
-                console.error(`Error adding member to guild ${c.req.param("id")}:`, err)
-                return c.json({ ok: false, error: "Internal Server Error" }, 500)
-            }
-        },
-    )
-
-// PATCH /guilds/:id/members/:userId - Update member role (admin only)
-guildsRoutes
+    /**
+     * Update a guild member's role (admin only).
+     * PATCH /guilds/:id/members/:user_id
+     */
     .patch(
-        "/:id/members/:userId",
-        zValidator("param", GuildMemberParamSchema),
-        zValidator("json", GuildMemberUpdateRequestSchema),
+        "/:id/members/:user_id",
+        GuildMemberUpdateDescription,
+        GuildMemberParamValidation,
+        GuildMemberUpdateValidation,
         async (c) => {
             try {
-                const { id, userId } = c.req.valid("param")
+                const { id, user_id } = c.req.valid("param")
 
                 const { is_admin } = c.req.valid("json")
                 const { guildRepo } = c.get("repos")
 
                 // Check if guild exists
-                const guild = await guildRepo.findById(id as GuildTableId)
+                const guildId = Number.parseInt(id, 10) as GuildTableId
+                const userId = Number.parseInt(user_id, 10) as UserTableId
+                const guild = await guildRepo.findById(guildId)
                 if (!guild) {
                     return c.json({ ok: false, error: "Guild not found" }, 404)
                 }
 
                 // Update member role
-                const updatedMember = await guildRepo.updateMemberRole(id, userId, is_admin)
+                const updatedMember = await guildRepo.updateMemberRole(guildId, userId, is_admin)
                 if (!updatedMember) {
                     return c.json({ ok: false, error: "Member not found in guild" }, 404)
                 }
@@ -231,21 +248,26 @@ guildsRoutes
         },
     )
 
-    // DELETE /guilds/:id/members/:userId - Remove member from guild (admin only)
-    .delete("/:id/members/:userId", zValidator("param", GuildMemberParamSchema), async (c) => {
+    /**
+     * Remove a member from a guild (admin only).
+     * DELETE /guilds/:id/members/:user_id
+     */
+    .delete("/:id/members/:user_id", GuildMemberDeleteDescription, GuildMemberParamValidation, async (c) => {
         try {
-            const { id, userId } = c.req.valid("param")
+            const { id, user_id } = c.req.valid("param")
 
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guild = await guildRepo.findById(id as GuildTableId)
+            const guildId = Number.parseInt(id, 10) as GuildTableId
+            const userId = Number.parseInt(user_id, 10) as UserTableId
+            const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
             }
 
             // Remove member from guild
-            const removedMember = await guildRepo.removeMember(id, userId)
+            const removedMember = await guildRepo.removeMember(guildId, userId)
             if (!removedMember) {
                 return c.json(
                     {
@@ -259,53 +281,6 @@ guildsRoutes
             return c.json({ ok: true, data: { removed: true } })
         } catch (err) {
             console.error(`Error removing member from guild ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
-
-    // GET /guilds/:id/admins - List only admin members (optional, stub)
-    .get("/:id/admins", zValidator("param", GuildIdParamSchema), async (c) => {
-        // TODO: Implement admin member listing
-        return c.json({ ok: false, error: "Not implemented" }, 501)
-    })
-
-    // GET /guilds/:id/invites - List invites for a guild (optional, stub)
-    .get("/:id/invites", zValidator("param", GuildIdParamSchema), async (c) => {
-        // TODO: Implement invite listing
-        return c.json({ ok: false, error: "Not implemented" }, 501)
-    })
-
-    // GET /guilds/:id/activity - Get guild activity log (optional, stub)
-    .get("/:id/activity", zValidator("param", GuildIdParamSchema), async (c) => {
-        // TODO: Implement activity log
-        return c.json({ ok: false, error: "Not implemented" }, 501)
-    })
-
-    /**
-     * =============================================
-     * User's Guilds (Reverse Lookup)
-     * =============================================
-     */
-    // GET /users/:id/guilds - Get guilds a user belongs to
-    .get("/users/:id/guilds", async (c) => {
-        try {
-            const userId = Number(c.req.param("id"))
-            if (Number.isNaN(userId)) {
-                return c.json({ ok: false, error: "Invalid user ID" }, 400)
-            }
-
-            const { guildRepo, userRepo } = c.get("repos")
-
-            // Check if user exists
-            const user = await userRepo.findById(userId as UserTableId)
-            if (!user) {
-                return c.json({ ok: false, error: "User not found" }, 404)
-            }
-
-            const guilds = await guildRepo.getUserGuilds(userId as UserTableId)
-            return c.json({ ok: true, data: guilds })
-        } catch (err) {
-            console.error(`Error fetching guilds for user ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
         }
     })

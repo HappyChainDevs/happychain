@@ -8,6 +8,7 @@ import {
     UserDeleteByPrimaryWalletDescription,
     UserGetByIdDescription,
     UserGetByPrimaryWalletDescription,
+    UserGuildsListDescription,
     UserIdParamValidation,
     UserQueryDescription,
     UserQueryValidation,
@@ -493,3 +494,27 @@ export default new Hono()
             return c.json({ ok: true, data: updatedUser })
         },
     )
+
+    /**
+     * Get all guilds a user belongs to.
+     * GET /users/:id/guilds
+     */
+    .get("/:id/guilds", UserGuildsListDescription, UserIdParamValidation, async (c) => {
+        try {
+            const { id } = c.req.valid("param")
+            const { guildRepo, userRepo } = c.get("repos")
+
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
+
+            const guilds = await guildRepo.getUserGuilds(userId)
+            return c.json({ ok: true, data: guilds })
+        } catch (err) {
+            console.error(`Error fetching guilds for user ${c.req.param("id")}:`, err)
+            return c.json({ ok: false, error: "Internal Server Error" }, 500)
+        }
+    })
