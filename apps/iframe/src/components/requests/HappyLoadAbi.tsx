@@ -1,5 +1,4 @@
 import type { HappyMethodNames } from "@happy.tech/common"
-import { shortenAddress } from "@happy.tech/wallet-common"
 import { formatAbiItem } from "abitype"
 import { blockExplorerKeys, useSmartContract } from "#src/hooks/useBlockExplorer"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
@@ -33,9 +32,8 @@ export const HappyLoadAbi = ({
             headline={<>Import contract interface</>}
             description={
                 <>
-                    Transactions sent to{" "}
-                    <span className="font-medium text-primary">{shortenAddress(params.address)}</span> will be displayed
-                    in a human-readable way.
+                    Transactions sent to <LinkToAddress address={params.address} shorten /> will be displayed in a
+                    human-readable way.
                 </>
             }
             actions={{
