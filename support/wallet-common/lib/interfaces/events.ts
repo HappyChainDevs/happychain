@@ -251,6 +251,6 @@ export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP119
  * simpler if all event definitions live in the same place.
  */
 export type PopupMsgs = {
-    [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.PopupReject]: ProviderEventError<SerializedRpcError>
 }
