@@ -9,6 +9,7 @@ export const iframeID = createUUID()
 export const appURLMock = async () => ({
     getAppURL: () => appURL,
     getIframeURL: () => iframeURL,
+    iframeID: () => iframeID,
     isApp: (app: AppURL) => app === appURL,
     isIframe: (app: AppURL) => app === iframeURL,
     isStandaloneIframe: () => false,
