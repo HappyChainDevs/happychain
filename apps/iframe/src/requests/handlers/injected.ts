@@ -83,8 +83,14 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const target = checkedAddress(request.payload.params[0])
 
-            const isAuthorized =
-                isSessionKeyAuthorized(app, target) && (await isSessionKeyValidatorInstalled(user.address))
+            let isAuthorized = isSessionKeyAuthorized(app, target)
+            // In dev, the validator contract may change relatively often, making old keys
+            // non-functional, so check that the validator is installed before returning a session key.
+            //
+            // We'll need to handle this flow in prod whenever we're
+            // thinking to do a contract update in a released environment.
+            if (import.meta.env.NODE_ENV === "development")
+                isAuthorized &&= await isSessionKeyValidatorInstalled(user.address)
 
             if (isAuthorized) {
                 const sessionKey = getSessionKey(user.address, target)
