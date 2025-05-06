@@ -1,15 +1,16 @@
 import type { Address, Hash } from "@happy.tech/common"
-import type { Hex } from "viem"
+import { type Account, type Hex, parseGwei } from "viem"
 import { env } from "#lib/env"
 import { InvalidTransactionRecipientError } from "#lib/errors"
 import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
 import { Onchain } from "#lib/types"
-import { publicClient } from "#lib/utils/clients"
+import { publicClient, walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import type { BoopReceiptService } from "./BoopReceiptService"
 import type { BoopStateService } from "./BoopStateService"
 import type { BoopTransactionService } from "./BoopTransactionService"
 import { computeBoopHash } from "./computeBoopHash"
+import { findBoopExecutionAccount } from "./evmAccounts"
 
 export class SubmitterService {
     constructor(
@@ -25,7 +26,7 @@ export class SubmitterService {
         return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
     }
 
-    async monitorReceipt(boop: Boop, txHash: Hash) {
+    async monitorReceipt(boop: Boop, nonce: number, txHash: Hash) {
         try {
             const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
@@ -34,7 +35,16 @@ export class SubmitterService {
                 logger.warn("Persisted Boop not found. Could not finalize.", logData)
                 return
             }
+
+            const cancelTimer = setTimeout(() => {
+                logger.warn("Transaction timed out. Cancelling transaction.", { txHash, boopHash })
+                const account = findBoopExecutionAccount(boopHash, boop.account, boop.nonceTrack)
+                this.cancelTransaction({ txHash, nonce, account })
+            }, 5_000)
+
             const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
+
+            clearTimeout(cancelTimer)
 
             const { id: boopReceiptId } = receipt ? await this.boopReceiptService.insertOrThrow(receipt) : { id: null }
 
@@ -49,13 +59,34 @@ export class SubmitterService {
         }
     }
 
+    private async cancelTransaction({ txHash, nonce, account }: { txHash: Hash; nonce: number; account: Account }) {
+        const stuckTx = await publicClient.getTransaction({ hash: txHash })
+        const maxFeePerGas = stuckTx.maxFeePerGas! + parseGwei("5") // bump by +5 gwei
+        const maxPriorityFeePerGas = stuckTx.maxPriorityFeePerGas! + parseGwei("3")
+
+        await walletClient.sendTransaction({
+            to: account.address,
+            value: 0n,
+            nonce,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            account,
+        })
+    }
+
     private async waitForSubmitReceipt(params: { txHash: Hex; boopHash: Hex }): Promise<BoopReceipt> {
         const { txHash, boopHash } = params
 
         const boop = await this.boopTransactionService.findByBoopHashOrThrow(boopHash)
 
-        // TODO this needs a timeout / cancellation policy
-        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            pollingInterval: 500,
+            timeout: 20_000,
+            onReplaced: (replacement) => {
+                logger.info("Transaction replaced", { txHash, replacement })
+            },
+        })
 
         if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)
 

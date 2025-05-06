@@ -7,7 +7,7 @@ import { computeBoopHash } from "#lib/services/computeBoopHash"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
 import { type Boop, Onchain } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
-import { walletClient } from "#lib/utils/clients"
+import { chain, walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import type { SubmitInput, SubmitOutput } from "./types"
 
@@ -92,20 +92,34 @@ async function submitWhenPossible(
     } satisfies Boop
 
     // TODO make sure this does no extra needless simulations
-    const txHash = await walletClient.writeContract({
+    // - internally it calls prepareTransactionRequest
+    //   - this seems to always call chainId as its provided by defaultParameters
+    //
+    const nonce = await account.nonceManager!.consume({
+        address: account.address,
+        chainId: chain.id,
+        client: walletClient,
+    })
+
+    const request = {
         address: input.entryPoint ?? deployment.EntryPoint,
         args: [encodeBoop(updatedBoop)],
         abi: abis.EntryPoint,
         functionName: "submit",
+        type: "eip1559", // TODO: is this the correct type?
+        nonce,
         gas: BigInt(simulation.gas),
         maxFeePerGas: simulation.maxFeePerGas,
         maxPriorityFeePerGas: 1n,
         account,
-    })
+    } as const
+
+    const txHash = await walletClient.writeContract(request)
+
     logger.trace("Successfully submitted", boopHash, txHash)
 
     boopNonceManager.incrementLocalNonce(boop)
     // TODO save gas values
     // TODO don't monitor unless asked
-    submitterService.monitorReceipt(boop, txHash)
+    submitterService.monitorReceipt(boop, nonce, txHash)
 }
