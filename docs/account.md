@@ -16,7 +16,7 @@
 
 The Happy Account is a global account for all applications on HappyChain.
 
-The account is an EIP-4337 smart contract wallet controlled by a private key (EOA). The private key
+The account is a Boop-powered smart contract wallet controlled by a private key (EOA). The private key
 can be derived from a social account (Google, Twitter, Discord, ...) or come from a browser-injected
 wallet extension like Metamask. The social account solution is non-custodial via seamless 2FA.
 
@@ -28,16 +28,15 @@ Applications enable support for the Happy Account by permissionlessly embedding 
 their apps via our SDK. Currently, only web apps — desktop or mobile — are supported. Support for
 native apps (Android, iOS, Unity, ...) is planned for the future.
 
-Our SDK currently has two entrypoints:
+Our SDK currently has the following entrypoints:
 
-- `@happy.tech/react` for applications built with React
-- `@happy.tech/core` for any other web application (can be made to work with any framework)
+- [`@happy.tech/react`](https://www.npmjs.com/package/@happy.tech/react) for applications built with React
+- [`@happy.tech/vue`](https://www.npmjs.com/package/@happy.tech/vue) for applications built with Vue
+- [`@happy.tech/core`](https://www.npmjs.com/package/@happy.tech/core) for any other web application (can be made to work with any framework)
 
-<!-- TODO provide links to the NPM packages once deployed to the registry -->
+<!-- TODO provide link to Boop SDK -->
 
 Note that the React SDK also re-exports everything exposed by the vanilla JS SDK.
-
-A Vue SDK will be published very soon.
 
 Beyond enabling the creation and interactions with the HappyAccount, the SDK also provides an
 embedded wallet UI similar to that of injected wallets (Metamask & co), allowing them to track
@@ -92,9 +91,9 @@ The Happy Account supports two types of signers:
 When using an injected wallet, the `happyProvider` forwards the request to the injected wallet.
 This is the traditional flow that web3 users are familiar with.
 
-> When we integrate EIP-4337, things might look a little bit different. Most wallets don't have
-> built-in EIP-4337 support at the UI level, and so the usual transaction request is replaced by a
-> signing request over a byte string representing an EIP-4337 user operation. It's not ideal to not
+> Because we support account abstraction through Boops, things might look a little bit different. Most wallets don't have
+> built-in account abstraction support at the UI level, and so the usual transaction request is replaced by a
+> signing request over a byte string representing a Boop. It's not ideal to not
 > know what you are signing, and so we will display our own pre-confirmation popup before routing
 > the user to his injected wallet.
 
