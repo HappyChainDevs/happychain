@@ -63,6 +63,7 @@ const SessionKeyDemo = () => {
     async function addSessionKeyToCounterContract() {
         await requestSessionKey(deployment.HappyCounter)
         toast.success(
+            // No period after the address, as that will most often flush to a next line given toast width.
             `Session Key will be used when interacting with ${deployment.HappyCounter} Try sending a transaction to the counter with the button below!`,
         )
     }
