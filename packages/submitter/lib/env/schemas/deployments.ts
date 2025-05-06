@@ -13,7 +13,7 @@ export const deploymentsSchema = z.object({
 
     /**
      * The (HTTP) RPC url to use for the chain. Defaults to a well-known RPC if {@link
-     * CHAIN_ID} is known (for now only 1337 (devnet) and 216 (HappyChain Sepolia)).
+     * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
      *
      * TODO: websocket support
      */

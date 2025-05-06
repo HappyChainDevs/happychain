@@ -23,15 +23,26 @@ const boopsRecordAtom = atomWithStorage<Record<Address, StoredBoop[]>>(StorageKe
 export const boopsAtom = atom(
     (get) => {
         const user = get(userAtom)
-        return user ? (get(boopsRecordAtom)[user?.address] ?? []) : []
+        if (!user) return []
+        return get(boopsRecordAtom)[user.address] ?? []
     },
-    (get, set, boops: StoredBoop[]) => {
+    (get, set, updatedUserBoops: StoredBoop[]) => {
         const user = get(userAtom)
         if (!user) return
 
-        set(boopsRecordAtom, (stored) => {
-            stored[user.address] = boops.sort((a, b) => b.createdAt - a.createdAt)
-            return stored
+        set(boopsRecordAtom, (currentBoopsRecord) => {
+            const currentUserBoops = currentBoopsRecord[user.address] ?? []
+            for (const boop of updatedUserBoops) {
+                const existingBoop = currentUserBoops.find((b) => b.boopHash === boop.boopHash)
+                if (existingBoop) Object.assign(existingBoop, boop)
+                else currentUserBoops.unshift(boop)
+            }
+
+            return {
+                // Must spread here for Jotai to trigger rerender
+                ...currentBoopsRecord,
+                [user.address]: [...currentUserBoops].sort((a, b) => b.createdAt - a.createdAt),
+            }
         })
     },
 )
@@ -93,6 +104,7 @@ export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">):
     const existing = accountBoops.find((boop) => boop.boopHash === entry.boopHash)
     if (existing) existing.createdAt = Date.now()
     else accountBoops.push(entry)
+
     store.set(boopsAtom, accountBoops)
 }
 
@@ -132,8 +144,6 @@ function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
     }
 
     const rest = accountBoops.filter((boop) => boop.boopHash !== boopHash)
-    // TODO check this works
     const _update = { ...existing, ...update } as StoredBoop
-
     store.set(boopsAtom, [...rest, _update])
 }
