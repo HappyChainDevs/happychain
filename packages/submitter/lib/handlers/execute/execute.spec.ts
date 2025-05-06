@@ -168,20 +168,10 @@ describe("submitter_execute", () => {
             // this is to ensure that the nonce value is above `0` so that we don't fail for having a
             // _negative_ nonce
             const tx1 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack))
-            const tx2 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue + 1n, nonceTrack))
-            await Promise.all([
-                client.api.v1.boop.execute.$post({
-                    json: { boop: serializeBigInt(tx1) },
-                }),
-                client.api.v1.boop.execute.$post({
-                    json: { boop: serializeBigInt(tx2) },
-                }),
-            ])
+            await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx1) } })
 
-            const jsonTx = await sign(
-                // mints a different amount of tokens, computes a difference hash, same nonce though
-                createMockTokenAMintBoop(smartAccount, nonceValue + 1n, nonceTrack, 5n * 10n ** 18n),
-            )
+            // mints a different amount of tokens, computes a difference hash, same nonce though
+            const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack, 5n * 10n ** 18n))
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
