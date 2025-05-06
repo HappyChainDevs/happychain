@@ -82,13 +82,10 @@ export class Logger {
     }
 
     public static create(tag: LogTag, logLevel?: LogLevel): TaggedLogger {
-        // Create a new instance of the logger with the specified tag and log level.
-        const newLogger = class extends Logger {}
-        Object.defineProperty(newLogger, "_instance", { value: new newLogger() })
-        newLogger.instance.enableTags(tag)
-        newLogger.instance.setLogLevel(logLevel ?? Logger.instance.minLevel)
-
-        return new Proxy(newLogger.instance, {
+        const logger = new Logger()
+        logger.enableTags(tag)
+        logger.setLogLevel(logLevel ?? Logger.instance.minLevel)
+        return new Proxy(logger, {
             get(target, prop, receiver) {
                 const value = Reflect.get(target, prop, receiver)
                 if (typeof value === "function" && ["log", "error", "warn", "info", "trace"].includes(prop as string)) {
