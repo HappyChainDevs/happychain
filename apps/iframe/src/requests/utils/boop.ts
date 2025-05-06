@@ -121,7 +121,6 @@ export async function sendBoop(
         reqLogger.trace("boop/execute output", output)
 
         if (output.status !== Onchain.Success) throw new BoopExecutionError(output)
-
         markBoopAsSuccess(output)
         return output.receipt.boopHash
     } catch (error) {
