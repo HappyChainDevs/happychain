@@ -1,24 +1,20 @@
-import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
+import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
-import type { GameTableId, UserTableId } from "../../db/types"
+import type { UserTableId } from "../../db/types"
 
-// Game API response schema (for GET, POST responses)
+// ====================================================================================================
+// Response Schemas
+
 export const GameResponseSchema = z
     .object({
-        id: z
-            .number()
-            .int()
-            .transform((val) => val as GameTableId),
-        name: z.string().min(3).max(50), // must be unique (enforced in DB)
+        id: z.number().int(),
+        name: z.string().min(3).max(50),
         icon_url: z.string().nullable(),
         description: z.string().nullable(),
-        admin_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
-        created_at: z.string().datetime(),
-        updated_at: z.string().datetime(),
+        admin_id: z.number().int(),
+        created_at: z.string(),
+        updated_at: z.string(),
     })
     .strict()
     .openapi({
@@ -33,23 +29,15 @@ export const GameResponseSchema = z
         },
     })
 
-// User game score response schema
 export const UserGameScoreResponseSchema = z
     .object({
         id: z.number().int(),
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
-        game_id: z
-            .number()
-            .int()
-            .transform((val) => val as GameTableId),
+        user_id: z.number().int(),
+        game_id: z.number().int(),
         score: z.number().int(),
         metadata: z.string().optional(),
-        created_at: z.string().datetime(),
-        updated_at: z.string().datetime(),
-        // Extended properties when including additional details
+        created_at: z.string(),
+        updated_at: z.string(),
         username: z.string().optional(),
         game_name: z.string().optional(),
     })
@@ -68,15 +56,22 @@ export const UserGameScoreResponseSchema = z
         },
     })
 
-// Game query schema for GET /games (query params)
+export const GameResponseSchemaObj = resolver(GameResponseSchema)
+
+export const GameListResponseSchemaObj = resolver(z.array(GameResponseSchema))
+
+export const UserGameScoreResponseSchemaObj = resolver(UserGameScoreResponseSchema)
+
+// Generic error schema
+export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
+
+// ====================================================================================================
+// Request Body Schemas
+
 export const GameQuerySchema = z
     .object({
-        name: z.string().min(3).max(50).optional(), // must be unique (enforced in DB)
-        admin_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId)
-            .optional(),
+        name: z.string().min(3).max(50).optional(),
+        admin_id: z.number().int().optional(),
     })
     .strict()
     .refine((data) => data.name !== undefined || data.admin_id !== undefined, {
@@ -89,16 +84,12 @@ export const GameQuerySchema = z
         },
     })
 
-// Game creation request schema (for POST /games)
 export const GameCreateRequestSchema = z
     .object({
-        name: z.string().min(3).max(50), // must be unique (enforced in DB)
+        name: z.string().min(3).max(50),
         icon_url: z.string().url().nullable().optional(),
         description: z.string().nullable().optional(),
-        admin_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        admin_wallet: z.string().refine(isHex),
     })
     .strict()
     .openapi({
@@ -110,10 +101,9 @@ export const GameCreateRequestSchema = z
         },
     })
 
-// Game update request schema (for PATCH /games/:id)
 export const GameUpdateRequestSchema = z
     .object({
-        name: z.string().min(3).max(50).optional(), // must be unique (enforced in DB)
+        name: z.string().min(3).max(50).optional(),
         icon_url: z.string().url().nullable().optional(),
         description: z.string().nullable().optional(),
     })
@@ -129,13 +119,9 @@ export const GameUpdateRequestSchema = z
         },
     })
 
-// Score submission request schema (for POST /scores)
 export const ScoreSubmitRequestSchema = z
     .object({
-        user_wallet: z
-            .string()
-            .refine(isHex, { message: "User wallet must be a valid hex string" })
-            .transform((val) => val as Address),
+        user_wallet: z.string().refine(isHex, { message: "User wallet must be a valid hex string" }),
         score: z.number().int().positive(),
         metadata: z.string().optional(),
     })
@@ -148,7 +134,6 @@ export const ScoreSubmitRequestSchema = z
         },
     })
 
-// Game scores query schema (for GET /games/:id/scores)
 export const GameScoresQuerySchema = z
     .object({
         top: z.number().int().positive().optional().default(50),
@@ -160,17 +145,18 @@ export const GameScoresQuerySchema = z
         },
     })
 
-// Game ID path parameter schema
+// ====================================================================================================
+// Request Param Schemas
+
 export const GameIdParamSchema = z
     .object({
-        id: z
-            .string()
-            .regex(/^\d+$/, { message: "Game ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as GameTableId),
+        id: z.string().regex(/^\d+$/, { message: "Game ID must be a number" }),
     })
     .strict()
+    .openapi({
+        example: { id: "1" },
+    })
 
-// Admin ID path parameter schema
 export const AdminIdParamSchema = z
     .object({
         admin_id: z
@@ -180,33 +166,20 @@ export const AdminIdParamSchema = z
     })
     .strict()
 
-// Admin wallet path parameter schema
 export const AdminWalletParamSchema = z
     .object({
-        admin_wallet: z
-            .string()
-            .refine(isHex, { message: "Admin wallet must be a valid hex string" })
-            .transform((val) => val as Address),
+        admin_wallet: z.string().refine(isHex, { message: "Admin wallet must be a valid hex string" }),
     })
     .strict()
+    .openapi({
+        example: { admin_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
+    })
 
-// User wallet path parameter schema
 export const UserWalletParamSchema = z
     .object({
-        user_wallet: z
-            .string()
-            .refine(isHex, { message: "User wallet must be a valid hex string" })
-            .transform((val) => val as Address),
+        user_wallet: z.string().refine(isHex, { message: "User wallet must be a valid hex string" }),
     })
     .strict()
-
-// Combined Game ID and User ID parameter schema
-export const GameUserParamSchema = z
-    .object({
-        id: GameIdParamSchema.shape.id,
-        userId: z
-            .string()
-            .regex(/^\d+$/, { message: "User ID must be a number" })
-            .transform((val) => Number.parseInt(val, 10) as UserTableId),
+    .openapi({
+        example: { user_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
     })
-    .strict()

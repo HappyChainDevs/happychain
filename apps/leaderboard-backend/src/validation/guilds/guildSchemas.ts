@@ -71,14 +71,14 @@ export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), 
 export const GuildQuerySchema = z
     .object({
         name: z.string().optional(),
-        creator_id: z.string().optional(),
+        creator_id: z.number().int().optional(),
         include_members: z.boolean().default(false).optional(),
     })
     .strict()
     .openapi({
         example: {
             name: "Alpha",
-            creator_id: "1",
+            creator_id: 1,
             include_members: true,
         },
     })

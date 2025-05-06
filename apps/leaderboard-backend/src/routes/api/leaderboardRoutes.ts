@@ -1,9 +1,17 @@
-import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
+import type { GameTableId } from "../../db/types"
 import {
-    LeaderboardGameIdParamSchema,
-    LeaderboardLimitQuerySchema,
-} from "../../validation/leaderboard/leaderBoardSchema"
+    GameGuildLeaderboardDescription,
+    GameGuildLeaderboardParamValidation,
+    GameGuildLeaderboardQueryValidation,
+    GameLeaderboardDescription,
+    GameLeaderboardParamValidation,
+    GameLeaderboardQueryValidation,
+    GlobalLeaderboardDescription,
+    GlobalLeaderboardValidation,
+    GuildLeaderboardDescription,
+    GuildLeaderboardValidation,
+} from "../../validation/leaderboard"
 
 export default new Hono()
 
@@ -11,7 +19,7 @@ export default new Hono()
      * GET /leaderboards/global - Global leaderboard (top users across all games)
      * Returns users ranked by their total score across all games
      */
-    .get("/global", zValidator("query", LeaderboardLimitQuerySchema), async (c) => {
+    .get("/global", GlobalLeaderboardDescription, GlobalLeaderboardValidation, async (c) => {
         try {
             const { limit } = c.req.valid("query")
             const { leaderboardRepo } = c.get("repos")
@@ -31,7 +39,7 @@ export default new Hono()
      * GET /leaderboards/guilds - Guild leaderboard (top guilds)
      * Returns guilds ranked by their members' total score across all games
      */
-    .get("/guilds", zValidator("query", LeaderboardLimitQuerySchema), async (c) => {
+    .get("/guilds", GuildLeaderboardDescription, GuildLeaderboardValidation, async (c) => {
         try {
             const { limit } = c.req.valid("query")
             const { leaderboardRepo } = c.get("repos")
@@ -53,8 +61,9 @@ export default new Hono()
      */
     .get(
         "/games/:id",
-        zValidator("param", LeaderboardGameIdParamSchema),
-        zValidator("query", LeaderboardLimitQuerySchema),
+        GameLeaderboardDescription,
+        GameLeaderboardParamValidation,
+        GameLeaderboardQueryValidation,
         async (c) => {
             try {
                 const { id } = c.req.valid("param")
@@ -62,12 +71,12 @@ export default new Hono()
                 const { leaderboardRepo, gameRepo } = c.get("repos")
 
                 // Check if game exists
-                const game = await gameRepo.findById(id)
+                const game = await gameRepo.findById(id as GameTableId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
                 }
 
-                const leaderboard = await leaderboardRepo.getGameLeaderboard(id, limit)
+                const leaderboard = await leaderboardRepo.getGameLeaderboard(id as GameTableId, limit)
                 return c.json({
                     ok: true,
                     data: leaderboard,
@@ -85,8 +94,9 @@ export default new Hono()
      */
     .get(
         "/games/:id/guilds",
-        zValidator("param", LeaderboardGameIdParamSchema),
-        zValidator("query", LeaderboardLimitQuerySchema),
+        GameGuildLeaderboardDescription,
+        GameGuildLeaderboardParamValidation,
+        GameGuildLeaderboardQueryValidation,
         async (c) => {
             try {
                 const { id } = c.req.valid("param")
@@ -94,12 +104,12 @@ export default new Hono()
                 const { leaderboardRepo, gameRepo } = c.get("repos")
 
                 // Check if game exists
-                const game = await gameRepo.findById(id)
+                const game = await gameRepo.findById(id as GameTableId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
                 }
 
-                const leaderboard = await leaderboardRepo.getGameGuildLeaderboard(id, limit)
+                const leaderboard = await leaderboardRepo.getGameGuildLeaderboard(id as GameTableId, limit)
                 return c.json({
                     ok: true,
                     data: leaderboard,

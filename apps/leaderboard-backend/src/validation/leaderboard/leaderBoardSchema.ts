@@ -1,20 +1,15 @@
-import type { Address } from "@happy.tech/common"
 import { z } from "@hono/zod-openapi"
+import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
-import type { GameTableId, GuildTableId, UserTableId } from "../db/types"
 
-// Global leaderboard entry schema (user-based)
-export const GlobalLeaderboardEntrySchema = z
+// ====================================================================================================
+// Response Schemas
+
+const GlobalLeaderboardEntrySchema = z
     .object({
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
+        user_id: z.number().int(),
         username: z.string(), // is unique (enforced in db)
-        primary_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address), // is unique (enforced in db)
+        primary_wallet: z.string().refine(isHex),
         total_score: z.number().int(),
     })
     .strict()
@@ -27,13 +22,9 @@ export const GlobalLeaderboardEntrySchema = z
         },
     })
 
-// Guild leaderboard entry schema
-export const GuildLeaderboardEntrySchema = z
+const GuildLeaderboardEntrySchema = z
     .object({
-        guild_id: z
-            .number()
-            .int()
-            .transform((val) => val as GuildTableId),
+        guild_id: z.number().int(),
         guild_name: z.string(),
         icon_url: z.string().nullable(),
         total_score: z.number().int(),
@@ -50,22 +41,12 @@ export const GuildLeaderboardEntrySchema = z
         },
     })
 
-// Game-specific leaderboard entry schema (user-based)
-export const GameLeaderboardEntrySchema = z
+const GameLeaderboardEntrySchema = z
     .object({
-        game_id: z
-            .number()
-            .int()
-            .transform((val) => val as GameTableId),
-        user_id: z
-            .number()
-            .int()
-            .transform((val) => val as UserTableId),
+        game_id: z.number().int(),
+        user_id: z.number().int(),
         username: z.string(),
-        primary_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address),
+        primary_wallet: z.string().refine(isHex),
         score: z.number().int(),
     })
     .strict()
@@ -79,17 +60,10 @@ export const GameLeaderboardEntrySchema = z
         },
     })
 
-// Game-specific guild leaderboard entry schema
-export const GameGuildLeaderboardEntrySchema = z
+const GameGuildLeaderboardEntrySchema = z
     .object({
-        game_id: z
-            .number()
-            .int()
-            .transform((val) => val as GameTableId),
-        guild_id: z
-            .number()
-            .int()
-            .transform((val) => val as GuildTableId),
+        game_id: z.number().int(),
+        guild_id: z.number().int(),
         guild_name: z.string(),
         icon_url: z.string().nullable(),
         total_score: z.number().int(),
@@ -107,18 +81,21 @@ export const GameGuildLeaderboardEntrySchema = z
         },
     })
 
-// Parameter and query validation schemas
+export const GlobalLeaderBoardResponseObj = resolver(z.array(GlobalLeaderboardEntrySchema))
 
-// Limit query parameter schema
+export const GuildLeaderBoardResponseObj = resolver(z.array(GuildLeaderboardEntrySchema))
+
+export const GameLeaderBoardResponseObj = resolver(z.array(GameLeaderboardEntrySchema))
+
+export const GameGuildLeaderBoardResponseObj = resolver(z.array(GameGuildLeaderboardEntrySchema))
+
+// ====================================================================================================
+// Request Param/Query Schemas
+
 export const LeaderboardLimitQuerySchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).default(50),
 })
 
-// Game ID parameter schema
 export const LeaderboardGameIdParamSchema = z.object({
-    id: z.coerce
-        .number()
-        .int()
-        .positive()
-        .transform((id) => id as GameTableId),
+    id: z.coerce.number().int().positive(),
 })
