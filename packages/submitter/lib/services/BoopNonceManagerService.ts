@@ -46,9 +46,13 @@ export class BoopNonceManagerService {
     }
 
     public async checkIfBlocked(entryPoint: Address, boop: Boop): Promise<Result<boolean, SubmitError>> {
-        if (this.trackExceedsBuffer(boop)) return err(this.#makeSubmitError("bufferExceeded"))
-        if (this.reachedMaxCapacity()) return err(this.#makeSubmitError("maxCapacity"))
-        if (await this.nonceOutOfRange(entryPoint, boop)) return err(this.#makeSubmitError("nonce out of range"))
+        if (this.trackExceedsBuffer(boop))
+            return err(this.#makeSubmitError("Buffer full for this (account, nonceTrack) pair. Try again later."))
+        if (this.reachedMaxCapacity())
+            return err(this.#makeSubmitError("The submitter has reached its maximum capacity. Try again later."))
+        if (await this.nonceOutOfRange(entryPoint, boop))
+            return err(this.#makeSubmitError("The supplied nonce is too far ahead of the current non value."))
+
         const localNonce = await this.getLocalNonce(entryPoint, boop.account, boop.nonceTrack)
         return ok(boop.nonceValue > localNonce)
     }
