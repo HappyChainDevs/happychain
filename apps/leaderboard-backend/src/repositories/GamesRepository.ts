@@ -46,7 +46,11 @@ export class GameRepository {
 
     /// Update game details
     async update(id: GameTableId, updateWith: UpdateGame): Promise<Game | undefined> {
-        await this.db.updateTable("games").set(updateWith).where("id", "=", id).execute()
+        await this.db
+            .updateTable("games")
+            .set({ ...updateWith, updated_at: new Date().toISOString() })
+            .where("id", "=", id)
+            .execute()
 
         return this.findById(id)
     }
@@ -158,6 +162,7 @@ export class GameScoreRepository {
                 .set({
                     score: newScore,
                     metadata: metadata !== undefined ? metadata : existingScore.metadata,
+                    updated_at: new Date().toISOString(),
                 })
                 .where("id", "=", existingScore.id)
                 .returningAll()

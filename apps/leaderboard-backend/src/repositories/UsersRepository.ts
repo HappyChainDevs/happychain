@@ -133,6 +133,7 @@ export class UserRepository {
             .updateTable("users")
             .set({
                 ...updateWith,
+                updated_at: new Date().toISOString(),
             })
             .where("id", "=", id)
             .execute()
@@ -171,6 +172,7 @@ export class UserRepository {
                     .updateTable("users")
                     .set({
                         primary_wallet: walletAddress,
+                        updated_at: new Date().toISOString(),
                     })
                     .where("id", "=", userId)
                     .execute()
@@ -208,6 +210,7 @@ export class UserRepository {
                 .updateTable("users")
                 .set({
                     primary_wallet: walletAddress,
+                    updated_at: new Date().toISOString(),
                 })
                 .where("id", "=", userId)
                 .execute()

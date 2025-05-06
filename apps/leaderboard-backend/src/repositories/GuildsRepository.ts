@@ -115,7 +115,14 @@ export class GuildRepository {
 
     /// Update guild details
     async update(id: GuildTableId, updateWith: UpdateGuild): Promise<Guild | undefined> {
-        await this.db.updateTable("guilds").set(updateWith).where("id", "=", id).execute()
+        await this.db
+            .updateTable("guilds")
+            .set({
+                ...updateWith,
+                updated_at: new Date().toISOString(),
+            })
+            .where("id", "=", id)
+            .execute()
 
         return this.findById(id)
     }
