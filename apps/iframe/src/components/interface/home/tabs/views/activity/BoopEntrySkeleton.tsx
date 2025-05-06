@@ -1,8 +1,6 @@
 import { shortenAddress } from "@happy.tech/wallet-common"
 import { CircleNotch } from "@phosphor-icons/react"
-import { useAtomValue } from "jotai"
 import type { Hash } from "viem"
-import { currentChainAtom } from "#src/state/chains"
 
 interface BoopEntrySkeletonProps {
     boopHash: Hash
@@ -13,8 +11,6 @@ interface BoopEntrySkeletonProps {
  * transaction being confirmed in a block.
  */
 const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
-    const currentChain = useAtomValue(currentChainAtom)
-    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls : ""
     const hash = shortenAddress(boopHash)
 
     return (
@@ -26,15 +22,17 @@ const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
                 <div className="font-medium text-base-content/80">Pending transaction</div>
                 <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">{hash}</div>
             </div>
-            <a
-                href={`${blockExplorerUrl}/op/${boopHash}`}
+
+            {/* Transaction Hash is not available while boop is pending... */}
+            {/* <a
+                href={`${blockExplorerUrl}/tx/${transactionHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="View on explorer"
                 className="absolute size-full inset opacity-0"
             >
                 {hash}
-            </a>
+            </a> */}
         </article>
     )
 }
