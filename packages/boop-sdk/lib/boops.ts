@@ -1,4 +1,4 @@
-import { bytesToNumber, getBytes, toBytes } from "@happy.tech/common"
+import { type Hex, bytesToNumber, getBytes, toBytes } from "@happy.tech/common"
 
 /**
  * Support Extension Types
@@ -12,12 +12,12 @@ export enum ExtensionType {
  * Key types used to describe extraData values.
  */
 export enum ExtraDataKey {
-    Validator = 1,
-    Executor = 2,
+    Validator = "0x1",
+    Executor = "0x2",
 }
 
-function serializeExtraData(key: string, value: string | bigint | number | undefined): string {
-    const data = (value || "").toString(16).replace(/^0x/, "")
+function serializeExtraData(key: Hex, value: string | bigint | number | undefined): string {
+    const data = (value ?? "").toString(16).replace(/^0x/, "")
     const length = Math.ceil(data.length / 2)
     const keyBytes = toBytes(key, 3)
     const lengthBytes = toBytes(length, 3)
@@ -30,11 +30,11 @@ function serializeExtraData(key: string, value: string | bigint | number | undef
  * Each key-value pair is serialized with a 3-byte key, a 3-byte length prefix, and the value itself.
  * The resulting hex string is prefixed with '0x'.
  */
-export function encodeExtraData(data: Record<string, string | bigint | number | undefined>): `0x${string}` {
+export function encodeExtraData(data: Record<Hex, string | bigint | number | undefined>): Hex {
     if (!data || !Object.keys(data)?.length) return "0x"
 
     const raw = Object.entries(data)
-        .map(([key, value]) => serializeExtraData(key, value))
+        .map(([key, value]) => serializeExtraData(key as Hex, value))
         .join("")
 
     return `0x${raw}`
@@ -44,9 +44,9 @@ export function encodeExtraData(data: Record<string, string | bigint | number | 
  * Decodes a hex string of extraData into a record of key-value pairs.
  * Each key is 3 bytes is a 3 byte hex string. `0x001` and the value will also be a hex string.
  */
-export function decodeExtraData(encoded: `0x${string}`): Record<string, string> {
+export function decodeExtraData(encoded: Hex): Record<Hex, Hex> {
     const encodedBytes = encoded.replace(/^0x/, "")
-    const data: Record<string, string> = {}
+    const data: Record<Hex, Hex> = {}
     let offset = 0
 
     while (offset < encodedBytes.length) {
