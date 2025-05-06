@@ -1,5 +1,5 @@
 import { type Address, type Hash, type Hex, sleep } from "@happy.tech/common"
-import { type Boop, computeBoopHash } from "#lib/client"
+import { type Boop, type TransactionTypeName, computeBoopHash } from "#lib/client"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { deployment, env } from "#lib/env"
 import { SubmitterError } from "#lib/errors"
@@ -30,6 +30,8 @@ export class BoopReceiptService {
         if (!boopReceipt) return
         const txReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.transactionHash })
         txReceipt.contractAddress ??= null // coerce to null
+        type txReceiptType = typeof txReceipt & { contractAddress: Address | null; type: TransactionTypeName }
+        console.log("txReceipt", txReceipt)
         return {
             boopHash: boopHash,
             status: boopReceipt.status as OnchainStatus,
@@ -41,7 +43,7 @@ export class BoopReceiptService {
             revertData: boopReceipt.revertData,
             gasUsed: boopReceipt.gasUsed,
             gasCost: boopReceipt.gasCost,
-            txReceipt: txReceipt as typeof txReceipt & { contractAddress: Address | null } satisfies Receipt,
+            txReceipt: txReceipt as txReceiptType satisfies Receipt,
         }
     }
 
