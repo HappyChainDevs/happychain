@@ -26,7 +26,12 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             const tx = checkedTx(request.payload.params[0])
-            return await sendBoop({ account: user.address, tx, signer: eoaSigner })
+            return await sendBoop({
+                account: user.address,
+                tx,
+                simulatedBoopData: request.payload.extraData,
+                signer: eoaSigner,
+            })
         }
 
         case "eth_requestAccounts": {

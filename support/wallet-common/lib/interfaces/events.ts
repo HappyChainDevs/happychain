@@ -1,3 +1,4 @@
+import type { SimulateOutput } from "@happy.tech/boop-sdk"
 import type { OverlayErrorCode, SerializedRpcError } from "../errors"
 import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
 import type { EIP6963ProviderInfo } from "./eip6963"
@@ -220,7 +221,7 @@ export type ProviderMsgsFromIframe = {
  */
 
 type RequestExtraDataTypeMap = {
-    eth_sendTransaction: Record<string, never>
+    eth_sendTransaction: SimulateOutput
 }
 
 /**
