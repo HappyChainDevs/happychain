@@ -1,3 +1,4 @@
+import { Onchain } from "@happy.tech/boop-sdk"
 import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
@@ -6,12 +7,17 @@ import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
+import { happyPaymaster } from "#src/constants/contracts.ts"
+import { useSmartContract } from "#src/hooks/useBlockExplorer.ts"
+import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
+import { type ValidRpcTransactionRequest, checkedTx } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import FieldLoader from "../loaders/FieldLoader"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
+import { GasFieldName } from "./common/GasFieldDisplay"
 import {
     FormattedDetailsLine,
     Layout,
@@ -24,7 +30,6 @@ import {
 import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 import { useTxFees } from "./utils/useTxFees"
-import { GasFieldName } from "./common/GasFieldDisplay"
 
 export const EthSendTransaction = ({
     method,
@@ -32,7 +37,7 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    const tx = params[0]
+    const tx: ValidRpcTransactionRequest = checkedTx(params[0])
     const user = useAtomValue(userAtom)
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
@@ -41,6 +46,17 @@ export const EthSendTransaction = ({
     const isValidTransaction = (!!user?.address && !isSupportedTxType) || !!txTo
     const isSelfPaying = false // currently we always sponsor
     const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
+
+    const {
+        data: contractData,
+        error: _contractDataFetchError,
+    } = useSmartContract(happyPaymaster)
+
+    // ====================================== Contract ABI details ======================================
+
+    const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
+
+    // ====================================== Tx details ======================================
 
     const {
         data: userBalance,
@@ -77,7 +93,33 @@ export const EthSendTransaction = ({
         [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType],
     )
 
+    // ====================================== Boop Gas details ======================================
+
+    const {
+        data: simulatedBoopData,
+        isPending: boopSimulationPending,
+        isError: boopSimulationError,
+    } = useSimulateBoop({
+        userAddress: user?.address,
+        tx,
+    })
+
     const formatted = useMemo(() => {
+        if (!simulatedBoopData) return undefined
+
+        if (simulatedBoopData.status === Onchain.Success) {
+            const { maxFeePerGas: boopMaxFeePerGas, submitterFee = 0n, gas: boopGas } = simulatedBoopData
+
+            const maxFeePerGas2 = txMaxFeePerGas ?? txGasPrice ?? boopMaxFeePerGas
+            const gasLimit2 = txGasLimit ?? BigInt(boopGas)
+            return {
+                value: formatEther(txValue),
+                maxFeePerGas: ifDef(maxFeePerGas2, formatGwei),
+                gasLimit: ifDef(gasLimit2, formatGwei),
+                submitterFee: ifDef(submitterFee, formatGwei),
+                totalGas: ifDef(maxFeePerGas2 * gasLimit2 * submitterFee, formatGwei),
+            }
+        }
         return {
             value: formatEther(txValue),
             gasLimit: formatGwei(txGasLimit ?? 0n),
@@ -85,9 +127,7 @@ export const EthSendTransaction = ({
             maxFeePerGas: formatGwei(txMaxFeePerGas ?? txGasPrice ?? 0n),
             maxPriorityFeePerGas: formatGwei(txMaxPriorityFeePerGas ?? 0n),
         }
-    }, [txGasLimit, txGasPrice, txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
-
-    const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
+    }, [simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
 
     const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
 
@@ -96,7 +136,8 @@ export const EthSendTransaction = ({
         (shouldQueryBalance && isBalancePending) ||
         areFeesPending ||
         isGasLimitPending ||
-        notEnoughFunds
+        notEnoughFunds ||
+        boopSimulationError
 
     if (!isValidTransaction) {
         // biome-ignore format: compact
@@ -118,7 +159,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
-                            accept({ method, params: [updatedTx] })
+                            accept({ method, params: [updatedTx], extraData: simulatedBoopData })
                             void queryClient.invalidateQueries({
                                 queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey],
                             })
@@ -144,7 +185,7 @@ export const EthSendTransaction = ({
                         {txValue > 0n && (
                             <SubsectionContent>
                                 <SubsectionTitle>Sending amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formatted.value} HAPPY</FormattedDetailsLine>
+                                <FormattedDetailsLine>{formatted?.value} HAPPY</FormattedDetailsLine>
                             </SubsectionContent>
                         )}
                     </SubsectionBlock>
@@ -152,19 +193,47 @@ export const EthSendTransaction = ({
                 <SectionBlock>
                     <SubsectionBlock>
                         <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.GasLimit}</SubsectionTitle>
+                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}:</SubsectionTitle>
                             <FormattedDetailsLine>
-                                {isGasLimitPending ? <FieldLoader /> : formatted.gasLimit}
+                                {areFeesPending ? <FieldLoader /> : formatted?.maxFeePerGas}
                             </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
+                            <SubsectionTitle>{GasFieldName.GasLimit}:</SubsectionTitle>
                             <FormattedDetailsLine>
-                                {areFeesPending ? <FieldLoader /> : formatted.maxFeePerGas}
+                                {isGasLimitPending ? <FieldLoader /> : formatted?.gasLimit}
+                            </FormattedDetailsLine>
+                        </SubsectionContent>
+
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.SubmitterFee}:</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                {boopSimulationPending ? <FieldLoader /> : formatted?.submitterFee}
+                            </FormattedDetailsLine>
+                        </SubsectionContent>
+
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.TotalGas}:</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                {isGasLimitPending ? <FieldLoader /> : formatted?.totalGas}
                             </FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
+
+                {!isSelfPaying && contractData && (
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <SubsectionTitle>
+                                Sponsored by [<span className="text-accent">HappyPaymaster</span>
+                                ]:
+                            </SubsectionTitle>
+                            <FormattedDetailsLine>
+                                <LinkToAddress address={happyPaymaster}>{happyPaymaster}</LinkToAddress>
+                            </FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                )}
 
                 {decodedData && (
                     <DisclosureSection
