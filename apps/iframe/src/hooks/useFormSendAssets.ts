@@ -1,7 +1,7 @@
-import { type Address, debounce } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { type ChangeEvent, type FormEvent, useCallback, useEffect, useState } from "react"
 import { isAddress, parseEther } from "viem"
 import { useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
 import { getBalanceQueryKey } from "wagmi/query"
@@ -94,7 +94,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
         setAmount(formattedBalance)
     }
 
-    const validateRecipientImplem = useCallback((recipient: string) => {
+    function validateRecipient(recipient: string) {
         const result = recipientSchema.safeParse(recipient)
         const error = !result.success ? result.error : undefined
         if (error && recipient !== "") {
@@ -104,10 +104,9 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
             setRecipientError(undefined)
         }
         return error
-    }, [])
-    const validateRecipient = useMemo(() => debounce(validateRecipientImplem), [validateRecipientImplem])
+    }
 
-    const validateAmountImplem = useCallback(
+    const validateAmount = useCallback(
         (amount: string) => {
             // Can't use refine here because that causes the balance issue to be added even when the transform
             // in `amountSchema` fails. Pipe here is just a little terse than superRefine.
@@ -128,7 +127,6 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
         },
         [balance],
     )
-    const validateAmount = useMemo(() => debounce(validateAmountImplem), [validateAmountImplem])
 
     /** Generic handler for input in fields changes. */
     function handleOnInput(e: ChangeEvent<HTMLInputElement>) {

@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { FormField, FormFieldLabel } from "../primitives/form-field/FormField"
-import { Input } from "../primitives/input/Input"
+import { FormField } from "../primitives/form-field/FormField"
 import {
     FormattedDetailsLine,
     Layout,
@@ -9,7 +8,6 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
-import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletAddEthereumChain = ({
@@ -19,20 +17,10 @@ export const WalletAddEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
-    const headline = "Add new chain"
-
-    if (import.meta.env.PROD)
-        return (
-            <RequestDisabled
-                headline={headline}
-                description="The Happy Wallet is an HappyChain exclusive 🤠"
-                reject={reject}
-            />
-        )
-
     return (
         <Layout
-            headline={headline}
+            labelHeader="Add custom chain"
+            headline="Add new chain"
             actions={{
                 accept: {
                     children: "Add chain",
@@ -48,35 +36,31 @@ export const WalletAddEthereumChain = ({
                 <form>
                     <fieldset className="grid gap-4">
                         <legend className="pb-2 text-xs font-semibold">Customize chain information</legend>
-                        <FormField>
-                            <FormFieldLabel htmlFor="custom-chain-name">Name</FormFieldLabel>
-                            <Input
+                        <FormField.Root required>
+                            <FormField.Label htmlFor="custom-chain-name">Name</FormField.Label>
+                            <FormField.Input
                                 required
                                 onChange={(e) => {
                                     setChain((old) => ({ ...old, chainName: e.target.value }))
                                 }}
                                 type="text"
-                                id="custom-chain-name"
                                 name="custom-chain-name"
                                 value={chain.chainName}
                             />
-                        </FormField>
-                        <FormField>
-                            <FormFieldLabel htmlFor="custom-chain-rpc-url">RPC URL</FormFieldLabel>
-                            <Input
+                        </FormField.Root>
+                        <FormField.Root required>
+                            <FormField.Label>RPC URL</FormField.Label>
+                            <FormField.Input
                                 onChange={(e) => {
                                     setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
                                 }}
-                                required
                                 type="url"
                                 value={chain.rpcUrls[0] ?? ""}
-                                id="custom-chain-rpc-url"
-                                name="custom-chain-rpc-url"
                             />
-                        </FormField>
-                        <FormField>
-                            <FormFieldLabel htmlFor="custom-chain-currency">Currency symbol</FormFieldLabel>
-                            <Input
+                        </FormField.Root>
+                        <FormField.Root required>
+                            <FormField.Label>Currency symbol</FormField.Label>
+                            <FormField.Input
                                 type="text"
                                 onChange={(e) => {
                                     setChain((old) => ({
@@ -88,18 +72,13 @@ export const WalletAddEthereumChain = ({
                                         },
                                     }))
                                 }}
-                                required
                                 value={chain.nativeCurrency?.symbol ?? ""}
-                                id="custom-chain-currency"
-                                name="custom-chain-currency"
                             />
-                        </FormField>
+                        </FormField.Root>
 
-                        <FormField>
-                            <FormFieldLabel isOptional htmlFor="custom-chain-block-explorer">
-                                Block explorer
-                            </FormFieldLabel>
-                            <Input
+                        <FormField.Root>
+                            <FormField.Label>Block explorer</FormField.Label>
+                            <FormField.Input
                                 type="url"
                                 onChange={(e) => {
                                     setChain((old) => ({
@@ -108,10 +87,8 @@ export const WalletAddEthereumChain = ({
                                     }))
                                 }}
                                 value={chain.blockExplorerUrls?.[0] ?? ""}
-                                id="custom-chain-block-explorer"
-                                name="custom-chain-block-explorer"
                             />
-                        </FormField>
+                        </FormField.Root>
                     </fieldset>
                 </form>
             </SectionBlock>
