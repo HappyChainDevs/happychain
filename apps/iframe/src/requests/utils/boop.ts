@@ -100,7 +100,7 @@ export async function sendBoop(
 
         if (!isSponsored) {
             const output = await boopClient.simulate({ entryPoint, boop })
-            console.log("boop/simulate output", output)
+            reqLogger.trace("boop/simulate output", output)
             if (output.status !== Onchain.Success) {
                 // TODO which error?
                 throw new BoopSimulationError(output)
