@@ -19,6 +19,7 @@ env:
   APP_PORT: 3001
   AUTOMINE_TESTS: true
   LOG_LEVEL: "TRACE"
+  DATABASE_URL: "submitter-tests.sqlite"
 
 jobs:
   test-submitter:
