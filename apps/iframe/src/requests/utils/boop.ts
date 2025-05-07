@@ -98,12 +98,13 @@ export type SendBoopArgs = {
     account: Address
     tx: ValidRpcTransactionRequest
     signer: (data: Hex) => Promise<Hex>
+    simulatedBoopData?: SimulateOutput
     isSponsored?: boolean
     nonceTrack?: bigint
 }
 
 export async function sendBoop(
-    { account, tx, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
+    { account, tx, simulatedBoopData, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
     retry = 0, // TODO: set to 1?
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
@@ -115,7 +116,7 @@ export async function sendBoop(
         if (!boopClient) throw new Error("Boop client not initialized")
 
         if (!isSponsored) {
-            const output = await boopClient.simulate({ entryPoint, boop })
+            const output = simulatedBoopData ?? (await boopClient.simulate({ entryPoint, boop }))
             reqLogger.trace("boop/simulate output", output)
             if (output.status !== Onchain.Success) throw translateBoopError(output)
 
