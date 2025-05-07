@@ -30,6 +30,9 @@ export const storage = createStorage<StorageSchema>({
     replacer: bigIntReplacer,
 })
 
+// biome-ignore lint/suspicious/noExplicitAny: let's not record the types for every version
+const migrations: Record<string, (oldVal: any) => any> = {}
+
 function cleanOrMigrateStorage() {
     if (typeof window === "undefined") return
 
@@ -42,10 +45,18 @@ function cleanOrMigrateStorage() {
             const newVersion = newKey?.split(":")[2]
 
             if (newKey && newVersion !== version) {
-                console.warn(
-                    `storage happychain:${name} updated from ${version} to ${newVersion}, removing old version`,
-                )
-                delete localStorage[key]
+                const migrate = migrations[key]
+                if (migrate) {
+                    console.log(`migrating happychain:${name} from ${version} to ${newVersion}`)
+                    const oldVal = JSON.parse(localStorage[key], bigIntReviver)
+                    localStorage[newKey] = JSON.stringify(migrate(oldVal), bigIntReplacer)
+                    delete localStorage[key]
+                } else {
+                    console.warn(
+                        `storage happychain:${name} updated from ${version} to ${newVersion}, removing old version`,
+                    )
+                    delete localStorage[key]
+                }
             }
         }
     }
