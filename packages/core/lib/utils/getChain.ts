@@ -1,4 +1,4 @@
-import { type Chain, type ChainRpcUrls, devnet, happyChainSepolia } from "@happy.tech/wallet-common"
+import { type Chain, type ChainRpcUrls, anvil, happyChainSepolia } from "@happy.tech/wallet-common"
 
 /**
  * Returns a {@link Chain} object based on the provided chain ID.
@@ -12,8 +12,8 @@ export function getChain(chainId: number, rpc?: ChainRpcUrls): Chain {
     switch (chainId) {
         case happyChainSepolia.id:
             return happyChainSepolia
-        case devnet.id:
-            return devnet
+        case anvil.id:
+            return anvil
         default:
             if (!rpc) throw new Error("Must provide rpc URLs for non-builtin chain")
             return {
