@@ -4,7 +4,7 @@
  */
 
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
-import { BoopClient, computeBoopHash } from "@happy.tech/boop-sdk"
+import { type ExecuteSuccess, BoopClient, computeBoopHash, Onchain } from "@happy.tech/boop-sdk"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -58,23 +58,26 @@ async function run() {
         owner: testAccount.address,
         salt: "0x01",
     })
-
-    if (!createAccountResult.isOk()) {
-        throw new Error(createAccountResult.error.message)
+    if (!("address" in createAccountResult)) {
+        throw new Error("Account creation failed: " + JSON.stringify(createAccountResult));
     }
 
-    const tx = await createAndSignMintTx(createAccountResult.value.address)
-    const executeRes = await boopClient.execute({ tx })
+    const tx = await createAndSignMintTx(createAccountResult.address)
+    const executeResult = await boopClient.execute({ boop: tx })
+    
+    if(executeResult.status !== Onchain.Success) {
+        throw new Error(`execute not successful: ${JSON.stringify(executeResult)}`)
+    }
 
-    if (!executeRes.isOk()) {
-        throw new Error(executeRes.error.message)
+    console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(executeResult as ExecuteSuccess).receipt.txReceipt.transactionHash}`)
+
+    const receiptResult = await boopClient.receipt({ hash: (executeResult as ExecuteSuccess).receipt.boopHash })
+    if(!("receipt" in receiptResult)) {
+        throw new Error("Receipt not found: " + JSON.stringify(receiptResult))
     }
-    if (executeRes.value.status !== "submitSuccess") {
-        throw new Error("submit failed")
-    }
-    console.log(`https://explorer.testnet.happy.tech/tx/${executeRes.value.state.receipt.txReceipt.transactionHash}`)
 }
 
 run().then(() => {
     console.log("done")
 })
+
