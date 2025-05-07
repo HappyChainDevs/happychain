@@ -9,7 +9,7 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 
 const app = new Hono()
-    app.use("*", cors({
+    .use("*", cors({
         origin: "*",
         allowMethods: ["GET", "POST", "OPTIONS"],
         allowHeaders: ["Content-Type"],
