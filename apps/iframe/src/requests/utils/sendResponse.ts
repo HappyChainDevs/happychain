@@ -1,7 +1,6 @@
 import { getProp, stringify } from "@happy.tech/common"
 import {
     type ApprovedRequestPayload,
-    type EIP1193RequestParameters,
     EIP1474InternalError,
     Msgs,
     type ProviderEventPayload,
