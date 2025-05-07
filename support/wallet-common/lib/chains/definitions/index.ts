@@ -5,7 +5,6 @@ export const chainDefinitions = {
     defaultChain: happyChainSepoliaDefinition,
 
     // Internal use only
-    devnet: anvilDefinition,
-    from: happyChainSepoliaDefinition,
+    anvil: anvilDefinition,
     happyChainSepolia: happyChainSepoliaDefinition,
 }
