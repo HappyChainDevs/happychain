@@ -7,8 +7,6 @@ import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
-import { happyPaymaster } from "#src/constants/contracts.ts"
-import { useSmartContract } from "#src/hooks/useBlockExplorer.ts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
 import { type ValidRpcTransactionRequest, checkedTx } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
@@ -17,7 +15,6 @@ import FieldLoader from "../loaders/FieldLoader"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
-import { GasFieldName } from "./common/GasFieldDisplay"
 import {
     FormattedDetailsLine,
     Layout,
@@ -37,7 +34,7 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    const tx: ValidRpcTransactionRequest = checkedTx(params[0])
+    const tx: ValidRpcTransactionRequest = checkedTx(params[0]) // TODO not ideal to use this since it throws errors not meant for the popup
     const user = useAtomValue(userAtom)
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
@@ -46,11 +43,6 @@ export const EthSendTransaction = ({
     const isValidTransaction = (!!user?.address && !isSupportedTxType) || !!txTo
     const isSelfPaying = false // currently we always sponsor
     const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
-
-    const {
-        data: contractData,
-        error: _contractDataFetchError,
-    } = useSmartContract(happyPaymaster)
 
     // ====================================== Contract ABI details ======================================
 
@@ -114,20 +106,11 @@ export const EthSendTransaction = ({
             const gasLimit2 = txGasLimit ?? BigInt(boopGas)
             return {
                 value: formatEther(txValue),
-                maxFeePerGas: ifDef(maxFeePerGas2, formatGwei),
-                gasLimit: ifDef(gasLimit2, formatGwei),
-                submitterFee: ifDef(submitterFee, formatGwei),
-                totalGas: ifDef(maxFeePerGas2 * gasLimit2 * submitterFee, formatGwei),
+                totalGas: ifDef(maxFeePerGas2 * gasLimit2 + submitterFee, formatGwei),
+                submitterFee: submitterFee,
             }
         }
-        return {
-            value: formatEther(txValue),
-            gasLimit: formatGwei(txGasLimit ?? 0n),
-            gasPrice: formatGwei(txGasPrice ?? 0n),
-            maxFeePerGas: formatGwei(txMaxFeePerGas ?? txGasPrice ?? 0n),
-            maxPriorityFeePerGas: formatGwei(txMaxPriorityFeePerGas ?? 0n),
-        }
-    }, [simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas, txMaxPriorityFeePerGas])
+    }, [simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
 
     const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
 
@@ -193,44 +176,23 @@ export const EthSendTransaction = ({
                 <SectionBlock>
                     <SubsectionBlock>
                         <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}:</SubsectionTitle>
                             <FormattedDetailsLine>
-                                {areFeesPending ? <FieldLoader /> : formatted?.maxFeePerGas}
-                            </FormattedDetailsLine>
-                        </SubsectionContent>
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.GasLimit}:</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                {isGasLimitPending ? <FieldLoader /> : formatted?.gasLimit}
-                            </FormattedDetailsLine>
-                        </SubsectionContent>
-
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.SubmitterFee}:</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                {boopSimulationPending ? <FieldLoader /> : formatted?.submitterFee}
-                            </FormattedDetailsLine>
-                        </SubsectionContent>
-
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.TotalGas}:</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                {isGasLimitPending ? <FieldLoader /> : formatted?.totalGas}
+                                {boopSimulationPending ? (
+                                    <FieldLoader />
+                                ) : (
+                                    `Cost: ${formatted?.totalGas} HAPPY (Submitter Fee: ${formatted?.submitterFee})`
+                                )}
                             </FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
 
-                {!isSelfPaying && contractData && (
+                {!isSelfPaying && (
                     <SectionBlock>
                         <SubsectionBlock>
                             <SubsectionTitle>
-                                Sponsored by [<span className="text-accent">HappyPaymaster</span>
-                                ]:
+                                Sponsored by <span className="text-accent">HappyChain</span>
                             </SubsectionTitle>
-                            <FormattedDetailsLine>
-                                <LinkToAddress address={happyPaymaster}>{happyPaymaster}</LinkToAddress>
-                            </FormattedDetailsLine>
                         </SubsectionBlock>
                     </SectionBlock>
                 )}
