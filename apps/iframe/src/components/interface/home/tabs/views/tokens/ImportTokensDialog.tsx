@@ -1,4 +1,4 @@
-import { Dialog, Field } from "@ark-ui/react"
+import { Dialog } from "@ark-ui/react"
 import { Plus, X } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom, useAtomValue } from "jotai"
@@ -6,9 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
-import { FieldInput } from "#src/components/primitives/input/FieldInput"
-import { Input } from "#src/components/primitives/input/Input"
-import { recipeTextInput } from "#src/components/primitives/input/variants"
+import { FormField } from "#src/components/primitives/form-field/FormField.tsx"
 import { recipePositioner } from "#src/components/primitives/popover/variants"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 import { importTokensDialogVisibilityAtom } from "#src/state/interfaceState"
@@ -44,8 +42,7 @@ export const ImportTokensDialog = () => {
 
     const {
         data: { decimals, symbol } = {},
-        isRefetching,
-        isLoading,
+        isFetching,
     } = useERC20Balance(inputAddress as Address, user?.address as Address, false)
 
     // --- conditions for elements being disabled / readOnly ---
@@ -55,8 +52,9 @@ export const ImportTokensDialog = () => {
     const isValidAddress = isAddress(inputAddress)
 
     // Show error and allow manual entry if we have a valid address but no contract data
-    const symbolInputInvalidCondition = !isLoading && isValidAddress && symbol === undefined && customTokenSymbol === ""
-    const decimalsInputInvalidCondition = !isLoading && isValidAddress && decimals === undefined
+    const symbolInputInvalidCondition =
+        !isFetching && isValidAddress && symbol === undefined && customTokenSymbol === ""
+    const decimalsInputInvalidCondition = !isFetching && isValidAddress && decimals === undefined
 
     // Fields should be readonly (uneditable) iff there's no data fetched from the contract
     // indicating that the entered contract address is not a valid token contract
@@ -93,6 +91,7 @@ export const ImportTokensDialog = () => {
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault()
+            if (status === "pending") return
 
             const formData = new FormData(e.currentTarget)
             const address = formData.get("address") as Address
@@ -118,7 +117,7 @@ export const ImportTokensDialog = () => {
                 }
             }
         },
-        [setVisibility, watchAssetAsync],
+        [setVisibility, watchAssetAsync, status],
     )
 
     return (
@@ -134,14 +133,19 @@ export const ImportTokensDialog = () => {
             }}
             open={isVisible}
         >
-            <Dialog.Positioner
-                className={recipePositioner({
-                    mode: "modal",
-                    originY: "bottom",
-                })}
-            >
-                <Dialog.Content className="text-center overflow-y-auto bg-base-300 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
-                    <div className="flex flex-row my-auto gap-4 items-start">
+            <Dialog.Positioner className={recipePositioner({ mode: "modal", originY: "bottom" })}>
+                <Dialog.Content
+                    className={cx(
+                        "overflow-y-auto min-h-fit size-full",
+                        "p-4 lg:p-5 pb-3 sm:pb-0",
+                        "text-center text-sm text-neutral-11",
+                        "bg-base-200 inset-0 relative",
+                        "[&[data-state=open]]:flex flex-col",
+                        "motion-safe:[&[data-state=open]]:animate-growIn",
+                        "motion-safe:[&[data-state=closed]]:animate-growOut",
+                    )}
+                >
+                    <div className="flex flex-row my-auto gap-4 items-start min-h-12">
                         <div className="flex flex-col w-full items-start justify-start">
                             <Dialog.Title className="text-start font-semibold text-base-content">
                                 Import ERC-20 Token
@@ -152,43 +156,50 @@ export const ImportTokensDialog = () => {
                             <X size={"1.25em"} />
                         </Dialog.CloseTrigger>
                     </div>
-                    <form
-                        className="flex flex-col w-full h-full items-center justify-center py-2 space-y-4"
-                        onSubmit={submitWatchAssetData}
-                    >
-                        <FieldInput errorLabel="Invalid Address" invalid={!isEmpty && !isValidAddress}>
-                            <Field.Label className="text-md text-base-content">Address</Field.Label>
-                            <Input
-                                scale={"default"}
-                                aria-invalid={!isEmpty && !isValidAddress}
+                    <form className="w-full grid gap-4" onSubmit={submitWatchAssetData}>
+                        <FormField.Root
+                            readOnly={status === "pending"}
+                            required
+                            invalid={
+                                (!isEmpty && !isValidAddress) ||
+                                symbolInputInvalidCondition ||
+                                decimalsInputInvalidCondition
+                            }
+                        >
+                            <FormField.Label>Address</FormField.Label>
+                            <FormField.Input
                                 name="address"
-                                id="token-address"
-                                type="string"
                                 onChange={handleAddressInputChange}
                                 value={inputAddress}
-                                placeholder="0x123..."
-                                inputClass="w-full"
+                                pattern="^0x[a-fA-F0-9]{40}$"
+                                placeholder="0x..."
                             />
-                        </FieldInput>
+                            <FormField.ErrorText>
+                                {!isEmpty && !isValidAddress ? "Invalid contract address." : "Invalid ERC-20 contract"}
+                            </FormField.ErrorText>
+                        </FormField.Root>
 
-                        <FieldInput
-                            errorLabel="Invalid Token Contract"
+                        <FormField.Root
+                            required
                             invalid={symbolInputInvalidCondition}
-                            isLoading={isRefetching || isLoading}
+                            readOnly={
+                                symbolInputReadOnly ||
+                                isValidAddress ||
+                                symbolInputInvalidCondition ||
+                                status === "pending"
+                            }
                         >
-                            <Field.Label className="text-md text-base-content">Token Symbol</Field.Label>
-                            <Input
+                            <FormField.Label>Token symbol</FormField.Label>
+                            <FormField.Input
                                 name="symbol"
-                                id="token-symbol"
-                                type="string"
                                 value={customTokenSymbol}
-                                inputClass="w-full"
-                                scale={"default"}
                                 onChange={handleCustomSymbolInputChange}
-                                disabled={!isValidAddress || symbolInputInvalidCondition}
-                                readOnly={symbolInputReadOnly}
                             />
-                        </FieldInput>
+                            <FormField.ErrorText>
+                                {/* Spacing */}
+                                {""}
+                            </FormField.ErrorText>
+                        </FormField.Root>
 
                         {/*
                          * `Decimals` field value behavior:
@@ -196,38 +207,28 @@ export const ImportTokensDialog = () => {
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
-                        <FieldInput
-                            errorLabel="Invalid Token Contract"
-                            invalid={decimalsInputInvalidCondition}
-                            isLoading={isRefetching || isLoading}
-                        >
-                            <Field.Label className="text-md text-base-content disabled:opacity-50">
-                                Token Decimals
-                            </Field.Label>
-                            <textarea
-                                id="token-decimal"
-                                name="decimals"
-                                readOnly
-                                className={cx(
-                                    "h-[40px] !appearance-none caret-transparent resize-none border focus:ring-0",
-                                    !isValidAddress && "opacity-20 cursor-not-allowed",
-                                    `${recipeTextInput({ scale: "default" })}`,
-                                )}
-                                disabled={!isValidAddress || decimalsInputInvalidCondition}
-                                defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
-                            />
-                        </FieldInput>
-
+                        <FormField.Root required readOnly>
+                            <FormField.Label className="text-md text-base-content disabled:opacity-50">
+                                Token decimals
+                            </FormField.Label>
+                            <FormField.Input value={decimals || ""} name="decimals" type="number" step="1" min="1" />
+                            <FormField.ErrorText>
+                                {/* Spacing */}
+                                {""}
+                            </FormField.ErrorText>
+                        </FormField.Root>
                         <Button
                             type="submit"
-                            intent={"primary"}
+                            intent="primary"
                             className="text-neutral-content justify-center"
                             isLoading={status === "pending"}
-                            disabled={submitButtonDisabledCondition}
+                            aria-disabled={submitButtonDisabledCondition || status === "pending"}
                         >
                             Submit
                         </Button>
                     </form>
+                    {/* for spacing */}
+                    <div className="grow" />
                 </Dialog.Content>
             </Dialog.Positioner>
         </Dialog.Root>

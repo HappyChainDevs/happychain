@@ -112,7 +112,7 @@ const ConnectContent = () => {
 
     if (popupBlocked || mutationLogin.isError) {
         return (
-            <div className="overflow-y-auto [scrollbar-width:thin]">
+            <div className="overflow-y-auto scrollbar-thin">
                 <ErrorDisplay
                     popupBlocked={popupBlocked}
                     onAccept={() => {
@@ -126,7 +126,7 @@ const ConnectContent = () => {
 
     return (
         <>
-            <div className="overflow-y-auto [scrollbar-width:thin]">
+            <div className="overflow-y-auto scrollbar-thin">
                 {mutationLogin.isPending ? (
                     <LoginPending provider={mutationLogin.variables} />
                 ) : (

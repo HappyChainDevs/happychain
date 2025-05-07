@@ -1,6 +1,5 @@
 import { shortenAddress } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
-import type React from "react"
 import type { PropsWithChildren } from "react"
 import type { Address } from "viem"
 import { Button, type ButtonProps } from "#src/components/primitives/button/Button"
@@ -12,7 +11,6 @@ interface LayoutProps extends PropsWithChildren {
     labelHeader?: React.ReactNode
     headline?: React.ReactNode
     description?: React.ReactNode
-    hideActions?: boolean
     actions: {
         accept?: ButtonProps
         reject: ButtonProps
@@ -29,9 +27,10 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
                     <h1>{labelHeader ?? appURL}</h1>
                 </div>
             </header>
-            <div className="pt-12">
+            <div className="pt-16">
                 <section className="w-full px-2">
                     <div className="mx-auto w-full grid gap-4 text-center max-w-prose">
+                        <h1 className="font-bold text-xl">{headline}</h1>
                         <div title={user?.address} className="flex gap-2 text-start justify-center text-xs rounded-xl">
                             <div className="h-8 overflow-hidden aspect-square rounded-full bg-neutral/90">
                                 {user?.avatar && (
@@ -57,7 +56,6 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
                                 )}
                             </div>
                         </div>
-                        {headline && <h1 className="font-bold text-xl">{headline}</h1>}
                         <p className="opacity-80 text-sm">{description}</p>
                     </div>
                 </section>
@@ -128,7 +126,7 @@ export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: Forma
 
     return (
         <pre
-            className={`overflow-auto text-ellipsis text-sm scrollbar-thin ${
+            className={`overflow-auto tabular-nums text-sm scrollbar-thin ${
                 isCode ? "whitespace-pre" : "whitespace-pre-line"
             }`}
         >
