@@ -31,7 +31,7 @@ export class BoopReceiptService {
         const txReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.transactionHash })
         txReceipt.contractAddress ??= null // coerce to null
         type txReceiptType = typeof txReceipt & { contractAddress: Address | null; type: TransactionTypeName }
-        console.log("txReceipt", txReceipt)
+
         return {
             boopHash: boopHash,
             status: boopReceipt.status as OnchainStatus,

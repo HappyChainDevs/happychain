@@ -1,4 +1,3 @@
-import type { EIP1193RequestParameters } from "@happy.tech/wallet-common"
 import { getAppURL } from "#src/utils/appURL"
 import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"

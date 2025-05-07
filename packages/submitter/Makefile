@@ -7,15 +7,19 @@ include ../../makefiles/help.mk
 # (-include to ignore error if it does not exist)
 -include .env
 
-ifdef DATABASE_URL_OVERRIDE
-  export DATABASE_URL := $(DATABASE_URL_OVERRIDE)
-endif
-
 # Port at which Anvil will be running
 export ANVIL_PORT ?= 8545
 
 # Honor AUTOMINE_TESTS by setting the block time to 0.
 export ANVIL_BLOCK_TIME ?= $(if $(findstring true,$(AUTOMINE_TESTS)),0,2)
+
+define setup-test-env
+	$(eval CHAIN_ID=31337) \
+  	$(eval NODE_ENV=test) \
+  	$(eval DATABASE_URL=tests.sqlite) \
+  	if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi; \
+	./dist/cli migrate latest;
+endef
 
 migrate: ## Runs latest migrations
 	@./dist/cli migrate latest
@@ -37,10 +41,8 @@ routes: ## Display all available routes
 args ?= --bail
 
 test: ## Run the submitter tests — runs Anvil and deploys contracts if not already running. Pass args in $args.
-	@if lsof -ti :$(ANVIL_PORT); then \
-  		$(eval DATABASE_URL=submitter-tests.sqlite) \
-  		$(eval DATABASE_URL_OVERRIDE=submitter-tests.sqlite) \
-  		make migrate; \
+	@if lsof -ti :$(ANVIL_PORT) > /dev/null 2>&1; then \
+  		$(call setup-test-env) \
   		bun test $(args); \
 	else \
 		make test-run-anvil; \
@@ -48,11 +50,9 @@ test: ## Run the submitter tests — runs Anvil and deploys contracts if not alr
 .PHONY: test
 
 test-run-anvil:
-	@$(eval DATABASE_URL=submitter-tests.sqlite)
-	@$(eval DATABASE_URL_OVERRIDE=submitter-tests.sqlite)
 	@trap 'make kill-anvil' EXIT; \
 	trap 'exit' INT TERM HUP; \
-	make migrate; \
+	$(call setup-test-env) \
 	make start-anvil; \
 	until cast chain-id; do sleep 1; done; \
 	make deploy-contracts --silent; \
