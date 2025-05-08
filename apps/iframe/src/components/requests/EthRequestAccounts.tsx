@@ -11,17 +11,6 @@ export const EthRequestAccounts = ({
 }: RequestConfirmationProps<"eth_requestAccounts" | "wallet_requestPermissions">) => {
     const appURL = getAppURL()
 
-    const getRequestPayload = (): EIP1193RequestParameters<typeof method> => {
-        if (method === "eth_requestAccounts") {
-            return { method: "eth_requestAccounts" }
-        } else {
-            return {
-                method: "wallet_requestPermissions",
-                params: params as [{ eth_accounts: Record<string, never> }],
-            }
-        }
-    }
-
     return (
         <Layout
             headline={
@@ -34,7 +23,8 @@ export const EthRequestAccounts = ({
             actions={{
                 accept: {
                     children: "Allow",
-                    onClick: () => accept(getRequestPayload()),
+                    // biome-ignore lint/suspicious/noExplicitAny: we know the params match the method
+                    onClick: () => accept({ method, params } as any),
                 },
                 reject: {
                     children: "Go back",
