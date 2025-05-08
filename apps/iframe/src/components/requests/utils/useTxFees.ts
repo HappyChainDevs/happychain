@@ -48,7 +48,7 @@ export function useTxFees({ tx, txType, enabled }: UseTxFeesArgs): UseTxFeesRetu
     }
 
     return {
-        txMaxFeePerGas: parsedTxMaxPriorityFeePerGas ?? fetchedMaxFeePerGas,
+        txMaxFeePerGas: parsedTxMaxFeePerGas ?? fetchedMaxFeePerGas,
         txMaxPriorityFeePerGas: parsedTxMaxPriorityFeePerGas ?? fetchedMaxPriorityFeePerGas,
         txGasPrice: parsedTxGasPrice ?? fetchedGasPrice,
         areFeesPending: shouldQueryFees && isPending,

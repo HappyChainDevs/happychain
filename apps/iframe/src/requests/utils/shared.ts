@@ -116,6 +116,8 @@ export async function getTransactionCount(
  * Attempts to estimate the gas by interpreting the tx as a boop from the local account. If the tx is not originating
  * from the local account, returns {@link FORWARD} to indicate the request should be directed at a public client instead.
  * We currently can't simulate gas for other boop accounts.
+ *
+ * This handles both EIP-1559 and legacy transactions, preserving their gas parameters.
  */
 export async function eth_estimateGas(
     user: HappyUser | undefined,
@@ -123,14 +125,30 @@ export async function eth_estimateGas(
 ): Promise<Hex | Forward> {
     if (user?.address !== tx.from) return FORWARD
 
-    const boopClient = getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
+    try {
+        const boopClient = getBoopClient()
+        if (!boopClient) throw new Error("Boop client not initialized")
 
-    const boop = await boopFromTransaction(user?.address, tx)
-    const output = await boopClient.simulate({ entryPoint, boop })
+        // boopFromTransaction already handles both legacy and EIP-1559 transactions
+        // by converting gasPrice to maxFeePerGas when needed
+        const boop = await boopFromTransaction(user?.address, tx)
+        const output = await boopClient.simulate({ entryPoint, boop })
 
-    // TODO need robust error handling
-    if (output.status !== Onchain.Success) throw new Error("can't simulate lol", { cause: output })
+        if (output.status !== Onchain.Success) {
+            // Provide more detailed error information based on simulation output
+            const errorMsg =
+                "description" in output && output.description
+                    ? output.description
+                    : "Simulation failed with unknown reason"
+            reqLogger.warn("Gas estimation simulation failed", { tx, error: errorMsg, status: output.status })
+            throw new EIP1474InternalError(`Gas estimation failed: ${errorMsg}`)
+        }
 
-    return toHex(output.executeGas)
+        // Return the gas estimate, which already accounts for the appropriate transaction type
+        return toHex(output.executeGas)
+    } catch (error) {
+        // Catch and log any errors during the estimation process
+        reqLogger.error("Gas estimation error", error)
+        throw error instanceof Error ? error : new EIP1474InternalError("Failed to estimate gas")
+    }
 }

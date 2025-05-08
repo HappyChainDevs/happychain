@@ -19,7 +19,7 @@ import {
     type HappyRpcError,
     RevertRpcError,
 } from "@happy.tech/wallet-common"
-import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress } from "viem"
+import { type Address, type Hash, type Hex, type TransactionEIP1559, parseSignature, zeroAddress } from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
@@ -163,11 +163,10 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
         callData: tx.data ?? "0x",
         validatorData: "0x", // we will fill after signing
         extraData: createValidatorExtraData(account, tx.to),
-        // For sponsored boops, gas & limits will be filled by the submitter.
-        // For self-paying boops, we will fill this after calling `simulate`.
-        maxFeePerGas: 0n,
+        // Use gas values from the transaction if they exist, for legacy txs, use gasPrice as maxFeePerGas
+        maxFeePerGas: tx.maxFeePerGas ? BigInt(tx.maxFeePerGas) : tx.gasPrice ? BigInt(tx.gasPrice) : 0n,
         submitterFee: 0n,
-        gasLimit: 0,
+        gasLimit: tx.gas ? Number(tx.gas) : 0,
         validateGasLimit: 0,
         validatePaymentGasLimit: 0,
         executeGasLimit: 0,
@@ -231,12 +230,20 @@ export function formatTransaction(
         typeHex: "0x2",
         chainId: Number(currentChain.chainId),
         accessList: [], // no way to retrieve without access to submitter tx, not important
-        // TODO Parse signature values (r, s, v) and extract proper yParity value from validatorData
-        //      https://linear.app/happychain/issue/HAPPY-490/
-        r: "0x0",
-        s: "0x0",
-        v: 0n,
-        yParity: 0,
+        // Parse signature values from validatorData if available
+        ...(boop?.validatorData && boop.validatorData.length >= 132
+            ? (({ r, s, yParity }) => ({
+                  r,
+                  s,
+                  v: BigInt(yParity),
+                  yParity,
+              }))(parseSignature(boop.validatorData))
+            : {
+                  r: "0x0",
+                  s: "0x0",
+                  v: 0n,
+                  yParity: 0,
+              }),
         boop: receipt,
     } as TransactionEIP1559
 }

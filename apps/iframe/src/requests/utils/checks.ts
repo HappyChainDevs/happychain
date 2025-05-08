@@ -45,6 +45,17 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
     if (tx.nonce && parseBigInt(tx.nonce) === undefined)
         throw new EIP1474InvalidInput(`nonce is not a number: ${tx.nonce}`)
 
+    // Validate gas price parameters based on transaction type
+    // Legacy transactions use gasPrice
+    if (tx.gasPrice && !parseBigInt(tx.gasPrice))
+        throw new EIP1474InvalidInput(`gasPrice is not a number: ${tx.gasPrice}`)
+
+    // EIP-1559 transactions use maxFeePerGas and maxPriorityFeePerGas
+    if (tx.maxFeePerGas && !parseBigInt(tx.maxFeePerGas))
+        throw new EIP1474InvalidInput(`maxFeePerGas is not a number: ${tx.maxFeePerGas}`)
+    if (tx.maxPriorityFeePerGas && !parseBigInt(tx.maxPriorityFeePerGas))
+        throw new EIP1474InvalidInput(`maxPriorityFeePerGas is not a number: ${tx.maxPriorityFeePerGas}`)
+
     if (tx.data && !isHex(tx.data)) return tx as ValidRpcTransactionRequest
 
     // TODO more
