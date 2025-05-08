@@ -149,20 +149,20 @@ export const GameScoresQuerySchema = z
 
 export const GameIdParamSchema = z
     .object({
-        id: z.coerce.number().int().positive(),
+        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
     })
     .strict()
     .openapi({
-        example: { id: 1 },
+        example: { id: "1" },
     })
 
 export const AdminIdParamSchema = z
     .object({
-        admin_id: z.coerce.number().int().positive(),
+        admin_id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
     })
     .strict()
     .openapi({
-        example: { admin_id: 1 },
+        example: { admin_id: "1" },
     })
 
 export const AdminWalletParamSchema = z

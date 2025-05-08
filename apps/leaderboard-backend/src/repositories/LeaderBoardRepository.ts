@@ -30,7 +30,6 @@ export class LeaderBoardRepository {
 
     // Guild leaderboard: top guilds by total score of all members
     async getGuildLeaderboard(limit = 50): Promise<GuildLeaderboardEntry[]> {
-        // Get leaderboard entries (without member_count)
         const leaderboardRows = await this.db
             .selectFrom("guilds")
             .innerJoin("guild_members", "guilds.id", "guild_members.guild_id")

@@ -84,7 +84,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
             const includeMembers = c.req.query("include_members") === "true"
 
-            const guildId = id as GuildTableId
+            const guildId = Number.parseInt(id, 10) as GuildTableId
             const guild = await guildRepo.findById(guildId, includeMembers)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -109,7 +109,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guildId = id as GuildTableId
+            const guildId = Number.parseInt(id, 10) as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -145,7 +145,7 @@ export default new Hono()
             const { guildRepo } = c.get("repos")
 
             // Check if guild exists
-            const guildId = id as GuildTableId
+            const guildId = Number.parseInt(id, 10) as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -170,7 +170,7 @@ export default new Hono()
             const { guildRepo, userRepo } = c.get("repos")
 
             // Ensure guild exists
-            const guildId = id as GuildTableId
+            const guildId = Number.parseInt(id, 10) as GuildTableId
             const guild = await guildRepo.findById(guildId)
             if (!guild) {
                 return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -226,8 +226,8 @@ export default new Hono()
                 const { guildRepo } = c.get("repos")
 
                 // Check if guild exists
-                const guildId = id as GuildTableId
-                const userId = member_id as UserTableId
+                const guildId = Number.parseInt(id, 10) as GuildTableId
+                const userId = Number.parseInt(member_id, 10) as UserTableId
                 const guild = await guildRepo.findById(guildId)
                 if (!guild) {
                     return c.json({ ok: false, error: "Guild not found" }, 404)
@@ -263,8 +263,8 @@ export default new Hono()
                 const { guildRepo } = c.get("repos")
 
                 // Check if guild exists
-                const guildId = id as GuildTableId
-                const userId = member_id as UserTableId
+                const guildId = Number.parseInt(id, 10) as GuildTableId
+                const userId = Number.parseInt(member_id, 10) as UserTableId
                 const guild = await guildRepo.findById(guildId)
                 if (!guild) {
                     return c.json({ ok: false, error: "Guild not found" }, 404)

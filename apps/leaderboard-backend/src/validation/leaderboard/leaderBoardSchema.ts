@@ -93,9 +93,9 @@ export const GameGuildLeaderBoardResponseObj = resolver(z.array(GameGuildLeaderb
 // Request Param/Query Schemas
 
 export const LeaderboardLimitQuerySchema = z.object({
-    limit: z.coerce.number().int().min(1).max(100).default(50),
+    limit: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }).default("50"),
 })
 
 export const LeaderboardGameIdParamSchema = z.object({
-    id: z.coerce.number().int().positive(),
+    id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
 })

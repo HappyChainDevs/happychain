@@ -4,27 +4,22 @@ import type { Database, Game, GameTableId, NewGame, UpdateGame, UserGameScore, U
 export class GameRepository {
     constructor(private db: Kysely<Database>) {}
 
-    /// Find a game by ID
     async findById(id: GameTableId): Promise<Game | undefined> {
         return await this.db.selectFrom("games").where("id", "=", id).selectAll().executeTakeFirst()
     }
 
-    /// Find games by name (partial match)
     async findByNameLike(name: string): Promise<Game[]> {
         return await this.db.selectFrom("games").where("name", "like", `%${name}%`).selectAll().execute()
     }
 
-    /// Find a game by exact name
     async findByExactName(name: string): Promise<Game | undefined> {
         return await this.db.selectFrom("games").where("name", "=", name).selectAll().executeTakeFirst()
     }
 
-    /// Find games by admin
     async findByAdmin(adminId: UserTableId): Promise<Game[]> {
         return await this.db.selectFrom("games").where("admin_id", "=", adminId).selectAll().execute()
     }
 
-    /// Generic find method with search criteria
     async find(criteria: {
         name?: string
         admin_id?: UserTableId
@@ -39,12 +34,10 @@ export class GameRepository {
             .execute()
     }
 
-    /// Create a new game
     async create(game: NewGame): Promise<Game> {
         return await this.db.insertInto("games").values(game).returningAll().executeTakeFirstOrThrow()
     }
 
-    /// Update game details
     async update(id: GameTableId, updateWith: UpdateGame): Promise<Game | undefined> {
         await this.db
             .updateTable("games")
@@ -55,7 +48,6 @@ export class GameRepository {
         return this.findById(id)
     }
 
-    /// Delete a game
     async delete(id: GameTableId): Promise<Game | undefined> {
         return await this.db.transaction().execute(async (trx) => {
             // Get game before deletion
@@ -65,32 +57,17 @@ export class GameRepository {
                 return undefined
             }
 
-            // Delete all scores for this game
             await trx.deleteFrom("user_game_scores").where("game_id", "=", id).execute()
-
-            // Delete the game
             await trx.deleteFrom("games").where("id", "=", id).execute()
 
             return game
         })
-    }
-
-    /// Check if user is admin of a game
-    async isUserGameAdmin(userId: UserTableId, gameId: GameTableId): Promise<boolean> {
-        const game = await this.db
-            .selectFrom("games")
-            .where("id", "=", gameId)
-            .where("admin_id", "=", userId)
-            .executeTakeFirst()
-
-        return !!game
     }
 }
 
 export class GameScoreRepository {
     constructor(private db: Kysely<Database>) {}
 
-    /// Find a user's score for a specific game
     async findUserGameScore(userId: UserTableId, gameId: GameTableId): Promise<UserGameScore | undefined> {
         return await this.db
             .selectFrom("user_game_scores")
@@ -100,7 +77,6 @@ export class GameScoreRepository {
             .executeTakeFirst()
     }
 
-    /// Get all scores for a user
     async findUserScores(
         userId: UserTableId,
         gameId?: GameTableId,
@@ -123,7 +99,6 @@ export class GameScoreRepository {
             .execute()
     }
 
-    /// Get all scores for a game
     async findGameScores(gameId: GameTableId, limit = 50): Promise<(UserGameScore & { username: string })[]> {
         return await this.db
             .selectFrom("user_game_scores")
@@ -144,18 +119,15 @@ export class GameScoreRepository {
             .execute()
     }
 
-    /// Submit a score (create or update if higher)
     async submitScore(
         userId: UserTableId,
         gameId: GameTableId,
         score: number,
         metadata?: string,
     ): Promise<UserGameScore> {
-        // Check if score exists for this user and game
         const existingScore = await this.findUserGameScore(userId, gameId)
 
         if (existingScore) {
-            // Add new score to existing score
             const newScore = existingScore.score + score
             return await this.db
                 .updateTable("user_game_scores")
@@ -168,7 +140,6 @@ export class GameScoreRepository {
                 .returningAll()
                 .executeTakeFirstOrThrow()
         } else {
-            // Create new score
             return await this.db
                 .insertInto("user_game_scores")
                 .values({
@@ -182,7 +153,6 @@ export class GameScoreRepository {
         }
     }
 
-    /// Delete a score
     async deleteScore(userId: UserTableId, gameId: GameTableId): Promise<UserGameScore | undefined> {
         return await this.db
             .deleteFrom("user_game_scores")
