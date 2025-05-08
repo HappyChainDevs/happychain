@@ -134,14 +134,3 @@ export function parseBigInt(input: string | undefined): bigint | undefined {
         return undefined
     }
 }
-/**
- * Safely converts a value to BigInt, handling null/undefined cases with a default value (0n).
- */
-export const toBigIntSafe = (value: string | bigint | null | undefined): bigint => {
-    if (!value) return 0n
-    try {
-        return typeof value === "bigint" ? value : BigInt(value)
-    } catch {
-        return 0n
-    }
-}
