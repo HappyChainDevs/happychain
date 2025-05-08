@@ -10,9 +10,6 @@ interface ApiClientOptions {
 
 export class ApiClient {
     #baseUrl: string
-    #headers: HeadersInit = {
-        "Content-Type": "application/json",
-    }
 
     constructor({ baseUrl = "" }: ApiClientOptions = {}) {
         this.#baseUrl = baseUrl
