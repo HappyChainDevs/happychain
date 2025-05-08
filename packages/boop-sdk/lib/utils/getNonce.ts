@@ -1,19 +1,28 @@
+import { stringify } from "@happy.tech/common"
+
 export type GetNonceInput = {
     address: `0x${string}`
     nonceTrack: bigint
 }
 
-type GetNonceSuccess = GetNonceInput & {
-    status: "success"
+export const GetNonce = {
+    Success: "getNonceSuccess",
+    Error: "getNonceError",
+} as const
+
+export type GetNonceStatus = (typeof GetNonce)[keyof typeof GetNonce]
+
+export type GetNonceOutput = GetNonceSuccess | GetNonceError
+
+export type GetNonceSuccess = GetNonceInput & {
+    status: typeof GetNonce.Success
     nonceValue: bigint
 }
 
-type GetNonceFailure = GetNonceInput & {
-    status: "error"
+export type GetNonceError = GetNonceInput & {
+    status: typeof GetNonce.Error
     description: string
 }
-
-export type GetNonceOutput = GetNonceSuccess | GetNonceFailure
 
 // "nonceValues(address,uint192)(uint64)"
 const nonceValuesSelector = "0xe631c8f2000000000000000000000000"
@@ -40,8 +49,8 @@ export async function getNonce(baseUrl: string, to: `0x${string}`, input: GetNon
             .then((res) => res.json())
             .then((response) => BigInt(response.result))
 
-        return { ...input, nonceValue, status: "success" }
+        return { ...input, nonceValue, status: GetNonce.Success }
     } catch (error) {
-        return { ...input, status: "error", description: (error as Error)?.message }
+        return { ...input, status: GetNonce.Error, description: stringify(error) }
     }
 }
