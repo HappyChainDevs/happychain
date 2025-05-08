@@ -20,7 +20,7 @@ jobs:
 
       - name: Build code
         run: |
-          make submitter.build
+          make submitter.prod
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
@@ -59,6 +59,7 @@ jobs:
             DATABASE_URL=/home/submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=production
+            RPC_URL=https://replica.testnet.happy.tech
             EOF
               cd /home/submitter/build
               bun migrate.es.js
