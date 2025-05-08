@@ -4,5 +4,5 @@ export const anvilDefinition = {
     chainName: "Anvil",
     rpcUrls: ["http://127.0.0.1:8545", "ws://127.0.0.1:8545"],
     nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
-    chainId: "0x7A69", // 31337
+    chainId: "0x7a69", // 31337
 } satisfies ChainParameters
