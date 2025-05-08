@@ -25,11 +25,11 @@ export type GetNonceError = GetNonceInput & {
 }
 
 // "nonceValues(address,uint192)(uint64)"
-const nonceValuesSelector = "0xe631c8f2000000000000000000000000"
+const nonceValuesSelector = "0xe631c8f2"
 
 export async function getNonce(baseUrl: string, to: `0x${string}`, input: GetNonceInput): Promise<GetNonceOutput> {
     try {
-        const addressData = input.address.replace(/^0x/, "").toLowerCase()
+        const addressData = input.address.replace(/^0x/, "").toLowerCase().padStart(64, "0")
         const nonceTrackData = input.nonceTrack.toString(16).padStart(64, "0")
         const nonceValue = await fetch(baseUrl, {
             method: "POST",
