@@ -8,12 +8,8 @@ export * from "./handlers/getState/types"
 export * from "./handlers/waitForReceipt/types"
 export * from "./handlers/getPending/types"
 
-// === ENUMS =======================================================================================
+// === UTILITIES ===================================================================================
 
-// export { EntryPointStatus } from "./interfaces/status"
-// export { StateRequestStatus } from "./interfaces/BoopState"
-
-// // === UTILITIES ===================================================================================
 export { computeBoopHash } from "./services/computeBoopHash"
 export { decodeBoop } from "./utils/boop/decodeBoop"
 export { encodeBoop } from "./utils/boop/encodeBoop"
