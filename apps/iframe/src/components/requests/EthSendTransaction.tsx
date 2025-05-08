@@ -2,13 +2,13 @@ import { Onchain } from "@happy.tech/boop-sdk"
 import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
+import { type Address, type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
-import { type ValidRpcTransactionRequest, checkedTx } from "#src/requests/utils/checks.ts"
+import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import FieldLoader from "../loaders/FieldLoader"
@@ -27,14 +27,13 @@ import {
 import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 import { useTxFees } from "./utils/useTxFees"
-
 export const EthSendTransaction = ({
     method,
     params,
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    const tx: ValidRpcTransactionRequest = checkedTx(params[0]) // TODO not ideal to use this since it throws errors not meant for the popup
+    const tx: RpcTransactionRequest = params[0]
     const user = useAtomValue(userAtom)
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
@@ -72,18 +71,21 @@ export const EthSendTransaction = ({
         enabled: isValidTransaction,
     })
 
-    const updatedTx = useMemo(
-        () =>
-            ({
-                ...tx,
-                maxFeePerGas: ifDef(txMaxFeePerGas, toHex),
-                maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
-                gasPrice: ifDef(txGasPrice, toHex),
-                gas: ifDef(txGasLimit, toHex),
-                type: txType,
-            }) as RpcTransactionRequest,
-        [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType],
-    )
+    const validTx = useMemo(() => {
+        if (!tx.from || !isAddress(tx.from)) throw new Error("Invalid or missing `from` address")
+        if (!tx.to || !isAddress(tx.to)) throw new Error("Invalid or missing `to` address")
+
+        return {
+            ...tx,
+            maxFeePerGas: ifDef(txMaxFeePerGas, toHex),
+            maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
+            gasPrice: ifDef(txGasPrice, toHex),
+            gas: ifDef(txGasLimit, toHex),
+            type: txType,
+            from: tx.from as Address,
+            to: tx.to as Address,
+        } as ValidRpcTransactionRequest
+    }, [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType])
 
     // ====================================== Boop Gas details ======================================
 
@@ -93,7 +95,7 @@ export const EthSendTransaction = ({
         isError: boopSimulationError,
     } = useSimulateBoop({
         userAddress: user?.address,
-        tx,
+        tx: validTx,
     })
 
     const formatted = useMemo(() => {
@@ -102,11 +104,11 @@ export const EthSendTransaction = ({
         if (simulatedBoopData.status === Onchain.Success) {
             const { maxFeePerGas: boopMaxFeePerGas, submitterFee = 0n, gas: boopGas } = simulatedBoopData
 
-            const maxFeePerGas2 = txMaxFeePerGas ?? txGasPrice ?? boopMaxFeePerGas
-            const gasLimit2 = txGasLimit ?? BigInt(boopGas)
+            const maxFeePerGas = txMaxFeePerGas ?? txGasPrice ?? boopMaxFeePerGas
+            const gasLimit = txGasLimit ?? BigInt(boopGas)
             return {
                 value: formatEther(txValue),
-                totalGas: ifDef(maxFeePerGas2 * gasLimit2 + submitterFee, formatGwei),
+                totalGas: ifDef(maxFeePerGas * gasLimit + submitterFee, formatGwei),
                 submitterFee: submitterFee,
             }
         }
@@ -142,7 +144,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
-                            accept({ method, params: [updatedTx], extraData: simulatedBoopData })
+                            accept({ method, params: [validTx], extraData: simulatedBoopData })
                             void queryClient.invalidateQueries({
                                 queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey],
                             })
@@ -180,7 +182,7 @@ export const EthSendTransaction = ({
                                 {boopSimulationPending ? (
                                     <FieldLoader />
                                 ) : (
-                                    `Cost: ${formatted?.totalGas} HAPPY (Submitter Fee: ${formatted?.submitterFee})`
+                                    `Cost: ${formatted?.totalGas} HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
                                 )}
                             </FormattedDetailsLine>
                         </SubsectionContent>

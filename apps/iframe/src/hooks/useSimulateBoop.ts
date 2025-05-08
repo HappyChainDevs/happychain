@@ -7,7 +7,7 @@ import { boopClient } from "#src/state/boopClient"
 
 type SimulateBoopArgs = {
     userAddress: Address | undefined
-    tx: ValidRpcTransactionRequest | undefined
+    tx: ValidRpcTransactionRequest
 }
 
 export function useSimulateBoop({ userAddress, tx }: SimulateBoopArgs) {
