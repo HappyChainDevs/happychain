@@ -9,12 +9,15 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 
 const app = new Hono()
-    .use("*", cors({
-        origin: "*",
-        allowMethods: ["GET", "POST", "OPTIONS"],
-        allowHeaders: ["Content-Type"],
-        maxAge: 86400
-    }))
+    .use(
+        "*",
+        cors({
+            origin: "*",
+            allowMethods: ["GET", "POST", "OPTIONS"],
+            allowHeaders: ["Content-Type"],
+            maxAge: 86400 // max allowable age for preflight requests (some browsers will downgrade this)
+        })
+    )
     .use(
         except(
             // don't run these during testing
