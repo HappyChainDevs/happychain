@@ -1,11 +1,13 @@
 import { CreateAccount } from "@happy.tech/boop-sdk"
 import type { Address } from "viem"
-import { boopClient } from "#src/state/boopClient"
-import { reqLogger } from "#src/utils/logger"
+import { getBoopClient } from "#src/state/boopClient"
+import { logger, reqLogger } from "#src/utils/logger"
 
 export async function getBoopAccountAddress(owner: Address): Promise<Address> {
     const salt = "0x1"
     try {
+        const boopClient = getBoopClient()
+        if (!boopClient) throw new Error("Boop client not initialized")
         const result = await boopClient.createAccount({
             // already verifies if the account is created under the hood
             owner,
@@ -20,7 +22,7 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
 
         throw result
     } catch (error) {
-        console.error("Failed to create Boop account:", error)
+        logger.error("Failed to create Boop account:", error)
         throw error
     }
 }

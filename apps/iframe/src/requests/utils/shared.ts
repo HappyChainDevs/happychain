@@ -17,7 +17,7 @@ import {
 import { boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import type { BlockParam } from "#src/requests/utils/eip1474"
-import { boopClient } from "#src/state/boopClient"
+import { getBoopClient } from "#src/state/boopClient"
 import { reqLogger } from "#src/utils/logger"
 
 export const FORWARD = Symbol("FORWARD")
@@ -36,6 +36,8 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
     if (cached?.receipt) return formatTransaction(hash, cached)
 
     try {
+        const boopClient = getBoopClient()
+        if (!boopClient) throw new Error("Boop client not initialized")
         const output = await boopClient.state({ hash })
         if (output.status === GetState.Receipt) {
             const receipt = output.receipt
@@ -75,6 +77,8 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
 
     try {
+        const boopClient = getBoopClient()
+        if (!boopClient) throw new Error("Boop client not initialized")
         const state = await boopClient.state({ hash })
         if (state.status !== GetState.Receipt) {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
@@ -109,7 +113,7 @@ export async function getTransactionCount(
 }
 
 /**
- * Attempts to estimate the gas by interpreting the tx as a book from the local account. If the tx is not originating
+ * Attempts to estimate the gas by interpreting the tx as a boop from the local account. If the tx is not originating
  * from the local account, returns {@link FORWARD} to indicate the request should be directed at a public client instead.
  * We currently can't simulate gas for other boop accounts.
  */
@@ -118,6 +122,9 @@ export async function eth_estimateGas(
     tx: ValidRpcTransactionRequest,
 ): Promise<Hex | Forward> {
     if (user?.address !== tx.from) return FORWARD
+
+    const boopClient = getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
 
     const boop = await boopFromTransaction(user?.address, tx)
     const output = await boopClient.simulate({ entryPoint, boop })
