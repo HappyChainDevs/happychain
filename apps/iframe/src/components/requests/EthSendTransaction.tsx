@@ -7,6 +7,7 @@ import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
+import { happyPaymaster } from "#src/constants/contracts.ts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
@@ -27,6 +28,7 @@ import {
 import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
 import { useTxFees } from "./utils/useTxFees"
+
 export const EthSendTransaction = ({
     method,
     params,
@@ -99,7 +101,6 @@ export const EthSendTransaction = ({
         tx: validTx,
         enabled: isValidTransaction,
     })
-    
 
     const formatted = useMemo(() => {
         if (!simulatedBoopData) return undefined
@@ -143,7 +144,11 @@ export const EthSendTransaction = ({
                 headline="Confirm transaction"
                 actions={{
                     accept: {
-                        children: notEnoughFunds ? "Not enough funds!" : "Confirm",
+                        children: notEnoughFunds
+                            ? "Not enough funds!"
+                            : isConfirmActionDisabled
+                              ? "Preparing..."
+                              : "Confirm",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled) return
@@ -196,7 +201,9 @@ export const EthSendTransaction = ({
                     <SectionBlock>
                         <SubsectionBlock>
                             <SubsectionTitle>
-                                Sponsored by <span className="text-accent">HappyChain</span>
+                                <LinkToAddress address={happyPaymaster}>
+                                    Sponsored by <span className="text-accent">HappyChain</span>
+                                </LinkToAddress>
                             </SubsectionTitle>
                         </SubsectionBlock>
                     </SectionBlock>
