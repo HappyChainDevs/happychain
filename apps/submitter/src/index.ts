@@ -15,8 +15,8 @@ const app = new Hono()
             origin: "*",
             allowMethods: ["GET", "POST", "OPTIONS"],
             allowHeaders: ["Content-Type"],
-            maxAge: 86400 // max allowable age for preflight requests (some browsers will downgrade this)
-        })
+            maxAge: 86400, // max allowable age for preflight requests (some browsers will downgrade this)
+        }),
     )
     .use(
         except(
