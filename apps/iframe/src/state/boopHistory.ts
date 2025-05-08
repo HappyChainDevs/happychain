@@ -1,4 +1,4 @@
-import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
+import { type BoopReceipt, Onchain } from "@happy.tech/boop-sdk"
 import { binaryPartition, createBigIntStorage } from "@happy.tech/common"
 import type { Address, Hash } from "@happy.tech/common"
 import { atom } from "jotai"
@@ -55,7 +55,7 @@ interface IStoredBoop {
     value: bigint
     error?: { message: string; code?: number | string }
     failedAt?: number
-    boopReceipt?: ExecuteOutput
+    boopReceipt?: BoopReceipt
     status: BoopStatus
 }
 export type StoredBoop = PendingBoop | ConfirmedBoop | FailedBoop
@@ -69,7 +69,7 @@ export interface ConfirmedBoop extends IStoredBoop {
     confirmedAt: number
     error?: never
     failedAt?: never
-    boopReceipt: ExecuteOutput
+    boopReceipt: BoopReceipt
     status: BoopStatus.Success
 }
 
@@ -101,13 +101,13 @@ export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">):
     store.set(boopsAtom, accountBoops)
 }
 
-export function markBoopAsSuccess(receipt: ExecuteSuccess): void {
+export function markBoopAsSuccess(receipt: BoopReceipt): void {
     if (receipt.status !== Onchain.Success) {
         console.error("Cannot mark boop as confirmed: Boop hash is missing.")
         return
     }
 
-    updateBoopStatus(receipt.receipt.boopHash, {
+    updateBoopStatus(receipt.boopHash, {
         status: BoopStatus.Success,
         confirmedAt: Date.now(),
         boopReceipt: receipt,
@@ -115,13 +115,13 @@ export function markBoopAsSuccess(receipt: ExecuteSuccess): void {
 }
 
 export function markBoopAsFailure(
-    failedBoop: Omit<PendingBoop, "createdAt" | "status" | "value">,
+    boopHash: Hash,
     error?: {
         message: string
         code?: number | string
     },
 ): void {
-    updateBoopStatus(failedBoop.boopHash, {
+    updateBoopStatus(boopHash, {
         status: BoopStatus.Failure,
         failedAt: Date.now(),
         error,
