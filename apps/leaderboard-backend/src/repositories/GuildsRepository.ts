@@ -90,8 +90,17 @@ export class GuildRepository {
     }
 
     async create(guild: NewGuild): Promise<Guild> {
+        const now = new Date().toISOString()
         return await this.db.transaction().execute(async (trx) => {
-            const newGuild = await trx.insertInto("guilds").values(guild).returningAll().executeTakeFirstOrThrow()
+            const newGuild = await trx
+                .insertInto("guilds")
+                .values({
+                    ...guild,
+                    created_at: now,
+                    updated_at: now,
+                })
+                .returningAll()
+                .executeTakeFirstOrThrow()
 
             await trx
                 .insertInto("guild_members")
@@ -99,6 +108,7 @@ export class GuildRepository {
                     guild_id: newGuild.id,
                     user_id: newGuild.creator_id,
                     is_admin: true,
+                    joined_at: now,
                 })
                 .execute()
 
@@ -194,6 +204,7 @@ export class GuildRepository {
                 guild_id: guildId,
                 user_id: userId,
                 is_admin: isAdmin,
+                joined_at: new Date().toISOString(),
             })
             .execute()
 

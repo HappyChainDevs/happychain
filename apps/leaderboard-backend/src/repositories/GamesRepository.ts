@@ -35,7 +35,16 @@ export class GameRepository {
     }
 
     async create(game: NewGame): Promise<Game> {
-        return await this.db.insertInto("games").values(game).returningAll().executeTakeFirstOrThrow()
+        const now = new Date().toISOString()
+        return await this.db
+            .insertInto("games")
+            .values({
+                ...game,
+                created_at: now,
+                updated_at: now,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow()
     }
 
     async update(id: GameTableId, updateWith: UpdateGame): Promise<Game | undefined> {
@@ -126,6 +135,7 @@ export class GameScoreRepository {
         metadata?: string,
     ): Promise<UserGameScore> {
         const existingScore = await this.findUserGameScore(userId, gameId)
+        const now = new Date().toISOString()
 
         if (existingScore) {
             const newScore = existingScore.score + score
@@ -134,7 +144,7 @@ export class GameScoreRepository {
                 .set({
                     score: newScore,
                     metadata: metadata !== undefined ? metadata : existingScore.metadata,
-                    updated_at: new Date().toISOString(),
+                    updated_at: now,
                 })
                 .where("id", "=", existingScore.id)
                 .returningAll()
@@ -147,6 +157,8 @@ export class GameScoreRepository {
                     game_id: gameId,
                     score,
                     metadata,
+                    created_at: now,
+                    updated_at: now,
                 })
                 .returningAll()
                 .executeTakeFirstOrThrow()

@@ -96,8 +96,17 @@ export class UserRepository {
     }
 
     async create(user: NewUser): Promise<User> {
+        const now = new Date().toISOString()
         return await this.db.transaction().execute(async (trx) => {
-            const createdUser = await trx.insertInto("users").values(user).returningAll().executeTakeFirstOrThrow()
+            const createdUser = await trx
+                .insertInto("users")
+                .values({
+                    ...user,
+                    created_at: now,
+                    updated_at: now,
+                })
+                .returningAll()
+                .executeTakeFirstOrThrow()
 
             await trx
                 .insertInto("user_wallets")
@@ -105,6 +114,7 @@ export class UserRepository {
                     user_id: createdUser.id,
                     wallet_address: createdUser.primary_wallet,
                     is_primary: true,
+                    created_at: now,
                 })
                 .execute()
 
@@ -142,6 +152,7 @@ export class UserRepository {
                 user_id: userId,
                 wallet_address: walletAddress,
                 is_primary: false,
+                created_at: new Date().toISOString(),
             })
             .execute()
         return true
@@ -192,7 +203,7 @@ export class UserRepository {
             .where("user_id", "=", userId)
             .where("wallet_address", "=", walletAddress)
             .execute()
-
+        
         return result.length > 0
     }
 
