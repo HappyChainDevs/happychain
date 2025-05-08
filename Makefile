@@ -529,14 +529,17 @@ endef
 
 select-submitter-local:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,http://localhost:3001)
+	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,http://localhost:3001)
 .PHONY: select-submitter-local
 
 select-submitter-staging:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter-staging.happy.tech)
+	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter-staging.happy.tech)
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter.happy.tech)
+	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter.happy.tech)
 .PHONY: select-submitter-prod
 
 select-iframe-local:
@@ -552,6 +555,7 @@ select-chain-local:
 	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
 	$(call update_env,packages/submitter/.env,CHAIN_ID,31337)
 	$(call update_env,packages/submitter/.env,RPC_URL,http://localhost:8545)
+	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
@@ -567,6 +571,7 @@ select-chain-testnet:
 	$(call update_env,apps/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
 	$(call update_env,packages/submitter/.env,CHAIN_ID,216)
 	$(call update_env,packages/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
+	$(call update_env,packages/boop-sdk/.env,RPC_URL,https://rpc.testnet.happy.tech)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
 	$(call update_env,apps/randomness/.env,RPC_URL,wss://rpc.testnet.happy.tech/ws)

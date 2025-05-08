@@ -40,8 +40,8 @@ export class BoopClient {
     #applyDefaults(config?: Partial<BoopClientConfig>): BoopClientConfig {
         return {
             baseUrl: config?.baseUrl ?? env.SUBMITTER_URL,
-            rpcUrl: config?.rpcUrl ?? "http://localhost:8545", //env.RPC_URL,
-            entryPoint: config?.entryPoint ?? "0xDCE87Ac6850A0D3938B0e1B2F7b8B29789BB29D3", //env.ENTRYPOINT,
+            rpcUrl: config?.rpcUrl ?? env.RPC_URL,
+            entryPoint: config?.entryPoint ?? env.ENTRYPOINT,
         }
     }
 
