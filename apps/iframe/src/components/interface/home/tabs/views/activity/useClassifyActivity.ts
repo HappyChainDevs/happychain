@@ -90,9 +90,8 @@ function _decodeERC20TransferLog(log: Log) {
 function classifyBoop(boop: StoredBoop): ActivityDetails {
     if (boop?.status !== BoopStatus.Success || boop.boopReceipt.status !== Onchain.Success)
         return { type: OperationType.Failed }
-    const logs = boop.boopReceipt.receipt.logs
 
-    for (const log of logs) {
+    for (const log of boop.boopReceipt.logs) {
         switch (log.topics[0]?.toLowerCase()) {
             case EVENT_SIGNATURES.ERC20_TRANSFER:
                 return { type: OperationType.ERC20Transfer }

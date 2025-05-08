@@ -28,9 +28,7 @@ const SessionKeyDemo = () => {
 
     useEffect(() => {
         setLoading(true)
-        updateCounterValue().then(() => {
-            setLoading(false)
-        })
+        updateCounterValue().finally(() => setLoading(false))
     }, [updateCounterValue])
 
     async function submitIncrement() {
@@ -43,18 +41,24 @@ const SessionKeyDemo = () => {
     }
 
     async function incrementCounter() {
+        let _count = counter
         try {
+            console.log("[incrementCounter] incrementing counter")
             const hash = await submitIncrement()
+            console.log("[incrementCounter] hash:", hash)
             if (!hash) throw new Error("No hash returned")
-            const receipt = await publicClient.waitForTransactionReceipt({ hash })
-            if (receipt.status === "reverted") {
-                toast.error("UserOp reverted!")
-                return
-            }
 
-            const newCount = await updateCounterValue()
-            toast.success(`Counter incremented to ${newCount}`)
+            setCounter((count) => {
+                _count = (count || 0n) + 1n
+                return _count
+            })
+            const receipt = await publicClient.waitForTransactionReceipt({ hash })
+
+            if (receipt.status === "reverted") throw new Error("UserOp reverted!")
+
+            toast.success(`Counter incremented to ${_count} and confirmed onchain!`)
         } catch (error) {
+            setCounter((count) => (_count === counter || !_count ? count : _count - 1n))
             console.warn("[incrementCounter] error:", error)
             toast.error("Failed to increment counter")
         }

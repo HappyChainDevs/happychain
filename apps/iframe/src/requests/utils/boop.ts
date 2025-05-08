@@ -6,6 +6,7 @@ import {
     type SimulateOutput,
     type SimulateSuccess,
     SubmitterError,
+    WaitForReceipt,
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
 import { Map2, Mutex, parseBigInt } from "@happy.tech/common"
@@ -131,17 +132,32 @@ export async function sendBoop(
         if (!boopHash) throw new Error("Boop hash not computed") // temp: fix for boopHash being undefined
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop({ boopHash, value })
-        const output = await boopClient.execute({ entryPoint, boop: signedBoop })
+        const output = await boopClient.submit({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
         if (output.status !== Onchain.Success) throw translateBoopError(output)
-        markBoopAsSuccess(output)
-        return output.receipt.boopHash
+
+        boopClient.receipt({ hash: boopHash }).then((receipt) => {
+            switch (receipt.status) {
+                case WaitForReceipt.Success:
+                    markBoopAsSuccess(receipt.receipt)
+                    break
+                case WaitForReceipt.UnknownBoop:
+                    markBoopAsFailure(boopHash!, { message: "Unknown boop" })
+                    break
+                default:
+                    markBoopAsFailure(boopHash!, {
+                        message: receipt.description || "Unknown error",
+                    })
+            }
+        })
+
+        return boopHash
     } catch (error) {
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
-        if (boopHash) markBoopAsFailure({ boopHash }, serializeError(error))
+        if (boopHash) markBoopAsFailure(boopHash, serializeError(error))
         throw error
     }
 }
