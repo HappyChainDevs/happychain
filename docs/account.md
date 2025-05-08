@@ -16,7 +16,7 @@
 
 The Happy Account is a global account for all applications on HappyChain.
 
-The account is a Boop-powered smart contract wallet controlled by a private key (EOA). The private key
+The account is a [Boop-powered](../contracts/src/boop/README.md) smart contract wallet controlled by a private key (EOA). The private key
 can be derived from a social account (Google, Twitter, Discord, ...) or come from a browser-injected
 wallet extension like Metamask. The social account solution is non-custodial via seamless 2FA.
 
@@ -30,11 +30,10 @@ native apps (Android, iOS, Unity, ...) is planned for the future.
 
 Our SDK currently has the following entrypoints:
 
+- [`@happy.tech/core`](https://www.npmjs.com/package/@happy.tech/core) contains most functionalities relating to the Happy Account, as well as tools for framework-agnostic integration
+- [`@happy.tech/book-sdk`](https://www.npmjs.com/package/@happy.tech/boop-sdk) for interacting with Boop
 - [`@happy.tech/react`](https://www.npmjs.com/package/@happy.tech/react) for applications built with React
 - [`@happy.tech/vue`](https://www.npmjs.com/package/@happy.tech/vue) for applications built with Vue
-- [`@happy.tech/core`](https://www.npmjs.com/package/@happy.tech/core) for any other web application (can be made to work with any framework)
-
-<!-- TODO provide link to Boop SDK -->
 
 Note that the React SDK also re-exports everything exposed by the vanilla JS SDK.
 
@@ -91,9 +90,9 @@ The Happy Account supports two types of signers:
 When using an injected wallet, the `happyProvider` forwards the request to the injected wallet.
 This is the traditional flow that web3 users are familiar with.
 
-> Because we support account abstraction through Boops, things might look a little bit different. Most wallets don't have
+> Because we support account abstraction through Boop, things might look a little bit different. Most wallets don't have
 > built-in account abstraction support at the UI level, and so the usual transaction request is replaced by a
-> signing request over a byte string representing a Boop. It's not ideal to not
+> signing request over a byte string representing a boop. It's not ideal to not
 > know what you are signing, and so we will display our own pre-confirmation popup before routing
 > the user to his injected wallet.
 

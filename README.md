@@ -5,7 +5,7 @@ HappyChain is a blockchain focused on fully onchain gaming.
 Our flagship feature is the Happy Account, a global account for all applications on HappyChain,
 implemented via a wallet that can be permissionlessly embedded into any app.
 
-The Happy Account enables secure asset self-custody and transaction signing via Boops (an EIP-4337 alternative) smart
+The Happy Account enables secure asset self-custody and transaction signing via Boop (an EIP-4337 alternative) smart
 account controlled by private key, either derived from a social account (Google, Twitter,
 Discord, ...) + seamless 2FA, or via a traditional wallet extension (Metamask, Rabby, etc).
 
