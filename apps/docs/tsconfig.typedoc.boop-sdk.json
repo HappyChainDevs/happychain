@@ -4,5 +4,8 @@
     ],
     "files": [],
     "references": [
-        { "path": "../../packages/boop-sdk/tsconfig.json" }
+        {
+            "path": "../../packages/boop-sdk/tsconfig.build.json"
+        }
+    ]
 }

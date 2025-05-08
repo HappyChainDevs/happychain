@@ -3,4 +3,8 @@ import { app } from "./server"
 import type { AppType } from "./server"
 
 export type { AppType }
-export { env, app }
+
+export default {
+    port: env.APP_PORT,
+    fetch: app.fetch,
+}

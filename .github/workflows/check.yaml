@@ -138,14 +138,14 @@ jobs:
             apps/randomness/build
           key: ${{ runner.os }}-build-randomness-${{ hashFiles('apps/randomness/**/*', '!apps/randomness/dist/**/*', '!apps/randomness/node_modules/**/*') }}
 
-      - name: Cache submitter package build
+      - name: Cache submitter app build
         uses: actions/cache@v4
-        id: cache-submitter-package-build
+        id: cache-submitter-app-build
         with:
           path: |
-            packages/submitter/dist
-            packages/submitter/build
-          key: ${{ runner.os }}-build-submitter-${{ hashFiles('packages/submitter/**/*', '!packages/submitter/dist/**/*', '!packages/submitter/node_modules/**/*') }}
+            apps/submitter/dist
+            apps/submitter/build
+          key: ${{ runner.os }}-build-submitter-app-${{ hashFiles('apps/submitter/**/*', '!apps/submitter/dist/**/*', '!apps/submitter/node_modules/**/*') }}
 
       - name: Cache boop-sdk package build
         uses: actions/cache@v4
@@ -155,15 +155,6 @@ jobs:
             packages/boop-sdk/dist
             packages/boop-sdk/build
           key: ${{ runner.os }}-build-boop-sdk-${{ hashFiles('packages/boop-sdk/**/*', '!packages/boop-sdk/dist/**/*', '!packages/boop-sdk/node_modules/**/*') }}
-
-      - name: Cache submitter app build
-        uses: actions/cache@v4
-        id: cache-submitter-app-build
-        with:
-          path: |
-            apps/submitter/dist
-            apps/submitter/build
-          key: ${{ runner.os }}-build-submitter-app-${{ hashFiles('apps/submitter/**/*', '!apps/submitter/dist/**/*', '!apps/submitter/node_modules/**/*') }}
 
       - name: Cache js demo build
         uses: actions/cache@v4
@@ -201,13 +192,12 @@ jobs:
         run: |
           if [[ "${{ steps.cache-core-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/core/dist.prod; fi
           if [[ "${{ steps.cache-react-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/react/dist.prod; fi
-          if [[ "${{ steps.cache-submitter-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/submitter/dist.prod; fi
+          if [[ "${{ steps.cache-submitter-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/submitter/dist.prod; fi
           if [[ "${{ steps.cache-boop-sdk-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/boop-sdk/dist.prod; fi
           if [[ "${{ steps.cache-txm-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/txm/dist.prod; fi
           if [[ "${{ steps.cache-vue-package-build.outputs.cache-hit }}" == "true" ]]; then touch packages/vue/dist.prod; fi
           if [[ "${{ steps.cache-iframe-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/iframe/dist.prod; fi
           if [[ "${{ steps.cache-randomness-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/randomness/dist.prod; fi
-          if [[ "${{ steps.cache-submitter-app-build.outputs.cache-hit }}" == "true" ]]; then touch apps/submitter/dist.prod; fi
           if [[ "${{ steps.cache-js-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/js/dist.prod; fi
           if [[ "${{ steps.cache-react-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/react/dist.prod; fi
           if [[ "${{ steps.cache-vue-demo-build.outputs.cache-hit }}" == "true" ]]; then touch demos/vue/dist.prod; fi

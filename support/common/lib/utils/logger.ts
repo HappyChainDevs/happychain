@@ -58,6 +58,9 @@ export class Logger {
      * By default, set to LogLevel.OFF so that no logs are printed.
      */
     private minLevel: LogLevel = LogLevel.OFF
+    get logLevel(): LogLevel {
+        return this.minLevel
+    }
 
     /**
      * Set of enabled tags for filtering log messages.
