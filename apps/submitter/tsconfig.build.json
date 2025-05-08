@@ -5,9 +5,8 @@
         "jsx": "react-jsx",
         "jsxImportSource": "hono/jsx",
         "paths": {
-            "#src/*": ["./src/*"]
-        },
-        "moduleResolution": "bundler"
+            "#lib/*": ["./lib/*"]
+        }
     },
-    "include": ["src", "./package.json"]
+    "include": ["lib", "./package.json"]
 }

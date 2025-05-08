@@ -1,23 +1,54 @@
 {
-    "name": "submitter",
-    "module": "dist/index.es.js",
-    "type": "module",
+    "name": "@happy.tech/submitter",
     "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "files": ["dist", "build", "package.json"],
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "imports": {
+        "#lib/*": "./lib/*"
+    },
+    "bin": {
+        "submitter-cli": "./dist/cli"
+    },
     "exports": {
+        "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.es.d.ts",
             "default": "./dist/index.es.js"
+        },
+        "./migrate": {
+            "types": "./dist/migrate.es.d.ts",
+            "default": "./dist/migrate.es.js"
+        },
+        "./client": {
+            "types": "./dist/client.es.d.ts",
+            "default": "./dist/client.es.js"
         }
     },
-    "dependencies": {
-        "@happy.tech/submitter": "workspace:0.0.0",
-        "@scalar/hono-api-reference": "^0.5.175"
+    "devDependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@types/bun": "^1.2.4"
     },
     "peerDependencies": {
-        "typescript": "^5"
+        "typescript": "^5.0.0"
     },
-    "devDependencies": {
-        "@types/bun": "^1.2.4",
-        "@happy.tech/configs": "workspace:0.1.0"
+    "dependencies": {
+        "@hono/zod-validator": "^0.4.3",
+        "@scalar/hono-api-reference": "^0.5.175",
+        "hono": "^4.7.2",
+        "hono-openapi": "^0.4.4",
+        "kysely": "^0.27.5",
+        "kysely-bun-sqlite": "^0.3.2",
+        "kysely-codegen": "^0.17.0",
+        "neverthrow": "^8.2.0",
+        "ox": "^0.6.12",
+        "viem": "^2.21.53",
+        "zod": "^3.23.8",
+        "zod-openapi": "^4.2.3"
     }
 }

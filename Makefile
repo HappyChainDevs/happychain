@@ -22,7 +22,7 @@ SDK_ONLY_PKGS := packages/core,packages/react,packages/vue
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 
 # packages needed to build the boop skd
-BOOP_SDK_PKGS := packages/submitter,packages/boop-sdk
+BOOP_SDK_PKGS := apps/submitter,packages/boop-sdk
 
 # packages needed to build the iframe
 IFRAME_PKGS := $(SHARED_PKGS),$(BOOP_SDK_PKGS),apps/iframe
@@ -40,7 +40,7 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/submitter
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
@@ -160,9 +160,8 @@ submitter.dev: setup.ts shared.dev
 .PHONY: submitter.dev
 
 submitter.build: shared.build
-	cd packages/submitter && make build;
-	cd packages/boop-sdk && make build;
 	cd apps/submitter && make build;
+	cd packages/boop-sdk && make build;
 .PHONY: submitter.build
 
 submitter.prod: submitter.build
@@ -553,8 +552,6 @@ select-iframe-testnet:
 select-chain-local:
 	$(call update_env,apps/submitter/.env,CHAIN_ID,31337)
 	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
-	$(call update_env,packages/submitter/.env,CHAIN_ID,31337)
-	$(call update_env,packages/submitter/.env,RPC_URL,http://localhost:8545)
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
@@ -569,8 +566,6 @@ select-chain-local:
 select-chain-testnet:
 	$(call update_env,apps/submitter/.env,CHAIN_ID,216)
 	$(call update_env,apps/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
-	$(call update_env,packages/submitter/.env,CHAIN_ID,216)
-	$(call update_env,packages/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,https://rpc.testnet.happy.tech)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,216)

@@ -1,7 +1,6 @@
 import { z } from "zod"
+import "zod-openapi/extend" // Adds .openapi(...) to zod so that we can document the API as we validate
 import { getDeployment } from "#lib/env/deployment"
-// Adds .openapi(...) to zod so that we can document the API as we validate
-import "zod-openapi/extend"
 import { appSchema } from "./schemas/app"
 import { deploymentsSchema } from "./schemas/deployments"
 import { gasSchema } from "./schemas/gas"
@@ -15,7 +14,7 @@ const envSchema = z
     .merge(gasSchema)
 
 /**
- * Provides accesss to filtered and validated environment variables, which define the configuration of the submitter.
+ * Provides access to filtered and validated environment variables, which define the configuration of the submitter.
  */
 export const env: Environment = envSchema.parse(process.env)
 export type Environment = z.infer<typeof envSchema>

@@ -3,7 +3,7 @@ name: Test Submitter Package
 on:
   pull_request:
     paths:
-      - 'packages/submitter/**'
+      - 'apps/submitter/**'
       - 'contracts/deployments/anvil/boop/**'
       - 'contracts/deployments/anvil/mocks/**'
     types:
@@ -54,5 +54,5 @@ jobs:
       
       - name: Test Submitter package
         run: |
-            cd packages/submitter
+            cd apps/submitter
             make test

@@ -233,8 +233,8 @@ export class BoopClient {
 
     #getPendingOutput(response: unknown): GetPendingOutput {
         const output = response as GetPendingOutput
-        if (output?.status !== GetPending.Success) return output
-
+        if (output.status !== GetPending.Success) return output
+        if (!("pending" in output)) return output
         return {
             ...output,
             pending: output.pending.map((pending) => ({
