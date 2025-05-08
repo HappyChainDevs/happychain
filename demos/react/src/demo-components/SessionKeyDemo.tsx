@@ -86,7 +86,7 @@ const SessionKeyDemo = () => {
 
             <div className="col-span-2 text-center mt-2">
                 <pre className="text-sm font-semibold">Current counter value</pre>
-                {counter ? (
+                {counter !== undefined ? (
                     <div className="text-4xl font-bold">{counter.toString()}</div>
                 ) : loading ? (
                     <Spinner className="animate-spin mx-auto" size="2.25rem" />
