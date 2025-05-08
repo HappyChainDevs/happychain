@@ -10,6 +10,7 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
+import { env } from "./env"
 import { type Repositories, repositories } from "./repositories"
 import gamesApi from "./routes/api/gamesRoutes"
 import guildsApi from "./routes/api/guildsRoutes"
@@ -61,7 +62,7 @@ app.get(
             },
             servers: [
                 {
-                    url: `http://localhost:${process.env.PORT || 4545}`,
+                    url: `http://localhost:${env.PORT || 4545}`,
                     description: "Local server",
                 },
             ],

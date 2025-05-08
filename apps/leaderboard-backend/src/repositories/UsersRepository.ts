@@ -203,7 +203,7 @@ export class UserRepository {
             .where("user_id", "=", userId)
             .where("wallet_address", "=", walletAddress)
             .execute()
-        
+
         return result.length > 0
     }
 
