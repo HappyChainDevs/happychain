@@ -18,12 +18,8 @@ export type UseSimulateBoopReturn = {
     simulationQueryKey: readonly unknown[]
 }
 
-export function useSimulateBoop({
-    userAddress,
-    tx,
-    enabled,
-}: UseSimulateBoopArgs): UseSimulateBoopReturn {
-    const simulationQueryKey = ["simulate-boop", userAddress, tx] as const
+export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArgs): UseSimulateBoopReturn {
+    const simulationQueryKey = [Symbol("simulate-boop"), userAddress, tx] as const
     const shouldQuery = !!userAddress && !!tx && enabled
 
     const {
