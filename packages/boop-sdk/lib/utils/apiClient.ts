@@ -28,7 +28,16 @@ export class ApiClient {
 
     async #request(method: HttpMethod, endpoint: string, { body, query }: ProcessedRequestParams): Promise<unknown> {
         const url = constructUrl(this.#baseUrl, endpoint, query)
-        const init = { method, headers: this.#headers, body: body ? JSON.stringify(body) : null }
+        
+        // set application/json header for POST requests only
+        const hasBody = method !== "GET" && body !== undefined && body !== null
+        const headers = hasBody ? { "Content-Type": "application/json" } : undefined
+      
+        const init: RequestInit = {
+          method,
+          headers,
+          body: hasBody ? JSON.stringify(body) : null,
+        }
         const response = await fetch(url, init)
         return await this.#handleResponse(response)
     }
