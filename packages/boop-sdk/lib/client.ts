@@ -1,4 +1,4 @@
-import { serializeBigInt } from "@happy.tech/common"
+import { type Address, serializeBigInt } from "@happy.tech/common"
 import {
     type BoopReceipt,
     type CreateAccountInput,
@@ -26,7 +26,7 @@ import { type GetNonceInput, type GetNonceOutput, getNonce } from "./utils/getNo
 export type BoopClientConfig = {
     baseUrl: string
     rpcUrl: string
-    entryPoint: `0x${string}`
+    entryPoint: Address
 }
 
 export class BoopClient {
