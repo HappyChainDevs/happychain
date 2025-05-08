@@ -24,7 +24,7 @@ export const ActivityView = () => {
             <div className="flex flex-col gap-3 items-center justify-center pt-6">
                 <ClockIcon className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
                 <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
-                    No transactions to display.
+                    No boops to display.
                 </p>
             </div>
         )
