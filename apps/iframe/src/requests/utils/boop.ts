@@ -109,7 +109,7 @@ export async function sendBoop(
         if (!boopClient) throw new Error("Boop client not initialized")
 
         if (!isSponsored) {
-            const output = await boopClient.simulate({ entryPoint, boop })
+            const output = simulatedBoopData ?? (await boopClient.simulate({ entryPoint, boop }))
             reqLogger.trace("boop/simulate output", output)
             if (output.status !== Onchain.Success) throw translateBoopError(output)
 
