@@ -34,7 +34,7 @@ export const boopsAtom = atom(
             return {
                 // Must spread here for Jotai to trigger rerender
                 ...stored,
-                [user.address]: boops.toSorted(sortBoops)
+                [user.address]: boops.toSorted(sortBoops),
             }
         })
     },
@@ -63,6 +63,8 @@ export interface PendingBoop extends IStoredBoop {
     error?: never
     boopReceipt?: never
     status: BoopStatus.Pending
+    nonceTrack?: UInt256
+    nonceValue?: UInt256
 }
 
 export interface ConfirmedBoop extends IStoredBoop {
@@ -85,7 +87,12 @@ export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
 
 // === State Mutators ==============================================================================
 
-export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">): void {
+export function addPendingBoop(
+    boop: Omit<PendingBoop, "createdAt" | "status"> & {
+        nonceTrack?: UInt256
+        nonceValue?: UInt256
+    },
+): void {
     const entry = {
         boopHash: boop.boopHash,
         value: boop.value,
@@ -174,23 +181,28 @@ function sortBoops(a: StoredBoop, b: StoredBoop): number {
     const isSuccessA = a.status === BoopStatus.Success
     const isSuccessB = b.status === BoopStatus.Success
 
-    // === pending boops ===
+    // === 1. Pending boops ===
     if (isPendingA || isPendingB) {
-        if (!isPendingA) return 1
-        if (!isPendingB) return -1
+        if (!isPendingA) return 1 // b is pending, a is not → b first
+        if (!isPendingB) return -1 // a is pending, b is not → a first
 
+        // Most recent arrival first
         let comp = b.createdAt - a.createdAt
         if (comp !== 0) return comp
 
-        const trackA = 0n
-        const trackB = 0n
+        // Smallest nonceTrack first (rare tie-breaker)
+        const trackA = a.nonceTrack ?? 0n
+        const trackB = b.nonceTrack ?? 0n
         comp = trackA > trackB ? 1 : trackA < trackB ? -1 : 0
         if (comp !== 0) return comp
 
-        return 0
+        // Highest nonceValue first
+        const nonceA = a.nonceValue ?? 0n
+        const nonceB = b.nonceValue ?? 0n
+        return nonceB > nonceA ? 1 : nonceB < nonceA ? -1 : 0
     }
 
-    // === confirmed boops ===
+    // === 2. Confirmed boops ===
     if (isSuccessA && isSuccessB) {
         const receiptA = (a.boopReceipt as ExecuteSuccess).receipt
         const receiptB = (b.boopReceipt as ExecuteSuccess).receipt
@@ -207,10 +219,10 @@ function sortBoops(a: StoredBoop, b: StoredBoop): number {
         return receiptB.nonceValue > receiptA.nonceValue ? 1 : receiptB.nonceValue < receiptA.nonceValue ? -1 : 0
     }
 
-    // === failed boops ===
+    // === 3. Failed boops ===
     if (isSuccessA) return -1
     if (isSuccessB) return 1
 
-    // fallback: failed vs failed — sort by createdAt
+    // fallback: failed vs failed — sort by failedAt (descending)
     return b.failedAt - a.failedAt
 }
