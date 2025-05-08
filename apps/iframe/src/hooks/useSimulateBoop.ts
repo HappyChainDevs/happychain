@@ -5,18 +5,44 @@ import { boopFromTransaction } from "#src/requests/utils/boop"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { boopClient } from "#src/state/boopClient"
 
-type SimulateBoopArgs = {
+export type UseSimulateBoopArgs = {
     userAddress: Address | undefined
-    tx: ValidRpcTransactionRequest
+    tx: ValidRpcTransactionRequest | undefined
+    enabled: boolean
 }
 
-export function useSimulateBoop({ userAddress, tx }: SimulateBoopArgs) {
-    return useQuery({
-        queryKey: ["simulate-boop", userAddress, tx],
+export type UseSimulateBoopReturn = {
+    simulatedBoopData: Awaited<ReturnType<typeof boopClient.simulate>> | undefined
+    isSimulationPending: boolean
+    isSimulationError: boolean
+    simulationQueryKey: readonly unknown[]
+}
+
+export function useSimulateBoop({
+    userAddress,
+    tx,
+    enabled,
+}: UseSimulateBoopArgs): UseSimulateBoopReturn {
+    const simulationQueryKey = ["simulate-boop", userAddress, tx] as const
+    const shouldQuery = !!userAddress && !!tx && enabled
+
+    const {
+        data: simulatedBoopData,
+        isPending: isSimulationPending,
+        isError: isSimulationError,
+    } = useQuery({
+        queryKey: simulationQueryKey,
+        enabled: shouldQuery,
         queryFn: async () => {
             const boop = await boopFromTransaction(userAddress!, tx!)
-            return await boopClient.simulate({ entryPoint, boop })
+            return boopClient.simulate({ entryPoint, boop })
         },
-        enabled: !!userAddress && !!tx,
     })
+
+    return {
+        simulatedBoopData,
+        isSimulationPending,
+        isSimulationError,
+        simulationQueryKey,
+    }
 }

@@ -90,13 +90,16 @@ export const EthSendTransaction = ({
     // ====================================== Boop Gas details ======================================
 
     const {
-        data: simulatedBoopData,
-        isPending: boopSimulationPending,
-        isError: boopSimulationError,
+        simulatedBoopData,
+        isSimulationPending: boopSimulationPending,
+        isSimulationError: boopSimulationError,
+        simulationQueryKey: boopQueryKey,
     } = useSimulateBoop({
         userAddress: user?.address,
         tx: validTx,
+        enabled: isValidTransaction,
     })
+    
 
     const formatted = useMemo(() => {
         if (!simulatedBoopData) return undefined
@@ -146,7 +149,7 @@ export const EthSendTransaction = ({
                             if (isConfirmActionDisabled) return
                             accept({ method, params: [validTx], extraData: simulatedBoopData })
                             void queryClient.invalidateQueries({
-                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey],
+                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey, boopQueryKey],
                             })
                         },
                     },
