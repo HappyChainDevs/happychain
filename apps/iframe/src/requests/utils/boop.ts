@@ -17,7 +17,7 @@ import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
-import { boopClient } from "#src/state/boopClient"
+import { getBoopClient } from "#src/state/boopClient"
 import { addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient"
@@ -97,6 +97,8 @@ export async function sendBoop(
 
     try {
         const boop = await boopFromTransaction(account, tx)
+        const boopClient = getBoopClient()
+        if (!boopClient) throw new Error("Boop client not initialized")
 
         if (!isSponsored) {
             const output = await boopClient.simulate({ entryPoint, boop })
