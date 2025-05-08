@@ -1,8 +1,8 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { requiresApproval } from "@happy.tech/wallet-common"
-import type { Address } from "viem/accounts"
 import { Permissions } from "#src/constants/permissions"
+import { checkAndChecksumAddress } from "#src/requests/utils/checks"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
 import { getChains, getCurrentChain } from "../state/chains"
@@ -52,7 +52,7 @@ export function checkIfRequestRequiresConfirmation(
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
-            const targetAddress = payload.params[0] as Address
+            const targetAddress = checkAndChecksumAddress(payload.params[0])
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
             const user = getUser()
 

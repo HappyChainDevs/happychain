@@ -1,5 +1,5 @@
 /**
- * Various validatation & assertion functions for use in request handlers.
+ * Various validation & assertion functions for use in request handlers.
  */
 
 import { type Address, parseBigInt } from "@happy.tech/common"
@@ -11,14 +11,15 @@ import {
     EIP1474InvalidInput,
     permissionsLists,
 } from "@happy.tech/wallet-common"
-import { type RpcTransactionRequest, isAddress, isHex } from "viem"
+import { checksum } from "ox/Address"
+import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex } from "viem"
 import { getAuthState } from "#src/state/authState"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
- * @throws {EIP1193UnauthorizedError}
+ * @throws EIP1193UnauthorizedError
  */
 export function checkAuthenticated() {
     if (getAuthState() !== AuthState.Connected) throw new EIP1193UnauthorizedError()
@@ -65,20 +66,34 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
 }
 
 /**
+ * Checks the validity of the asset address and checksums it.
+ * @throws EIP1474InvalidInput if the asset address is invalid
+ */
+export function checkedWatchedAsset(params: WatchAssetParameters) {
+    return {
+        type: params.type,
+        options: {
+            ...params.options,
+            address: checkAndChecksumAddress(params.options.address),
+        },
+    }
+}
+
+/**
  * Checks that the address is valid, or throws.
- * @throws EIP1174InvalidInput if the address is invalid
+ * @throws EIP1474InvalidInput if the address is invalid
  */
 export function checkAddress(address: string): asserts address is Address {
     if (!isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
 }
 
 /**
- * Returns the address if it is a valid Ethereum address.
+ * Returns the checksumed address if it is a valid Ethereum address.
  * @throws EIP1474InvalidInput if the input is not a valid address
  */
-export function checkedAddress(address: string): Address {
+export function checkAndChecksumAddress(address: string): Address {
     checkAddress(address)
-    return address
+    return checksum(address)
 }
 
 /**
