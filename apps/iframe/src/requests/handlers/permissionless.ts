@@ -3,7 +3,7 @@ import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } 
 import { isAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { sendBoop } from "#src/requests/utils/boop"
-import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
 import { checkSessionKeyAuthorized, getSessionKey, revokeSessionKeys } from "#src/requests/utils/sessionKeys"
 import {
@@ -96,7 +96,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             const user = getCheckedUser()
-            const target = checkedAddress(request.payload.params[0])
+            const target = checkAndChecksumAddress(request.payload.params[0])
             checkSessionKeyAuthorized(app, target)
             const sessionKey = getSessionKey(user.address, target)
             return privateKeyToAccount(sessionKey).address

@@ -1,7 +1,7 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
 import { sendBoop } from "#src/requests/utils/boop"
-import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
 import { installNewSessionKey } from "#src/requests/utils/sessionKeys"
 import { eoaSigner } from "#src/requests/utils/signers"
@@ -62,7 +62,8 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
         }
 
         case "wallet_watchAsset": {
-            return addWatchedAsset(user.address, request.payload.params)
+            const params = checkedWatchedAsset(request.payload.params)
+            return addWatchedAsset(user.address, params)
         }
 
         case HappyMethodNames.LOAD_ABI: {
@@ -71,7 +72,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // If this lands in the approved handler, we know there are no session keys for the target address.
-            const target = checkedAddress(request.payload.params[0])
+            const target = checkAndChecksumAddress(request.payload.params[0])
             return installNewSessionKey(app, user.address, target)
         }
 

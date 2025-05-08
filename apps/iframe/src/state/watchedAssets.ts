@@ -1,6 +1,6 @@
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import { type Address, type WatchAssetParameters, isAddress } from "viem"
+import type { Address, WatchAssetParameters } from "viem"
 import { StorageKey } from "#src/services/storage"
 
 export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>
@@ -33,20 +33,16 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
  * If the asset does not already exist for the address, it is added.
  * Does nothing if the asset is already in the list.
  */
-export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): boolean {
-    if (!isAddress(newAsset.options.address)) {
-        throw new Error("Invalid asset address format")
-    }
-
+export function addWatchedAsset(userAddress: Address, newAsset: WatchAssetParameters): boolean {
     store.set(watchedAssetsAtom, (prevAssets) => {
-        const assetsForAddress = prevAssets[address] || []
+        const assetsForAddress = prevAssets[userAddress] || []
         const assetExists = assetsForAddress.some((asset) => asset.options.address === newAsset.options.address)
 
         return assetExists
             ? prevAssets
             : {
                   ...prevAssets,
-                  [address]: [...assetsForAddress, newAsset],
+                  [userAddress]: assetsForAddress.concat(newAsset),
               }
     })
 
@@ -57,11 +53,7 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
  * Removes a specific asset from the watched assets list by its contract address for a specific user.
  * Returns `true` if the asset was found and removed, or `false` if it was not in the list.
  */
-export function removeWatchedAsset(assetAddress: Address, userAddress?: Address): boolean {
-    if (!userAddress) {
-        console.warn("User address not found")
-        return false
-    }
+export function removeWatchedAsset(userAddress: Address, assetAddress: Address): boolean {
     let assetRemoved = false
     store.set(watchedAssetsAtom, (prevAssets) => {
         const assetsForAddress = prevAssets[userAddress] || []

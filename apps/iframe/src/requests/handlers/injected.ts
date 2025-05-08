@@ -6,7 +6,7 @@ import {
     type ProviderMsgsFromApp,
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
-import { checkedAddress, checkedTx } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
 import { sendToInjectedClient, sendToPublicClient } from "#src/requests/utils/sendToClient"
 import {
     getSessionKey,
@@ -83,7 +83,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             checkUser(user)
-            const target = checkedAddress(request.payload.params[0])
+            const target = checkAndChecksumAddress(request.payload.params[0])
 
             let isAuthorized = isSessionKeyAuthorized(app, target)
             // In dev, the validator contract may change relatively often, making old keys
@@ -123,7 +123,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "eth_requestAccounts": {
-            if (!user) return []
+            checkUser(user)
             const resp = await sendToInjectedClient(request.payload)
 
             // wallet not connected, we will revoke permissions (they should already be revoked)
@@ -194,7 +194,9 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_watchAsset": {
-            return user ? addWatchedAsset(user.address, request.payload.params) : false
+            checkUser(user)
+            const params = checkedWatchedAsset(request.payload.params)
+            return addWatchedAsset(user.address, params)
         }
 
         case HappyMethodNames.LOAD_ABI: {
