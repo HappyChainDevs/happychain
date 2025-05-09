@@ -92,6 +92,26 @@ describe("PermissionsService", () => {
                     const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(true)
                 })
+
+                it("should not change state if same sessionKey target is granted multiple times", () => {
+                    // Start Empty
+                    const zeroState = getPermissions(appURL, PermissionNames.SESSION_KEY)
+                    expect(zeroState.length).toBe(0)
+
+                    // Add the same target multiple times
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    const firstState = getPermissions(appURL, PermissionNames.SESSION_KEY)
+                    expect(firstState.length).toBe(1)
+                    expect(firstState[0].caveats.length).toBe(1)
+
+                    // Add a new target
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0xbcd" } })
+                    const secondState = getPermissions(appURL, PermissionNames.SESSION_KEY)
+                    expect(secondState.length).toBe(1)
+                    expect(secondState[0].caveats.length).toBe(2)
+                })
             })
 
             describe("without user", () => {

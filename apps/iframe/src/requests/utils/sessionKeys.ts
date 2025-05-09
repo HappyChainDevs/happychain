@@ -74,8 +74,6 @@ async function installSessionKeyExtension(account: Address, target?: Address, se
 
 async function registerSessionKey(account: Address, target: Address, sessionKeyAddress: Address) {
     sessionKeyLogger.trace("registerSessionKey", { account, target, sessionKeyAddress })
-    const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
     return await sendBoop({
         account,
         signer: eoaSigner,
@@ -193,9 +191,7 @@ export async function installNewSessionKey(app: AppURL, account: Address, target
  * Authorizes & stores the session for the target address.
  */
 export function authorizeSessionKey(app: AppURL, account: Address, target: Address, sessionKey: Hex) {
-    grantPermissions(app, {
-        [PermissionNames.SESSION_KEY]: { target },
-    })
+    grantPermissions(app, { [PermissionNames.SESSION_KEY]: { target } })
     const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
     storage.set(StorageKey.SessionKeys, {
         ...storedSessionKeys,

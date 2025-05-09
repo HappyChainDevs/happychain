@@ -16,28 +16,23 @@ const WalletCallsDemo = () => {
     }
 
     async function signMessage(message: string) {
-        if (!user) {
-            toast.error("no user connected")
-            return
+        try {
+            if (!user) throw new Error("No user is connected")
+
+            setSignatureResult("")
+
+            const signature = await walletClient.signMessage({ message })
+
+            const valid = await publicClient.verifyMessage({ address: user?.controllingAddress, message, signature })
+
+            if (!valid) throw new Error("Invalid Signature")
+
+            toast.success(`Message Signed by Wallet: ${message}`)
+            setSignatureResult(signature)
+        } catch (e) {
+            toast.error((e as Error)?.message || "Error signing message")
+            setSignatureResult("")
         }
-
-        setSignatureResult("")
-
-        const signature = await walletClient.signMessage({ message })
-
-        const valid = await publicClient.verifyMessage({
-            address: user?.controllingAddress,
-            message,
-            signature,
-        })
-
-        if (!valid) {
-            toast.error("Invalid Signature")
-            return
-        }
-
-        toast.success(`Message Signed by Wallet: ${message}`)
-        setSignatureResult(signature)
     }
 
     async function signMessageWithDelay(message: string) {

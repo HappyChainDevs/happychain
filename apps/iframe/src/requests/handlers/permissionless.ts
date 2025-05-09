@@ -103,7 +103,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
         /* // FOR TESTING
            // eth_getBlockByNumber does not need handling, it gets forwarded to the public client by default.
            // But uncommenting this block is helpful in testing error propagation behaviour in three scenarios:
-           // - arbirary errors
+           // - arbitrary errors
            // - our own standard JSON-RPC errors
            // - Viem's own JSON-RPC errors
         case "eth_getBlockByNumber":
