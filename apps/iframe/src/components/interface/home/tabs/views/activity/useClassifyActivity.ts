@@ -87,7 +87,7 @@ function _decodeERC20TransferLog(log: Log) {
  * @param boop - The user operation to classify
  * @returns The classified activity details
  */
-function classifyUserOperation(boop: StoredBoop): ActivityDetails {
+function classifyBoop(boop: StoredBoop): ActivityDetails {
     if (boop?.status !== BoopStatus.Success || boop.boopReceipt.status !== Onchain.Success)
         return { type: OperationType.Failed }
     const logs = boop.boopReceipt.receipt.logs
@@ -115,12 +115,12 @@ function classifyUserOperation(boop: StoredBoop): ActivityDetails {
 }
 
 /**
- * Classifies a user operation and fetches additional ERC20 details if needed.
+ * Classifies a boop and fetches additional ERC20 details if needed.
  * @param transaction - The user operation/transaction to classify
  * @returns Classified activity with token details (if applicable)
  */
 export function useClassifyActivity(boop: StoredBoop): ActivityDetails {
-    const activity = classifyUserOperation(boop)
+    const activity = classifyBoop(boop)
 
     const { data: tokenDetails } = useReadContracts({
         contracts:
