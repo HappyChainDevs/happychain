@@ -1,6 +1,7 @@
-import { ClockIcon } from "@phosphor-icons/react"
+import { ClockIcon, RowsIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { historyAtom } from "#src/state/boopHistory"
+import { getCurrentChain } from "#src/state/chains"
 import { userAtom } from "#src/state/user"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import { BoopEntry } from "./BoopEntry"
@@ -14,36 +15,36 @@ import BoopEntrySkeleton from "./BoopEntrySkeleton"
  */
 export const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const boops = useAtomValue(historyAtom)
+    const history = useAtomValue(historyAtom)
+    const currentChain = getCurrentChain()
+    const blockExplorerUrl = currentChain.blockExplorerUrls?.[0] ?? ""
 
     if (!user) return <UserNotFoundWarning />
 
-    if (!boops.length) {
+    if (!history.length) {
         return (
             <div className="flex flex-col gap-3 items-center justify-center pt-6">
                 <ClockIcon className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
-                <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
-                    No boops to display.
-                </p>
+                <p className="text-xs italic text-base-content/70 dark:text-base-content/80">No boops to display.</p>
             </div>
         )
     }
-    const nonPendingUserOps = userOps.filter((op) => op.status !== UserOpStatus.Pending)
+    const settledHistory = history.filter((boop) => !!boop.status)
 
     return (
         <div className="grid gap-4">
-            {boops.map((boop) =>
+            {history.map((boop) =>
                 boop.status ? (
                     <BoopEntry key={`boop_confirmed_${boop.boopHash}`} entry={boop} />
                 ) : (
                     <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
                 ),
             )}
-            {nonPendingUserOps.length >= 50 && (
+            {settledHistory.length >= 10 && (
                 <div className="flex flex-row items-center justify-center text-xs gap-1">
-                    <Rows size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
+                    <RowsIcon size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
                     <a
-                        href={`${blockExplorerUrl}/address/${user.address}?tab=user_ops`}
+                        href={`${blockExplorerUrl}/address/${user.address}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="View more on explorer"
