@@ -17,9 +17,7 @@ const historyRecordAtom = atomWithStorage<Record<Address, HistoryEntry[]>>(
     StorageKey.Boops,
     {},
     createBigIntStorage(),
-    {
-        getOnInit: true,
-    },
+    { getOnInit: true },
 )
 
 /** Boop history for the current user. */
@@ -32,7 +30,7 @@ export const historyAtom = atom(
     (get, set, history: HistoryEntry[]) => {
         const user = get(userAtom)
         if (!user) return
-        set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: history.toSorted(compareEntries) }))
+        set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: trimAndSortEntries(history) }))
     },
 )
 
@@ -135,4 +133,8 @@ function compareEntries(a: HistoryEntry, b: HistoryEntry): number {
 
     // 4. Sort by nonceValue
     return Number(b.nonceValue - a.nonceValue) // higher nonceValue = earlier
+}
+
+function trimAndSortEntries(entries: HistoryEntry[]): HistoryEntry[] {
+    return entries.toSorted(compareEntries).slice(0, 50)
 }
