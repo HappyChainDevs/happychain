@@ -93,6 +93,21 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             // If this is permissionless, we're already on the right chain so we simply succeed.
             return null
 
+        case "wallet_getCapabilities": {
+            checkAuthenticated()
+            checkedAddress(request.payload.params?.[0])
+
+            const currentChainId = getCurrentChain().chainId
+
+            const capabilities: WalletCapabilities = {
+                [currentChainId]: Object.fromEntries(
+                    Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
+                ),
+            }
+
+            return capabilities
+        }
+
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             getCheckedUser()
             const target = checkAndChecksumAddress(request.payload.params[0])
