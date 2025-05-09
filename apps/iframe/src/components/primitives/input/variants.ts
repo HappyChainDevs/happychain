@@ -7,7 +7,7 @@ export const recipeTextInput = cva(
         "text-start",
         "text-neutral-12/90",
         // User activity: focus
-        "focus:outline-none focus:ring-1 focus:ring-opacity-10",
+        "focus:outline-none content-focused:ring-1",
         // Behaviour: disabled
         "[&:is([aria-disabled=true],:disabled)]:opacity-[.35] [&:is([aria-disabled=true],:disabled)]:dark:opacity-[.50] [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed [&:is([aria-disabled=true],:disabled)]:select-none",
         // Behaviour: readonly for inputs & textareas
@@ -37,6 +37,16 @@ export const recipeTextInput = cva(
                     "[&:not([type=search])]:ps-3",
                     // Any text input that isn't a combobox and that shows a placeholder (aka empty state, user didn't type anything yet)
                     "[&:is(:not(:not(:placeholder-shown)),:not([role=combobox]))]:pe-3",
+                ],
+                // NOTE(norswap): hackfix to make recipient input have same font-size as amount on send page
+                small: [
+                    // Input
+                    "text-xs",
+                    "min-h-9",
+                    "px-[1ex]",
+                    "py-[0.25em]",
+                    "border",
+                    "rounded-md",
                 ],
             },
         },
