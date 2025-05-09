@@ -47,7 +47,10 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
 
             if (!event) logger.warn("Couldn't find `Deployed` event in receipt")
             if (event?.account !== predictedAddress)
-                logger.error("Predicted and deployed addresses don't match", event?.account, predictedAddress)
+                logger.error("Predicted and deployed addresses don't match", {
+                    predicted: predictedAddress,
+                    deployed: event?.account,
+                })
 
             const status = CreateAccount.Success
             const address = (event?.account ?? predictedAddress) as Address

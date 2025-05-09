@@ -56,5 +56,5 @@ export const waitForReceiptDescription = describeRoute({
     },
 })
 
-export const waitForReceiptParamValidation = zv("param", paramSchema)
-export const waitForReceiptQueryValidation = zv("query", querySchema)
+export const waitForReceiptParamValidation = zv("param", paramSchema.strict())
+export const waitForReceiptQueryValidation = zv("query", querySchema.strict())

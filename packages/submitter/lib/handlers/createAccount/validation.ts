@@ -55,4 +55,4 @@ export const createAccountDescription = describeRoute({
     },
 })
 
-export const createAccountValidation = zv("json", inputSchema)
+export const createAccountValidation = zv("json", inputSchema.strict())

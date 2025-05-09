@@ -44,4 +44,4 @@ export const simulateDescription = describeRoute({
         },
     },
 })
-export const simulateValidation = zv("json", inputSchema)
+export const simulateValidation = zv("json", inputSchema.strict())

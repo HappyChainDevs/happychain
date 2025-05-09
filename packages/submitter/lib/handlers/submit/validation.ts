@@ -44,4 +44,4 @@ export const submitDescription = describeRoute({
         },
     },
 })
-export const submitValidation = zv("json", inputSchema)
+export const submitValidation = zv("json", inputSchema.strict())
