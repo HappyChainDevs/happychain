@@ -223,19 +223,28 @@ export async function removeSessionKeys(account: Address, targets: Address[]) {
     })
 }
 
-export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<boolean> {
+/**
+ * Revokes all selected session key permissions granted to a specific dapp (`dappUrl`)
+ * for the currently active user across a list of target contracts.
+ *
+ * This function performs the following steps:
+ * 1. Retrieves the current user and list of target contracts.
+ * 2. If either is missing, it exits early.
+ * 3. Removes the session keys associated with those contracts from in-memory storage.
+ * 4. Revokes the corresponding permissions from local storage.
+ * 5. Updates the local session key store by removing entries tied to the revoked contracts.
+ *
+ * This ensures a full cleanup of session key authorization when navigating away
+ * from dapp-specific contexts, such as a permission management screen.
+ */
+export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<void> {
     const targetContracts = getTargetContracts()
-    if (!targetContracts.length) {
-        console.log("[revokeSessionKeyPermissions] No target contracts provided / available")
-        return true
-    }
+    if (!targetContracts.length || targetContracts.length === 0) return
 
     try {
         const user = getUser()
-
         if (!user) {
-            console.log("[revokeSessionKeyPermissions] Missing chain or user data")
-            return false
+            throw new Error("no user defined")
         }
 
         removeSessionKeys(user.address, targetContracts)
@@ -257,10 +266,7 @@ export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<bool
                 [user!.address]: userSessionKeys,
             })
         }
-
-        return true
     } catch (error) {
         console.error(error)
-        return false
     }
 }

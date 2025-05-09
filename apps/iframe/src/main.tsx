@@ -1,7 +1,7 @@
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 
-import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router"
+import { RouterProvider, createRouter } from "@tanstack/react-router"
 
 import { HappyAccountProvider } from "./providers/HappyAccountProvider"
 // Import the generated route tree
@@ -17,12 +17,8 @@ import { queryClient } from "./tanstack-query/config"
 import { logger } from "./utils/logger"
 import { config } from "./wagmi/config"
 
-const memoryHistory = createMemoryHistory({
-    initialEntries: ["/embed"],
-})
-
 // Create a new router instance
-const router = createRouter({ routeTree, history: memoryHistory })
+const router = createRouter({ routeTree })
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {

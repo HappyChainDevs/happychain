@@ -36,7 +36,7 @@ export const walletOpenSignalAtom = atom(false)
 export const { getValue: getWalletOpenSignal, setValue: setWalletOpenSignal } = accessorsFromAtom(walletOpenSignalAtom)
 
 /**
- * This atom stores targetb contract addresses selected by
+ * This atom stores target contract addresses selected by
  * users for session key revocation operations.
  */
 export const targetContractsAtom = atom<Address[]>([])
