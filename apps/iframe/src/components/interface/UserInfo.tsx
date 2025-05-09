@@ -49,7 +49,6 @@ const UserInfo = () => {
                         referrerPolicy="no-referrer"
                     />
                 </div>
-
                 <div className="rounded-full absolute bottom-0 end-0 bg-base-200">
                     <img className="h-3 w-auto" src={activeProvider.icon} alt={activeProvider.name} />
                 </div>

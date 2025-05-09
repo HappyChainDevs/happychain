@@ -54,7 +54,7 @@ export class BoopReceiptService {
             const fromEntryPoint = log.address.toLowerCase() === deployment.EntryPoint.toLowerCase()
             if (fromEntryPoint && log.topics[0] === BOOP_SUBMITTED_SELECTOR) {
                 const decodedLog = decodeEvent(log)
-                if (!decodedLog) throw new Error("Found BoopSumitted event but could not decode")
+                if (!decodedLog) throw new Error("Found BoopSubmitted event but could not decode")
                 const decodedHash = computeBoopHash(env.CHAIN_ID, decodedLog.args as Boop)
                 if (decodedHash === boopHash) {
                     return filteredLogs
@@ -71,12 +71,12 @@ export class BoopReceiptService {
         return []
     }
 
-    // TODO horrible return type conflict here
-    async insertOrThrow(receipt: BoopReceipt) {
+    // TODO: horrible return type conflict here. DB BoopReceipt is not equal to Spec BoopReceipt
+    async insertOrThrow(receipt: BoopReceipt): Promise<{ id: number | null }> {
         const { txReceipt, ...rest } = receipt
         const receiptToInsert = { ...rest, transactionHash: txReceipt.transactionHash }
         const data = await this.boopReceiptRepository.insert(receiptToInsert)
         if (!data) throw new SubmitterError("Failed to insert receipt")
-        return data
+        return { id: data.id }
     }
 }
