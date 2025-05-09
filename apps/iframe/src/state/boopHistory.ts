@@ -75,7 +75,6 @@ export function addPendingBoop(boopHash: Hash, boop: Boop): void {
     }
 
     const entry = {
-        // status: BoopStatus.Pending, // TODO
         boopHash,
         value: boop.value,
         nonceTrack: boop.nonceTrack,
