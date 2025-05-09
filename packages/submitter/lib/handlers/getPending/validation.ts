@@ -33,4 +33,4 @@ export const getPendingDescription = describeRoute({
         },
     },
 })
-export const getPendingValidation = zv("param", inputSchema)
+export const getPendingValidation = zv("param", inputSchema.strict())

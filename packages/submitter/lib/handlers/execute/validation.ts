@@ -43,4 +43,4 @@ export const executeDescription = describeRoute({
         },
     },
 })
-export const executeValidation = zv("json", inputSchema)
+export const executeValidation = zv("json", inputSchema.strict())

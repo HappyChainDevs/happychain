@@ -51,4 +51,4 @@ export const getStateDescription = describeRoute({
         },
     },
 })
-export const getStateValidation = zv("param", inputSchema)
+export const getStateValidation = zv("param", inputSchema.strict())
