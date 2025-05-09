@@ -11,8 +11,10 @@ import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } fro
 import { sendBoop } from "#src/requests/utils/boop"
 import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
-import { getPermissions, grantPermissions } from "#src/state/permissions"
+import { getTargetContracts, setTargetContracts } from "#src/state/interfaceState.ts"
+import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
+import { getUser } from "#src/state/user.ts"
 import { getWalletClient } from "#src/state/walletClient.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { sessionKeyLogger } from "#src/utils/logger"
@@ -200,4 +202,65 @@ export function authorizeSessionKey(app: AppURL, account: Address, target: Addre
             [target]: sessionKey,
         },
     })
+}
+
+export async function removeSessionKeys(account: Address, targets: Address[]) {
+    sessionKeyLogger.trace("removeSessionKeys", { account, targets })
+    const walletClient = getWalletClient()
+    if (!walletClient) throw new EIP1193DisconnectedError()
+    await sendBoop({
+        account,
+        signer: eoaSigner,
+        tx: {
+            to: sessionKeyValidator,
+            from: account,
+            data: encodeFunctionData({
+                abi: sessionKeyValidatorAbi,
+                functionName: "removeSessionKeys",
+                args: [targets],
+            }),
+        },
+    })
+}
+
+export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<boolean> {
+    const targetContracts = getTargetContracts()
+    if (!targetContracts.length) {
+        console.log("[revokeSessionKeyPermissions] No target contracts provided / available")
+        return true
+    }
+
+    try {
+        const user = getUser()
+
+        if (!user) {
+            console.log("[revokeSessionKeyPermissions] Missing chain or user data")
+            return false
+        }
+
+        removeSessionKeys(user.address, targetContracts)
+        const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+        const userSessionKeys = { ...storedSessionKeys[user.address] }
+
+        for (const contract of targetContracts) {
+            // remove permissions + session key entries from local storage
+            const permissionRequest = {
+                [PermissionNames.SESSION_KEY]: {
+                    target: contract,
+                },
+            }
+            revokePermissions(dappUrl, permissionRequest)
+            setTargetContracts([])
+            delete userSessionKeys[contract]
+            storage.set(StorageKey.SessionKeys, {
+                ...storedSessionKeys,
+                [user!.address]: userSessionKeys,
+            })
+        }
+
+        return true
+    } catch (error) {
+        console.error(error)
+        return false
+    }
 }

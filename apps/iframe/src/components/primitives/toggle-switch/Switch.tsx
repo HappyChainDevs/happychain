@@ -62,6 +62,7 @@ const recipeToggle = cva(
 type SwitchVariantsProps = VariantProps<typeof recipeToggle>
 
 interface SwitchProps extends ComponentProps<typeof ArkSwitch.Root>, SwitchVariantsProps {
+    className: string
     switchLabel: React.ReactNode
 }
 

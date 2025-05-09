@@ -16,7 +16,7 @@ export const Tab = ({ title, isDataLoading }: TabProps) => {
         >
             <div className="flex flex-row items-center gap-2">
                 {title}
-                {isDataLoading && <Spinner className="animate-spin text-[0.875em]" />}
+                {isDataLoading && <Spinner className="animate-spin text-[0.875em]" weight="regular" />}
             </div>
         </Tabs.Trigger>
     )

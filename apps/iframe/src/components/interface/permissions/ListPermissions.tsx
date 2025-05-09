@@ -26,6 +26,7 @@ const CaveatControl = ({ caveat, dappUrl, permissionKey }: CaveatControlProps) =
             return null
     }
 }
+
 interface ListItemProps {
     permission: WalletPermission
 }
@@ -48,7 +49,6 @@ const ListItem = ({ permission }: ListItemProps) => {
                         }, [] as Address[])
                         setTargetContracts(caveatAddresses)
 
-                        // revoke permissions locally, user clicking back button will handle onchain revocations
                         revokePermissions(permission.invoker as AppURL, permission.parentCapability)
                     } else {
                         setTargetContracts([])
