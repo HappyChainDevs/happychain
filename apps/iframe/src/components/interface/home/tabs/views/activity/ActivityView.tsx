@@ -40,7 +40,8 @@ export const ActivityView = () => {
                     <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
                 ),
             )}
-            {settledHistory.length >= 10 && (
+
+            {settledHistory.length >= 50 && (
                 <div className="flex flex-row items-center justify-center text-xs gap-1">
                     <RowsIcon size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
                     <a
