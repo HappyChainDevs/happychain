@@ -1,6 +1,6 @@
 import { type BoopReceipt, Onchain } from "@happy.tech/boop-sdk"
 import { binaryPartition, createBigIntStorage } from "@happy.tech/common"
-import type { Address, Hash } from "@happy.tech/common"
+import type { Address, Hash, UInt256 } from "@happy.tech/common"
 import { atom } from "jotai"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
@@ -57,14 +57,14 @@ interface IStoredBoop {
     failedAt?: number
     boopReceipt?: BoopReceipt
     status: BoopStatus
+    nonceTrack: UInt256
+    nonceValue: UInt256
 }
 export type StoredBoop = PendingBoop | ConfirmedBoop | FailedBoop
 export interface PendingBoop extends IStoredBoop {
     error?: never
     boopReceipt?: never
     status: BoopStatus.Pending
-    nonceTrack?: UInt256
-    nonceValue?: UInt256
 }
 
 export interface ConfirmedBoop extends IStoredBoop {
@@ -87,17 +87,14 @@ export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
 
 // === State Mutators ==============================================================================
 
-export function addPendingBoop(
-    boop: Omit<PendingBoop, "createdAt" | "status"> & {
-        nonceTrack?: UInt256
-        nonceValue?: UInt256
-    },
-): void {
+export function addPendingBoop(boop: Omit<PendingBoop, "createdAt" | "status">): void {
     const entry = {
         boopHash: boop.boopHash,
         value: boop.value,
         createdAt: Date.now(),
         status: BoopStatus.Pending,
+        nonceTrack: boop.nonceTrack,
+        nonceValue: boop.nonceValue,
     } satisfies PendingBoop
 
     const accountBoops = store.get(boopsAtom) || []
@@ -118,7 +115,7 @@ export function markBoopAsSuccess(receipt: BoopReceipt): void {
         status: BoopStatus.Success,
         confirmedAt: Date.now(),
         boopReceipt: receipt,
-    } satisfies Omit<ConfirmedBoop, "boopHash" | "createdAt" | "value">)
+    } satisfies Omit<ConfirmedBoop, "boopHash" | "createdAt" | "value" | "nonceTrack" | "nonceValue">)
 }
 
 export function markBoopAsFailure(
@@ -132,7 +129,7 @@ export function markBoopAsFailure(
         status: BoopStatus.Failure,
         failedAt: Date.now(),
         error,
-    } satisfies Omit<FailedBoop, "boopHash" | "createdAt" | "value">)
+    } satisfies Omit<FailedBoop, "boopHash" | "createdAt" | "value" | "nonceTrack" | "nonceValue">)
 }
 
 function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
@@ -145,7 +142,7 @@ function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
         return
     }
     const updated = { ...existing, ...update } as StoredBoop
-    store.set(boopsAtom, [...rest, updated])
+    store.set(boopsAtom, [...rest, updated].toSorted(sortBoops))
 }
 
 /**
@@ -158,30 +155,44 @@ function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
  *    - Sorted by `createdAt` (descending), so newest are shown first.
  *    - Tie-breakers like `nonceTrack` and `nonceValue` are ignored since they are not available for pending boops.
  *
- * 2. **Confirmed (Success) Boops come next**:
+ * 2. **Confirmed (Success) Boops / Failed Boops come next**:
  *    - Sorted by `blockNumber` (descending) to show the most recent block confirmations first.
  *    - Tie-breaker: `transactionIndex` (descending) to order within a block.
  *    - Tie-breaker: `nonceTrack` (ascending) to provide deterministic ordering across parallel nonce lanes.
  *    - Final tie-breaker: `nonceValue` (descending) to show highest nonce first within the same track.
  *
- * 3. **Failed Boops come last**:
- *    - Positioned below both Pending and Confirmed boops.
- *    - Sorted by `failedAt` (descending) to reflect most recent failures first.
- *
  * This ordering ensures:
  * - Pending Boops surface to the top for active user feedback.
- * - Confirmed Boops follow, sequenced clearly by their onchain status.
- * - Failed Boops are demoted but still visible in a useful reverse-chronological view.
+ * - Confirmed / Failed Boops follow, sequenced clearly by their onchain status.
  *
  * Intended for use with `Array.prototype.toSorted(sortBoops)` to preserve immutability and state integrity.
  */
 function sortBoops(a: StoredBoop, b: StoredBoop): number {
-    const isPendingA = a.status === BoopStatus.Pending
-    const isPendingB = b.status === BoopStatus.Pending
-    const isSuccessA = a.status === BoopStatus.Success
-    const isSuccessB = b.status === BoopStatus.Success
+    // --- Helper functions to extract properties with less repetition ---
+    function getBlockNumber(boop: StoredBoop): bigint {
+        return boop.status === BoopStatus.Success ? (boop as ConfirmedBoop).boopReceipt.txReceipt.blockNumber : 0n
+    }
+
+    function getTxIndex(boop: StoredBoop): number {
+        return boop.status === BoopStatus.Success ? (boop as ConfirmedBoop).boopReceipt.txReceipt.transactionIndex : 0
+    }
+
+    function getNonceTrack(boop: StoredBoop): bigint {
+        if (boop.status === BoopStatus.Pending) return (boop as PendingBoop).nonceTrack
+        if (boop.status === BoopStatus.Success) return (boop as ConfirmedBoop).boopReceipt.nonceTrack
+        return (boop as FailedBoop).nonceTrack
+    }
+
+    function getNonceValue(boop: StoredBoop): bigint {
+        if (boop.status === BoopStatus.Pending) return (boop as PendingBoop).nonceValue
+        if (boop.status === BoopStatus.Success) return (boop as ConfirmedBoop).boopReceipt.nonceValue
+        return (boop as FailedBoop).nonceValue
+    }
 
     // === 1. Pending boops ===
+    const isPendingA = a.status === BoopStatus.Pending
+    const isPendingB = b.status === BoopStatus.Pending
+
     if (isPendingA || isPendingB) {
         if (!isPendingA) return 1 // b is pending, a is not → b first
         if (!isPendingB) return -1 // a is pending, b is not → a first
@@ -190,39 +201,27 @@ function sortBoops(a: StoredBoop, b: StoredBoop): number {
         let comp = b.createdAt - a.createdAt
         if (comp !== 0) return comp
 
-        // Smallest nonceTrack first (rare tie-breaker)
-        const trackA = a.nonceTrack ?? 0n
-        const trackB = b.nonceTrack ?? 0n
-        comp = trackA > trackB ? 1 : trackA < trackB ? -1 : 0
+        // Smallest nonceTrack first
+        comp = Number(getNonceTrack(a) - getNonceTrack(b))
         if (comp !== 0) return comp
 
         // Highest nonceValue first
-        const nonceA = a.nonceValue ?? 0n
-        const nonceB = b.nonceValue ?? 0n
-        return nonceB > nonceA ? 1 : nonceB < nonceA ? -1 : 0
+        return Number(getNonceValue(b) - getNonceValue(a))
     }
 
-    // === 2. Confirmed boops ===
-    if (isSuccessA && isSuccessB) {
-        const receiptA = (a.boopReceipt as ExecuteSuccess).receipt
-        const receiptB = (b.boopReceipt as ExecuteSuccess).receipt
+    // === 2. Confirmed / Failed Boops ===
+    // Compare block numbers (latest block goes first)
+    let comp = Number(getBlockNumber(b) - getBlockNumber(a))
+    if (comp !== 0) return comp
 
-        let comp = Number(receiptB.txReceipt.blockNumber - receiptA.txReceipt.blockNumber)
-        if (comp !== 0) return comp
+    // Compare transaction indices (latest in block goes first)
+    comp = getTxIndex(b) - getTxIndex(a)
+    if (comp !== 0) return comp
 
-        comp = receiptB.txReceipt.transactionIndex - receiptA.txReceipt.transactionIndex
-        if (comp !== 0) return comp
+    // Compare nonceTrack (smallest goes first)
+    comp = Number(getNonceTrack(a) - getNonceTrack(b))
+    if (comp !== 0) return comp
 
-        comp = receiptA.nonceTrack > receiptB.nonceTrack ? 1 : receiptA.nonceTrack < receiptB.nonceTrack ? -1 : 0
-        if (comp !== 0) return comp
-
-        return receiptB.nonceValue > receiptA.nonceValue ? 1 : receiptB.nonceValue < receiptA.nonceValue ? -1 : 0
-    }
-
-    // === 3. Failed boops ===
-    if (isSuccessA) return -1
-    if (isSuccessB) return 1
-
-    // fallback: failed vs failed — sort by failedAt (descending)
-    return b.failedAt - a.failedAt
+    // Compare nonceValue (highest goes first)
+    return Number(getNonceValue(b) - getNonceValue(a))
 }
