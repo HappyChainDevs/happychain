@@ -5,131 +5,118 @@ import { Button } from "#src/components/primitives/button/Button"
 import { FormField, FormFieldLabel } from "#src/components/primitives/form-field/FormField"
 import { Input } from "#src/components/primitives/input/Input"
 import { recipeInput } from "#src/components/primitives/input/variant"
-import { FieldFormSendAssets, useFormSendAssets } from "#src/hooks/useFormSendAssets"
+import { Fields, useFormSendAssets } from "#src/hooks/useFormSendAssets"
 
 export const FormSend = () => {
     const navigate = useNavigate()
     const {
-        formAtom: [formValue],
+        recipient,
+        amount,
+        balance,
         handleOnSubmit,
         handleOnInput,
-        handleOnClickMaxNativeTokenBalance,
-        queryBalanceNativeToken,
-        queryWaitForTransactionReceipt,
-        formErrors,
-        mutationSendTransaction,
-        maximumValueNativeToken,
+        inFlight,
+        sending,
+        waitingForInclusion,
+        handleOnClickMax,
+        recipientError,
+        amountError,
     } = useFormSendAssets()
+
+    const recipientHasError = !!recipientError && recipient !== ""
+    const amountHasError = !!amountError && amount !== ""
+    const hasFormErrors = recipientHasError || amountHasError
+    const errorStyling = "bg-error/15 ring-1 ring-error/60 dark:bg-error/[0.08]"
 
     return (
         <form onSubmit={handleOnSubmit} className="w-full grid gap-4">
             <FormField>
-                <FormFieldLabel htmlFor={FieldFormSendAssets.Recipient}>To:</FormFieldLabel>
-                <div className="grid gap-1 [&:has(input:user-invalid)_.indicator]:not-sr-only">
+                <FormFieldLabel htmlFor={Fields.Recipient}>To:</FormFieldLabel>
+                <div className="grid gap-1">
                     <Input
-                        required
-                        name={FieldFormSendAssets.Recipient}
-                        id={FieldFormSendAssets.Recipient}
+                        readOnly={inFlight}
+                        name={Fields.Recipient}
+                        id={Fields.Recipient}
                         placeholder="0x..."
-                        readOnly={
-                            mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading
-                        }
                         onInput={handleOnInput}
                         aria-describedby="help-recipient-address"
-                        aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
+                        aria-invalid={recipientHasError}
                         pattern="^$|^0x[a-fA-F0-9]{40}$"
-                        {...(formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && {
+                        scale="small"
+                        {...(recipientHasError && {
                             "aria-errormessage": "error-recipient-address",
+                            inputClass: errorStyling,
                         })}
                     />
                     <p className="sr-only" id="help-recipient-address">
                         The Ethereum address you'll send the tokens to.
                     </p>
-
-                    {formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && (
-                        <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-recipient-address">
-                            {formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
-                        </p>
-                    )}
+                    <p
+                        className="indicator w-full text-[0.65rem] min-h-[1rem] font-medium"
+                        id="error-recipient-address"
+                    >
+                        {recipientHasError && recipientError}
+                    </p>
                 </div>
             </FormField>
             <FormField>
                 <div className="flex items-baseline justify-between gap-[1ex]">
-                    <FormFieldLabel htmlFor={FieldFormSendAssets.Amount}>Amount:</FormFieldLabel>
+                    <FormFieldLabel htmlFor={Fields.Amount}>Amount:</FormFieldLabel>
                     <p
                         className={cx(
                             "text-[0.6925em] font-medium inline-flex gap-[1ex] items-baseline",
-                            queryBalanceNativeToken?.status === "pending" ? "animate-pulse" : "",
+                            balance === undefined ? "animate-pulse" : "",
                         )}
                     >
-                        Your balance:{" "}
-                        {queryBalanceNativeToken?.status !== "success" ? "--.--" : maximumValueNativeToken}
+                        Your balance: {balance === undefined ? "--.--" : balance}
                     </p>
                 </div>
-                <div className="flex flex-col gap-1 [&:has(input:user-invalid)_.indicator]:not-sr-only">
+                <div className="flex flex-col gap-1">
                     <div
                         className={recipeInput({
-                            class: "relative flex justify-between gap-1",
+                            class: cx(
+                                "relative flex justify-between gap-1",
+                                amountHasError && "bg-error/15 ring-1 ring-error/60 dark:bg-error/[0.08]",
+                            ),
                         })}
                     >
                         <input
-                            required
-                            readOnly={
-                                queryBalanceNativeToken.status !== "success" ||
-                                queryWaitForTransactionReceipt.isLoading ||
-                                mutationSendTransaction.status === "pending"
-                            }
-                            name={FieldFormSendAssets.Amount}
-                            id={FieldFormSendAssets.Amount}
+                            // NOTE(norswap): This can't be a "type: number" because it will suppress the field value,
+                            // preventing proper validation messages.
+                            readOnly={balance === undefined || inFlight}
+                            name={Fields.Amount}
+                            id={Fields.Amount}
                             className="w-full focus:outline-none h-full bg-transparent"
                             placeholder="0.0"
-                            step="any"
-                            inputMode="decimal"
-                            type="number"
-                            min="0"
-                            value={formValue[FieldFormSendAssets.Amount]}
-                            max={maximumValueNativeToken}
+                            value={amount}
                             onInput={handleOnInput}
                             aria-describedby="help-send-amount"
-                            aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
-                            {...(formErrors?.fieldErrors[FieldFormSendAssets.Amount] && {
-                                "aria-errormessage": "error-send-amount",
-                            })}
+                            aria-invalid={amountHasError}
+                            {...(amountHasError && { "aria-errormessage": "error-send-amount" })}
                         />
                         <Button
                             intent="ghost"
-                            aria-disabled={
-                                mutationSendTransaction.status === "pending" ||
-                                queryWaitForTransactionReceipt.isLoading ||
-                                maximumValueNativeToken === 0
-                            }
+                            aria-disabled={inFlight || !balance}
                             className="text-xs"
                             type="button"
-                            onClick={handleOnClickMaxNativeTokenBalance}
+                            onClick={handleOnClickMax}
                         >
                             Max
                         </Button>
                     </div>
-                    <div className="grid">
-                        <p className="sr-only" id="help-send-amount">
-                            The amount of tokens you want to send from your account.
-                        </p>
-
-                        {formErrors?.fieldErrors[FieldFormSendAssets.Amount] && (
-                            <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-send-amount">
-                                {formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
-                            </p>
-                        )}
-                    </div>
+                    <p className="sr-only" id="help-send-amount">
+                        The amount of tokens you want to send from your account.
+                    </p>
+                    <p className="indicator w-full text-[0.65rem] min-h-[1rem] font-medium" id="error-send-amount">
+                        {amountHasError && amountError}
+                    </p>
                 </div>
             </FormField>
 
-            {mutationSendTransaction.status === "pending" && (
+            {inFlight && (
                 <div className="flex items-start bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
                     <WarningCircle size="1.25em" className="shrink-0 mt-[0.15em]" />
-                    <p>
-                        {`${!queryWaitForTransactionReceipt.isLoading ? "Once sent, the" : "The"} transaction will not be cancelled!`}
-                    </p>
+                    <p>{`${!waitingForInclusion ? "Once sent, the" : "The"} transaction will not be cancelled!`}</p>
                 </div>
             )}
 
@@ -137,28 +124,17 @@ export const FormSend = () => {
                 <Button
                     className="justify-center"
                     intent="primary"
-                    aria-disabled={
-                        queryWaitForTransactionReceipt.isLoading ||
-                        mutationSendTransaction.status === "pending" ||
-                        !!formErrors
-                    }
-                    isLoading={mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading}
+                    aria-disabled={inFlight || hasFormErrors}
+                    isLoading={inFlight}
                     type="submit"
                 >
-                    {mutationSendTransaction.status === "pending"
-                        ? "Sending..."
-                        : queryWaitForTransactionReceipt.isLoading
-                          ? "Confirming..."
-                          : "Send"}
+                    {sending ? "Sending..." : waitingForInclusion ? "Confirming..." : "Send"}
                 </Button>
                 <Button
-                    aria-disabled={
-                        queryWaitForTransactionReceipt.isLoading || mutationSendTransaction.status === "pending"
-                    }
+                    aria-disabled={inFlight}
                     onClick={() => {
-                        if (mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading)
-                            return
-                        navigate({ to: "/embed" })
+                        if (inFlight) return
+                        void navigate({ to: "/embed" })
                     }}
                     intent="ghost-negative"
                     className="justify-center"
