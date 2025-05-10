@@ -9,6 +9,7 @@ export const Route = createRootRoute({
     component: RootComponent,
 })
 
+// This must be in a file called __root to be picked up by TansStack Router.
 function RootComponent() {
     const router = useRouter()
     useEffect(() => {
@@ -21,7 +22,7 @@ function RootComponent() {
              // Checks if the navigation originated from `/embed/permissions/:appId` and, if
              // so, revokes the permissions of the session keys associated with the app.
             if (isFromAppPermissionsPage) {
-                await revokeSessionKeyPermissions(isFromAppPermissionsPage[1] as AppURL)
+                await revokeSessionKeyPermissions(decodeURI(isFromAppPermissionsPage[1]) as AppURL)
             }
         })
     }, [router])
