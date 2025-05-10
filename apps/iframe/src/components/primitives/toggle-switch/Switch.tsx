@@ -1,6 +1,6 @@
 import { Switch as ArkSwitch } from "@ark-ui/react"
 import { type VariantProps, cva } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 /**
  * Brand styling for any UI element that implements a toggle behaviour
@@ -63,7 +63,7 @@ type SwitchVariantsProps = VariantProps<typeof recipeToggle>
 
 interface SwitchProps extends ComponentProps<typeof ArkSwitch.Root>, SwitchVariantsProps {
     className: string
-    switchLabel: React.ReactNode
+    switchLabel: ReactNode
 }
 
 /**
