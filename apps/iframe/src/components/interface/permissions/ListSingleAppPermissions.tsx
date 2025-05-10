@@ -54,7 +54,6 @@ const ListItem = ({ permission }: ListItemProps) => {
         (e: SwitchCheckedChangeDetails) => {
             const app = permission.invoker as AppURL
             const isSessionKey = permission.parentCapability === PermissionNames.SESSION_KEY
-            console.log("toggled", app, isSessionKey)
 
             if (!isSessionKey) {
                 // No caveat to worry about for now.
