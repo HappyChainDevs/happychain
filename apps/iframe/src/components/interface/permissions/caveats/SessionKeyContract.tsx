@@ -1,16 +1,17 @@
 import { Checkbox } from "@ark-ui/react"
 import { PermissionNames } from "@happy.tech/common"
 import { Check } from "@phosphor-icons/react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { Address } from "viem"
-import { revokedSessionKeys } from "#src/state/interfaceState"
-import { hasPermissions } from "#src/state/permissions.ts"
+import { type SessionKeyRequest, hasPermissions } from "#src/state/permissions.ts"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
     appURL: AppURL
     contract: Address
     showControl: boolean
+    addActiveSessionKey: (app: AppURL, request: SessionKeyRequest) => void
+    removeActiveSessionKey: (app: AppURL, request: SessionKeyRequest) => void
 }
 
 /**
@@ -23,19 +24,15 @@ interface SessionKeyContractProps {
  * and onchain revocation (call to the `SessionKeyValidator`). Actual revocation(s)
  * happen when user navigates back to the home page.
  */
-export const SessionKeyContract = ({ appURL, contract, showControl }: SessionKeyContractProps) => {
-    const permissionRequest = {
-        [PermissionNames.SESSION_KEY]: {
-            target: contract,
-        },
-    }
-
-    // Initial state is whether the permission is granted or not
+export const SessionKeyContract = ({
+    appURL,
+    contract,
+    addActiveSessionKey,
+    removeActiveSessionKey,
+}: SessionKeyContractProps) => {
+    // Initial state is whether the permission is granted or not.
+    const permissionRequest = { [PermissionNames.SESSION_KEY]: { target: contract } }
     const [checked, setChecked] = useState(hasPermissions(appURL, permissionRequest))
-
-    useEffect(() => {
-        if (!showControl && checked) setChecked(false)
-    }, [showControl, checked])
 
     return (
         <Checkbox.Root
@@ -44,8 +41,8 @@ export const SessionKeyContract = ({ appURL, contract, showControl }: SessionKey
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
                 // in the atom to be used in the revokeSessionKey call
-                if (e.checked) revokedSessionKeys.add(contract)
-                else revokedSessionKeys.delete(contract)
+                if (e.checked) addActiveSessionKey(appURL, permissionRequest)
+                else removeActiveSessionKey(appURL, permissionRequest)
                 setChecked(e.checked)
             }}
         >
