@@ -36,8 +36,8 @@ export const walletOpenSignalAtom = atom(false)
 export const { getValue: getWalletOpenSignal, setValue: setWalletOpenSignal } = accessorsFromAtom(walletOpenSignalAtom)
 
 /**
- * This atom stores target contract addresses selected by
- * users for session key revocation operations.
+ * Stores **ADDRESSES** (not keys) for which session keys need to be revoked. This is not
+ * an atom because it never needs to be used reactively — it's simply a way to pass data
+ * from the permission management UI to the route transition handler (in `__root.tsx`).
  */
-export const targetContractsAtom = atom<Address[]>([])
-export const { getValue: getTargetContracts, setValue: setTargetContracts } = accessorsFromAtom(targetContractsAtom)
+export const revokedSessionKeys = new Set<Address>()

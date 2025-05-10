@@ -1,10 +1,9 @@
 import { Checkbox } from "@ark-ui/react"
 import { PermissionNames } from "@happy.tech/common"
 import { Check } from "@phosphor-icons/react"
-import { useAtom } from "jotai"
 import { useEffect, useState } from "react"
 import type { Address } from "viem"
-import { targetContractsAtom } from "#src/state/interfaceState"
+import { revokedSessionKeys } from "#src/state/interfaceState"
 import { hasPermissions } from "#src/state/permissions.ts"
 import type { AppURL } from "#src/utils/appURL"
 
@@ -25,7 +24,6 @@ interface SessionKeyContractProps {
  * happen when user navigates back to the home page.
  */
 export const SessionKeyContract = ({ appURL, contract, showControl }: SessionKeyContractProps) => {
-    const [_, setTargetContracts] = useAtom(targetContractsAtom)
     const permissionRequest = {
         [PermissionNames.SESSION_KEY]: {
             target: contract,
@@ -46,11 +44,8 @@ export const SessionKeyContract = ({ appURL, contract, showControl }: SessionKey
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
                 // in the atom to be used in the revokeSessionKey call
-                if (e.checked) {
-                    setTargetContracts((prev) => prev.filter((addr) => addr !== contract))
-                } else {
-                    setTargetContracts((prev) => (prev.includes(contract) ? prev : [...prev, contract]))
-                }
+                if (e.checked) revokedSessionKeys.add(contract)
+                else revokedSessionKeys.delete(contract)
                 setChecked(e.checked)
             }}
         >

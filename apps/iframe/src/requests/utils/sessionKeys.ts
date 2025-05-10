@@ -11,7 +11,7 @@ import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } fro
 import { sendBoop } from "#src/requests/utils/boop"
 import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
-import { getTargetContracts, setTargetContracts } from "#src/state/interfaceState.ts"
+import { revokedSessionKeys } from "#src/state/interfaceState.ts"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user.ts"
@@ -237,9 +237,8 @@ export async function removeSessionKeys(account: Address, targets: Address[]) {
  * This ensures a full cleanup of session key authorization when navigating away
  * from dapp-specific contexts, such as a permission management screen.
  */
-export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<void> {
-    const targetContracts = getTargetContracts()
-    if (!targetContracts.length || targetContracts.length === 0) return
+export async function revokeSessionKeyPermissions(appURL: AppURL, targets: Address[]): Promise<void> {
+    if (targets.length === 0) return
 
     try {
         const user = getUser()
@@ -247,19 +246,19 @@ export async function revokeSessionKeyPermissions(dappUrl: AppURL): Promise<void
             throw new Error("no user defined")
         }
 
-        removeSessionKeys(user.address, targetContracts)
+        removeSessionKeys(user.address, targets)
         const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
         const userSessionKeys = { ...storedSessionKeys[user.address] }
 
-        for (const contract of targetContracts) {
+        for (const contract of targets) {
             // remove permissions + session key entries from local storage
             const permissionRequest = {
                 [PermissionNames.SESSION_KEY]: {
                     target: contract,
                 },
             }
-            revokePermissions(dappUrl, permissionRequest)
-            setTargetContracts([])
+            revokePermissions(appURL, permissionRequest)
+            revokedSessionKeys.clear()
             delete userSessionKeys[contract]
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,

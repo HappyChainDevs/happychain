@@ -1,16 +1,14 @@
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react"
 import { PermissionNames } from "@happy.tech/common"
+import { useCallback } from "react"
 import type { Address, WalletPermissionCaveat } from "viem"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
+import { revokedSessionKeys } from "#src/state/interfaceState"
 import { type AppPermissions, type WalletPermission, grantPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
 import { SessionKeyContract } from "./caveats/SessionKeyContract"
-
-import { useAtom } from "jotai"
-import { useCallback } from "react"
-import { targetContractsAtom } from "#src/state/interfaceState"
 
 interface CaveatControlProps {
     permissionName: string
@@ -34,20 +32,32 @@ interface ListItemProps {
 
 const ListItem = ({ permission }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
-    const [_, setTargetContracts] = useAtom(targetContractsAtom)
 
     const onSwitchToggle = useCallback(
         (e: SwitchCheckedChangeDetails) => {
             const isSessionKey = permission.parentCapability === PermissionNames.SESSION_KEY
             if (e.checked) {
-                if (isSessionKey) setTargetContracts([])
+                if (isSessionKey) revokedSessionKeys.clear()
                 grantPermissions(permission.invoker as AppURL, permission.parentCapability)
             } else {
-                if (isSessionKey) setTargetContracts(permission.caveats.map((c) => c.value as Address))
+                // The sessions keys will be revoked when transitioning aways from the
+                // page (cf. transition handler in `__root.tsx`). This avoids sending
+                // redundant transactions if permissions are being toggled on and off.
+                //
+                // This is not 100% optimal, e.g. the user can toggle off the session keys and then
+                // exit the page, causing the session keys to be deleted locally but not unregistered
+                // onchain. This is generally safe — the session key will be lost (deleted) so unusable
+                // despite being allowed onchain. This can only be a safety issues if the session keys
+                // are stolen, but if that is possible, then we have much bigger problems to worry about.
+
+                if (isSessionKey) {
+                    revokedSessionKeys.clear()
+                    permission.caveats.forEach((c) => revokedSessionKeys.add(c.value as Address))
+                }
                 revokePermissions(permission.invoker as AppURL, permission.parentCapability)
             }
         },
-        [permission, setTargetContracts],
+        [permission],
     )
 
     return (

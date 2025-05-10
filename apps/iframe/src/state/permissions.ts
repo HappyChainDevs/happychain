@@ -1,4 +1,4 @@
-import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
+import { type HTTPString, PermissionNames, type UUID, createUUID } from "@happy.tech/common"
 import { logger } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
@@ -7,7 +7,7 @@ import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
-import { setTargetContracts } from "./interfaceState"
+import { revokedSessionKeys } from "./interfaceState"
 import { getUser, userAtom } from "./user"
 
 // STORE INSTANTIATION
@@ -219,13 +219,10 @@ export function clearAppPermissions(app: AppURL): void {
     const user = getUser()
     if (!user) return
 
-    const perms = getAppPermissions(app)
-    const targetAddresses = Object.values(perms).flatMap((permission) =>
-        permission.caveats
-            .filter((caveat) => caveat.type === "target" && typeof caveat.value === "string")
-            .map((caveat) => caveat.value as Address),
-    )
-    setTargetContracts(targetAddresses)
+    Object.values(getAppPermissions(app)).forEach((p: WalletPermission) => {
+        if (p.parentCapability !== PermissionNames.SESSION_KEY) return
+        p.caveats.forEach((c) => revokedSessionKeys.add(c.value as Address))
+    })
 
     // Remove app permissions from storage
     store.set(permissionsMapAtom, (prev) => {
