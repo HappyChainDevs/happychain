@@ -73,6 +73,13 @@ export type PermissionRequestObject = {
 }
 
 /**
+ * A refinement of {@link PermissionRequestObject} for requesting session keys.
+ */
+export type SessionKeyRequest = {
+    [PermissionNames.SESSION_KEY]: { target: Address }
+}
+
+/**
  * A permissions specifier, which can be either a single EIP-1193 request name, or a {@link
  * PermissionRequestObject}.
  */
@@ -219,10 +226,11 @@ export function clearAppPermissions(app: AppURL): void {
     const user = getUser()
     if (!user) return
 
-    Object.values(getAppPermissions(app)).forEach((p: WalletPermission) => {
-        if (p.parentCapability !== PermissionNames.SESSION_KEY) return
-        p.caveats.forEach((c) => revokedSessionKeys.add(c.value as Address))
-    })
+    // Register session keys for onchain deregistrations.
+    Object.values(getAppPermissions(app))
+        .filter((p: WalletPermission) => p.parentCapability === PermissionNames.SESSION_KEY)
+        .flatMap((p) => p.caveats)
+        .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
     // Remove app permissions from storage
     store.set(permissionsMapAtom, (prev) => {
@@ -346,7 +354,10 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
     const appPermissions = getAppPermissions(app)
 
     for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
-        // If no specific caveats provided, remove entire permission
+        // Permission is not granted, nothing to do.
+        if (!appPermissions[name]) continue
+
+        // If no specific caveats provided, remove entire permission.
         if (!caveats.length) {
             delete appPermissions[name]
             if (name === "eth_accounts") {
@@ -355,11 +366,14 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
             continue
         }
 
-        if (!appPermissions[name]) continue
+        // Otherwise, remove specific caveats.
 
-        // Remove specific caveats
+        // For session key permission, register the targets for onchain deregistration.
+        if (name === PermissionNames.SESSION_KEY) {
+            caveats.forEach((caveat) => revokedSessionKeys.add(caveat.value as Address))
+        }
+
         const existingPermission = appPermissions[name]
-
         const remainingCaveats = existingPermission.caveats.filter(
             (existingCaveat) => !caveats.some((caveatToRemove) => checkIfCaveatsMatch(existingCaveat, caveatToRemove)),
         )
