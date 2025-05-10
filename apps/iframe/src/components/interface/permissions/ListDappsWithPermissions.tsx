@@ -5,39 +5,39 @@ import type { AppPermissions } from "#src/state/permissions"
 import { getAppURL } from "#src/utils/appURL"
 
 interface ListItemProps {
-    dappUrl: string
+    appURL: string
 }
 
-const ListItem = ({ dappUrl }: ListItemProps) => {
+const ListItem = ({ appURL }: ListItemProps) => {
     const [isFaviconBroken, setIsFaviconBroken] = useState(false)
 
     return (
         <li className="p-2 min-h-10 flex hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center text-sm">
             <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
                 <img
-                    alt={dappUrl}
+                    alt={appURL}
                     className="text-transparent rounded-full h-[1.3rem] w-[1.5rem]"
                     loading="lazy"
                     width="20"
                     height="20"
                     onError={() => setIsFaviconBroken(true)}
                     src={
-                        isFaviconBroken || dappUrl.includes("localhost:")
+                        isFaviconBroken || appURL.includes("localhost:")
                             ? "/images/happychainLogoSimple.png"
-                            : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=20`
+                            : `https://www.google.com/s2/favicons?domain=${appURL}&sz=20`
                     }
                 />
-                <span className="me-auto inline-block">{dappUrl}</span>
+                <span className="me-auto inline-block">{appURL}</span>
                 <span className="p-0.5 rounded-full center" data-part="icon">
                     <CaretRight />
                 </span>
             </span>
             <Link
                 className="absolute size-full block inset-0 z-10 opacity-0"
-                to="/embed/permissions/$dappId"
-                params={{ dappId: encodeURI(dappUrl) }}
+                to="/embed/permissions/$appURL"
+                params={{ appURL: encodeURI(appURL) }}
             >
-                Open {dappUrl} detailed permissions list
+                Open {appURL} detailed permissions list
             </Link>
         </li>
     )
@@ -58,12 +58,12 @@ const ListDappsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
 
     return (
         <ul className="flex flex-col">
-            <ListItem dappUrl={getAppURL()} />
+            <ListItem appURL={getAppURL()} />
             {items
                 .filter((record) => record[0] !== getAppURL())
                 .map((record) => {
                     const [dappUrl] = record
-                    return <ListItem dappUrl={dappUrl} key={`list-permissions-dapp-${dappUrl}`} />
+                    return <ListItem appURL={dappUrl} key={`list-permissions-dapp-${dappUrl}`} />
                 })}
         </ul>
     )

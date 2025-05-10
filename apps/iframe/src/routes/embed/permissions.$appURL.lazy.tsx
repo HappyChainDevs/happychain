@@ -4,14 +4,14 @@ import { ListDappPermissions } from "#src/components/interface/permissions/ListP
 import { getAppPermissions } from "#src/state/permissions"
 import { type AppURL } from "#src/utils/appURL"
 
-export const Route = createLazyFileRoute("/embed/permissions/$dappId")({
+export const Route = createLazyFileRoute("/embed/permissions/$appURL")({
     component: DappPermissions,
 })
 
 function DappPermissions() {
     const appURL = useParams({
-        from: "/embed/permissions/$dappId",
-        select: (params) => decodeURI(params.dappId),
+        from: "/embed/permissions/$appURL",
+        select: (params) => decodeURI(params.appURL),
     }) as AppURL
 
     // Very purposefully not reactive: when revoking a permission, it will show as toggled off instead of vanishing,
