@@ -23,6 +23,12 @@ interface ListItemProps {
 const ListItem = ({ permission }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
 
+    // Cache the initial list of all session keys, so that they remained displayed even after we turn some of them off.
+    const [allSessionKeys] = useState(() => {
+        if (permission.parentCapability !== PermissionNames.SESSION_KEY) return []
+        return permission.caveats.map((c) => c.value as Address)
+    })
+
     // These are the contract target that have active session keys. We maintain those in React state so that we can
     // toggle them back. In particular this is important when toggling the entire session key category on and off.
     const [activeSessionKeys, setActiveSessionKeys] = useState(() => {
@@ -89,17 +95,16 @@ const ListItem = ({ permission }: ListItemProps) => {
                     permissionDescriptions?.[permission.parentCapability as PermissionDescriptionIndex] ?? "---"
                 }
             />
-            {activeSessionKeys.length > 0 && (
+            {allSessionKeys.length > 0 && (
                 <div className="px-3 pt-3 text-xs">
                     <p className="italic pb-1.5 text-base-content/50 dark:text-neutral-content/50">
-                        {permission.caveats.length} contract{permission.caveats.length > 1 && "s"} approved:
+                        {activeSessionKeys.length} contract{activeSessionKeys.length > 1 && "s"} approved:
                     </p>
-                    {activeSessionKeys.map((target, index) => (
+                    {allSessionKeys.map((target) => (
                         <SessionKeyCheckbox
-                            showControl={hasPermission}
                             appURL={permission.invoker as AppURL}
                             contract={target}
-                            key={`${permission.invoker}-${permission.parentCapability}-${target}-${index}`}
+                            key={`${permission.parentCapability}-${target}`}
                             addActiveSessionKey={addActiveSessionKey}
                             removeActiveSessionKey={removeActiveSessionKey}
                         />
