@@ -48,7 +48,7 @@ export type AppPermissions = Record<string, WalletPermission>
  */
 export type WalletPermission = {
     // The app to which the permission is granted.
-    invoker: HTTPString
+    invoker: HTTPString // TODO AppURL type & remove casts
     // This is the EIP-1193 request that this permission is mapped to.
     parentCapability: "eth_accounts" | string // TODO only string or make specific
     caveats: WalletPermissionCaveat[]
