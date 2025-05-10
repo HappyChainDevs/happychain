@@ -2,6 +2,12 @@
 
 export { createStorage } from "./services/storage"
 
+// === COLLECTIONS =================================================================================
+
+export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map"
+export { Map2 } from "./collections/map2"
+export { FIFOCache } from "./collections/fifoCache"
+
 // === UTILS =======================================================================================
 
 export { type TaggedLogger, Logger, type LogTag, LogLevel, logLevel } from "./utils/logger"
@@ -89,12 +95,6 @@ export { unknownToError } from "./utils/error"
 export { HappyMethodNames, PermissionNames, TransactionType } from "./utils/constants"
 
 export { Mutex } from "./utils/mutex"
-
-export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map"
-
-export { Map2 } from "./collections/map2"
-
-export { FIFOCache } from "./collections/fifo-cache"
 
 export { fetchWithRetry } from "./utils/fetch"
 
