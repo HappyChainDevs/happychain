@@ -23,8 +23,8 @@ function RootComponent() {
             // Checks if the navigation originated from `/embed/permissions/:appURL` and, if
             // so, revokes the permissions of the session keys associated with the app.
             if (isFromAppPermissionsPage) {
-                const appURL = decodeURI(isFromAppPermissionsPage[1]) as AppURL
-                await revokeSessionKeyPermissions(appURL, [...revokedSessionKeys.values()])
+                const app = decodeURI(isFromAppPermissionsPage[1]) as AppURL
+                await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
             }
         })
     }, [router])
