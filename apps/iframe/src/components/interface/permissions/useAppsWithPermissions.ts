@@ -4,7 +4,7 @@ import { useAccount } from "wagmi"
 import { type AppPermissions, permissionsMapAtom } from "#src/state/permissions"
 import { type AppURL, isIframe } from "#src/utils/appURL"
 
-function useGetAllDappsWithPermissions(): [AppURL, AppPermissions][] {
+function useAppsWithPermissions(): [AppURL, AppPermissions][] {
     const permissionsMap = useAtomValue(permissionsMapAtom)
     const account = useAccount()
 
@@ -12,4 +12,4 @@ function useGetAllDappsWithPermissions(): [AppURL, AppPermissions][] {
         .filter(([app]) => !isIframe(app))
 }
 
-export { useGetAllDappsWithPermissions }
+export { useAppsWithPermissions }

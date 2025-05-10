@@ -1,40 +1,36 @@
 import { useCollapsible } from "@ark-ui/react"
 import { Button } from "#src/components/primitives/button/Button"
 import { InlineDrawer } from "#src/components/primitives/collapsible/InlineDrawer"
-import { type AppPermissions, clearAppPermissions } from "#src/state/permissions"
+import { clearAppPermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
 interface ClearAllDappsPermissionsProps {
-    listDappsWithPermissions: Array<[string, AppPermissions]>
+    url: AppURL
 }
 
-const ClearAllDappsPermissions = ({ listDappsWithPermissions }: ClearAllDappsPermissionsProps) => {
+export const ClearSingleAppPermissions = ({ url }: ClearAllDappsPermissionsProps) => {
     const api = useCollapsible()
     return (
         <InlineDrawer
             trigger={{
-                label: "Clear permissions for all apps",
+                label: "Clear all permissions",
                 intent: "ghost-negative",
             }}
             rootContext={api}
         >
             <p className="text-base-content text-center text-xs">
-                Are you sure you want to clear the permissions of all apps ?
+                Are you sure you want to clear all permissions for this app ?
             </p>
             <div className="grid gap-2">
                 <Button
                     onClick={() => {
-                        listDappsWithPermissions.forEach((record) => {
-                            const [url] = record
-                            clearAppPermissions(url as AppURL)
-                        })
-
+                        clearAppPermissions(url)
                         api.setOpen(false)
                     }}
                     className="justify-center"
                     intent="outline-negative"
                 >
-                    Yes, clear all
+                    Yes, clear all permissions
                 </Button>
                 <Button
                     intent="ghost"
@@ -49,5 +45,3 @@ const ClearAllDappsPermissions = ({ listDappsWithPermissions }: ClearAllDappsPer
         </InlineDrawer>
     )
 }
-
-export { ClearAllDappsPermissions }

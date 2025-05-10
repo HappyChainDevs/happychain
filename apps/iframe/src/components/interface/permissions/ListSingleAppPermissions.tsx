@@ -14,7 +14,7 @@ import {
     revokePermissions,
 } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
-import { SessionKeyContract } from "./caveats/SessionKeyContract"
+import { SessionKeyCheckbox } from "./SessionKeyCheckbox"
 
 interface ListItemProps {
     permission: WalletPermission
@@ -94,7 +94,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                         {permission.caveats.length} contract{permission.caveats.length > 1 && "s"} approved:
                     </p>
                     {activeSessionKeys.map((target, index) => (
-                        <SessionKeyContract
+                        <SessionKeyCheckbox
                             showControl={hasPermission}
                             appURL={permission.invoker as AppURL}
                             contract={target}
@@ -114,7 +114,7 @@ interface ListDappPermissionsProps {
     appURL: AppURL
 }
 
-export const ListDappPermissions = ({ appURL, items }: ListDappPermissionsProps) => {
+export const ListSingleAppPermissions = ({ appURL, items }: ListDappPermissionsProps) => {
     if (Object.keys(items).length === 0)
         return (
             <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-base-content/50">

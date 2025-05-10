@@ -1,14 +1,14 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { ClearAllDappsPermissions } from "#src/components/interface/permissions/ClearAllDappsPermissions"
-import { ListDappsWithPermissions } from "#src/components/interface/permissions/ListDappsWithPermissions"
-import { useGetAllDappsWithPermissions } from "#src/components/interface/permissions/useGetAllDappsWithPermissions"
+import { ClearAllAppsPermissions } from "#src/components/interface/permissions/ClearAllAppsPermissions"
+import { ListAppsWithPermissions } from "#src/components/interface/permissions/ListAppsWithPermissions"
+import { useAppsWithPermissions } from "#src/components/interface/permissions/useAppsWithPermissions"
 
 export const Route = createLazyFileRoute("/embed/permissions/")({
     component: Permissions,
 })
 
 function Permissions() {
-    const listDappsWithPermissions = useGetAllDappsWithPermissions()
+    const appsWithPermissions = useAppsWithPermissions()
 
     return (
         <>
@@ -17,9 +17,9 @@ function Permissions() {
                     Permissions
                 </h2>
                 <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
-                <ListDappsWithPermissions items={listDappsWithPermissions} />
-                {listDappsWithPermissions.length > 0 && (
-                    <ClearAllDappsPermissions listDappsWithPermissions={listDappsWithPermissions} />
+                <ListAppsWithPermissions items={appsWithPermissions} />
+                {appsWithPermissions.length > 0 && (
+                    <ClearAllAppsPermissions listDappsWithPermissions={appsWithPermissions} />
                 )}
             </div>
         </>

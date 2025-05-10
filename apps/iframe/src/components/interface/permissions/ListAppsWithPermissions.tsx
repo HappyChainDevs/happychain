@@ -47,7 +47,7 @@ interface ListDappsWithPermissionsProps {
     items: Array<[string, AppPermissions]>
 }
 
-const ListDappsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
+export const ListAppsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
     if (items.length === 0)
         return (
             <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-neutral/50">
@@ -68,5 +68,3 @@ const ListDappsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
         </ul>
     )
 }
-
-export { ListDappsWithPermissions }
