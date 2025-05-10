@@ -48,6 +48,7 @@ const ListItem = ({ permission }: ListItemProps) => {
         (e: SwitchCheckedChangeDetails) => {
             const app = permission.invoker as AppURL
             const isSessionKey = permission.parentCapability === PermissionNames.SESSION_KEY
+            console.log("toggled", app, isSessionKey)
 
             if (!isSessionKey) {
                 // No caveat to worry about for now.
@@ -122,14 +123,22 @@ export const ListSingleAppPermissions = ({ appURL, items }: ListDappPermissionsP
             </p>
         )
 
+    const eth_accounts = PermissionNames.ETH_ACCOUNTS
+    const permissionNames = Object.keys(items)
+
+    // Display connection permission first.
+    const permissionsList: (readonly [string, WalletPermission])[] = [
+        ...(permissionNames.includes(eth_accounts) ? [[eth_accounts, items[eth_accounts]] as const] : []),
+        ...permissionNames.filter((name) => name !== eth_accounts).map((name) => [name, items[name]] as const),
+    ]
+
     return (
         <ul className="divide-y divide-neutral/10">
-            {Object.keys(items).map((permissionName) => {
-                const permission = items[permissionName]
+            {permissionsList.map(([name, permission]) => {
                 return (
                     <li
                         className="text-xs w-full items-center inline-flex gap-4 justify-between p-2"
-                        key={`edit-permission-${permissionName}-${appURL}`}
+                        key={`edit-permission-${name}-${appURL}`}
                     >
                         <ListItem permission={permission} />
                     </li>
