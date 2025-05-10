@@ -13,16 +13,6 @@ interface SessionKeyContractProps {
     removeActiveSessionKey: (app: AppURL, request: SessionKeyRequest) => void
 }
 
-/**
- * A checkbox that manages session key permissions for a user.
- *
- * Initial state: Checkbox is checked if the contract has permissions (determined by
- * `hasPermissions(dappUrl, permissionRequest))`, otherwise unchecked.
- *
- * When unchecked, adds the contract to `targetContractsAtom` for permission (iframe)
- * and onchain revocation (call to the `SessionKeyValidator`). Actual revocation(s)
- * happen when user navigates back to the home page.
- */
 export const SessionKeyCheckbox = ({
     appURL,
     contract,
