@@ -13,7 +13,7 @@ import {
     installNewSessionKey,
     isSessionKeyAuthorized,
     isSessionKeyValidatorInstalled,
-    revokeSessionKeyPermissions,
+    revokeSessionKeys,
 } from "#src/requests/utils/sessionKeys"
 import {
     FORWARD,
@@ -155,7 +155,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case "wallet_revokePermissions": {
             const resp = await sendToInjectedClient(request.payload)
             revokePermissions(app, request.payload.params[0])
-            if (revokedSessionKeys.size > 0) await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
+            if (revokedSessionKeys.size > 0) await revokeSessionKeys(app, [...revokedSessionKeys.values()])
             return resp
         }
 
