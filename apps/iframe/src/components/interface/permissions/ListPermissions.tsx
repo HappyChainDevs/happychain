@@ -12,16 +12,14 @@ import { targetContractsAtom } from "#src/state/interfaceState"
 interface CaveatControlProps {
     permissionKey: string
     caveat: WalletPermissionCaveat
-    dappUrl: AppURL
+    appURL: AppURL
 }
-const CaveatControl = ({ caveat, dappUrl, permissionKey }: CaveatControlProps) => {
-    const hasPermission = useHasPermissions(permissionKey, dappUrl)
+
+const CaveatControl = ({ caveat, appURL, permissionKey }: CaveatControlProps) => {
+    const hasPermission = useHasPermissions(permissionKey, appURL)
     switch (permissionKey) {
         case "happy_sessionKey":
-            if (caveat.type === "target") {
-                return <SessionKeyContract showControl={hasPermission} dappUrl={dappUrl} contract={caveat.value} />
-            }
-            break
+            return <SessionKeyContract showControl={hasPermission} appURL={appURL} contract={caveat.value} />
         default:
             return null
     }
@@ -68,7 +66,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                     {permission.caveats.map((caveat, index) => (
                         <CaveatControl
                             permissionKey={permission.parentCapability}
-                            dappUrl={permission.invoker as AppURL}
+                            appURL={permission.invoker as AppURL}
                             caveat={caveat}
                             key={`${permission.invoker}-${permission.parentCapability}-caveat-${caveat.value}-${index}`}
                         />
@@ -81,10 +79,10 @@ const ListItem = ({ permission }: ListItemProps) => {
 
 interface ListDappPermissionsProps {
     items: AppPermissions
-    dappUrl: AppURL
+    appURL: AppURL
 }
 
-export const ListDappPermissions = ({ dappUrl, items }: ListDappPermissionsProps) => {
+export const ListDappPermissions = ({ appURL, items }: ListDappPermissionsProps) => {
     if (Object.keys(items).length === 0)
         return (
             <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-base-content/50">
@@ -99,7 +97,7 @@ export const ListDappPermissions = ({ dappUrl, items }: ListDappPermissionsProps
                 return (
                     <li
                         className="text-xs w-full items-center inline-flex gap-4 justify-between p-2"
-                        key={`edit-permission-${permission}-${dappUrl}`}
+                        key={`edit-permission-${permission}-${appURL}`}
                     >
                         <ListItem permission={permissionItem} />
                     </li>

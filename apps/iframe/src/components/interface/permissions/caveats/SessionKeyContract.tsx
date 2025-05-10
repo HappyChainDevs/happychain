@@ -9,7 +9,7 @@ import { hasPermissions } from "#src/state/permissions.ts"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
-    dappUrl: AppURL
+    appURL: AppURL
     contract: Address
     showControl: boolean
 }
@@ -24,7 +24,7 @@ interface SessionKeyContractProps {
  * and onchain revocation (call to the `SessionKeyValidator`). Actual revocation(s)
  * happen when user navigates back to the home page.
  */
-export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKeyContractProps) => {
+export const SessionKeyContract = ({ appURL, contract, showControl }: SessionKeyContractProps) => {
     const [_, setTargetContracts] = useAtom(targetContractsAtom)
     const permissionRequest = {
         [PermissionNames.SESSION_KEY]: {
@@ -33,7 +33,7 @@ export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKe
     }
 
     // Initial state is whether the permission is granted or not
-    const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
+    const [checked, setChecked] = useState(hasPermissions(appURL, permissionRequest))
 
     useEffect(() => {
         if (!showControl && checked) setChecked(false)
