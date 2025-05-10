@@ -22,8 +22,8 @@ const IndexLazyImport = createFileRoute('/')()
 const EmbedIndexLazyImport = createFileRoute('/embed/')()
 const EmbedSendLazyImport = createFileRoute('/embed/send')()
 const EmbedPermissionsIndexLazyImport = createFileRoute('/embed/permissions/')()
-const EmbedPermissionsDappIdLazyImport = createFileRoute(
-  '/embed/permissions/$dappId',
+const EmbedPermissionsAppURLLazyImport = createFileRoute(
+  '/embed/permissions/$appURL',
 )()
 
 // Create/Update Routes
@@ -66,14 +66,14 @@ const EmbedPermissionsIndexLazyRoute = EmbedPermissionsIndexLazyImport.update({
   import('./routes/embed/permissions.index.lazy').then((d) => d.Route),
 )
 
-const EmbedPermissionsDappIdLazyRoute = EmbedPermissionsDappIdLazyImport.update(
+const EmbedPermissionsAppURLLazyRoute = EmbedPermissionsAppURLLazyImport.update(
   {
-    id: '/permissions/$dappId',
-    path: '/permissions/$dappId',
+    id: '/permissions/$appURL',
+    path: '/permissions/$appURL',
     getParentRoute: () => EmbedLazyRoute,
   } as any,
 ).lazy(() =>
-  import('./routes/embed/permissions.$dappId.lazy').then((d) => d.Route),
+  import('./routes/embed/permissions.$appURL.lazy').then((d) => d.Route),
 )
 
 // Populate the FileRoutesByPath interface
@@ -115,11 +115,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedIndexLazyImport
       parentRoute: typeof EmbedLazyImport
     }
-    '/embed/permissions/$dappId': {
-      id: '/embed/permissions/$dappId'
-      path: '/permissions/$dappId'
-      fullPath: '/embed/permissions/$dappId'
-      preLoaderRoute: typeof EmbedPermissionsDappIdLazyImport
+    '/embed/permissions/$appURL': {
+      id: '/embed/permissions/$appURL'
+      path: '/permissions/$appURL'
+      fullPath: '/embed/permissions/$appURL'
+      preLoaderRoute: typeof EmbedPermissionsAppURLLazyImport
       parentRoute: typeof EmbedLazyImport
     }
     '/embed/permissions/': {
@@ -137,14 +137,14 @@ declare module '@tanstack/react-router' {
 interface EmbedLazyRouteChildren {
   EmbedSendLazyRoute: typeof EmbedSendLazyRoute
   EmbedIndexLazyRoute: typeof EmbedIndexLazyRoute
-  EmbedPermissionsDappIdLazyRoute: typeof EmbedPermissionsDappIdLazyRoute
+  EmbedPermissionsAppURLLazyRoute: typeof EmbedPermissionsAppURLLazyRoute
   EmbedPermissionsIndexLazyRoute: typeof EmbedPermissionsIndexLazyRoute
 }
 
 const EmbedLazyRouteChildren: EmbedLazyRouteChildren = {
   EmbedSendLazyRoute: EmbedSendLazyRoute,
   EmbedIndexLazyRoute: EmbedIndexLazyRoute,
-  EmbedPermissionsDappIdLazyRoute: EmbedPermissionsDappIdLazyRoute,
+  EmbedPermissionsAppURLLazyRoute: EmbedPermissionsAppURLLazyRoute,
   EmbedPermissionsIndexLazyRoute: EmbedPermissionsIndexLazyRoute,
 }
 
@@ -158,7 +158,7 @@ export interface FileRoutesByFullPath {
   '/embed': typeof EmbedLazyRouteWithChildren
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed/': typeof EmbedIndexLazyRoute
-  '/embed/permissions/$dappId': typeof EmbedPermissionsDappIdLazyRoute
+  '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions': typeof EmbedPermissionsIndexLazyRoute
 }
 
@@ -167,7 +167,7 @@ export interface FileRoutesByTo {
   '/request': typeof RequestRoute
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed': typeof EmbedIndexLazyRoute
-  '/embed/permissions/$dappId': typeof EmbedPermissionsDappIdLazyRoute
+  '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions': typeof EmbedPermissionsIndexLazyRoute
 }
 
@@ -178,7 +178,7 @@ export interface FileRoutesById {
   '/embed': typeof EmbedLazyRouteWithChildren
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed/': typeof EmbedIndexLazyRoute
-  '/embed/permissions/$dappId': typeof EmbedPermissionsDappIdLazyRoute
+  '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions/': typeof EmbedPermissionsIndexLazyRoute
 }
 
@@ -190,7 +190,7 @@ export interface FileRouteTypes {
     | '/embed'
     | '/embed/send'
     | '/embed/'
-    | '/embed/permissions/$dappId'
+    | '/embed/permissions/$appURL'
     | '/embed/permissions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -198,7 +198,7 @@ export interface FileRouteTypes {
     | '/request'
     | '/embed/send'
     | '/embed'
-    | '/embed/permissions/$dappId'
+    | '/embed/permissions/$appURL'
     | '/embed/permissions'
   id:
     | '__root__'
@@ -207,7 +207,7 @@ export interface FileRouteTypes {
     | '/embed'
     | '/embed/send'
     | '/embed/'
-    | '/embed/permissions/$dappId'
+    | '/embed/permissions/$appURL'
     | '/embed/permissions/'
   fileRoutesById: FileRoutesById
 }
@@ -250,7 +250,7 @@ export const routeTree = rootRoute
       "children": [
         "/embed/send",
         "/embed/",
-        "/embed/permissions/$dappId",
+        "/embed/permissions/$appURL",
         "/embed/permissions/"
       ]
     },
@@ -262,8 +262,8 @@ export const routeTree = rootRoute
       "filePath": "embed/index.lazy.tsx",
       "parent": "/embed"
     },
-    "/embed/permissions/$dappId": {
-      "filePath": "embed/permissions.$dappId.lazy.tsx",
+    "/embed/permissions/$appURL": {
+      "filePath": "embed/permissions.$appURL.lazy.tsx",
       "parent": "/embed"
     },
     "/embed/permissions/": {
