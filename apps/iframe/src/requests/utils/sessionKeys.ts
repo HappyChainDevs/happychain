@@ -25,6 +25,7 @@ import { sessionKeyLogger } from "#src/utils/logger"
  *
  * @param validatorAddress - Validator contract address
  * @returns Hex string containing encoded extraData
+ * TODO
  */
 export function createValidatorExtraData(account: Address, target: Address): `0x${string}` {
     const extraData = hasSessionKey(account, target) ? { [ExtraDataKey.Validator]: sessionKeyValidator } : {}
@@ -241,6 +242,7 @@ export async function revokeSessionKeyPermissions(appURL: AppURL, targets: Addre
     if (targets.length === 0) return
 
     try {
+        // TODO
         const user = getUser()
         if (!user) {
             throw new Error("no user defined")

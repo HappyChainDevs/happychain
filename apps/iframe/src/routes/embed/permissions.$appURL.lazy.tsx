@@ -1,8 +1,8 @@
 import { createLazyFileRoute, useParams } from "@tanstack/react-router"
-import { ClearAllPermissions } from "#src/components/interface/permissions/ClearAllPermissions"
-import { ListDappPermissions } from "#src/components/interface/permissions/ListPermissions"
+import { ClearSingleAppPermissions } from "#src/components/interface/permissions/ClearSingleAppPermissions"
+import { ListSingleAppPermissions } from "#src/components/interface/permissions/ListSingleAppPermissions"
 import { getAppPermissions } from "#src/state/permissions"
-import { type AppURL } from "#src/utils/appURL"
+import type { AppURL } from "#src/utils/appURL"
 
 export const Route = createLazyFileRoute("/embed/permissions/$appURL")({
     component: DappPermissions,
@@ -25,8 +25,8 @@ function DappPermissions() {
                     {appURL}
                 </h2>
                 <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
-                <ListDappPermissions appURL={appURL} items={appPermissions} />
-                {Object.keys(appPermissions).length > 0 && <ClearAllPermissions url={appURL} />}
+                <ListSingleAppPermissions appURL={appURL} items={appPermissions} />
+                {Object.keys(appPermissions).length > 0 && <ClearSingleAppPermissions url={appURL} />}
             </div>
         </div>
     )

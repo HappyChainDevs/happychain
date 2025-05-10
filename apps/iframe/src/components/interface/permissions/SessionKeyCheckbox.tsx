@@ -1,10 +1,10 @@
 import { Checkbox } from "@ark-ui/react"
-import { PermissionNames } from "@happy.tech/common"
 import { Check } from "@phosphor-icons/react"
 import { useState } from "react"
 import type { Address } from "viem"
 import { type SessionKeyRequest, hasPermissions } from "#src/state/permissions.ts"
 import type { AppURL } from "#src/utils/appURL"
+import { PermissionNames } from "../../../../../../support/common/lib"
 
 interface SessionKeyContractProps {
     appURL: AppURL
@@ -24,7 +24,7 @@ interface SessionKeyContractProps {
  * and onchain revocation (call to the `SessionKeyValidator`). Actual revocation(s)
  * happen when user navigates back to the home page.
  */
-export const SessionKeyContract = ({
+export const SessionKeyCheckbox = ({
     appURL,
     contract,
     addActiveSessionKey,
