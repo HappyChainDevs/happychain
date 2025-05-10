@@ -285,11 +285,10 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 
-    for (const { name, caveats } of permissionRequestEntries(permissionRequest)) {
+    for (const { name, caveats: newCaveats } of permissionRequestEntries(permissionRequest)) {
         // If permission exists, merge new caveats with existing ones
         if (appPermissions[name]) {
             const existingCaveats = appPermissions[name].caveats
-            const newCaveats = caveats
 
             appPermissions[name] = {
                 ...appPermissions[name],
@@ -303,7 +302,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
             grantedPermissions.push(appPermissions[name])
         } else {
             const grantedPermission = {
-                caveats,
+                caveats: newCaveats,
                 invoker: app,
                 parentCapability: name,
                 date: Date.now(),
