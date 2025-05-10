@@ -2,8 +2,10 @@ import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { isAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import { sendBoop } from "#src/requests/utils/boop"
 import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
+import { checkSessionKeyAuthorized, getSessionKey, revokeSessionKeyPermissions } from "#src/requests/utils/sessionKeys"
 import {
     FORWARD,
     eth_estimateGas,
@@ -13,11 +15,10 @@ import {
 } from "#src/requests/utils/shared"
 import { sessionKeySigner } from "#src/requests/utils/signers"
 import { getCurrentChain } from "#src/state/chains"
+import { revokedSessionKeys } from "#src/state/interfaceState"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getCheckedUser, getUser } from "#src/state/user"
 import { appForSourceID } from "#src/utils/appURL"
-import { sendBoop } from "../utils/boop"
-import { checkSessionKeyAuthorized, getSessionKey } from "../utils/sessionKeys"
 
 export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
@@ -82,6 +83,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
         case "wallet_revokePermissions":
             checkAuthenticated()
             revokePermissions(app, request.payload.params[0])
+            if (revokedSessionKeys.size > 0) await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
             return []
 
         case "wallet_addEthereumChain":

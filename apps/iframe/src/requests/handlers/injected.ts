@@ -13,6 +13,7 @@ import {
     installNewSessionKey,
     isSessionKeyAuthorized,
     isSessionKeyValidatorInstalled,
+    revokeSessionKeyPermissions,
 } from "#src/requests/utils/sessionKeys"
 import {
     FORWARD,
@@ -23,6 +24,7 @@ import {
 } from "#src/requests/utils/shared"
 import { eoaSigner, sessionKeySigner } from "#src/requests/utils/signers"
 import { getChains, setChains, setCurrentChain } from "#src/state/chains"
+import { revokedSessionKeys } from "#src/state/interfaceState"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { checkUser, getUser } from "#src/state/user"
@@ -153,6 +155,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case "wallet_revokePermissions": {
             const resp = await sendToInjectedClient(request.payload)
             revokePermissions(app, request.payload.params[0])
+            if (revokedSessionKeys.size > 0) await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
             return resp
         }
 
