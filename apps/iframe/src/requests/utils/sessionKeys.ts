@@ -14,18 +14,14 @@ import { StorageKey, storage } from "#src/services/storage"
 import { revokedSessionKeys } from "#src/state/interfaceState.ts"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
-import { getUser } from "#src/state/user.ts"
+import { getCheckedUser } from "#src/state/user.ts"
 import { getWalletClient } from "#src/state/walletClient.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { sessionKeyLogger } from "#src/utils/logger"
 
 /**
- * Creates extraData for custom validator according to Boop spec
- * @see Utils.getExtraDataValue - The corresponding function that extracts values from extraData
- *
- * @param validatorAddress - Validator contract address
- * @returns Hex string containing encoded extraData
- * TODO
+ * Returns extraData for a boop, which will specify the session key validator
+ * if a session key exists for the destination address, or be empty otherwise.
  */
 export function createValidatorExtraData(account: Address, target: Address): `0x${string}` {
     const extraData = hasSessionKey(account, target) ? { [ExtraDataKey.Validator]: sessionKeyValidator } : {}
@@ -225,49 +221,39 @@ export async function removeSessionKeys(account: Address, targets: Address[]) {
 }
 
 /**
- * Revokes all selected session key permissions granted to a specific dapp (`dappUrl`)
- * for the currently active user across a list of target contracts.
+ * Revokes the session keys for all the provided target addresses (for the provided app and current user).
  *
- * This function performs the following steps:
- * 1. Retrieves the current user and list of target contracts.
- * 2. If either is missing, it exits early.
- * 3. Removes the session keys associated with those contracts from in-memory storage.
- * 4. Revokes the corresponding permissions from local storage.
- * 5. Updates the local session key store by removing entries tied to the revoked contracts.
+ * In particular, this performs three actions:
  *
- * This ensures a full cleanup of session key authorization when navigating away
- * from dapp-specific contexts, such as a permission management screen.
+ * 1. Revoke the permission itself via {@link revokePermissions}. This is safe if the permissions
+ * has already been revoked, as is the case when using the permission management screen.
+ *
+ * 2. Deletes the session key from local storage.
+ *
+ * 3. Makes an onchain call to deregister the session key from the account.
  */
-export async function revokeSessionKeyPermissions(appURL: AppURL, targets: Address[]): Promise<void> {
+export async function revokeSessionKeys(app: AppURL, targets: Address[]): Promise<void> {
     if (targets.length === 0) return
 
     try {
-        // TODO
-        const user = getUser()
-        if (!user) {
-            throw new Error("no user defined")
-        }
-
+        const user = getCheckedUser()
         removeSessionKeys(user.address, targets)
         const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
         const userSessionKeys = { ...storedSessionKeys[user.address] }
 
-        for (const contract of targets) {
+        for (const target of targets) {
             // remove permissions + session key entries from local storage
-            const permissionRequest = {
-                [PermissionNames.SESSION_KEY]: {
-                    target: contract,
-                },
-            }
-            revokePermissions(appURL, permissionRequest)
+            const permissionRequest = { [PermissionNames.SESSION_KEY]: { target } }
+            revokePermissions(app, permissionRequest)
             revokedSessionKeys.clear()
-            delete userSessionKeys[contract]
+            const { [target]: _, ...rest } = userSessionKeys
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
-                [user!.address]: userSessionKeys,
+                [user!.address]: rest,
             })
         }
     } catch (error) {
-        console.error(error)
+        sessionKeyLogger.error("failed to revoke session key", error)
+        throw error
     }
 }

@@ -3,7 +3,7 @@ import { revokedSessionKeys } from "#src/state/interfaceState"
 import type { AppURL } from "#src/utils/appURL"
 import "#src/connections/initialize.ts"
 import { useEffect } from "react"
-import { revokeSessionKeyPermissions } from "#src/requests/utils/sessionKeys.ts"
+import { revokeSessionKeys } from "#src/requests/utils/sessionKeys.ts"
 import { DevTools } from "../components/DevTools"
 
 export const Route = createRootRoute({
@@ -24,7 +24,7 @@ function RootComponent() {
             // so, revokes the permissions of the session keys associated with the app.
             if (isFromAppPermissionsPage) {
                 const app = decodeURI(isFromAppPermissionsPage[1]) as AppURL
-                await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
+                await revokeSessionKeys(app, [...revokedSessionKeys.values()])
             }
         })
     }, [router])

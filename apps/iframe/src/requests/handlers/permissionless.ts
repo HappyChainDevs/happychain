@@ -5,7 +5,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAuthenticated, checkedAddress, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
-import { checkSessionKeyAuthorized, getSessionKey, revokeSessionKeyPermissions } from "#src/requests/utils/sessionKeys"
+import { checkSessionKeyAuthorized, getSessionKey, revokeSessionKeys } from "#src/requests/utils/sessionKeys"
 import {
     FORWARD,
     eth_estimateGas,
@@ -83,7 +83,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
         case "wallet_revokePermissions":
             checkAuthenticated()
             revokePermissions(app, request.payload.params[0])
-            if (revokedSessionKeys.size > 0) await revokeSessionKeyPermissions(app, [...revokedSessionKeys.values()])
+            if (revokedSessionKeys.size > 0) await revokeSessionKeys(app, [...revokedSessionKeys.values()])
             return []
 
         case "wallet_addEthereumChain":
