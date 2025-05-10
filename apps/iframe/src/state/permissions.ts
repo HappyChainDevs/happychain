@@ -283,6 +283,8 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
 
             appPermissions[name] = {
                 ...appPermissions[name],
+                // Avoid duplicate permissions. Only works for caveats with
+                // primitive values which is always the case now (session keys).
                 caveats: [...existingCaveats, ...newCaveats].filter(
                     (c1, index, self) => self.findIndex((c2) => c2.type === c1.type && c2.value === c1.value) === index,
                 ),
