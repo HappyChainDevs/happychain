@@ -4,7 +4,7 @@ import { BunSqliteDialect } from "kysely-bun-sqlite"
 import { env } from "#lib/env"
 import type { DB } from "./generated"
 import { SerializePlugin } from "./plugins/SerializerPlugin"
-import { transformerRules } from "./transformer-rules"
+import { transformerRules } from "./transformerRules"
 
 export const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database: new BunDatabase(env.DATABASE_URL) }),

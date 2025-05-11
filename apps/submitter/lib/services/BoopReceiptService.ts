@@ -1,9 +1,12 @@
 import { type Address, type Hash, type Hex, sleep } from "@happy.tech/common"
+import { type Result, err, ok } from "neverthrow"
 import { type Boop, type TransactionTypeName, computeBoopHash } from "#lib/client"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
+import { auto } from "#lib/database/tables"
 import { deployment, env } from "#lib/env"
 import type { BoopReceipt, Log, OnchainStatus, Receipt } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
+import { logger } from "#lib/utils/logger.ts"
 import { decodeEvent, getSelectorFromEventName } from "#lib/utils/parsing"
 
 const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
@@ -24,13 +27,16 @@ export class BoopReceiptService {
     }
 
     async #findNow(boopHash: Hash): Promise<BoopReceipt | undefined> {
-        // We need this because otherwise we can't know the association between a boopHash and a txHash.
-        const boopReceipt = await this.boopReceiptRepository.findByBoopHash(boopHash)
+        const receiptResult = await this.boopReceiptRepository.findByBoopHash(boopHash)
+        if (receiptResult.isErr()) {
+            logger.warn("Error while fetching receipt from DB", receiptResult.error)
+            return
+        }
+        const boopReceipt = receiptResult.value
         if (!boopReceipt) return
-        const txReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.transactionHash })
-        txReceipt.contractAddress ??= null // coerce to null
+        const txReceipt = await publicClient.getTransactionReceipt({ hash: boopReceipt.txHash })
+        txReceipt.contractAddress ??= null
         type txReceiptType = typeof txReceipt & { contractAddress: Address | null; type: TransactionTypeName }
-
         return {
             boopHash: boopHash,
             status: boopReceipt.status as OnchainStatus,
@@ -70,13 +76,10 @@ export class BoopReceiptService {
         return []
     }
 
-    // TODO: horrible return type conflict here. DB BoopReceipt is not equal to Spec BoopReceipt
-    async insertOrThrow(receipt: BoopReceipt): Promise<{ id: number | null }> {
+    async insert(receipt: BoopReceipt): Promise<Result<number, unknown>> {
         const { txReceipt, ...rest } = receipt
-        const receiptToInsert = { ...rest, transactionHash: txReceipt.transactionHash }
-        const data = await this.boopReceiptRepository.insert(receiptToInsert)
-        // TODO why does this happen? better error handling — but this never bubbles up, only ends up logged upstream
-        if (!data) throw new Error("Failed to insert receipt")
-        return { id: data.id }
+        const databaseEntry = { ...rest, id: auto, txHash: txReceipt.transactionHash }
+        const result = await this.boopReceiptRepository.insert(databaseEntry)
+        return result.isOk() ? ok(result.value.id) : err(result.error)
     }
 }

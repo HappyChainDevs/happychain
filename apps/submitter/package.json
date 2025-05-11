@@ -14,14 +14,9 @@
         "submitter-cli": "./dist/cli"
     },
     "exports": {
-        "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.es.d.ts",
             "default": "./dist/index.es.js"
-        },
-        "./migrate": {
-            "types": "./dist/migrate.es.d.ts",
-            "default": "./dist/migrate.es.js"
         },
         "./client": {
             "types": "./dist/client.es.d.ts",
