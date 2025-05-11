@@ -1,58 +1,18 @@
 import type { Insertable, Kysely } from "kysely"
-import type { BoopTransaction, DB } from "#lib/database/generated"
+import type * as Schema from "#lib/database/generated"
+import { Tables, auto } from "#lib/database/tables"
 
 export class BoopTransactionRepository {
-    constructor(private db: Kysely<DB>) {}
+    constructor(private db: Kysely<Schema.DB>) {}
 
-    async findByBoopHash(boopHash: `0x${string}`): Promise<BoopTransaction | undefined> {
-        return await this.db
-            .selectFrom("boop_transactions")
-            .selectAll()
-            .where("boopHash", "=", boopHash)
-            .executeTakeFirst()
+    async findByBoopHash(boopHash: `0x${string}`): Promise<Schema.Boop | undefined> {
+        return await this.db.selectFrom(Tables.Boops).selectAll().where("boopHash", "=", boopHash).executeTakeFirst()
     }
 
-    async insert(state: Insertable<BoopTransaction>): Promise<BoopTransaction | undefined> {
-        const {
-            account,
-            callData,
-            dest,
-            entryPoint,
-            executeGasLimit,
-            validateGasLimit,
-            validatePaymentGasLimit,
-            extraData,
-            gasLimit,
-            boopHash,
-            maxFeePerGas,
-            nonceTrack,
-            nonceValue,
-            payer,
-            submitterFee,
-            validatorData,
-            value,
-        } = state
-        const data = await this.db //
-            .insertInto("boop_transactions")
-            .values({
-                account,
-                callData,
-                dest,
-                entryPoint,
-                executeGasLimit,
-                validateGasLimit,
-                validatePaymentGasLimit,
-                extraData,
-                gasLimit,
-                boopHash,
-                maxFeePerGas,
-                nonceTrack,
-                nonceValue,
-                payer,
-                submitterFee,
-                validatorData,
-                value,
-            })
+    async insert(state: Insertable<Schema.Boop>): Promise<Schema.Boop | undefined> {
+        return await this.db //
+            .insertInto(Tables.Boops)
+            .values({ ...state, id: auto })
             .onConflict((oc) =>
                 // If the previous tx failed, and is retried with the exact same data,
                 // this will be a conflict on txHash, all signed data will be the same
@@ -60,16 +20,15 @@ export class BoopTransactionRepository {
                 oc
                     .column("boopHash")
                     .doUpdateSet({
-                        executeGasLimit,
-                        extraData,
-                        gasLimit,
-                        maxFeePerGas,
-                        submitterFee,
-                        validatorData,
+                        executeGasLimit: state.executeGasLimit,
+                        extraData: state.extraData,
+                        gasLimit: state.gasLimit,
+                        maxFeePerGas: state.maxFeePerGas,
+                        submitterFee: state.submitterFee,
+                        validatorData: state.validatorData,
                     }),
             )
             .returningAll()
             .executeTakeFirst()
-        return data
     }
 }

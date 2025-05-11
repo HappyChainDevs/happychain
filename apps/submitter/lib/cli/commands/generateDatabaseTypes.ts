@@ -1,7 +1,7 @@
 import { join } from "node:path"
 import { KyselyBunSqliteDialect, generate } from "kysely-codegen"
 import { db } from "#lib/database"
-import { overrides } from "#lib/database/type-generation-overrides"
+import { overrides } from "#lib/database/typeGenOverrides"
 
 /**
  * This generates all the typescript types definitions based on the current database state, and save
@@ -19,7 +19,6 @@ const typeCodeGenOptions = {
     camelCase: false,
     db,
     dialect: new KyselyBunSqliteDialect(),
-    // logger: new Logger(),
     outFile: join(baseDir, typeGenOutFile),
     overrides,
     singular: true,

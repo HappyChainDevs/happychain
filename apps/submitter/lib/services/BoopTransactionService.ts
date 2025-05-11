@@ -1,5 +1,6 @@
-import type { BoopTransaction } from "#lib/database/generated"
+import type * as Schema from "#lib/database/generated"
 import type { BoopTransactionRepository } from "#lib/database/repositories/BoopTransactionRepository"
+import { auto } from "#lib/database/tables"
 
 export class BoopTransactionService {
     constructor(private boopTransactionRepository: BoopTransactionRepository) {}
@@ -16,7 +17,7 @@ export class BoopTransactionService {
         return boop
     }
 
-    async insert(newData: Omit<BoopTransaction, "id">): Promise<BoopTransaction | undefined> {
-        return await this.boopTransactionRepository.insert(newData)
+    async insert(boopEntry: Omit<Schema.Boop, "id">): Promise<Schema.Boop | undefined> {
+        return await this.boopTransactionRepository.insert({ ...boopEntry, id: auto })
     }
 }

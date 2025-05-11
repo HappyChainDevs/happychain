@@ -1,4 +1,5 @@
 import type { Address, Hash } from "@happy.tech/common"
+import { err } from "neverthrow"
 import type { Hex } from "viem"
 import { env } from "#lib/env"
 import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
@@ -19,9 +20,7 @@ export class SubmitterService {
 
     async add(entryPoint: Address, boop: Boop, boopHash: Hash) {
         logger.trace("Saving boop to db", boopHash)
-        // TODO yolo db is broken
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop } as any)
+        return await this.boopTransactionService.insert({ boopHash, entryPoint, ...boop })
     }
 
     async monitorReceipt(boop: Boop, txHash: Hash) {
@@ -33,14 +32,15 @@ export class SubmitterService {
                 logger.warn("Persisted Boop not found. Could not finalize.", logData)
                 return
             }
-            const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
 
-            const { id: boopReceiptId } = receipt ? await this.boopReceiptService.insertOrThrow(receipt) : { id: null }
+            const receipt = await this.waitForSubmitReceipt({ boopHash, txHash })
+            const receiptResult = receipt ? await this.boopReceiptService.insert(receipt) : err(null)
+            const receiptId = receiptResult.isOk() ? receiptResult.value : null
 
             return await this.boopStateService.insert({
                 status: receipt.status,
-                boopTransactionId: persisted.id,
-                boopReceiptId: boopReceiptId as number,
+                boopId: persisted.id,
+                receiptId,
                 included: !!receipt.txReceipt.transactionHash,
             })
         } catch (err) {
