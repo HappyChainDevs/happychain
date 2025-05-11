@@ -54,6 +54,13 @@ export function outputForRevertError(
             }
         }
         case "ValidationReverted": {
+            const decodedReason = decodeRawError(decoded.args[0] as Hex)
+            if (decodedReason?.errorName === "AccountPaidSessionKeyBoop")
+                return {
+                    status: Onchain.ValidationReverted,
+                    revertData: decoded.args[0] as Hex,
+                    description: "Trying to validate a self-paying boop with a session key.",
+                }
             return {
                 status: Onchain.ValidationReverted,
                 description:
@@ -223,6 +230,18 @@ export function outputForExecuteError(status: OnchainStatus, revertData: Hex): S
         case Onchain.ExecuteReverted: {
             // TODO note account misbehaviour
             const decodedReason = decodeRawError(revertData)
+            switch (decodedReason?.errorName) {
+                case "CannotRegisterSessionKeyForValidator": {
+                    const description =
+                        "Trying to register a session key to interact with the session key validator itself, which is not allowed."
+                    return { status, revertData, description }
+                }
+                case "CannotRegisterSessionKeyForAccount": {
+                    const description =
+                        "Trying to register a session key to interact with a boop account, which is not allowed."
+                    return { status, revertData, description }
+                }
+            }
             if (decodedReason?.errorName)
                 return {
                     status,

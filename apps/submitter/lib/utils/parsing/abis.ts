@@ -95,6 +95,13 @@ const errorSignatures = [
     "WithdrawDelayTooShort()",
 
     // =================================================================================================================
+    // SessionKeyValidator extension (non-standard)
+
+    "AccountPaidSessionKeyBoop()",
+    "CannotRegisterSessionKeyForValidator()",
+    "CannotRegisterSessionKeyForAccount()",
+
+    // =================================================================================================================
     // Defined, but not handled
 
     // would trigger if using a Boop to call into another account/paymasters's validate/execute/validatePayment
