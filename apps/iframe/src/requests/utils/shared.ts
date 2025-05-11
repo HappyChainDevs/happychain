@@ -56,13 +56,13 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
             // Not sure this hash is a boop, try getting an EVM tx by this hash.
             return FORWARD
         }
-    } catch (_err) {
+    } catch (err) {
         // We had a cache hit without receipt, so this is a boop, just use that.
         if (cached) return formatTransaction(hash, cached)
 
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.
-        throw new EIP1474InternalError("failed to fetch boop state") // TODO pass cause once output format cleaned up
+        throw new EIP1474InternalError("failed to fetch boop state", err)
     }
 }
 
@@ -87,10 +87,10 @@ export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forwa
 
         boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
         return formatTransactionReceipt(hash, state.receipt)
-    } catch (_err) {
+    } catch (err) {
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,
         // in which case things are pretty fucked anyway, so might as well bail out.
-        throw new EIP1474InternalError("failed to fetch boop state") // TODO pass cause once output format cleaned up
+        throw new EIP1474InternalError("failed to fetch boop state", err)
     }
 }
 

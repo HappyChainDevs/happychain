@@ -7,11 +7,18 @@ import {
     type Receipt,
     type SimulateOutput,
     type SimulateSuccess,
-    type SubmitStatus,
     SubmitterError,
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
 import { Map2, Mutex } from "@happy.tech/common"
+import {
+    EIP1474InternalError,
+    EIP1474InvalidInput,
+    EIP1474LimitExceeded,
+    EIP1474TransactionRejected,
+    type HappyRpcError,
+    RevertRpcError,
+} from "@happy.tech/wallet-common"
 import { type Address, type Hash, type Hex, type TransactionEIP1559, zeroAddress } from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
@@ -103,10 +110,7 @@ export async function sendBoop(
         if (!isSponsored) {
             const output = await boopClient.simulate({ entryPoint, boop })
             reqLogger.trace("boop/simulate output", output)
-            if (output.status !== Onchain.Success) {
-                // TODO which error?
-                throw new BoopSimulationError(output)
-            }
+            if (output.status !== Onchain.Success) throw translateBoopError(output)
 
             boop.gasLimit = output.gas
             boop.validateGasLimit = output.validateGas
@@ -122,7 +126,7 @@ export async function sendBoop(
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
-        if (output.status !== Onchain.Success) throw new BoopExecutionError(output)
+        if (output.status !== Onchain.Success) throw translateBoopError(output)
         markBoopAsSuccess(output)
         return output.receipt.boopHash
     } catch (error) {
@@ -237,82 +241,46 @@ export function formatTransaction(
     } as TransactionEIP1559
 }
 
-// === ERROR HANDLING ==================================================================================================
-
-// TODO: expose these from the submitter
-
-// TODO: needs a better key type
-// biome-ignore format: consistency
-const boopErrorMessages: Record<SubmitStatus, string> = {
-    [SubmitterError.UnexpectedError]:
-    "The submitter failed with an unexpected error.",
-    [SubmitterError.ClientError]:
-        "The submitter could not be accessed due to a client-side error.",
-    [SubmitterError.BufferExceeded]:
-        "The submitter rejected the request because of its boop buffering policies.",
-    [SubmitterError.OverCapacity]:
-        "The submitter rejected the request because it is over capacity.",
-
-    // TODO: the following three are not in the ExecuteOutput.status type, but they should be
-    [SubmitterError.SimulationTimeout]:
-        "The RPC simulation call (or related RPC call) timed out.",
-    [SubmitterError.SubmitTimeout]:
-        "The RPC submit call (or related RPC call) timed out.",
-    [SubmitterError.ReceiptTimeout]:
-        "Timed out while waiting for a receipt. This could indicate that the submitter tx is stuck in the mempool or an RPC issue.",
-
-    [SubmitterError.RpcError]: "Error from the submitter node's JSON-RPC server.",
-    [SubmitterError.InvalidGasValues]: "Invalid gas values.",
-
-    [Onchain.ValidationReverted]:
-        "The account validation of the boop reverted. This indicates either a dysfunctional account or a dysfunctional submitter.",
-    [Onchain.ValidationRejected]:
-        "The account rejected the boop.",
-    [Onchain.ExecuteReverted]:
-        "The account's `execute` call reverted. This indicates either a dysfunctional account or a dysfunctional submitter.",
-    [Onchain.ExecuteRejected]:
-        "The account's `execute` function returned indicate a failure. This is typically caused by an incorrect input from the user.",
-    [Onchain.CallReverted]:
-        "The call made by the account's `execute` function reverted.",
-    [Onchain.PaymentValidationReverted]:
-        "The paymaster's `validatePayment` call reverted. This indicates either a dysfunctional paymaster or a dysfunctional submitter.",
-    [Onchain.PaymentValidationRejected]:
-        "The paymaster rejected the boop.",
-    [Onchain.PayoutFailed]:
-        "When self-paying and the payment from the account fails, either because IAccount.payout reverts, consumes too much gas, or does not transfer the full cost to the submitter.",
-    [Onchain.ExtensionAlreadyRegistered]:
-        "The extension has already been registered.",
-    [Onchain.ExtensionNotRegistered]:
-        "The extension has not been registered.",   
-    [Onchain.UnexpectedReverted]:
-        "Unexpected revert of the submission, most likely out-of-gas.",
-
-    // not used, there for type completeness
-    [Onchain.Success]: "success",
-
-
-    [Onchain.MissingValidationInformation]: "The boop passes simulation but can't be submitted onchain because either validation or payment validation has indicated that the status is unknown during validation",
-    [Onchain.GasPriceTooHigh]: "The boop got rejected because the gas price was above the maxFeePerGas.",
-    [Onchain.InvalidNonce]: "The nonce provided was invalid outside of simulation.",
-    [Onchain.InsufficientStake]: "The submitter or paymaster has insufficient stake.",
-    [Onchain.InvalidSignature]: "The account or the paymaster rejected the boop because of an invalid signature.",
-    [Onchain.InvalidExtensionValue]: "The account or the paymaster rejected the boop because an extension value in the extraData is invalid.",
-
-    [Onchain.EntryPointOutOfGas]: "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
-        "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
-}
-
-/**
- * Thrown to report to the user the failure of a boop sent to {@link execute} to be successfully executed onchain.
- */
-export class BoopExecutionError extends Error {
-    constructor(public readonly output: ExecuteOutput) {
-        super(boopErrorMessages[output.status])
+function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcError {
+    switch (output.status) {
+        case Onchain.MissingValidationInformation:
+        case Onchain.GasPriceTooHigh:
+        case Onchain.InvalidNonce:
+        case Onchain.ExecuteRejected:
+        case Onchain.InvalidExtensionValue:
+        case SubmitterError.InvalidGasValues:
+            return new EIP1474InvalidInput(output.description, output)
+        case Onchain.ValidationRejected:
+        case Onchain.PaymentValidationRejected:
+        case Onchain.InsufficientStake:
+        case Onchain.InvalidSignature:
+        case Onchain.ExtensionAlreadyRegistered:
+        case Onchain.ExtensionNotRegistered:
+            return new EIP1474TransactionRejected(output.description, output)
+        case Onchain.ExecuteReverted:
+        case Onchain.CallReverted:
+        case Onchain.ValidationReverted:
+        case Onchain.PaymentValidationReverted:
+        case Onchain.PayoutFailed:
+        case Onchain.EntryPointOutOfGas:
+        case Onchain.UnexpectedReverted:
+        case SubmitterError.UnexpectedError:
+            return new RevertRpcError(output.description, output)
+        case SubmitterError.BufferExceeded:
+        case SubmitterError.OverCapacity:
+            return new EIP1474LimitExceeded(output.description, output)
+        case SubmitterError.SimulationTimeout:
+        case SubmitterError.SubmitTimeout:
+        case SubmitterError.ReceiptTimeout:
+        case SubmitterError.RpcError:
+        case SubmitterError.ClientError:
+            return new EIP1474InternalError(output.description, output)
+        case Onchain.Success:
+            return new EIP1474InternalError("Not an error — implementation bug", output)
+        default: {
+            // Type check exhaustiveness.
+            const _: never = output
+        }
     }
-}
-
-export class BoopSimulationError extends Error {
-    constructor(public readonly output: SimulateOutput) {
-        super(boopErrorMessages[output.status])
-    }
+    return null as unknown as HappyRpcError
 }

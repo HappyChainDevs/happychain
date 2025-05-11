@@ -1,6 +1,6 @@
 // === EIP1474 ERROR CODES & DESCRIPTION ===============================================================================\
 
-import { HappyRpcError } from "./HappyRpcError"
+import { HappyRpcError, type HappyRpcErrorArgs } from "./HappyRpcError"
 
 /**
  * Standard Ethereum RPC Error Codes {@link https://eips.ethereum.org/EIPS/eip-1474#error-codes}
@@ -21,6 +21,7 @@ export enum EIP1474ErrorCodes {
     MethodNotFound = -32601, // JSON-RPC
     InvalidMethodParameters = -32602, // JSON-RPC (params validation failure)
     InternalError = -32603, // JSON-RPC (default for all non-specified errors)
+    // While this can be used for EVM reverts, we use `RevertRpcError` instead.
     InvalidInput = -32000, // EIP1474 (params structurally valid but semantically invalid)
     // (e.g. requesting a canonical block with a block num that is known, but not canonical)
     ResourceNotFound = -32001, // EIP1474
@@ -54,21 +55,35 @@ export const eip1474ErrorDescriptions = {
  * General Purpose Ethereum RPC error.
  */
 export class EthereumRpcError extends HappyRpcError {
-    constructor(code: EIP1474ErrorCodes, details?: string, ctxMessages?: string[]) {
-        super(code, eip1474ErrorDescriptions[code], details, ctxMessages)
+    constructor(args: Omit<HappyRpcErrorArgs, "shortMessage"> & { code: EIP1474ErrorCodes }) {
+        super({ ...args, shortMessage: eip1474ErrorDescriptions[args.code as EIP1474ErrorCodes] })
     }
 }
 
 /** Ethereum RPC error code -32000 */
 export class EIP1474InvalidInput extends EthereumRpcError {
-    constructor(details?: string) {
-        super(EIP1474ErrorCodes.InvalidInput, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1474ErrorCodes.InvalidInput, details, cause })
     }
 }
 
 /** Ethereum RPC error code -32603 */
 export class EIP1474InternalError extends EthereumRpcError {
-    constructor(details?: string) {
-        super(EIP1474ErrorCodes.InternalError, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1474ErrorCodes.InternalError, details, cause })
+    }
+}
+
+/** Ethereum RPC error code -32003 */
+export class EIP1474TransactionRejected extends EthereumRpcError {
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1474ErrorCodes.TransactionRejected, details, cause })
+    }
+}
+
+/** Ethereum RPC error code -32003 */
+export class EIP1474LimitExceeded extends EthereumRpcError {
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1474ErrorCodes.LimitExceeded, details, cause })
     }
 }

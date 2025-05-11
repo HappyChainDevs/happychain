@@ -20,7 +20,6 @@ import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-
 /**
  * Implementation of an extensible account
  */
