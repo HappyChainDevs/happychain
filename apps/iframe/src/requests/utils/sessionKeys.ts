@@ -3,11 +3,12 @@
  */
 
 import { ExtensionType, ExtraDataKey, encodeExtraData } from "@happy.tech/boop-sdk"
-import { type Address, PermissionNames } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import { EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { type Hex, encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
+import { Permissions } from "#src/constants/permissions"
 import { sendBoop } from "#src/requests/utils/boop"
 import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
@@ -130,7 +131,7 @@ export async function uninstallSessionKeyExtension(account: Address) {
  * Returns true iff the user has session key authorization for the target address.
  */
 export function isSessionKeyAuthorized(app: AppURL, target: Address): boolean {
-    const permissionRequest = { [PermissionNames.SESSION_KEY]: { target } }
+    const permissionRequest = { [Permissions.SessionKey]: { target } }
     return getPermissions(app, permissionRequest).length > 0
 }
 
@@ -190,7 +191,7 @@ export async function installNewSessionKey(app: AppURL, account: Address, target
  * Authorizes & stores the session for the target address.
  */
 export function authorizeSessionKey(app: AppURL, account: Address, target: Address, sessionKey: Hex) {
-    grantPermissions(app, { [PermissionNames.SESSION_KEY]: { target } })
+    grantPermissions(app, { [Permissions.SessionKey]: { target } })
     const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
     storage.set(StorageKey.SessionKeys, {
         ...storedSessionKeys,
@@ -243,7 +244,7 @@ export async function revokeSessionKeys(app: AppURL, targets: Address[]): Promis
 
         for (const target of targets) {
             // remove permissions + session key entries from local storage
-            const permissionRequest = { [PermissionNames.SESSION_KEY]: { target } }
+            const permissionRequest = { [Permissions.SessionKey]: { target } }
             revokePermissions(app, permissionRequest)
             revokedSessionKeys.clear()
             const { [target]: _, ...rest } = userSessionKeys

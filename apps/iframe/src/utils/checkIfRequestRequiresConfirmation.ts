@@ -2,7 +2,7 @@ import { HappyMethodNames } from "@happy.tech/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { requiresApproval } from "@happy.tech/wallet-common"
 import type { Address } from "viem/accounts"
-import { PermissionNames } from "#src/constants/permissions"
+import { Permissions } from "#src/constants/permissions"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
 import { getChains, getCurrentChain } from "../state/chains"
@@ -30,7 +30,7 @@ export function checkIfRequestRequiresConfirmation(
 
         case "eth_sendTransaction":
             return !hasPermissions(app, {
-                [PermissionNames.SESSION_KEY]: { target: payload.params[0].to },
+                [Permissions.SessionKey]: { target: payload.params[0].to },
             })
 
         case "wallet_requestPermissions":
@@ -61,7 +61,7 @@ export function checkIfRequestRequiresConfirmation(
             // 2. No session key exists for this contract
             return (
                 !hasPermissions(app, {
-                    [PermissionNames.SESSION_KEY]: {
+                    [Permissions.SessionKey]: {
                         target: targetAddress,
                     },
                 }) || !storedSessionKeys?.[user!.address]?.[targetAddress]
