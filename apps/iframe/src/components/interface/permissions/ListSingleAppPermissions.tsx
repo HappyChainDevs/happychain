@@ -127,13 +127,12 @@ export const ListSingleAppPermissions = ({ appURL, items }: ListDappPermissionsP
             </p>
         )
 
-    const eth_accounts = Permissions.Accounts
     const permissionNames = Object.keys(items)
 
     // Display connection permission first.
     const permissionsList: (readonly [string, WalletPermission])[] = [
-        ...(permissionNames.includes(eth_accounts) ? [[eth_accounts, items[eth_accounts]] as const] : []),
-        ...permissionNames.filter((name) => name !== eth_accounts).map((name) => [name, items[name]] as const),
+        ...(permissionNames.includes("eth_accounts") ? [["eth_accounts", items.eth_accounts] as const] : []),
+        ...permissionNames.filter((name) => name !== "eth_accounts").map((name) => [name, items[name]] as const),
     ]
 
     return (
