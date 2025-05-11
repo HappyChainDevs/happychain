@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.28;
 
+import {Encoding} from "boop/core/Encoding.sol";
+import {Utils} from "boop/core/Utils.sol";
 import {
     InvalidSignature,
     NotFromEntryPoint,
@@ -10,14 +12,14 @@ import {
     ExtensionNotRegistered,
     InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
+import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
+import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
+import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {Encoding} from "./../core/Encoding.sol";
-import {Utils} from "./../core/Utils.sol";
-import {ICustomExecutor, EXECUTOR_KEY} from "./../interfaces/ICustomExecutor.sol";
-import {ICustomValidator, VALIDATOR_KEY} from "./../interfaces/ICustomValidator.sol";
+
 
 /**
  * Implementation of an extensible account
@@ -25,6 +27,7 @@ import {ICustomValidator, VALIDATOR_KEY} from "./../interfaces/ICustomValidator.
 contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
     using ECDSA for bytes32;
     using Encoding for Boop;
+    using ExcessivelySafeCall for address;
 
     // ====================================================================================================
     // ERRORS
@@ -192,7 +195,14 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
                 }
             }
         } else {
-            (bool success, bytes memory returnData) = boop.dest.call{value: boop.value}(boop.callData);
+            (bool success, bytes memory returnData) = boop.dest.excessivelySafeCall(
+                // Buffer to ensure we have enough gas left to return.
+                // We have measure excessivelySafeCall overhead < 600 and output assignment ~100.
+                gasleft() - 1000,
+                boop.value,
+                256, // max return size
+                boop.callData
+            );
             if (!success) output.revertData = returnData;
             output.status = success ? CallStatus.SUCCEEDED : CallStatus.CALL_REVERTED;
         }

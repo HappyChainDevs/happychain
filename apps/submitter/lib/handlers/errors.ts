@@ -253,7 +253,6 @@ export function outputForExecuteError(status: OnchainStatus, revertData: Hex): S
             return {
                 status,
                 revertData,
-                // TODO check our account implem handles the OOG scenario + add this requirement to the spec
                 description: "The account's `execute` function reverted.\n" + faultyAccount,
             }
         }

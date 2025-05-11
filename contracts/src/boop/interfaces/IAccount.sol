@@ -42,8 +42,16 @@ interface IAccount {
      * The account is allowed to customize the call, or to perform additional pre and post
      * operations.
      *
-     * If the call fails, this function must set {interfaces/Types.ExecutionOutput}.revertData
+     * The function should set {interfaces/Types.ExecutionOutput}.status to the status of the
+     * call: succeeded, reverted, or rejected. Rejection indicates that the account itself
+     * could not process call, typically because the input (e.g. the extraData) is malformed.
+     *
+     * If the call reverts, this function must set {interfaces/Types.ExecutionOutput}.revertData
      * to the call's revert data.
+     *
+     * If the account rejects, it should set the revertData to an encoded error that explains
+     * the reason for rejection. The error {interfaces/EventsAndErrors.InvalidExtensionValue}
+     * is standard to indicate invalid extensions specified in the extraData.
      *
      * This function is called directly by {core/EntryPoint.submit} and should revert with
      * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint.
