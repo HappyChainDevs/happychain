@@ -21,7 +21,7 @@ interface ListItemProps {
 }
 
 const ListItem = ({ permission }: ListItemProps) => {
-    const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
+    const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker)
 
     // Cache the initial list of all session keys, so that they remained displayed even after we turn some of them off.
     const [allSessionKeys] = useState(() => {
@@ -52,7 +52,7 @@ const ListItem = ({ permission }: ListItemProps) => {
 
     const onSwitchToggle = useCallback(
         (e: SwitchCheckedChangeDetails) => {
-            const app = permission.invoker as AppURL
+            const app = permission.invoker
             const isSessionKey = permission.parentCapability === Permissions.SessionKey
 
             if (!isSessionKey) {
@@ -101,7 +101,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                     </p>
                     {allSessionKeys.map((target) => (
                         <SessionKeyCheckbox
-                            appURL={permission.invoker as AppURL}
+                            appURL={permission.invoker}
                             contract={target}
                             key={`${permission.parentCapability}-${target}`}
                             addActiveSessionKey={addActiveSessionKey}
