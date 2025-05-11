@@ -3,6 +3,7 @@ import {
     type BoopReceipt,
     type CreateAccountInput,
     type CreateAccountOutput,
+    type EVMReceipt,
     type ExecuteInput,
     type ExecuteOutput,
     GetPending,
@@ -11,7 +12,6 @@ import {
     type GetStateInput,
     type GetStateOutput,
     Onchain,
-    type Receipt,
     type SimulateInput,
     type SimulateOutput,
     type SubmitInput,
@@ -255,13 +255,10 @@ export class BoopClient {
         }
     }
 
-    #getTxReceiptOutput(receipt: Receipt): Receipt {
+    #getTxReceiptOutput(receipt: EVMReceipt): EVMReceipt {
         return {
             ...receipt,
-            blobGasPrice: receipt.blockNumber !== undefined ? BigInt(receipt.blockNumber) : undefined,
-            blobGasUsed: receipt.blockNumber !== undefined ? BigInt(receipt.blockNumber) : undefined,
             blockNumber: BigInt(receipt.blockNumber),
-            cumulativeGasUsed: BigInt(receipt.cumulativeGasUsed),
             effectiveGasPrice: BigInt(receipt.effectiveGasPrice),
             gasUsed: BigInt(receipt.gasUsed),
         }

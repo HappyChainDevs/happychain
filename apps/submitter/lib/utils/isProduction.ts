@@ -1,3 +1,4 @@
-import { env } from "#lib/env"
-
-export const isProduction = ["staging", "production"].includes(env.NODE_ENV)
+// import { env } from "#lib/env"
+//
+// export const isProduction = ["staging", "production"].includes(env.NODE_ENV)
+export const isProduction = true // TODO!

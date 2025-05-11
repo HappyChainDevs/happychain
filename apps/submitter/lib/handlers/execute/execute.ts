@@ -1,8 +1,8 @@
 import type { Hex } from "@happy.tech/common"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
-import { submit } from "#lib/handlers/submit/submit"
-import { boopReceiptService } from "#lib/services"
+import { submitInternal } from "#lib/handlers/submit/submit"
+import { receiptService } from "#lib/services"
 import { computeHash, simulationCache } from "#lib/services"
 import { Onchain, type OnchainStatus } from "#lib/types"
 import { SubmitterError } from "#lib/types"
@@ -13,16 +13,13 @@ import type { ExecuteInput, ExecuteOutput } from "./types"
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const entryPoint = data.entryPoint ?? deployment.EntryPoint
     const boopHash = computeHash(data.boop, { cache: true })
-    const submission = await submit(data)
+    const { txHash, ...submission } = await submitInternal(data, false)
 
     if (submission.status !== Onchain.Success) return submission
 
     logger.trace("Waiting for receipt", boopHash)
-    // TODO allow specifying a custom timeout
-    const receipt = await boopReceiptService.find(boopHash, env.RECEIPT_TIMEOUT)
-    logger.trace("Found receipt", boopHash, receipt)
-
-    if (!receipt)
+    const receipt = await receiptService.waitForInclusion(data.boop, txHash!, env.RECEIPT_TIMEOUT)
+    if (receipt.isErr())
         return {
             status: SubmitterError.ReceiptTimeout,
             stage: "execute",
@@ -31,11 +28,14 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
                 "The boop may still be included onchain later if the timeout was low.",
         }
 
-    if (receipt.txReceipt.status === "success") {
+    const boopReceipt = receipt.value
+    logger.trace("Found receipt", boopHash, boopReceipt.status)
+
+    if (boopReceipt.txReceipt.status === "success") {
         // TODO note misbehaviour
         // EntryPoint.submit succeeded, but check that the execution actually succeeded.
         let output: ExecuteOutput | undefined
-        for (const log of receipt.logs) {
+        for (const log of boopReceipt.logs) {
             const decoded = decodeEvent(log)
             if (!decoded) continue
             const status = getEntryPointStatusFromEventName(decoded?.eventName)
@@ -53,11 +53,11 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
             return output
         } else {
             logger.trace("Successfully executed", boopHash)
-            return { status: Onchain.Success, receipt }
+            return { status: Onchain.Success, receipt: boopReceipt }
         }
     }
 
-    const decoded = decodeRawError(receipt.revertData)
+    const decoded = decodeRawError(boopReceipt.revertData)
     const output = outputForRevertError(data.boop, boopHash, decoded)
 
     const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
@@ -66,7 +66,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         output.status === Onchain.UnexpectedReverted &&
         simulation &&
         simulation.status === Onchain.Success &&
-        receipt.txReceipt.gasUsed === BigInt(simulation.gas)
+        boopReceipt.txReceipt.gasUsed === BigInt(simulation.gas)
     ) {
         if (data.boop.payer === data.boop.account) {
             logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
@@ -77,7 +77,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
         return {
             status: Onchain.EntryPointOutOfGas,
             stage: "execute",
-            receipt,
+            receipt: boopReceipt,
             description:
                 "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
                 "this can indicate a `payout` function that consumes more gas during execution than during simulation.",

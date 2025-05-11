@@ -50,9 +50,9 @@ describe("routes: api/submitter", () => {
             const [result] = await Promise.all([
                 client.api.v1.boop.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
                 // don't need results, just need it to complete
-                client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } }),
+                client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } }),
             ])
-
+            console.log(await result.json())
             expect(result.status).toBe(200)
         })
         it("should fetch pending tx's by account", async () => {
