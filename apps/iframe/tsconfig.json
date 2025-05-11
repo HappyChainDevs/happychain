@@ -9,6 +9,7 @@
     "include": ["*.ts", "src"],
     "references": [
         {
+            // Alternative to importing the submitter package in package.json.
             "path": "../submitter/tsconfig.build.json"
         }
     ]
