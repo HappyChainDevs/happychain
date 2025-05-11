@@ -140,6 +140,8 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_requestPermissions": {
+            // NOTE: We don't yet support granting a session key via this method,
+            //       use HappyMethodNames.REQUEST_SESSION_KEY.
             const [{ eth_accounts, ...rest }] = request.payload.params
             if (eth_accounts) {
                 const injectedResponse = await sendToInjectedClient({
