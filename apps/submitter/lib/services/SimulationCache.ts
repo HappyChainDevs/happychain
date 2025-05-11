@@ -1,3 +1,4 @@
+import type { Address } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { env } from "#lib/env"
 import type { SimulateInput, SimulateOutput } from "#lib/handlers/simulate"
@@ -19,53 +20,53 @@ export class SimulationCache {
         this.outputMap = new Map()
     }
 
-    async findSimulation(boopHash: Hex): Promise<SimulateOutput | undefined> {
-        const value = this.outputMap.get(boopHash)
+    async findSimulation(entryPoint: Address, boopHash: Hex): Promise<SimulateOutput | undefined> {
+        const key = (entryPoint + boopHash) as Hex
+        const value = this.outputMap.get(key)
         if (value === undefined) return undefined
 
         // LRU logic: Move to end by re-inserting
-        this.outputMap.delete(boopHash)
-        this.outputMap.set(boopHash, value)
-        this.resetExpiry(boopHash)
+        this.outputMap.delete(key)
+        this.outputMap.set(key, value)
+        this.#resetExpiry(key)
 
         return value
     }
 
-    async insertSimulation(input: SimulateInput, output: SimulateOutput) {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), input.boop)
-        // TODO needs to key on the entrypoint too
+    async insertSimulation(input: Required<SimulateInput>, output: SimulateOutput) {
+        const key = (input.entryPoint + computeBoopHash(BigInt(env.CHAIN_ID), input.boop)) as Hex
 
-        if (this.expiryMap.has(boopHash)) this.clearExpiry(boopHash)
-        this.outputMap.set(boopHash, output)
+        if (this.expiryMap.has(key)) this.#clearExpiry(key)
+        this.outputMap.set(key, output)
         this.expiryMap.set(
-            boopHash,
-            setTimeout(() => this.delete(boopHash), this.ttl),
+            key,
+            setTimeout(() => this.#delete(key), this.ttl),
         )
 
         // Enforce maxSize by evicting the oldest entry if needed
         if (this.maxSize > 0 && this.outputMap.size > this.maxSize) {
             const firstKey = this.outputMap.keys().next().value
-            if (firstKey) this.delete(firstKey)
+            if (firstKey) this.#delete(firstKey)
         }
     }
 
-    private delete(boopHash: Hex): boolean {
-        this.clearExpiry(boopHash)
-        return this.outputMap.delete(boopHash)
+    #delete(key: Hex): boolean {
+        this.#clearExpiry(key)
+        return this.outputMap.delete(key)
     }
 
-    private resetExpiry(boopHash: Hex): void {
-        const expiry = this.expiryMap.get(boopHash)
+    #resetExpiry(key: Hex): void {
+        const expiry = this.expiryMap.get(key)
         if (!expiry) return
         clearTimeout(expiry)
-        const newTimeoutId = setTimeout(() => this.delete(boopHash), this.ttl)
-        this.expiryMap.set(boopHash, newTimeoutId)
+        const newTimeoutId = setTimeout(() => this.#delete(key), this.ttl)
+        this.expiryMap.set(key, newTimeoutId)
     }
 
-    private clearExpiry(boopHash: Hex): void {
-        const expiry = this.expiryMap.get(boopHash)
+    #clearExpiry(key: Hex): void {
+        const expiry = this.expiryMap.get(key)
         if (!expiry) return
         clearTimeout(expiry)
-        this.expiryMap.delete(boopHash)
+        this.expiryMap.delete(key)
     }
 }

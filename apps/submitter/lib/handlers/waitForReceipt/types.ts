@@ -1,4 +1,4 @@
-import type { Hash } from "@happy.tech/common"
+import type { Address, Hash } from "@happy.tech/common"
 import { GetState } from "#lib/handlers/getState/types"
 import type { SimulateOutput } from "#lib/handlers/simulate/types"
 import { type BoopReceipt, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
@@ -14,7 +14,10 @@ export const WaitForReceipt = {
 export type WaitForReceiptStatus = (typeof WaitForReceipt)[keyof typeof WaitForReceipt]
 
 export type WaitForReceiptInput = {
-    /** Hash of the Boop whose receipt is requested. */
+    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
+    entryPoint?: Address
+
+    /** Hash of the boop whose receipt is requested. */
     hash: Hash
 
     /**
