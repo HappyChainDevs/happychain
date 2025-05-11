@@ -320,9 +320,21 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
             // permissionsMapAtom.
             appPermissions[name] = grantedPermission
         }
+
         // Accounts permission granted, which lets the app access the user object.
         if (name === "eth_accounts" && isApp(app) && !isStandaloneIframe()) {
             emitUserUpdate(getUser())
+        }
+
+        // If the session keys were previously scheduled to be deleted & unregistered
+        // unchain, prevent that from happening. This can happens when toggling
+        // a session key permission off then on in the permission management UI.
+        //
+        // Note there is a possible rare race condition here, where a user toggles a session key off, then registers
+        // a new session key for the same target from the app, then toggles the old key back on in the UI. This should
+        // mostly not happen, but it will lead to two session keys for the same target to be displayed in the UI.
+        if (name === Permissions.SessionKey) {
+            newCaveats.forEach((c) => revokedSessionKeys.delete(c.value as Address))
         }
     }
 

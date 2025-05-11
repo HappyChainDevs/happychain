@@ -36,8 +36,9 @@ export const walletOpenSignalAtom = atom(false)
 export const { getValue: getWalletOpenSignal, setValue: setWalletOpenSignal } = accessorsFromAtom(walletOpenSignalAtom)
 
 /**
- * Stores **ADDRESSES** (not keys) for which session keys need to be revoked. This is not
- * an atom because it never needs to be used reactively — it's simply a way to pass data
- * from the permission management UI to the route transition handler (in `__root.tsx`).
+ * Stores **ADDRESSES** (not keys) for which session keys need to be revoked. This is not an atom
+ * because it never needs to be used reactively — it's simply a way to pass data from the permission
+ * grant/revoke functions to either the route transition handler (in __root.tsx, when modifying
+ * permission via the UI) or the request handler (when receiving a permission or session key RPC method).
  */
 export const revokedSessionKeys = new Set<Address>()
