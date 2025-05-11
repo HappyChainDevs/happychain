@@ -1,4 +1,5 @@
 import { HappyMethodNames } from "@happy.tech/common"
+import { Permissions } from "./permissions"
 
 export const requestLabels = {
     eth_requestAccounts: "Connect",
@@ -13,8 +14,8 @@ export const requestLabels = {
 } as const
 
 export const permissionDescriptions = {
-    eth_accounts: "Connection: the app can see your information and suggest transactions.",
-    happy_sessionKey: "Automatic approval: skip confirmation when this app interacts with approved contracts.",
+    [Permissions.Accounts]: "Connection: the app can see your information and suggest transactions.",
+    [Permissions.SessionKey]: "Automatic approval: skip confirmation when this app interacts with approved contracts.",
 }
 
 export type PermissionDescriptionIndex = keyof typeof permissionDescriptions

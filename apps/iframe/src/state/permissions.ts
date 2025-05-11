@@ -3,7 +3,7 @@ import { logger } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
-import { PermissionNames } from "#src/constants/permissions"
+import { Permissions } from "#src/constants/permissions"
 import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
@@ -77,7 +77,7 @@ export type PermissionRequestObject = {
  * A refinement of {@link PermissionRequestObject} for requesting session keys.
  */
 export type SessionKeyRequest = {
-    [PermissionNames.SESSION_KEY]: { target: Address }
+    [Permissions.SessionKey]: { target: Address }
 }
 
 /**
@@ -229,7 +229,7 @@ export function clearAppPermissions(app: AppURL): void {
 
     // Register session keys for onchain deregistrations.
     Object.values(getAppPermissions(app))
-        .filter((p: WalletPermission) => p.parentCapability === PermissionNames.SESSION_KEY)
+        .filter((p: WalletPermission) => p.parentCapability === Permissions.SessionKey)
         .flatMap((p) => p.caveats)
         .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
@@ -281,7 +281,7 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * @example Grant permission with caveat
  *```
  * grantPermissions(app, {
- *   [PermissionNames.SESSION_KEY]: {
+ *   [Permissions.SessionKey]: {
  *     target: contractAddress
  *   }
  * })
@@ -345,7 +345,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  * @example Revoke specific caveat
  * ```
  * revokePermissions(app, {
- *   [PermissionNames.SESSION_KEY]: {
+ *   [Permissions.SessionKey]: {
  *     target: "0xSpecificTargetAddress"
  *   }
  * })
@@ -370,7 +370,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
         // Otherwise, remove specific caveats.
 
         // For session key permission, register the targets for onchain deregistration.
-        if (name === PermissionNames.SESSION_KEY) {
+        if (name === Permissions.SessionKey) {
             caveats.forEach((caveat) => revokedSessionKeys.add(caveat.value as Address))
         }
 
@@ -400,7 +400,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
  *
  * This supports two types of permission checks :
  * 1. "Simple" permissions (e.g., "eth_accounts"), passed as a `string`
- * 2. Permissions with caveats (e.g., `{ [PermissionNames.SESSION_KEY]: { target: "0x..." } }`)
+ * 2. Permissions with caveats (e.g., `{ [Permissions.SessionKey]: { target: "0x..." } }`)
  *
  *
  * @example Simple permission
@@ -411,7 +411,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
  * @example Permission with caveats
  * ```
  * hasPermissions(app, {
- *   [PermissionNames.SESSION_KEY]: {
+ *   [Permissions.SessionKey]: {
  *     "target": "0x..."
  *   }
  * })

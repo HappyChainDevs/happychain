@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { PermissionNames } from "#src/constants/permissions"
+import { Permissions } from "#src/constants/permissions"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { currentChainAtom } from "#src/state/chains.ts"
 import { getAppURL } from "#src/utils/appURL"
 
 export const AppStatus = () => {
-    const hasPermission = useHasPermissions(PermissionNames.ETH_ACCOUNTS)
+    const hasPermission = useHasPermissions(Permissions.Accounts)
     const chain = useAtomValue(currentChainAtom)
 
     return (

@@ -1,8 +1,8 @@
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react"
-import { PermissionNames } from "#src/constants/permissions"
 import { useCallback, useState } from "react"
 import type { Address } from "viem"
 import { Switch } from "#src/components/primitives/toggle-switch/Switch"
+import { Permissions } from "#src/constants/permissions"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { revokedSessionKeys } from "#src/state/interfaceState"
@@ -25,26 +25,26 @@ const ListItem = ({ permission }: ListItemProps) => {
 
     // Cache the initial list of all session keys, so that they remained displayed even after we turn some of them off.
     const [allSessionKeys] = useState(() => {
-        if (permission.parentCapability !== PermissionNames.SESSION_KEY) return []
+        if (permission.parentCapability !== Permissions.SessionKey) return []
         return permission.caveats.map((c) => c.value as Address)
     })
 
     // These are the contract target that have active session keys. We maintain those in React state so that we can
     // toggle them back. In particular this is important when toggling the entire session key category on and off.
     const [activeSessionKeys, setActiveSessionKeys] = useState(() => {
-        if (permission.parentCapability !== PermissionNames.SESSION_KEY) return []
+        if (permission.parentCapability !== Permissions.SessionKey) return []
         return permission.caveats.map((c) => c.value as Address)
     })
 
     const addActiveSessionKey = (app: AppURL, request: SessionKeyRequest) => {
-        const target = request[PermissionNames.SESSION_KEY].target
+        const target = request[Permissions.SessionKey].target
         setActiveSessionKeys((prev) => [...prev, target])
         grantPermissions(app, request)
         revokedSessionKeys.delete(target)
     }
 
     const removeActiveSessionKey = (app: AppURL, request: SessionKeyRequest) => {
-        const target = request[PermissionNames.SESSION_KEY].target
+        const target = request[Permissions.SessionKey].target
         setActiveSessionKeys((prev) => prev.filter((t) => t !== target))
         revokePermissions(app, request)
         // revokePermission will add to revokedSessionKeys.
@@ -53,7 +53,7 @@ const ListItem = ({ permission }: ListItemProps) => {
     const onSwitchToggle = useCallback(
         (e: SwitchCheckedChangeDetails) => {
             const app = permission.invoker as AppURL
-            const isSessionKey = permission.parentCapability === PermissionNames.SESSION_KEY
+            const isSessionKey = permission.parentCapability === Permissions.SessionKey
 
             if (!isSessionKey) {
                 // No caveat to worry about for now.
@@ -63,7 +63,7 @@ const ListItem = ({ permission }: ListItemProps) => {
 
             for (const target of activeSessionKeys) {
                 if (e.checked) {
-                    grantPermissions(app, { [PermissionNames.SESSION_KEY]: { target } })
+                    grantPermissions(app, { [Permissions.SessionKey]: { target } })
                     revokedSessionKeys.delete(target as Address)
                 } else {
                     // The sessions keys will be unregistered onchain when transitioning away from
@@ -76,7 +76,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                     // despite being allowed onchain. This can only be a safety issues if the session keys
                     // are stolen, but if that is possible, then we have much bigger problems to worry about.
 
-                    revokePermissions(app, { [PermissionNames.SESSION_KEY]: { target } })
+                    revokePermissions(app, { [Permissions.SessionKey]: { target } })
                     revokedSessionKeys.add(target as Address)
                 }
             }
@@ -127,7 +127,7 @@ export const ListSingleAppPermissions = ({ appURL, items }: ListDappPermissionsP
             </p>
         )
 
-    const eth_accounts = PermissionNames.ETH_ACCOUNTS
+    const eth_accounts = Permissions.Accounts
     const permissionNames = Object.keys(items)
 
     // Display connection permission first.
