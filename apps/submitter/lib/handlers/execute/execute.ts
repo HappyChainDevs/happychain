@@ -3,8 +3,7 @@ import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { submit } from "#lib/handlers/submit/submit"
 import { boopReceiptService } from "#lib/services"
-import { simulationCache } from "#lib/services"
-import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { computeHash, simulationCache } from "#lib/services"
 import { Onchain, type OnchainStatus } from "#lib/types"
 import { SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
@@ -13,7 +12,7 @@ import type { ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const entryPoint = data.entryPoint ?? deployment.EntryPoint
-    const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })
+    const boopHash = computeHash(data.boop, { cache: true })
     const submission = await submit(data)
 
     if (submission.status !== Onchain.Success) return submission
