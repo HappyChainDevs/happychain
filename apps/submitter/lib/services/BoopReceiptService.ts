@@ -2,7 +2,6 @@ import { type Address, type Hash, type Hex, sleep } from "@happy.tech/common"
 import { type Boop, type TransactionTypeName, computeBoopHash } from "#lib/client"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { deployment, env } from "#lib/env"
-import { SubmitterError } from "#lib/errors"
 import type { BoopReceipt, Log, OnchainStatus, Receipt } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { decodeEvent, getSelectorFromEventName } from "#lib/utils/parsing"
@@ -76,7 +75,8 @@ export class BoopReceiptService {
         const { txReceipt, ...rest } = receipt
         const receiptToInsert = { ...rest, transactionHash: txReceipt.transactionHash }
         const data = await this.boopReceiptRepository.insert(receiptToInsert)
-        if (!data) throw new SubmitterError("Failed to insert receipt")
+        // TODO why does this happen? better error handling — but this never bubbles up, only ends up logged upstream
+        if (!data) throw new Error("Failed to insert receipt")
         return { id: data.id }
     }
 }

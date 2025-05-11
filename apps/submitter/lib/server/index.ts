@@ -72,10 +72,9 @@ app.onError(async (err, c) => {
     // re-format input validation errors
     if (err instanceof HTTPException && err.cause instanceof ZodError) {
         const error = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
-        return c.json({ error, requestId: c.get("requestId"), url: c.req.url }, 422)
+        return c.json({ error, requestId: c.get("requestId"), url: c.req.url }, 400)
     }
 
-    //
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)
 
     // standard hono exceptions
