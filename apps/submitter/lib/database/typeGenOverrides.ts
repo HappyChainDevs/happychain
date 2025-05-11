@@ -1,4 +1,3 @@
-import type { Address, Bytes, Int256, UInt32, UInt256 } from "@happy.tech/common"
 import { Tables } from "./tables"
 
 /**
@@ -9,16 +8,6 @@ import { Tables } from "./tables"
  */
 export const overrides = {
     columns: {
-        [`${Tables.Receipts}.boopHash`]: "`0x${string}`",
-        [`${Tables.Receipts}.gasCost`]: "bigint",
-        [`${Tables.Receipts}.gasUsed`]: "bigint",
-        [`${Tables.Receipts}.nonceTrack`]: "bigint",
-        [`${Tables.Receipts}.nonceValue`]: "bigint",
-        [`${Tables.Receipts}.revertData`]: "`0x${string}`",
-        [`${Tables.Receipts}.txHash`]: "`0x${string}`",
-
-        [`${Tables.States}.included`]: "boolean",
-
         [`${Tables.Boops}.entryPoint`]: "`0x${string}`",
         [`${Tables.Boops}.boopHash`]: "`0x${string}`",
         [`${Tables.Boops}.account`]: "`0x${string}`",
@@ -32,5 +21,23 @@ export const overrides = {
         [`${Tables.Boops}.callData`]: "`0x${string}`",
         [`${Tables.Boops}.validatorData`]: "`0x${string}`",
         [`${Tables.Boops}.extraData`]: "`0x${string}`",
+
+        [`${Tables.Receipts}.boopHash`]: "`0x${string}`",
+        [`${Tables.Receipts}.gasCost`]: "bigint",
+        // [`${Tables.Receipts}.gasUsed`]: "bigint",
+        [`${Tables.Receipts}.nonceTrack`]: "bigint",
+        [`${Tables.Receipts}.nonceValue`]: "bigint",
+        [`${Tables.Receipts}.revertData`]: "`0x${string}`",
+        [`${Tables.Receipts}.txHash`]: "`0x${string}`",
+
+        [`${Tables.EvmReceipts}.boopHash`]: "`0x${string}`",
+        [`${Tables.EvmReceipts}.transactionHash`]: "`0x${string}`",
+        [`${Tables.EvmReceipts}.status`]: "string",
+        [`${Tables.EvmReceipts}.from`]: "`0x${string}`",
+        [`${Tables.EvmReceipts}.to`]: "`0x${string}`",
+        [`${Tables.EvmReceipts}.blockHash`]: "`0x${string}`",
+        [`${Tables.EvmReceipts}.blockNumber`]: "bigint",
+        [`${Tables.EvmReceipts}.effectiveGasPrice`]: "bigint",
+        [`${Tables.EvmReceipts}.gasUsed`]: "bigint",
     },
 }

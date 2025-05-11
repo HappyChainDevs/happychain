@@ -12,7 +12,6 @@ export interface Boop {
   executeGasLimit: number;
   extraData: `0x${string}`;
   gasLimit: number;
-  id: number;
   maxFeePerGas: bigint;
   nonceTrack: bigint;
   nonceValue: bigint;
@@ -24,26 +23,28 @@ export interface Boop {
   value: bigint;
 }
 
+export interface EvmReceipt {
+  blockHash: `0x${string}`;
+  blockNumber: bigint;
+  boopHash: `0x${string}`;
+  effectiveGasPrice: bigint;
+  from: `0x${string}`;
+  gasUsed: bigint;
+  status: string;
+  to: `0x${string}`;
+  transactionHash: `0x${string}`;
+}
+
 export interface Receipt {
   boopHash: `0x${string}`;
   gasCost: bigint;
-  gasUsed: bigint;
-  id: number;
   revertData: `0x${string}`;
   status: string;
   txHash: `0x${string}`;
 }
 
-export interface State {
-  boopId: number;
-  id: number;
-  included: boolean;
-  receiptId: number | null;
-  status: string;
-}
-
 export interface DB {
   boops: Boop;
+  evm_receipts: EvmReceipt;
   receipts: Receipt;
-  states: State;
 }

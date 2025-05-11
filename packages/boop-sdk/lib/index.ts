@@ -116,7 +116,7 @@ export {
     // Ethereum Types
     //
     type Log,
-    type Receipt,
+    type EVMReceipt,
     type TransactionTypeName,
     TransactionType,
     //
