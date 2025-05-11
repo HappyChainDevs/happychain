@@ -35,6 +35,8 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
         }
 
         case "wallet_requestPermissions":
+            // NOTE: We don't yet support granting a session key via this method,
+            //       use HappyMethodNames.REQUEST_SESSION_KEY.
             return grantPermissions(app, request.payload.params[0])
 
         case "wallet_addEthereumChain": {
