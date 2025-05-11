@@ -29,7 +29,8 @@ export function outputForGenericError(error: unknown): SimulateError {
 export function outputForRevertError(
     boop: Boop,
     boopHash: Hash,
-    decoded?: DecodedRevertError,
+    decoded: DecodedRevertError | undefined,
+    simulation = false,
 ): SimulateFailed | SimulateError {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
@@ -56,8 +57,9 @@ export function outputForRevertError(
             return {
                 status: Onchain.ValidationReverted,
                 description:
-                    "Account reverted in `validate` — this is not standard compliant behaviour.\n" +
-                    "Are you sure you specified the correct account address?",
+                    "Account reverted in `validate` — this is not standard compliant behaviour." + simulation
+                        ? "\nAre you sure you specified the correct account address?"
+                        : "",
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -89,7 +91,6 @@ export function outputForRevertError(
 
             return {
                 status: Onchain.ValidationRejected,
-                // TODO provide a utility function for this
                 description: "Account rejected the boop, try parsing the revertData to see why",
                 revertData: decoded.args[0] as Hex,
             }
@@ -98,8 +99,9 @@ export function outputForRevertError(
             return {
                 status: Onchain.PaymentValidationReverted,
                 description:
-                    "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour.\n" +
-                    "Are you sure you specified the correct paymaster address?",
+                    "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour." + simulation
+                        ? "\nAre you sure you specified the correct paymaster address?"
+                        : "",
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -139,8 +141,6 @@ export function outputForRevertError(
             }
         }
         case "GasPriceTooHigh": {
-            // TODO this is for when this will be refactored for execute too
-            const simulation = true
             if (simulation) {
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {
@@ -162,7 +162,6 @@ export function outputForRevertError(
                 description: "Malformed boop simulated or submitted — this is an implementation bug, please report!",
             }
         }
-
         case "ExtensionAlreadyRegistered": {
             return {
                 status: Onchain.ExtensionAlreadyRegistered,
@@ -176,7 +175,6 @@ export function outputForRevertError(
                 status: Onchain.UnexpectedReverted,
             }
         }
-        // TODO later: extension stuff
     }
 }
 
