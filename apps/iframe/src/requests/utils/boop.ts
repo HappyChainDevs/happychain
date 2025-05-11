@@ -1,10 +1,10 @@
 import {
     type Boop,
     type BoopReceipt,
+    type EVMReceipt,
     type ExecuteOutput,
     type Log,
     Onchain,
-    type Receipt,
     type SimulateOutput,
     type SimulateSuccess,
     SubmitterError,
@@ -210,24 +210,25 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
 /**
  * Format a boop receipt in a transaction receipt returned by `eth_getTransactionReceipt`
  */
-export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): Receipt {
+export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): EVMReceipt {
     return {
+        // TODO tmp commenting out while working on submitter
         blockHash: receipt.txReceipt.blockHash,
         blockNumber: receipt.txReceipt.blockNumber,
-        contractAddress: receipt.txReceipt.contractAddress,
-        cumulativeGasUsed: receipt.txReceipt.cumulativeGasUsed,
+        // contractAddress: receipt.txReceipt.contractAddress,
+        // cumulativeGasUsed: receipt.txReceipt.cumulativeGasUsed,
         effectiveGasPrice: receipt.txReceipt.effectiveGasPrice,
         from: receipt.account,
         gasUsed: receipt.gasUsed,
         logs: receipt.logs as Log[], // TODO parse boop logs
-        logsBloom: receipt.txReceipt.logsBloom,
+        // logsBloom: receipt.txReceipt.logsBloom,
         status: receipt.status === Onchain.Success ? "success" : "reverted",
         to: "0x0", // TODO include Boop inside receipt and read from there
         transactionHash: hash,
-        transactionIndex: receipt.txReceipt.transactionIndex,
+        // transactionIndex: receipt.txReceipt.transactionIndex,
         type: receipt.txReceipt.type,
         boop: receipt,
-    } as Receipt
+    } as EVMReceipt
 }
 
 /**
@@ -259,7 +260,7 @@ export function formatTransaction(
         nonce: receipt?.nonceValue ? Number(receipt.nonceValue) : -1,
         input: boop?.callData || "0x",
         value: boop?.value ?? 0n,
-        transactionIndex: receipt?.txReceipt?.transactionIndex || null,
+        transactionIndex: null, // receipt?.txReceipt?.transactionIndex || null, // TODO tmp while working on submitter
         type: "eip1559", // it's a boop, so we're just putting the most usual thing in here
         typeHex: "0x2",
         chainId: Number(currentChain.chainId),

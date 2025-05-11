@@ -2,7 +2,7 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { GetState, Onchain, type Receipt } from "@happy.tech/boop-sdk"
+import { type EVMReceipt, GetState, Onchain } from "@happy.tech/boop-sdk"
 import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
 import { type Address, type Transaction, toHex } from "viem"
@@ -71,7 +71,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
  * tries to fetch it. If the hash is not found, the function returns {@link FORWARD} to signal that the request should
  * be passed to the public client to find an actual Ethereum transaction receipt.
  */
-export async function getTransactionReceipt(hash: Hash): Promise<Receipt | Forward | null> {
+export async function getTransactionReceipt(hash: Hash): Promise<EVMReceipt | Forward | null> {
     // TODO fill cache from sending side
     const cached = boopCache.get(hash)
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)

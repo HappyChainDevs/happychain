@@ -1,6 +1,6 @@
 import type { Address, Hash, Hex, UInt256 } from "@happy.tech/common"
 import type { OnchainStatus } from "./Onchain"
-import type { Log, Receipt } from "./ethereum"
+import type { EVMReceipt, Log } from "./ethereum"
 
 /**
  * Describes the result of a Boop that has been submitted onchain.
@@ -8,6 +8,12 @@ import type { Log, Receipt } from "./ethereum"
 export type BoopReceipt = {
     /** Boop identifying hash. */
     boopHash: Hash
+
+    /** Result of onchain submission of the Boop. */
+    status: OnchainStatus
+
+    /** EntryPoint to which the Boop was submitted onchain. */
+    entryPoint: Address
 
     /** Account that sent the Boop. */
     account: Address
@@ -17,12 +23,6 @@ export type BoopReceipt = {
 
     /** Nonce sequence number within the nonce track. */
     nonceValue: UInt256
-
-    /** EntryPoint to which the Boop was submitted onchain. */
-    entryPoint: Address
-
-    /** Result of onchain submission of the Boop. */
-    status: OnchainStatus
 
     /** Logs emitted by Boop. */
     logs: Log[]
@@ -43,6 +43,5 @@ export type BoopReceipt = {
      * Note that this transaction is allowed to do other things besides
      * carrying the boop, and could potentially have carried multiple boops.
      */
-    txReceipt: Receipt
-    // TODO omit stuff from here
+    txReceipt: EVMReceipt
 }
