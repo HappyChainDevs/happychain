@@ -36,6 +36,10 @@ migrate: ## Runs latest migrations
 	@./dist/cli migrate latest
 .PHONY: migrate
 
+db-types: ## Generate TS types for DB
+	@./dist/cli db-types
+.PHONY: db-types
+
 migrate-fresh: ## Deletes database and starts fresh
 	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
 	@./dist/cli migrate latest

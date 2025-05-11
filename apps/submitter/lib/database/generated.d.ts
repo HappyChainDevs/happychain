@@ -3,47 +3,47 @@
  * Please do not edit it manually.
  */
 
-export interface BoopReceipt {
-  boopHash: `0x${string}`;
-  gasCost: bigint;
-  gasUsed: bigint;
-  id: number | null;
-  revertData: `0x${string}`;
-  status: string;
-  transactionHash: `0x${string}`;
-}
-
-export interface BoopState {
-  boopReceiptId: number | null;
-  boopTransactionId: number;
-  id: number | null;
-  included: boolean;
-  status: string;
-}
-
-export interface BoopTransaction {
+export interface Boop {
   account: `0x${string}`;
   boopHash: `0x${string}`;
   callData: `0x${string}`;
   dest: `0x${string}`;
   entryPoint: `0x${string}`;
-  executeGasLimit: bigint;
+  executeGasLimit: number;
   extraData: `0x${string}`;
-  gasLimit: bigint;
-  id: number | null;
+  gasLimit: number;
+  id: number;
   maxFeePerGas: bigint;
   nonceTrack: bigint;
   nonceValue: bigint;
   payer: `0x${string}`;
   submitterFee: bigint;
-  validateGasLimit: bigint;
-  validatePaymentGasLimit: bigint;
+  validateGasLimit: number;
+  validatePaymentGasLimit: number;
   validatorData: `0x${string}`;
   value: bigint;
 }
 
+export interface Receipt {
+  boopHash: `0x${string}`;
+  gasCost: bigint;
+  gasUsed: bigint;
+  id: number;
+  revertData: `0x${string}`;
+  status: string;
+  txHash: `0x${string}`;
+}
+
+export interface State {
+  boopId: number;
+  id: number;
+  included: boolean;
+  receiptId: number | null;
+  status: string;
+}
+
 export interface DB {
-  boop_receipts: BoopReceipt;
-  boop_states: BoopState;
-  boop_transactions: BoopTransaction;
+  boops: Boop;
+  receipts: Receipt;
+  states: State;
 }

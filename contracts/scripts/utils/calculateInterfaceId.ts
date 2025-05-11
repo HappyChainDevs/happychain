@@ -1,3 +1,5 @@
+// TODO this file is outdated — interfaces have changed
+
 // Calculate ERC165 interface IDs for HappyAccount interfaces
 import { toFunctionSelector } from "viem"
 
