@@ -2,7 +2,7 @@ import type { Address } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { env } from "#lib/env"
 import type { SimulateInput, SimulateOutput } from "#lib/handlers/simulate"
-import { computeBoopHash } from "./computeBoopHash"
+import { computeHash } from "./computeHash"
 
 /**
  * A LRU cache to store simulation outputs.
@@ -34,7 +34,7 @@ export class SimulationCache {
     }
 
     async insertSimulation(input: Required<SimulateInput>, output: SimulateOutput) {
-        const key = (input.entryPoint + computeBoopHash(BigInt(env.CHAIN_ID), input.boop)) as Hex
+        const key = (input.entryPoint + computeHash(input.boop)) as Hex
 
         if (this.expiryMap.has(key)) this.#clearExpiry(key)
         this.outputMap.set(key, output)

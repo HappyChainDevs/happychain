@@ -1,8 +1,7 @@
-import { abis, deployment, env } from "#lib/env"
+import { abis, deployment } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { simulate } from "#lib/handlers/simulate"
-import { boopNonceManager, submitterService } from "#lib/services"
-import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { boopNonceManager, computeHash, submitterService } from "#lib/services"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
 import { type Boop, Onchain } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
@@ -12,7 +11,7 @@ import type { SubmitInput, SubmitOutput } from "./types"
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
     const { entryPoint = deployment.EntryPoint, boop } = input
-    const boopHash = computeBoopHash(env.CHAIN_ID, boop, { cache: true })
+    const boopHash = computeHash(boop, { cache: true })
     try {
         logger.trace("Submitting boop with hash", boopHash)
 

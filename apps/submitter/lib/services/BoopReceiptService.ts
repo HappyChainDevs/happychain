@@ -1,10 +1,10 @@
 import { type Address, type Hash, type Hex, sleep } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
-import { type Boop, type TransactionTypeName, computeBoopHash } from "#lib/client"
 import type { BoopReceiptRepository } from "#lib/database/repositories/BoopReceiptRepository"
 import { auto } from "#lib/database/tables"
-import { deployment, env } from "#lib/env"
-import type { BoopReceipt, Log, OnchainStatus, Receipt } from "#lib/types"
+import { deployment } from "#lib/env"
+import { computeHash } from "#lib/services"
+import type { Boop, BoopReceipt, Log, OnchainStatus, Receipt, TransactionTypeName } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger.ts"
 import { decodeEvent, getSelectorFromEventName } from "#lib/utils/parsing"
@@ -60,7 +60,7 @@ export class BoopReceiptService {
             if (fromEntryPoint && log.topics[0] === BOOP_SUBMITTED_SELECTOR) {
                 const decodedLog = decodeEvent(log)
                 if (!decodedLog) throw new Error("Found BoopSubmitted event but could not decode")
-                const decodedHash = computeBoopHash(env.CHAIN_ID, decodedLog.args as Boop)
+                const decodedHash = computeHash(decodedLog.args as Boop)
                 if (decodedHash === boopHash) {
                     return filteredLogs
                 } else {

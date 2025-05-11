@@ -1,12 +1,10 @@
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
-import { type Boop, Onchain } from "#lib/client"
 import { getSubmitterFee } from "#lib/custom/feePolicy"
 import { abis, deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
-import { computeBoopHash, simulationCache } from "#lib/services"
-import type { OnchainStatus } from "#lib/types"
-import { CallStatus, SubmitterError } from "#lib/types"
+import { computeHash, simulationCache } from "#lib/services"
+import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
@@ -17,7 +15,7 @@ export async function simulate(
     { entryPoint = deployment.EntryPoint, boop }: SimulateInput,
     forSubmit = false,
 ): Promise<SimulateOutput> {
-    const boopHash = computeBoopHash(env.CHAIN_ID, boop)
+    const boopHash = computeHash(boop)
     const encodedBoop = encodeBoop(boop)
     const selfPaying = boop.account === boop.payer
 
