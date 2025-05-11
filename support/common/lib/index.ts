@@ -10,9 +10,26 @@ export { FIFOCache } from "./collections/fifoCache"
 
 // === UTILS =======================================================================================
 
-export { type TaggedLogger, Logger, type LogTag, LogLevel, logLevel } from "./utils/logger"
+export {
+    bigIntMax,
+    bigIntReplacer,
+    bigIntReviver,
+    bigIntToZeroPadded,
+    serializeBigInt,
+    parseBigInt,
+    type BigIntSerialized,
+} from "./utils/bigint"
 
-export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
+export {
+    toBytes,
+    toDynamicLengthBytes,
+    getBytes,
+    getDynamicLengthBytes,
+    bytesToAddress,
+    bytesToBigInt,
+    bytesToNumber,
+    bytesToHex,
+} from "./utils/bytes"
 
 export type {
     HTTPString,
@@ -49,67 +66,29 @@ export type {
     ObjectFromTuples,
 } from "./utils/types"
 
-export {
-    bigIntMax,
-    bigIntReplacer,
-    bigIntReviver,
-    bigIntToZeroPadded,
-    serializeBigInt,
-    parseBigInt,
-    type BigIntSerialized,
-} from "./utils/bigint"
-
-export { validateNumericInput } from "./utils/regexChecks"
-
-export { createUUID, type UUID } from "./utils/uuid"
-
-export { nowInSeconds } from "./utils/date"
-
-export { onlyUnique } from "./utils/streams"
-
-export { debounce } from "./utils/debounce"
-
-export { throttle } from "./utils/throttle"
-
-export { promiseWithResolvers } from "./utils/promises"
-
-export {
-    toBytes,
-    toDynamicLengthBytes,
-    getBytes,
-    getDynamicLengthBytes,
-    bytesToAddress,
-    bytesToBigInt,
-    bytesToNumber,
-    bytesToHex,
-} from "./utils/bytes"
-
-export { sleep } from "./utils/sleep"
-
-export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises"
-
-export { keys, entries } from "./utils/records"
-
-export { unknownToError } from "./utils/error"
-
-export { HappyMethodNames, PermissionNames, TransactionType } from "./utils/constants"
-
-export { Mutex } from "./utils/mutex"
-
-export { fetchWithRetry } from "./utils/fetch"
-
-export { hasKey, hasDefinedKey, getProp, ifDef } from "./utils/objects"
-
-export { stringify } from "./utils/string"
-
-export { getUrlProtocol } from "./utils/urlProtocol"
-
 export { isAddress } from "./utils/address"
-
+export { HappyMethodNames, TransactionType } from "./utils/constants"
+export { nowInSeconds } from "./utils/date"
+export { debounce } from "./utils/debounce"
+export { unknownToError } from "./utils/error"
+export { fetchWithRetry } from "./utils/fetch"
 export { binaryPartition, partition } from "./utils/iterables"
+export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
+export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
+export { Mutex } from "./utils/mutex"
+export { getProp, hasDefinedKey, hasKey, ifDef } from "./utils/objects"
+export { promiseWithResolvers } from "./utils/promises"
+export type { PromiseWithResolvers, RejectType, ResolveInputType, ResolveType } from "./utils/promises"
+export { entries, keys } from "./utils/records"
+export { validateNumericInput } from "./utils/regexChecks"
+export { sleep } from "./utils/sleep"
+export { onlyUnique } from "./utils/streams"
+export { stringify } from "./utils/string"
+export { throttle } from "./utils/throttle"
+export { getUrlProtocol } from "./utils/urlProtocol"
+export { type UUID, createUUID } from "./utils/uuid"
 
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
-
 export { blankIcon, happyLogo128x128 } from "./data/icons"

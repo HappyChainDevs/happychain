@@ -1,4 +1,4 @@
-import { PermissionNames } from "@happy.tech/common"
+import { PermissionNames } from "#src/constants/permissions"
 import { generateTestUser } from "@happy.tech/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
