@@ -5,7 +5,6 @@ import { Switch } from "#src/components/primitives/toggle-switch/Switch"
 import { Permissions } from "#src/constants/permissions"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import { revokedSessionKeys } from "#src/state/interfaceState"
 import {
     type AppPermissions,
     type SessionKeyRequest,
@@ -36,53 +35,46 @@ const ListItem = ({ permission }: ListItemProps) => {
         return permission.caveats.map((c) => c.value as Address)
     })
 
-    const addActiveSessionKey = (app: AppURL, request: SessionKeyRequest) => {
+    const addActiveSessionKey = useCallback((app: AppURL, request: SessionKeyRequest) => {
         const target = request[Permissions.SessionKey].target
         setActiveSessionKeys((prev) => [...prev, target])
         grantPermissions(app, request)
-        revokedSessionKeys.delete(target)
-    }
+    }, [])
 
-    const removeActiveSessionKey = (app: AppURL, request: SessionKeyRequest) => {
+    const removeActiveSessionKey = useCallback((app: AppURL, request: SessionKeyRequest) => {
         const target = request[Permissions.SessionKey].target
         setActiveSessionKeys((prev) => prev.filter((t) => t !== target))
         revokePermissions(app, request)
-        // revokePermission will add to revokedSessionKeys.
+    }, [])
+
+    const onSwitchToggle = (e: SwitchCheckedChangeDetails) => {
+        const app = permission.invoker
+        const isSessionKey = permission.parentCapability === Permissions.SessionKey
+
+        if (!isSessionKey) {
+            // No caveat to worry about for now.
+            if (e.checked) grantPermissions(app, permission.parentCapability)
+            else revokePermissions(app, permission.parentCapability)
+        }
+
+        for (const target of activeSessionKeys) {
+            if (e.checked) {
+                grantPermissions(app, { [Permissions.SessionKey]: { target } })
+            } else {
+                // The sessions keys will be unregistered onchain when transitioning away from
+                // the page (cf. transition handler in `__root.tsx`). This avoids sending
+                // redundant transactions if permissions are being toggled on and off.
+                //
+                // This is not 100% optimal, e.g. the user can toggle off the session keys and then
+                // exit the page, causing the session keys to be deleted locally but not unregistered
+                // onchain. This is generally safe — the session key will be lost (deleted) so unusable
+                // despite being allowed onchain. This can only be a safety issues if the session keys
+                // are stolen, but if that is possible, then we have much bigger problems to worry about.
+
+                revokePermissions(app, { [Permissions.SessionKey]: { target } })
+            }
+        }
     }
-
-    const onSwitchToggle = useCallback(
-        (e: SwitchCheckedChangeDetails) => {
-            const app = permission.invoker
-            const isSessionKey = permission.parentCapability === Permissions.SessionKey
-
-            if (!isSessionKey) {
-                // No caveat to worry about for now.
-                if (e.checked) grantPermissions(app, permission.parentCapability)
-                else revokePermissions(app, permission.parentCapability)
-            }
-
-            for (const target of activeSessionKeys) {
-                if (e.checked) {
-                    grantPermissions(app, { [Permissions.SessionKey]: { target } })
-                    revokedSessionKeys.delete(target as Address)
-                } else {
-                    // The sessions keys will be unregistered onchain when transitioning away from
-                    // the page (cf. transition handler in `__root.tsx`). This avoids sending
-                    // redundant transactions if permissions are being toggled on and off.
-                    //
-                    // This is not 100% optimal, e.g. the user can toggle off the session keys and then
-                    // exit the page, causing the session keys to be deleted locally but not unregistered
-                    // onchain. This is generally safe — the session key will be lost (deleted) so unusable
-                    // despite being allowed onchain. This can only be a safety issues if the session keys
-                    // are stolen, but if that is possible, then we have much bigger problems to worry about.
-
-                    revokePermissions(app, { [Permissions.SessionKey]: { target } })
-                    revokedSessionKeys.add(target as Address)
-                }
-            }
-        },
-        [permission, activeSessionKeys],
-    )
 
     return (
         <div className="w-full">
