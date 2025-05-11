@@ -1,12 +1,12 @@
 import { Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
-import type { SubmitError } from "#lib/client.ts"
 import { abis, env } from "#lib/env"
 import type { PendingBoopInfo } from "#lib/handlers/getPending"
+import type { SubmitError } from "#lib/handlers/submit"
 import { type Boop, SubmitterError } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
-import { computeBoopHash } from "./computeBoopHash"
+import { computeHash } from "./computeHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
@@ -82,7 +82,7 @@ export class BoopNonceManagerService {
         this.blockedTxMap
             .getOrSet(boop.account, boop.nonceTrack, () => new Map())
             .set(boop.nonceValue, {
-                hash: computeBoopHash(BigInt(env.CHAIN_ID), boop),
+                hash: computeHash(boop),
                 resolve: (response: Result<undefined, SubmitError>) => {
                     clearTimeout(timeout)
                     resolve(response)

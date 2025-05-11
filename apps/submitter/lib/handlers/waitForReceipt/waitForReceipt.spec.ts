@@ -3,7 +3,7 @@ import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
-import { computeBoopHash } from "#lib/services/computeBoopHash"
+import { computeHash } from "#lib/services"
 import type { Boop } from "#lib/types"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
@@ -30,7 +30,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
+        const boopHash = computeHash(signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
@@ -45,7 +45,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), signedTx)
+        const boopHash = computeHash(signedTx)
 
         // submit transaction but don't wait to complete
         client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })

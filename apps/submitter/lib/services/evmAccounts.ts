@@ -5,7 +5,7 @@ import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import type { Boop } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import { computeBoopHash } from "./computeBoopHash"
+import { computeHash } from "./computeHash"
 
 /**
   flowchart TD
@@ -45,7 +45,7 @@ export const defaultAccount: Account = evmAccounts[0]
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
 
-    const hash = computeBoopHash(BigInt(env.CHAIN_ID), tx)
+    const hash = computeHash(tx)
     return executorService.get(hash, tx.account, tx.nonceTrack)
 }
 

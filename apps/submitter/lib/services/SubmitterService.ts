@@ -1,7 +1,6 @@
 import type { Address, Hash } from "@happy.tech/common"
 import { err } from "neverthrow"
 import type { Hex } from "viem"
-import { env } from "#lib/env"
 import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
@@ -9,7 +8,7 @@ import { logger } from "#lib/utils/logger"
 import type { BoopReceiptService } from "./BoopReceiptService"
 import type { BoopStateService } from "./BoopStateService"
 import type { BoopTransactionService } from "./BoopTransactionService"
-import { computeBoopHash } from "./computeBoopHash"
+import { computeHash } from "./computeHash"
 
 export class SubmitterService {
     constructor(
@@ -24,7 +23,7 @@ export class SubmitterService {
     }
 
     async monitorReceipt(boop: Boop, txHash: Hash) {
-        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
+        const boopHash = computeHash(boop)
         try {
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
             if (!persisted?.id) {

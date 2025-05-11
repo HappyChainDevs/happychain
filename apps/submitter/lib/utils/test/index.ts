@@ -3,9 +3,8 @@ import type { Address, PrivateKeyAccount } from "viem"
 import { zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
-import { abis, deployment, env } from "#lib/env"
-import { computeBoopHash } from "#lib/services/computeBoopHash"
-import { findExecutionAccount } from "#lib/services/evmAccounts"
+import { abis, deployment } from "#lib/env"
+import { computeHash, findExecutionAccount } from "#lib/services"
 import type { Boop } from "#lib/types"
 import { publicClient, walletClient } from "#lib/utils/clients"
 import type { inputSchema as ExecuteInputSchema } from "#lib/utils/validation/boop"
@@ -110,7 +109,7 @@ export function createMockTokenAMintBoop(
 }
 
 export async function signTx(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
-    const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
+    const boopHash = computeHash(boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return { ...boop, validatorData }
 }
