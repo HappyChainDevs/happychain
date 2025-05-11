@@ -14,7 +14,7 @@ import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
  */
 interface IAccount {
     /**
-     * Validates a Boop.
+     * Validates a boop.
      *
      * This function returns abi.encodeWithSelector(bytes4(0)) if the account validates the boop
      * according to its own rules, and an encoded custom error selector otherwise to indicate the
