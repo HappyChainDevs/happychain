@@ -80,7 +80,7 @@ export async function simulate(
     } catch (error) {
         const revert = getRevertError(error)
         const output = revert.isContractRevert
-            ? outputForRevertError(boop, boopHash, revert.decoded)
+            ? outputForRevertError(boop, boopHash, revert.decoded, true)
             : outputForGenericError(error)
 
         noteSimulationMisbehaviour(boop, output)
