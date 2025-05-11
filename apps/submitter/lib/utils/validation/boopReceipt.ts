@@ -9,7 +9,6 @@ const logSchema = z.object({
     blockHash: z.string().refine(isHexString).openapi({ example: "0x" }),
     blockNumber: z.string().openapi({ example: "12345" }),
     blockTimestamp: z.string().optional().openapi({ example: Date.now().toString() }),
-    // yeee
     data: z.string().openapi({ example: "0x" }),
     logIndex: z.number().openapi({ example: 0 }),
     removed: z.boolean().openapi({ example: false }),
