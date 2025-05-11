@@ -12,6 +12,7 @@ import { decodeEvent, decodeRawError } from "#lib/utils/parsing"
 import type { ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
+    const entryPoint = data.entryPoint ?? deployment.EntryPoint
     const boopHash = computeBoopHash(env.CHAIN_ID, data.boop, { cache: true })
     const submission = await submit(data)
 
@@ -41,7 +42,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
             const status = getEntryPointStatusFromEventName(decoded?.eventName)
             if (!status) continue
             // Don't get pranked by contracts emitting the same event.
-            if (log.address.toLowerCase() !== deployment.EntryPoint.toLowerCase()) continue
+            if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
             output = {
                 ...outputForExecuteError(status, decoded.args.revertData as Hex),
                 stage: "execute",
@@ -60,7 +61,7 @@ export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
     const decoded = decodeRawError(receipt.revertData)
     const output = outputForRevertError(data.boop, boopHash, decoded)
 
-    const simulation = await simulationCache.findSimulation(boopHash)
+    const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
 
     if (
         output.status === Onchain.UnexpectedReverted &&

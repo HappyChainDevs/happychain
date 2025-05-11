@@ -1,4 +1,4 @@
-import type { Hash } from "@happy.tech/common"
+import type { Address, Hash } from "@happy.tech/common"
 import type { SimulateOutput } from "#lib/handlers/simulate/types"
 import { type BoopReceipt, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 
@@ -16,7 +16,12 @@ export const GetState = {
 
 export type GetStateStatus = (typeof GetState)[keyof typeof GetState]
 
-export type GetStateInput = { hash: Hash }
+export type GetStateInput = {
+    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
+    entryPoint?: Address
+    /** Hash of the boop whose state to retrieve. */
+    hash: Hash
+}
 
 export type GetStateOutput = GetStateReceipt | GetStateSimulated | GetStateUnknown | GetStateError
 
