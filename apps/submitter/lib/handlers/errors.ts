@@ -64,7 +64,7 @@ export function outputForRevertError(
             return {
                 status: Onchain.ValidationReverted,
                 description:
-                    "Account reverted in `validate` — this is not standard compliant behaviour." + simulation
+                    "Account reverted in `validate`. " + faultyAccount + simulation
                         ? "\nAre you sure you specified the correct account address?"
                         : "",
                 revertData: decoded.args[0] as Hex,
@@ -98,7 +98,7 @@ export function outputForRevertError(
 
             return {
                 status: Onchain.ValidationRejected,
-                description: "Account rejected the boop, try parsing the revertData to see why",
+                description: "Account rejected the boop. " + tryParsing,
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -143,7 +143,7 @@ export function outputForRevertError(
             }
             return {
                 status: Onchain.PaymentValidationRejected,
-                description: "Paymaster rejected the boop, try parsing the revertData to see why",
+                description: "Paymaster rejected the boop. " + tryParsing,
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -261,8 +261,6 @@ export function outputForExecuteError(status: OnchainStatus, revertData: Hex): S
             throw new Error("Implementation error: invalid status passed to `outputForExecuteError`")
     }
 }
-
-// TODO apply string sharing to `outputForRevertError` as well
 
 const tryParsing = "Try parsing the revertData to understand why."
 
