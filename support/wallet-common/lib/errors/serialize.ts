@@ -11,6 +11,7 @@ export type SerializedRpcError = {
     code: number
     details?: string
     ctxMessages?: string[]
+    cause?: string
 }
 
 /**
@@ -30,7 +31,12 @@ export function standardizeRpcError(error: unknown): HappyRpcError {
  */
 export function serializeRpcError(error: unknown, ctxMessages?: string[]): SerializedRpcError {
     if (error instanceof ProviderRpcError || error instanceof EthereumRpcError) {
-        return { code: error.code, details: error.details }
+        return {
+            code: error.code,
+            details: error.details,
+            ctxMessages: [...(error.ctxMessages ?? []), ...(ctxMessages ?? [])],
+            cause: stringify(error.cause),
+        }
     }
     if (typeof error === "string") {
         return { code: EIP1474ErrorCodes.InternalError, details: error }
@@ -39,12 +45,12 @@ export function serializeRpcError(error: unknown, ctxMessages?: string[]): Seria
         return { code: EIP1474ErrorCodes.InternalError }
     }
 
-    let msgArray = (ctxMessages ?? []).map(stringify)
+    let msgArray = ctxMessages ?? []
     msgArray = msgArray.concat((getProp(error, "ctxMessages", "array") ?? []).map(stringify))
-    const maybectxMessages = msgArray.length > 0 ? msgArray : undefined
+    const maybeCtxMessages = msgArray.length > 0 ? msgArray : undefined
 
     const code = getProp(error, "code", "number") ?? EIP1474ErrorCodes.InternalError
-    return rpcErrorObjectWithCode(code, error, maybectxMessages)
+    return rpcErrorObjectWithCode(code, error, maybeCtxMessages)
 }
 
 /**
@@ -66,6 +72,7 @@ function rpcErrorObjectWithCode(code: number, error: object, ctxMessages?: strin
     const errMessage = hasDefinedKey(error, "message") ? stringify(error.message) : undefined
     const errDetails = hasDefinedKey(error, "details") ? stringify(error.details) : undefined
     const errData = hasDefinedKey(error, "data") ? stringify(error.data) : undefined
+    const cause = hasDefinedKey(error, "cause") ? stringify(error.cause) : undefined
 
     let details = errMessage
     if (!details) {
@@ -82,17 +89,17 @@ function rpcErrorObjectWithCode(code: number, error: object, ctxMessages?: strin
         if (string !== "[object Object]") details = string
     }
 
-    return { code, details, ctxMessages }
+    return { code, details, ctxMessages, cause }
 }
 
 /**
  * Convert a serialized provider RPC error into a suitable {@link Error} instance.
  */
 export function parseRpcError(error: SerializedRpcError): HappyRpcError {
-    if (isEIP1193ErrorCode(error.code)) return new ProviderRpcError(error.code, error.details, error.ctxMessages)
-    if (isEIP1474ErrorCode(error.code)) return new EthereumRpcError(error.code, error.details, error.ctxMessages)
+    if (isEIP1193ErrorCode(error.code)) return new ProviderRpcError(error)
+    if (isEIP1474ErrorCode(error.code)) return new EthereumRpcError(error)
 
     // This should never happen, so we do a brute log to warn.
     console.log(`WARNING: unknown rpc error code: ${error.code}`)
-    return new EthereumRpcError(EIP1474ErrorCodes.InternalError, error.details, error.ctxMessages)
+    return new EthereumRpcError({ ...error, code: EIP1474ErrorCodes.InternalError })
 }

@@ -1,6 +1,6 @@
 // === EIP1193 ERROR CODES & DESCRIPTION ===============================================================================
 
-import { HappyRpcError } from "./HappyRpcError"
+import { HappyRpcError, type HappyRpcErrorArgs } from "./HappyRpcError"
 
 /**
  * Standard Provider Error Codes ({@link https://eips.ethereum.org/EIPS/eip-1193#provider-errors})
@@ -40,49 +40,49 @@ export const eip1193ErrorDescriptions = {
  * be relied on for detection — use the {@link code} field instead.
  */
 export class ProviderRpcError extends HappyRpcError {
-    constructor(code: EIP1193ErrorCodes, details?: string, ctxMessages?: string[]) {
-        super(code, eip1193ErrorDescriptions[code], details, ctxMessages)
+    constructor(args: Omit<HappyRpcErrorArgs, "shortMessage"> & { code: EIP1193ErrorCodes }) {
+        super({ ...args, shortMessage: eip1193ErrorDescriptions[args.code] })
     }
 }
 
 /** Provider RPC error code 4001 */
 export class EIP1193UserRejectedRequestError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.UserRejectedRequest, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.UserRejectedRequest, details, cause })
     }
 }
 
 /** Provider RPC error code 4100 */
 export class EIP1193UnauthorizedError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.Unauthorized, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.Unauthorized, details, cause })
     }
 }
 
 /** Provider RPC error code 4200 */
 export class EIP1193UnsupportedMethodError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.UnsupportedMethod, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.UnsupportedMethod, details, cause })
     }
 }
 
 /** Provider RPC error code 4900 */
 export class EIP1193DisconnectedError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.Disconnected, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.Disconnected, details, cause })
     }
 }
 
 /** Provider RPC error code 4901 */
 export class EIP1193ChainDisconnectedError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.ChainDisconnected, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.ChainDisconnected, details, cause })
     }
 }
 
 /** Provider RPC error code 4902 */
 export class EIP1193SwitchChainError extends ProviderRpcError {
-    constructor(details?: string) {
-        super(EIP1193ErrorCodes.SwitchChainError, details)
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1193ErrorCodes.SwitchChainError, details, cause })
     }
 }
