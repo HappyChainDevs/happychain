@@ -1,7 +1,6 @@
 import type { Address, Hash } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { env } from "#lib/env"
-import { InvalidTransactionRecipientError } from "#lib/errors"
 import type { Boop, BoopReceipt, TransactionTypeName } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
@@ -26,8 +25,8 @@ export class SubmitterService {
     }
 
     async monitorReceipt(boop: Boop, txHash: Hash) {
+        const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
         try {
-            const boopHash = computeBoopHash(BigInt(env.CHAIN_ID), boop)
             const persisted = await this.boopTransactionService.findByBoopHash(boopHash)
             if (!persisted?.id) {
                 const logData = { txHash, boopHash, boop }
@@ -45,7 +44,7 @@ export class SubmitterService {
                 included: !!receipt.txReceipt.transactionHash,
             })
         } catch (err) {
-            logger.warn("Error while finalizing Boop", err)
+            logger.warn("Error while monitoring receipt", boopHash, err)
         }
     }
 
@@ -57,7 +56,8 @@ export class SubmitterService {
         // TODO this needs a timeout / cancellation policy
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
-        if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(boopHash)
+        if (typeof receipt.to !== "string")
+            throw new Error(`Invalid transaction recipient for boop with hash ${boopHash}`)
 
         return {
             boopHash,

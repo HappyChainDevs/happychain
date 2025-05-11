@@ -74,7 +74,7 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
 
         boopNonceManager.incrementLocalNonce(boop)
         // TODO don't monitor unless asked
-        submitterService.monitorReceipt(boop, txHash)
+        void submitterService.monitorReceipt(boop, txHash)
 
         return {
             status: Onchain.Success,
