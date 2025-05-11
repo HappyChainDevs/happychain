@@ -4,11 +4,6 @@ export enum HappyMethodNames {
     REQUEST_SESSION_KEY = "happy_requestSessionKey",
 }
 
-export enum PermissionNames {
-    SESSION_KEY = "happy_sessionKey",
-    ETH_ACCOUNTS = "eth_accounts",
-}
-
 export enum TransactionType {
     /**
      * Legacy tx include both pre- and post-EIP155 (replay protection) transactions. These are indistinguishable, they

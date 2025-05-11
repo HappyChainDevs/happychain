@@ -1,5 +1,5 @@
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react"
-import { PermissionNames } from "@happy.tech/common"
+import { PermissionNames } from "#src/constants/permissions"
 import { useCallback, useState } from "react"
 import type { Address } from "viem"
 import { Switch } from "#src/components/primitives/toggle-switch/Switch"
