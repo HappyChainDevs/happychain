@@ -17,6 +17,7 @@
         "avoid-tx-origin": "off",
         "no-console": "off",
         "gas-custom-errors": "off",
-        "imports-order": "warn"
+        "imports-order": "warn",
+        "import-path-check": "off"
     }
 }

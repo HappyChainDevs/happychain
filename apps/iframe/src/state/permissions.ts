@@ -1,4 +1,4 @@
-import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
+import { type UUID, createUUID } from "@happy.tech/common"
 import { logger } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
