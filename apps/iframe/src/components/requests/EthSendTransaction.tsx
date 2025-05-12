@@ -74,19 +74,15 @@ export const EthSendTransaction = ({
         enabled: isValidTransaction,
     })
 
-    const validTx = useMemo(() => {
-        if (!tx.to || !isAddress(tx.to)) throw new Error("Invalid or missing `to` address")
-
-        return {
-            ...tx,
-            maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
-            maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
-            gasPrice: ifDef(txGasPrice, toHex),
-            gas: ifDef(txGasLimit, toHex),
-            type: txType,
-            from: (tx.from ?? user?.address) as Address,
-        } as ValidRpcTransactionRequest
-    }, [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType, user])
+    const validTx = {
+        ...tx,
+        maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
+        maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
+        gasPrice: ifDef(txGasPrice, toHex),
+        gas: ifDef(txGasLimit, toHex),
+        type: txType,
+        from: (tx.from ?? user?.address) as Address,
+    } as ValidRpcTransactionRequest
 
     // ====================================== Boop Gas details ======================================
 
