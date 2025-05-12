@@ -71,6 +71,12 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
             return addWatchedAsset(user.address, params)
         }
 
+        case "wallet_sendCalls": {
+            const checkedParams = checkedWalletSendCallsParams(request.payload.params)
+            const extractedTx = extractValidTxFromCall(checkedParams)
+            return await sendBoop({ account: user.address, tx: extractedTx, signer: eoaSigner })
+        }
+
         case HappyMethodNames.LOAD_ABI: {
             return loadAbiForUser(user.address, request.payload.params)
         }
