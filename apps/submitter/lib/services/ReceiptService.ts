@@ -1,6 +1,6 @@
 import { type Address, type Hash, type Hex, sleep } from "@happy.tech/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
-import type { TransactionReceipt } from "viem"
+import type { Block, Transaction, TransactionReceipt } from "viem"
 import { deployment, env } from "#lib/env"
 import { computeHash, dbService } from "#lib/services"
 import type { StoredReceipt } from "#lib/services/DatabaseService"
@@ -21,6 +21,21 @@ const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") a
 const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
 export class ReceiptService {
+    
+    #unwatchBlocks?: () => void  
+    #pending = new Map<Hash, (r: Result<BoopReceipt, unknown>) => void>()
+
+    startBlockWatcher() {
+        if (this.#unwatchBlocks) return // already running
+        this.#unwatchBlocks = publicClient.watchBlocks({
+            includeTransactions: true,
+            onBlock: (block) => this.#handleBlock(block),
+            onError: (e) => logger.error("watchBlocks error", e),
+        })
+        logger.info("ReceiptService: block watcher started")
+    }
+    
+    
     async getReceipt(boopHash: Hash, txHash?: Hash, boop?: Boop): Promise<BoopReceipt | undefined> {
         try {
             // Try loading from DB.
@@ -49,7 +64,6 @@ export class ReceiptService {
         boop: Boop,
         txHash: Hash,
         timeout = env.RECEIPT_TIMEOUT,
-        pollingInterval = 500,
     ): Promise<Result<BoopReceipt, unknown>> {
         const boopHash = computeHash(boop)
         try {
@@ -58,11 +72,20 @@ export class ReceiptService {
             if (storedReceipt) return ok(this.#loadReceiptFromDB(storedReceipt))
             // Wait for EVM tx receipt, then build the boop receipt once obtained.
             // TODO this needs a timeout / cancellation policy
-            const txReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval, timeout })
-            // TODO maybe we consider this isn't a "canonical boop receipt" if the evm tx reverted?
-            dbService.saveEVMReceipt(boopHash, txReceipt as EVMReceipt)
-            const receipt = this.#buildReceipt(boop, txReceipt)
-            return ok(receipt)
+            
+            this.startBlockWatcher()
+
+            return new Promise((resolve) => {
+                const timer = setTimeout(() => {
+                    this.#pending.delete(boopHash)
+                    resolve(err(new Error("Timed out waiting for inclusion")))
+                }, timeout)
+            
+                this.#pending.set(boopHash, (result) => {
+                    clearTimeout(timer)
+                    resolve(result)
+                })
+            })
         } catch (error) {
             logger.warn("Error while monitoring receipt", boopHash, error)
             return err(error)
@@ -156,4 +179,53 @@ export class ReceiptService {
             } satisfies EVMReceipt,
         } satisfies BoopReceipt
     }
+
+    async #handleBlock(block: Block) {
+        const ep = deployment.EntryPoint.toLowerCase()
+    
+        const transactions: (Transaction | Hash)[] =
+            block.transactions ??
+            (await publicClient.getBlock({
+                blockHash: block.hash!,
+                includeTransactions: true,
+        })).transactions!
+    
+        for (const tx of transactions) {
+          const to = typeof tx === "string" ? undefined : tx.to?.toLowerCase()
+          if (to !== ep) continue
+    
+          const txHash = (typeof tx === "string" ? tx : tx.hash) as Hash
+          try {
+            const txReceipt = await publicClient.getTransactionReceipt({ hash: txHash })
+    
+            // Quickly locate a BoopExecutionStarted event
+            const startedLog = txReceipt.logs.find(
+              (l) => l.topics[0] === BOOP_STARTED_SELECTOR
+            )
+            if (!startedLog) continue
+    
+            const decodedEvent = decodeEvent(startedLog)
+            if (!decodedEvent) {
+                logger.warn("Failed to decode event", startedLog)
+                continue
+            }
+            const boop = decodedEvent.args as Boop
+            const boopHash = computeHash(boop)
+            void dbService.saveEVMReceipt(boopHash, txReceipt as EVMReceipt)
+    
+            // Build & persist our domain receipt
+            const receipt = this.#buildReceipt(boop, txReceipt)
+            void dbService.saveReceipt(receipt)
+    
+            // Fulfil any promise waiting on this boop
+            const settle = this.#pending.get(boopHash)
+            if (settle) {
+              settle(ok(receipt))
+              this.#pending.delete(boopHash)
+            }
+          } catch (e) {
+            logger.warn("Failed to process candidate tx", txHash, e)
+          }
+        }
+      }
 }

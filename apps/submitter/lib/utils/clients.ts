@@ -1,5 +1,5 @@
 import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
-import { http, createPublicClient, createWalletClient } from "viem"
+import { createPublicClient, createWalletClient, webSocket } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
 
@@ -38,7 +38,7 @@ function getChain(): Chain {
 
 export const chain: Chain = getChain()
 
-export const config = { chain, transport: http() } as const
+export const config = { chain, transport: webSocket() } as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
 export const publicClient: PublicClient = createPublicClient(config)
