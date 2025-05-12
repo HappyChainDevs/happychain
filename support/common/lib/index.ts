@@ -93,6 +93,7 @@ export { stringify } from "./utils/string"
 export { throttle } from "./utils/throttle"
 export { getUrlProtocol } from "./utils/urlProtocol"
 export { type UUID, createUUID } from "./utils/uuid"
+export { formatMs } from "./utils/time"
 
 // === DATA ========================================================================================
 
