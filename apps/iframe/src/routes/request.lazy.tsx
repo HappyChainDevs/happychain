@@ -133,6 +133,8 @@ function Request() {
             return <EthRequestAccounts {...props} />
         case "wallet_watchAsset":
             return <WalletWatchAsset {...props} />
+        case "wallet_sendCalls":
+            return <WalletSendCalls {...props} />
         case HappyMethodNames.LOAD_ABI:
             return <HappyLoadAbi {...props} />
         case HappyMethodNames.REQUEST_SESSION_KEY:

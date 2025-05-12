@@ -9,7 +9,7 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1474InvalidInput,
-    type HappyWalletCapability,
+    HappyWalletCapability,
     permissionsLists,
 } from "@happy.tech/wallet-common"
 import { checksum } from "ox/Address"
@@ -18,7 +18,7 @@ import { getAuthState } from "#src/state/authState"
 import { getUser } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
-import { isSendCallsParams } from "#src/utils/isSendCallsParams.ts"
+import { parseSendCallParams } from "#src/utils/isSendCallsParams"
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
@@ -134,59 +134,67 @@ export function ensureIsNotHappyMethod(
         )
 }
 
-/**
- *
- * wallet_sendCalls checks
- */
+// ================================= EIP-5792 =================================
+const SUPPORTED_CAPABILITIES = [HappyWalletCapability.BoopPaymaster] as const
 
 export type ValidWalletSendCallsRequest = {
-    id?: string
-    from?: Address
+    id: string
+    from: Address
     chainId: Hex
     atomicRequired: false
     version: "2.0.0"
     calls: [
         {
-            to?: Address
+            to: Address
             data?: Hex
             value?: Hex | bigint
-            capabilities?: Record<HappyWalletCapability, unknown>
+            capabilities?: {
+                [HappyWalletCapability.BoopPaymaster]?: {
+                    address: Address
+                    optional?: boolean
+                }
+            }
         },
     ]
-    capabilities?: Record<HappyWalletCapability, unknown>
+    capabilities?: {
+        [HappyWalletCapability.BoopPaymaster]?: {
+            address: Address
+            optional?: boolean
+        }
+    }
 }
 
-export function checkedWalletSendCallsParams(
-    params:
-        | WalletSendCallsParameters<
-              {
-                  // biome-ignore lint/suspicious/noExplicitAny: idk the params come in as that
-                  [key: string]: any
-              },
-              `0x${string}`,
-              `0x${string}`
-          >
-        | undefined,
-) {
-    // 1474 - invalid params
-    if (!isSendCallsParams(params)) throw new EIP1474InvalidInput("Invalid wallet_sendCalls request body")
-    // 4100	- Unauthorised
+type BoopPaymasterCapability = {
+    [HappyWalletCapability.BoopPaymaster]: {
+        address: Address
+        optional?: boolean
+    }
+}
 
-    const [req] = params
+type WalletSendCallsParams = WalletSendCallsParameters<BoopPaymasterCapability, Hex, Hex | bigint>
+
+export function checkedWalletSendCallsParams(params: WalletSendCallsParams | undefined): ValidWalletSendCallsRequest {
+    // 1474 - invalid params
+    const parsed = parseSendCallParams(params)
+    if (!parsed.success && parsed.error)
+        throw new EIP1474InvalidInput("Invalid wallet_sendCalls request body:", parsed.error)
+    // 4100	- Unauthorised
     checkAuthenticated()
+    const [reqBody] = parsed.data
     // 5710 - unsupported chain ID
-    if (params?.[0].chainId !== getCurrentChain().chainId)
-        throw new UnsupportedChainIdError(new Error("Not HappyChain"))
-    // 5720 - doesn't apply (?)
-    // 5740 - bundle too large, we currently only support only one call per bundle
-    if (params[0].calls.length > 1)
+    if (reqBody.chainId !== getCurrentChain().chainId) throw new UnsupportedChainIdError(new Error("Not HappyChain"))
+    // // 5740 - bundle too large, we currently only support only one call per bundle
+    if (reqBody.calls.length > 1)
         throw new BundleTooLargeError(new Error("Happy Wallet currently only supports 1 call per bundle"))
     // 5760 - no atomicity
-    if (params[0].atomicRequired)
-        throw new AtomicityNotSupportedError(new Error("Happy Wallet does not support atomicity yet"))
+    if (reqBody.atomicRequired)
+        throw new AtomicityNotSupportedError(new Error("Happy Wallet does not support atomicity (yet)"))
+    // 5700 - unsupported capability (global + at the call level)
+    validateCapabilities(reqBody.capabilities ?? {}, SUPPORTED_CAPABILITIES)
+    validateCapabilities(reqBody.calls[0].capabilities ?? {}, SUPPORTED_CAPABILITIES)
 
     // return validated thingamajig
-    return req as ValidWalletSendCallsRequest
+    return reqBody as ValidWalletSendCallsRequest
 }
 
 export function extractValidTxFromCall(request: ValidWalletSendCallsRequest): ValidRpcTransactionRequest {
@@ -195,9 +203,23 @@ export function extractValidTxFromCall(request: ValidWalletSendCallsRequest): Va
     const tx: ValidRpcTransactionRequest = {
         from: request.from!,
         to: call.to!,
-        value: typeof call.value === "bigint" ? `0x${call.value.toString(16)}` : call.value,
+        value: call.value !== undefined ? toHex(call.value) : undefined,
         data: call.data,
     }
 
     return tx
+}
+
+function validateCapabilities(
+    // biome-ignore lint/suspicious/noExplicitAny: viem does it
+    capabilities: Record<string, any>,
+    supported: readonly string[],
+) {
+    for (const [key, value] of Object.entries(capabilities)) {
+        const isSupported = supported.includes(key)
+        const isOptional = typeof value === "object" && value?.optional === true
+        if (!isSupported && !isOptional) {
+            throw new UnsupportedNonOptionalCapabilityError(new Error(`Unsupported non-optional capability: ${key}`))
+        }
+    }
 }

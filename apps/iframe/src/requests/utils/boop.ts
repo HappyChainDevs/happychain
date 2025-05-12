@@ -86,6 +86,7 @@ export type SendBoopArgs = {
     simulation?: SimulateSuccess
     isSponsored?: boolean
     nonceTrack?: bigint
+    paymaster?: Address
 }
 
 export async function sendBoop(

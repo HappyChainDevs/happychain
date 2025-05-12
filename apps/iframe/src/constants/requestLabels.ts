@@ -9,6 +9,7 @@ export const requestLabels = {
     wallet_requestPermissions: "Grant permissions",
     wallet_switchEthereumChain: "Switch chain",
     wallet_watchAsset: "Watch token",
+    wallet_sendCalls: "Batch calls",
     [HappyMethodNames.LOAD_ABI]: "Load ABI",
     [HappyMethodNames.REQUEST_SESSION_KEY]: "Approve session key",
 } as const

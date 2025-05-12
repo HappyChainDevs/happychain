@@ -1,5 +1,3 @@
-import { HappyWalletCapability } from "@happy.tech/wallet-common"
-import type { WalletSendCallsParameters } from "viem"
 import { isAddress, isHex } from "viem/utils"
 import { z } from "zod"
 
@@ -7,14 +5,10 @@ const addressSchema = z.string().refine((val) => isAddress(val), { message: "Inv
 
 const hexSchema = z.string().refine((val) => isHex(val), { message: "Invalid hex string" })
 
-const capabilitySchema = z
-    .record(z.string(), z.any())
-    .refine((caps) => Object.keys(caps).every((key) => key === HappyWalletCapability.BoopPaymaster), {
-        message: "Unsupported capability",
-    })
+const capabilitySchema = z.record(z.any())
 
 const callSchema = z.object({
-    to: addressSchema.optional(),
+    to: addressSchema,
     data: hexSchema.optional(),
     value: z.union([z.string(), z.bigint()]).optional(),
     capabilities: capabilitySchema.optional(),
@@ -25,15 +19,16 @@ const mainSchema = z.tuple([
         version: z.literal("2.0.0"),
         id: z.string().max(4096).optional(),
         from: addressSchema.optional(),
-        chainId: z.string().refine((val) => /^0x[1-9a-fA-F][0-9a-fA-F]*$/.test(val), {
-            message: "Invalid chainId",
-        }),
-        atomicRequired: z.literal(false), // atomicity not supported yet
+        chainId: z
+            .string()
+            .refine((val) => /^0x[0-9a-fA-F]+$/.test(val), { message: "chainId must be 0x-prefixed hex" }),
+
+        atomicRequired: z.boolean(), // atomicity not supported yet
         capabilities: capabilitySchema.optional(),
-        calls: z.array(callSchema).length(1, { message: "Only one call is supported" }).readonly(),
+        calls: z.array(callSchema).nonempty({ message: "At least one call is required" }).readonly(),
     }),
 ])
 
-export function isSendCallsParams(param: unknown): param is WalletSendCallsParameters {
-    return mainSchema.safeParse(param).success
+export function parseSendCallParams(param: unknown) {
+    return mainSchema.safeParse(param)
 }
