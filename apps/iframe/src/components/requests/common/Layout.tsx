@@ -111,7 +111,7 @@ export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: Forma
 
     return (
         <pre
-            className={`overflow-auto tabular-nums text-ellipsis text-sm scrollbar-thin ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
+            className={`overflow-auto text-ellipsis text-sm scrollbar-thin ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
         >
             {formattedContent}
         </pre>
