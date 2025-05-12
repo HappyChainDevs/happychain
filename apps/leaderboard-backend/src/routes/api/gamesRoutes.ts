@@ -1,5 +1,6 @@
 import type { Address } from "@happy.tech/common"
 import { Hono } from "hono"
+import { requireAuth, requireGameOwnership } from "../../auth"
 import type { GameTableId, UserTableId } from "../../db/types"
 import {
     AdminWalletParamValidation,
@@ -96,8 +97,9 @@ export default new Hono()
     /**
      * Create a new game (admin required)
      * POST /games
+     * @security BearerAuth
      */
-    .post("/", GameCreateDescription, GameCreateValidation, async (c) => {
+    .post("/", requireAuth, GameCreateDescription, GameCreateValidation, async (c) => {
         try {
             const gameData = c.req.valid("json")
             const { gameRepo, userRepo } = c.get("repos")
@@ -134,35 +136,45 @@ export default new Hono()
     /**
      * Update game details (admin only)
      * PATCH /games/:id
+     * Requires game ownership - only the game creator can update it
+     * @security BearerAuth
      */
-    .patch("/:id", GameUpdateDescription, GameIdParamValidation, GameUpdateValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-            const updateData = c.req.valid("json")
-            const { gameRepo } = c.get("repos")
+    .patch(
+        "/:id",
+        requireAuth,
+        requireGameOwnership,
+        GameUpdateDescription,
+        GameIdParamValidation,
+        GameUpdateValidation,
+        async (c) => {
+            try {
+                const { id } = c.req.valid("param")
+                const updateData = c.req.valid("json")
+                const { gameRepo } = c.get("repos")
 
-            // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
-            if (!game) {
-                return c.json({ ok: false, error: "Game not found" }, 404)
-            }
-
-            // Check if name is being changed and is unique
-            if (updateData.name && updateData.name !== game.name) {
-                const existingGame = await gameRepo.findByExactName(updateData.name)
-                if (existingGame) {
-                    return c.json({ ok: false, error: "Game name already exists" }, 409)
+                // Check if game exists
+                const gameId = Number.parseInt(id, 10) as GameTableId
+                const game = await gameRepo.findById(gameId)
+                if (!game) {
+                    return c.json({ ok: false, error: "Game not found" }, 404)
                 }
-            }
 
-            const updatedGame = await gameRepo.update(gameId, updateData)
-            return c.json({ ok: true, data: updatedGame }, 200)
-        } catch (err) {
-            console.error(`Error updating game ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+                // Check if name is being changed and is unique
+                if (updateData.name && updateData.name !== game.name) {
+                    const existingGame = await gameRepo.findByExactName(updateData.name)
+                    if (existingGame) {
+                        return c.json({ ok: false, error: "Game name already exists" }, 409)
+                    }
+                }
+
+                const updatedGame = await gameRepo.update(gameId, updateData)
+                return c.json({ ok: true, data: updatedGame }, 200)
+            } catch (err) {
+                console.error(`Error updating game ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
+            }
+        },
+    )
 
     // ====================================================================================================
     // Game Scores Routes
@@ -170,37 +182,45 @@ export default new Hono()
     /**
      * Submit a new score for a game
      * POST /games/:id/scores
+     * @security BearerAuth
      */
-    .post("/:id/scores", ScoreSubmitDescription, GameIdParamValidation, ScoreSubmitValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-            const { user_wallet, score, metadata } = c.req.valid("json")
-            const { gameRepo, userRepo } = c.get("repos")
+    .post(
+        "/:id/scores",
+        requireAuth,
+        ScoreSubmitDescription,
+        GameIdParamValidation,
+        ScoreSubmitValidation,
+        async (c) => {
+            try {
+                const { id } = c.req.valid("param")
+                const { user_wallet, score, metadata } = c.req.valid("json")
+                const { gameRepo, userRepo } = c.get("repos")
 
-            // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
-            const game = await gameRepo.findById(gameId)
-            if (!game) {
-                return c.json({ ok: false, error: "Game not found" }, 404)
+                // Check if game exists
+                const gameId = Number.parseInt(id, 10) as GameTableId
+                const game = await gameRepo.findById(gameId)
+                if (!game) {
+                    return c.json({ ok: false, error: "Game not found" }, 404)
+                }
+
+                // Check if user exists
+                const user = await userRepo.findByWalletAddress(user_wallet)
+                if (!user) {
+                    return c.json({ ok: false, error: "User not found" }, 404)
+                }
+
+                // Submit score
+                const { gameScoreRepo } = c.get("repos")
+                const userId = user.id as UserTableId
+                const newScore = await gameScoreRepo.submitScore(userId, gameId, score, metadata)
+
+                return c.json({ ok: true, data: newScore }, 201)
+            } catch (err) {
+                console.error(`Error submitting score for game ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
             }
-
-            // Check if user exists
-            const user = await userRepo.findByWalletAddress(user_wallet)
-            if (!user) {
-                return c.json({ ok: false, error: "User not found" }, 404)
-            }
-
-            // Submit score
-            const { gameScoreRepo } = c.get("repos")
-            const userId = user.id as UserTableId
-            const newScore = await gameScoreRepo.submitScore(userId, gameId, score, metadata)
-
-            return c.json({ ok: true, data: newScore }, 201)
-        } catch (err) {
-            console.error(`Error submitting score for game ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )
 
     /**
      * Get all scores for a game

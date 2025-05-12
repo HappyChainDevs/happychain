@@ -1,4 +1,6 @@
+import type { Address, Hex } from "@happy.tech/common"
 import { Hono } from "hono"
+import { requireAuth, verifySignature } from "../../auth"
 import type { AuthSessionTableId } from "../../db/types"
 import {
     AuthChallengeDescription,
@@ -38,12 +40,8 @@ export default new Hono()
         const { primary_wallet, message, signature } = c.req.valid("json")
         const { authRepo, userRepo } = c.get("repos")
 
-        // Verify signature
-        const isValid = await authRepo.verifySignature(
-            primary_wallet as `0x${string}`,
-            message as `0x${string}`,
-            signature as `0x${string}`,
-        )
+        // Verify signature directly using the utility function
+        const isValid = await verifySignature(primary_wallet as Address, message as Hex, signature as Hex)
 
         if (!isValid) {
             return c.json({ error: "Invalid signature", ok: false }, 401)
@@ -66,11 +64,12 @@ export default new Hono()
         // Return success with session ID and user info
         return c.json({
             ok: true,
-            session_id: session.id,
             user: {
                 id: user.id,
                 username: user.username,
                 primary_wallet: user.primary_wallet,
+                wallets: user.wallets,
+                sessionId: c.get("sessionId"),
             },
         })
     })
@@ -78,24 +77,13 @@ export default new Hono()
     /**
      * Get user info from session
      * GET /auth/me
+     * @security BearerAuth
      */
-    .get("/me", AuthMeDescription, async (c) => {
-        const authHeader = c.req.header("Authorization")
+    .get("/me", AuthMeDescription, requireAuth, async (c) => {
+        const { userRepo } = c.get("repos")
+        const userId = c.get("userId")
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return c.json({ error: "Authentication required", ok: false }, 401)
-        }
-
-        const sessionId = authHeader.substring(7) as AuthSessionTableId
-
-        const { authRepo, userRepo } = c.get("repos")
-        const session = await authRepo.verifySession(sessionId)
-
-        if (!session) {
-            return c.json({ error: "Invalid or expired session", ok: false }, 401)
-        }
-
-        const user = await userRepo.findById(session.user_id)
+        const user = await userRepo.findById(userId)
 
         if (!user) {
             return c.json({ error: "User not found", ok: false }, 404)
@@ -103,11 +91,12 @@ export default new Hono()
 
         return c.json({
             ok: true,
-            session_id: sessionId,
             user: {
                 id: user.id,
                 username: user.username,
                 primary_wallet: user.primary_wallet,
+                wallets: user.wallets,
+                sessionId: c.get("sessionId"),
             },
         })
     })
@@ -131,33 +120,19 @@ export default new Hono()
     /**
      * List all active sessions for a user
      * GET /auth/sessions
+     * @security BearerAuth
      */
-    .get("/sessions", AuthSessionsDescription, async (c) => {
-        const authHeader = c.req.header("Authorization")
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return c.json({ error: "Authentication required", ok: false }, 401)
-        }
-
-        const sessionId = authHeader.substring(7) as AuthSessionTableId
-
+    .get("/sessions", AuthSessionsDescription, requireAuth, async (c) => {
         const { authRepo } = c.get("repos")
-        const session = await authRepo.verifySession(sessionId)
+        const userId = c.get("userId")
 
-        if (!session) {
-            return c.json({ error: "Invalid or expired session", ok: false }, 401)
-        }
-
-        const sessions = await authRepo.getUserSessions(session.user_id)
+        const sessions = await authRepo.getUserSessions(userId)
 
         return c.json({
             ok: true,
             sessions: sessions.map((s) => ({
-                id: s.id,
-                primary_wallet: s.primary_wallet,
-                created_at: s.created_at,
-                last_used_at: s.last_used_at,
-                is_current: s.id === sessionId,
+                ...s,
+                current: s.id === c.get("sessionId"),
             })),
         })
     })

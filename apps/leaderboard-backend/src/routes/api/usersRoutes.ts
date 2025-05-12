@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { requireAuth, requireOwnership } from "../../auth"
 import type { UserTableId } from "../../db/types"
 import {
     PrimaryWalletParamValidation,
@@ -51,8 +52,9 @@ export default new Hono()
     /**
      * Create a new user.
      * POST /users
+     * @security BearerAuth
      */
-    .post("/", UserCreateDescription, UserCreateValidation, async (c) => {
+    .post("/", requireAuth, UserCreateDescription, UserCreateValidation, async (c) => {
         const userData = c.req.valid("json")
         const { userRepo } = c.get("repos")
 
@@ -98,53 +100,72 @@ export default new Hono()
     /**
      * Update user details by user ID.
      * PATCH /users/:id
+     * Requires ownership - only the user can update their own profile
+     * @security BearerAuth
      */
-    .patch("/:id", UserUpdateByIdDescription, UserIdParamValidation, UserUpdateValidation, async (c) => {
-        const { id } = c.req.valid("param")
-        const updateData = c.req.valid("json")
-        const { userRepo } = c.get("repos")
+    .patch(
+        "/:id",
+        requireAuth,
+        requireOwnership("id", "id"),
+        UserUpdateByIdDescription,
+        UserIdParamValidation,
+        UserUpdateValidation,
+        async (c) => {
+            const { id } = c.req.valid("param")
+            const updateData = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
-        // Check if user exists
-        const userId = Number.parseInt(id, 10) as UserTableId
-        const user = await userRepo.findById(userId)
-        if (!user) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
-
-        // Check if username is being changed and is unique
-        if (updateData.username && updateData.username !== user.username) {
-            const existingUser = await userRepo.findByUsername(updateData.username)
-            if (existingUser) {
-                return c.json({ ok: false, error: "Username already taken" }, 409)
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
             }
-        }
 
-        const updatedUser = await userRepo.update(userId, updateData)
-        return c.json(updatedUser, 200)
-    })
+            // Check if username is being changed and is unique
+            if (updateData.username && updateData.username !== user.username) {
+                const existingUser = await userRepo.findByUsername(updateData.username)
+                if (existingUser) {
+                    return c.json({ ok: false, error: "Username already taken" }, 409)
+                }
+            }
+
+            const updatedUser = await userRepo.update(userId, updateData)
+            return c.json(updatedUser, 200)
+        },
+    )
 
     /**
      * Delete a user by user ID and all associated data.
      * DELETE /users/:id
+     * Requires ownership - only the user can delete their own profile
+     * @security BearerAuth
      */
-    .delete("/:id", UserDeleteByIdDescription, UserIdParamValidation, async (c) => {
-        const { id } = c.req.valid("param")
-        const { userRepo } = c.get("repos")
+    .delete(
+        "/:id",
+        requireAuth,
+        requireOwnership("id", "id"),
+        UserDeleteByIdDescription,
+        UserIdParamValidation,
+        async (c) => {
+            const { id } = c.req.valid("param")
+            const { userRepo } = c.get("repos")
 
-        // Check if user exists
-        const userId = Number.parseInt(id, 10) as UserTableId
-        const user = await userRepo.findById(userId)
-        if (!user) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        const success = await userRepo.delete(userId)
-        if (!success) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            const success = await userRepo.delete(userId)
+            if (!success) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        return c.json(user, 200)
-    })
+            return c.json(user, 200)
+        },
+    )
 
     // ====================================================================================================
     // User Resource Routes (by Primary Wallet Address)
@@ -168,9 +189,13 @@ export default new Hono()
     /**
      * Update user details by primary wallet address.
      * PATCH /users/pw/:primary_wallet
+     * Requires ownership - only the user can update their own profile
+     * @security BearerAuth
      */
     .patch(
         "/pw/:primary_wallet",
+        requireAuth,
+        requireOwnership("primary_wallet", "primary_wallet"),
         UserUpdateByPrimaryWalletDescription,
         PrimaryWalletParamValidation,
         UserUpdateValidation,
@@ -201,24 +226,33 @@ export default new Hono()
     /**
      * Delete a user by primary wallet address and all associated wallets, guild memberships, and scores.
      * DELETE /users/pw/:primary_wallet
+     * Requires ownership - only the user can delete their own profile
+     * @security BearerAuth
      */
-    .delete("/pw/:primary_wallet", UserDeleteByPrimaryWalletDescription, PrimaryWalletParamValidation, async (c) => {
-        const { primary_wallet } = c.req.valid("param")
-        const { userRepo } = c.get("repos")
+    .delete(
+        "/pw/:primary_wallet",
+        requireAuth,
+        requireOwnership("primary_wallet", "primary_wallet"),
+        UserDeleteByPrimaryWalletDescription,
+        PrimaryWalletParamValidation,
+        async (c) => {
+            const { primary_wallet } = c.req.valid("param")
+            const { userRepo } = c.get("repos")
 
-        // Check if user exists
-        const user = await userRepo.findByWalletAddress(primary_wallet)
-        if (!user) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            // Check if user exists
+            const user = await userRepo.findByWalletAddress(primary_wallet)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        const success = await userRepo.delete(user.id)
-        if (!success) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            const success = await userRepo.delete(user.id)
+            if (!success) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        return c.json(user, 200)
-    })
+            return c.json(user, 200)
+        },
+    )
 
     // ====================================================================================================
     // User Wallets Collection Routes
@@ -268,41 +302,55 @@ export default new Hono()
     /**
      * Add a wallet to a user by user ID.
      * POST /users/:id/wallets
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
-    .post("/:id/wallets", UserWalletAddByIdDescription, UserIdParamValidation, UserWalletValidation, async (c) => {
-        const { id } = c.req.valid("param")
-        const { wallet_address } = c.req.valid("json")
-        const { userRepo } = c.get("repos")
+    .post(
+        "/:id/wallets",
+        requireAuth,
+        requireOwnership("id", "id"),
+        UserWalletAddByIdDescription,
+        UserIdParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { id } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
-        // Check if user exists
-        const userId = Number.parseInt(id, 10) as UserTableId
-        const user = await userRepo.findById(userId)
-        if (!user) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        // Check if wallet already belongs to another user
-        const existingUser = await userRepo.findByWalletAddress(wallet_address)
-        if (existingUser && existingUser.id !== userId) {
-            return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
-        }
+            // Check if wallet already belongs to another user
+            const existingUser = await userRepo.findByWalletAddress(wallet_address)
+            if (existingUser && existingUser.id !== userId) {
+                return c.json({ ok: false, error: "Wallet already registered to another user" }, 409)
+            }
 
-        const success = await userRepo.addWallet(userId, wallet_address)
-        if (!success) {
-            return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
-        }
+            const success = await userRepo.addWallet(userId, wallet_address)
+            if (!success) {
+                return c.json({ ok: false, error: "Wallet already exists for this user" }, 409)
+            }
 
-        // Get updated user with wallets
-        const updatedUser = await userRepo.findById(userId, true)
-        return c.json(updatedUser, 200)
-    })
+            // Get updated user with wallets
+            const updatedUser = await userRepo.findById(userId, true)
+            return c.json(updatedUser, 200)
+        },
+    )
 
     /**
      * Add a wallet to a user by primary wallet address.
      * POST /users/pw/:primary_wallet/wallets
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
     .post(
         "/pw/:primary_wallet/wallets",
+        requireAuth,
+        requireOwnership("primary_wallet", "primary_wallet"),
         UserWalletAddByPrimaryWalletDescription,
         PrimaryWalletParamValidation,
         UserWalletValidation,
@@ -343,10 +391,14 @@ export default new Hono()
 
     /**
      * Set a wallet as primary for a user by user ID.
-     * PATCH /users/:id/wallets
+     * PATCH /users/:id/wallets/primary
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
     .patch(
-        "/:id/wallets",
+        "/:id/wallets/primary",
+        requireAuth,
+        requireOwnership("id", "id"),
         UserWalletSetPrimaryByIdDescription,
         UserIdParamValidation,
         UserWalletValidation,
@@ -378,10 +430,14 @@ export default new Hono()
 
     /**
      * Set a wallet as primary for a user by primary wallet address.
-     * PATCH /users/pw/:primary_wallet/wallets
+     * PATCH /users/pw/:primary_wallet/wallets/primary
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
     .patch(
-        "/pw/:primary_wallet/wallets",
+        "/pw/:primary_wallet/wallets/primary",
+        requireAuth,
+        requireOwnership("primary_wallet", "primary_wallet"),
         UserWalletSetPrimaryByPrimaryWalletDescription,
         PrimaryWalletParamValidation,
         UserWalletValidation,
@@ -417,45 +473,59 @@ export default new Hono()
     /**
      * Remove a wallet from a user by user ID.
      * DELETE /users/:id/wallets
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
-    .delete("/:id/wallets", UserWalletRemoveByIdDescription, UserIdParamValidation, UserWalletValidation, async (c) => {
-        const { id } = c.req.valid("param")
-        const { wallet_address } = c.req.valid("json")
-        const { userRepo } = c.get("repos")
+    .delete(
+        "/:id/wallets",
+        requireAuth,
+        requireOwnership("id", "id"),
+        UserWalletRemoveByIdDescription,
+        UserIdParamValidation,
+        UserWalletValidation,
+        async (c) => {
+            const { id } = c.req.valid("param")
+            const { wallet_address } = c.req.valid("json")
+            const { userRepo } = c.get("repos")
 
-        // Check if user exists
-        const userId = Number.parseInt(id, 10) as UserTableId
-        const user = await userRepo.findById(userId)
-        if (!user) {
-            return c.json({ ok: false, error: "User not found" }, 404)
-        }
+            // Check if user exists
+            const userId = Number.parseInt(id, 10) as UserTableId
+            const user = await userRepo.findById(userId)
+            if (!user) {
+                return c.json({ ok: false, error: "User not found" }, 404)
+            }
 
-        if (user.primary_wallet === wallet_address) {
-            return c.json({ ok: false, error: "Cannot remove primary wallet" }, 400)
-        }
+            if (user.primary_wallet === wallet_address) {
+                return c.json({ ok: false, error: "Cannot remove primary wallet" }, 400)
+            }
 
-        const success = await userRepo.removeWallet(userId, wallet_address)
-        if (!success) {
-            return c.json(
-                {
-                    ok: false,
-                    error: "Cannot remove wallet: it may be the primary wallet or not found",
-                },
-                400,
-            )
-        }
+            const success = await userRepo.removeWallet(userId, wallet_address)
+            if (!success) {
+                return c.json(
+                    {
+                        ok: false,
+                        error: "Cannot remove wallet: it may be the primary wallet or not found",
+                    },
+                    400,
+                )
+            }
 
-        // Get updated user with wallets
-        const updatedUser = await userRepo.findById(userId, true)
-        return c.json(updatedUser, 200)
-    })
+            // Get updated user with wallets
+            const updatedUser = await userRepo.findById(userId, true)
+            return c.json(updatedUser, 200)
+        },
+    )
 
     /**
      * Remove a wallet from a user by primary wallet address.
      * DELETE /users/pw/:primary_wallet/wallets
+     * Requires ownership - only the user can manage their own wallets
+     * @security BearerAuth
      */
     .delete(
         "/pw/:primary_wallet/wallets",
+        requireAuth,
+        requireOwnership("primary_wallet", "primary_wallet"),
         UserWalletRemoveByPrimaryWalletDescription,
         PrimaryWalletParamValidation,
         UserWalletValidation,

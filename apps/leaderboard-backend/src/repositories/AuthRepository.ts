@@ -1,15 +1,13 @@
 import { createUUID } from "@happy.tech/common"
-import type { Address, Hex } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/boop/anvil"
 
 import type { Kysely } from "kysely"
-import { http, createPublicClient, hashMessage } from "viem"
+import { http, createPublicClient } from "viem"
 import { localhost } from "viem/chains"
 
 import type { AuthSession, AuthSessionTableId, Database, NewAuthSession, UserTableId } from "../db/types"
 import { env } from "../env"
-
-const EIP1271_MAGIC_VALUE = "0x1626ba7e"
 
 export class AuthRepository {
     private publicClient: ReturnType<typeof createPublicClient>
@@ -32,23 +30,6 @@ export class AuthRepository {
         const timestamp = Date.now()
 
         return `${nonce}${timestamp}`
-    }
-
-    async verifySignature(primary_wallet: Address, message: Hex, signature: Hex): Promise<boolean> {
-        try {
-            const messageHash = await hashMessage({ raw: message })
-            const result = await this.publicClient.readContract({
-                address: primary_wallet,
-                abi: abis.HappyAccountImpl,
-                functionName: "isValidSignature",
-                args: [messageHash, signature],
-            })
-
-            return result === EIP1271_MAGIC_VALUE
-        } catch (error) {
-            console.error("Error verifying signature:", error)
-            return false
-        }
     }
 
     async createSession(userId: UserTableId, walletAddress: Address): Promise<AuthSession | undefined> {

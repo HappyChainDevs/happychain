@@ -62,6 +62,20 @@ app.get(
                 version: "0.1.0",
                 description: "Leaderboard backend for HappyChain",
             },
+            components: {
+                securitySchemes: {
+                    bearerAuth: {
+                        type: "http",
+                        scheme: "bearer",
+                        bearerFormat: "UUID",
+                    },
+                },
+            },
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
             servers: [
                 {
                     url: `http://localhost:${env.PORT || 4545}`,

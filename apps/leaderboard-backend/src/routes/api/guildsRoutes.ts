@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { requireAuth, requireGuildRole } from "../../auth"
 import type { GuildTableId, UserTableId } from "../../db/types"
 import {
     GuildCreateDescription,
@@ -48,8 +49,9 @@ export default new Hono()
     /**
      * Create a new guild (creator becomes admin).
      * POST /guilds
+     * @security BearerAuth
      */
-    .post("/", GuildCreateDescription, GuildCreateValidation, async (c) => {
+    .post("/", requireAuth, GuildCreateDescription, GuildCreateValidation, async (c) => {
         try {
             const guildData = c.req.valid("json")
             const { guildRepo } = c.get("repos")
@@ -100,36 +102,46 @@ export default new Hono()
     /**
      * Update guild details (admin only).
      * PATCH /guilds/:id
+     * Requires ADMIN role in the guild
+     * @security BearerAuth
      */
-    .patch("/:id", GuildUpdateDescription, GuildIdParamValidation, GuildUpdateValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
+    .patch(
+        "/:id",
+        requireAuth,
+        requireGuildRole("ADMIN"),
+        GuildUpdateDescription,
+        GuildIdParamValidation,
+        GuildUpdateValidation,
+        async (c) => {
+            try {
+                const { id } = c.req.valid("param")
 
-            const updateData = c.req.valid("json")
-            const { guildRepo } = c.get("repos")
+                const updateData = c.req.valid("json")
+                const { guildRepo } = c.get("repos")
 
-            // Check if guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
-            const guild = await guildRepo.findById(guildId)
-            if (!guild) {
-                return c.json({ ok: false, error: "Guild not found" }, 404)
-            }
-
-            // Check if name is being changed and is unique
-            if (updateData.name && updateData.name !== guild.name) {
-                const existingGuilds = await guildRepo.findByName(updateData.name)
-                if (existingGuilds.length > 0) {
-                    return c.json({ ok: false, error: "Guild name already exists" }, 409)
+                // Check if guild exists
+                const guildId = Number.parseInt(id, 10) as GuildTableId
+                const guild = await guildRepo.findById(guildId)
+                if (!guild) {
+                    return c.json({ ok: false, error: "Guild not found" }, 404)
                 }
-            }
 
-            const updatedGuild = await guildRepo.update(guildId, updateData)
-            return c.json(updatedGuild, 200)
-        } catch (err) {
-            console.error(`Error updating guild ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+                // Check if name is being changed and is unique
+                if (updateData.name && updateData.name !== guild.name) {
+                    const existingGuilds = await guildRepo.findByName(updateData.name)
+                    if (existingGuilds.length > 0) {
+                        return c.json({ ok: false, error: "Guild name already exists" }, 409)
+                    }
+                }
+
+                const updatedGuild = await guildRepo.update(guildId, updateData)
+                return c.json(updatedGuild, 200)
+            } catch (err) {
+                console.error(`Error updating guild ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
+            }
+        },
+    )
 
     // ====================================================================================================
     // Guild Member Routes
@@ -162,58 +174,72 @@ export default new Hono()
     /**
      * Add a member to a guild (admin only).
      * POST /guilds/:id/members
+     * Requires ADMIN role in the guild
+     * @security BearerAuth
      */
-    .post("/:id/members", GuildMemberAddDescription, GuildIdParamValidation, GuildMemberAddValidation, async (c) => {
-        try {
-            const { id } = c.req.valid("param")
-            let { user_id, username, is_admin } = c.req.valid("json")
-            const { guildRepo, userRepo } = c.get("repos")
+    .post(
+        "/:id/members",
+        requireAuth,
+        requireGuildRole("ADMIN"),
+        GuildMemberAddDescription,
+        GuildIdParamValidation,
+        GuildMemberAddValidation,
+        async (c) => {
+            try {
+                const { id } = c.req.valid("param")
+                let { user_id, username, is_admin } = c.req.valid("json")
+                const { guildRepo, userRepo } = c.get("repos")
 
-            // Ensure guild exists
-            const guildId = Number.parseInt(id, 10) as GuildTableId
-            const guild = await guildRepo.findById(guildId)
-            if (!guild) {
-                return c.json({ ok: false, error: "Guild not found" }, 404)
-            }
-
-            // Resolve user_id from username if needed
-            if (!user_id && username) {
-                const userByName = await userRepo.findByUsername(username)
-                if (!userByName) {
-                    return c.json({ ok: false, error: "User not found by username" }, 404)
+                // Ensure guild exists
+                const guildId = Number.parseInt(id, 10) as GuildTableId
+                const guild = await guildRepo.findById(guildId)
+                if (!guild) {
+                    return c.json({ ok: false, error: "Guild not found" }, 404)
                 }
-                user_id = userByName.id
-            }
 
-            if (!user_id) {
-                return c.json({ ok: false, error: "User ID or username required" }, 400)
-            }
+                // Resolve user_id from username if needed
+                if (!user_id && username) {
+                    const userByName = await userRepo.findByUsername(username)
+                    if (!userByName) {
+                        return c.json({ ok: false, error: "User not found by username" }, 404)
+                    }
+                    user_id = userByName.id
+                }
 
-            // Ensure user exists
-            const user = await userRepo.findById(user_id as UserTableId)
-            if (!user) {
-                return c.json({ ok: false, error: "User not found" }, 404)
-            }
+                if (!user_id) {
+                    return c.json({ ok: false, error: "User ID or username required" }, 400)
+                }
 
-            // Add member to guild
-            const member = await guildRepo.addMember(guildId, user_id as UserTableId, is_admin || false)
-            if (!member) {
-                return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
-            }
+                // Ensure user exists
+                const user = await userRepo.findById(user_id as UserTableId)
+                if (!user) {
+                    return c.json({ ok: false, error: "User not found" }, 404)
+                }
 
-            return c.json(member, 201)
-        } catch (err) {
-            console.error(`Error adding member to guild ${c.req.param("id")}:`, err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+                // Add member to guild
+                const member = await guildRepo.addMember(guildId, user_id as UserTableId, is_admin || false)
+                if (!member) {
+                    return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
+                }
+
+                return c.json(member, 201)
+            } catch (err) {
+                console.error(`Error adding member to guild ${c.req.param("id")}:`, err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
+            }
+        },
+    )
 
     /**
      * Update a guild member's role (admin only).
      * PATCH /guilds/:id/members/:member_id
+     * Requires ADMIN role in the guild
+     * @security BearerAuth
      */
     .patch(
         "/:id/members/:member_id",
+        requireAuth,
+        requireGuildRole("ADMIN"),
         GuildMemberUpdateDescription,
         GuildIdParamValidation,
         GuildMemberIdParamValidation,
@@ -250,9 +276,13 @@ export default new Hono()
     /**
      * Remove a member from a guild (admin only).
      * DELETE /guilds/:id/members/:member_id
+     * Requires ADMIN role in the guild
+     * @security BearerAuth
      */
     .delete(
         "/:id/members/:member_id",
+        requireAuth,
+        requireGuildRole("ADMIN"),
         GuildMemberDeleteDescription,
         GuildIdParamValidation,
         GuildMemberIdParamValidation,
