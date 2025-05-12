@@ -140,7 +140,7 @@ export type MsgsFromApp = {
     // {@link Msgs.InjectedWalletRequestConnect} to request that the app connects to a given injected wallet.
     [Msgs.AnnounceInjectedProvider]: { info: EIP6963ProviderInfo; provider?: never }
     [Msgs.ConnectRequest]: ProviderEventPayload<
-        EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions">
+        EIP1193RequestParameters<"eth_accounts" | "eth_requestAccounts" | "wallet_requestPermissions">
     >
     [Msgs.InjectedWalletConnected]:
         | {
@@ -165,7 +165,10 @@ export type MsgsFromApp = {
 // === MESSAGE BUS EVENTS FROM IFRAME ==============================================================
 
 interface AuthResponse<
-    T extends "eth_requestAccounts" | "wallet_requestPermissions" = "eth_requestAccounts" | "wallet_requestPermissions",
+    T extends "eth_accounts" | "eth_requestAccounts" | "wallet_requestPermissions" =
+        | "eth_accounts"
+        | "eth_requestAccounts"
+        | "wallet_requestPermissions",
 > {
     request: ProviderEventPayload<EIP1193RequestParameters<T>>
     response: EIP1193RequestResult<T> | null

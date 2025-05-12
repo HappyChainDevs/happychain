@@ -1,4 +1,4 @@
-import { type Hex, createUUID } from "@happy.tech/common"
+import { type Hex, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type {
     ConnectionProvider,
     EIP6963ProviderDetail,
@@ -6,7 +6,7 @@ import type {
     MsgsFromApp,
     MsgsFromWallet,
 } from "@happy.tech/wallet-common"
-import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happy.tech/wallet-common"
+import { EIP1193UnauthorizedError, EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider"
 import { getCurrentChain } from "#src/state/chains"
@@ -76,7 +76,6 @@ export class InjectedConnector implements ConnectionProvider {
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         await setUserWithProvider(user, provider)
-        grantPermissions(getAppURL(), "eth_accounts")
     }
 
     public async onDisconnect() {
@@ -106,24 +105,25 @@ export class InjectedConnector implements ConnectionProvider {
         if (past?.provider !== this.id) return
 
         /**
-         * Here for re-connect we will use eth_requestAccounts instead of the simpler eth_accounts.
-         * This causes Metamask to popup and confirm connection on page load. Denying this will cause
-         * the user to be logged out and. `eth_accounts` in theory almost would avoid this, however
-         * after page load Wagmi is connected on the wallet-side and this requires an active
-         * connection. This is not possible in app-mode as the injected wallet lives on the app side
-         * and is only accessible when connected, and so in injected mode there can be no
-         * authentication without connection.
+         * Here for pageload re-connect we will use eth_accounts instead of eth_requestAccounts.
+         * Since this is a re-connect, and not an initial connection, we don't want to prompt the
+         * user. If the permissions have been revoked in the injected wallet, no user accounts will
+         * be found, and we will instead disconnect as that is likely the users true intent.
          */
         const reconnectRequest = {
             key: createUUID(), // it's ok, there are no pending promises to be resolved by this
-            windowId: walletID(), // reconnect was initialized internally, so the request originates from wallet
-            payload: { method: "eth_requestAccounts" },
+            windowId: walletID(), // reconnect was initialized internally, so the request is from iframe
+            payload: { method: "eth_accounts" },
             error: null,
         } as const
 
-        const { user } = await this.connectToInjectedWallet(reconnectRequest)
-        this.setProvider()
-        this.onReconnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+        try {
+            const { user } = await this.connectToInjectedWallet(reconnectRequest)
+            this.setProvider()
+            this.onReconnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+        } catch {
+            this.disconnect()
+        }
     }
 
     /**
@@ -149,12 +149,15 @@ export class InjectedConnector implements ConnectionProvider {
     ): Promise<{ user: HappyUser } & MsgsFromWallet[Msgs.ConnectResponse]> {
         // not in iframe (direct access)
         if (isStandaloneWallet()) {
+            // fetch the response
             const response = await this.detail.provider.request(request.payload)
-            // get user accounts
-            const [address] =
-                request.payload.method === "eth_requestAccounts"
-                    ? (response as Hex[])
-                    : await this.detail.provider.request({ method: "eth_accounts" })
+
+            // get user accounts (if the request was wallet_requestAccounts, we must re-fetch with eth_accounts)
+            const [address] = ["eth_requestAccounts", "eth_accounts"].includes(request.payload.method)
+                ? (response as Hex[])
+                : await this.detail.provider.request({ method: "eth_accounts" })
+
+            if (!address) throw new EIP1193UnauthorizedError()
 
             const user = await createHappyUserFromWallet(this.id, address)
             await this.switchInjectedWalletToHappyChain()
@@ -167,26 +170,29 @@ export class InjectedConnector implements ConnectionProvider {
         // This will ensure the correct one is selected, connected, and executed. It will prepare
         // the app for all subsequent requests to be executed against the same injected provider
         void appMessageBus.emit(Msgs.InjectedWalletRequestConnect, { rdns: this.detail.info.rdns, request })
-        return await new Promise((resolve, reject) => {
-            const unsubscribe = appMessageBus.on(
-                Msgs.InjectedWalletConnected,
-                async ({ rdns, address, request: _request, response }) => {
-                    if (request.key !== _request?.key) return
 
-                    unsubscribe()
+        const { promise, resolve, reject } = promiseWithResolvers<
+            { user: HappyUser } & MsgsFromWallet[Msgs.ConnectResponse]
+        >()
 
-                    if (!address || !rdns || rdns !== this.detail.info.rdns) {
-                        return reject(new EIP1193UserRejectedRequestError())
-                    }
+        const unsubscribe = appMessageBus.on(
+            Msgs.InjectedWalletConnected,
+            async ({ rdns, address, request: _request, response }) => {
+                if (request.key !== _request?.key) return
 
-                    const user = await createHappyUserFromWallet(this.id, address)
+                unsubscribe()
 
-                    return this.switchInjectedWalletToHappyChain().then(() => {
-                        return resolve({ user, request, response })
-                    })
-                },
-            )
-        })
+                if (!rdns || rdns !== this.detail.info.rdns) return reject(new EIP1193UserRejectedRequestError())
+                if (!address) return reject(new EIP1193UnauthorizedError())
+
+                const user = await createHappyUserFromWallet(this.id, address)
+                return this.switchInjectedWalletToHappyChain().then(() => {
+                    return resolve({ user, request, response })
+                })
+            },
+        )
+
+        return promise
     }
 
     private async switchInjectedWalletToHappyChain() {

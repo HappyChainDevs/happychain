@@ -54,29 +54,27 @@ export type HappyProviderConfig = {
 export const windowId = typeof window === "undefined" ? "server" : createUUID()
 
 export class HappyProviderImplem extends SafeEventEmitter implements HappyProviderInternal {
+    private static INSTANCE: HappyProviderInternal
+
     private readonly injectedWalletHandler: EIP1193ConnectionHandler
     private readonly socialWalletHandler: EIP1193ConnectionHandler
 
-    private static INSTANCE: HappyProviderInternal
-
     public static instance(): HappyProviderInternal {
-        if (!HappyProviderImplem.INSTANCE) {
-            HappyProviderImplem.INSTANCE =
-                typeof window === "undefined"
-                    ? new HappyProviderSSRSafe()
-                    : new HappyProviderImplem({
-                          iframePath: IFRAME_PATH,
-                          windowId: windowId as UUID,
-                          providerBus: new EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>({
-                              mode: EventBusMode.AppPort,
-                              scope: "happy-chain-eip1193-provider",
-                          }),
-                          msgBus: new EventBus<MsgsFromWallet, MsgsFromApp>({
-                              mode: EventBusMode.AppPort,
-                              scope: "happy-chain-dapp-bus",
-                          }),
-                      })
-        }
+        HappyProviderImplem.INSTANCE ??=
+            typeof window === "undefined"
+                ? new HappyProviderSSRSafe()
+                : new HappyProviderImplem({
+                      iframePath: IFRAME_PATH,
+                      windowId: windowId as UUID,
+                      providerBus: new EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>({
+                          mode: EventBusMode.AppPort,
+                          scope: "happy-chain-eip1193-provider",
+                      }),
+                      msgBus: new EventBus<MsgsFromWallet, MsgsFromApp>({
+                          mode: EventBusMode.AppPort,
+                          scope: "happy-chain-dapp-bus",
+                      }),
+                  })
 
         return HappyProviderImplem.INSTANCE
     }
@@ -86,7 +84,6 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
     private iframeReady = false
 
     private user: HappyUser | undefined
-
     private authState: AuthState = AuthState.Initializing
     private lastConnectedType: WalletType | undefined
 
@@ -97,54 +94,55 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
      * Handles authentication, connection, and messaging between app and iframe contexts.
      * TODO
      */
-    constructor(private config: HappyProviderConfig) {
+    private constructor(private config: HappyProviderConfig) {
         super()
         config.logger?.info("HappyProvider Created")
 
         this.iframeMsgBus = config.msgBus
 
-        this.hooks = registerListeners(config.msgBus)
-
-        this.hooks.onWalletInit((ready: boolean) => {
-            this.iframeReady = ready
-
-            if ("ethereum" in window) {
-                // listen to message bus instead of window here because when embedded, in many situations, the
-                // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
-                void config.msgBus.emit(Msgs.AnnounceInjectedProvider, {
-                    info: injectedProviderInfo,
-                })
-            }
-
-            mipdStore.getProviders().forEach((detail) => {
-                // don't forward ourselves to the iframe
-                if (detail.info.rdns === "tech.happy") return
-
-                void config.msgBus.emit(Msgs.AnnounceInjectedProvider, { info: detail.info })
-            })
-        })
-
-        this.hooks.onUserUpdate((user?: HappyUser) => {
-            this.user = user
-            this.lastConnectedType = user?.type ?? this.lastConnectedType
-        })
-
-        this.hooks.onAuthStateUpdate((authState: AuthState) => {
-            this.authState = authState
-            if (authState === AuthState.Disconnected) {
-                this.lastConnectedType = undefined
-            }
-        })
-
-        config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
-
         this.injectedWalletHandler = new InjectedWalletHandler(config)
         this.socialWalletHandler = new SocialWalletHandler(config)
 
-        announceProvider({
-            info: happyProviderInfo,
-            provider: this as EIP1193Provider,
+        this.hooks = registerListeners(config.msgBus)
+
+        this.hooks.onWalletInit(this.#onIframeInit.bind(this))
+        this.hooks.onUserUpdate(this.#onUserUpdate.bind(this))
+        this.hooks.onAuthStateUpdate(this.#onAuthStateUpdate.bind(this))
+
+        config.providerBus.on(Msgs.ProviderEvent, this.#handleProviderNativeEvent.bind(this))
+
+        announceProvider({ info: happyProviderInfo, provider: this as EIP1193Provider })
+    }
+
+    #onIframeInit(ready: boolean) {
+        this.iframeReady = ready
+
+        if ("ethereum" in window) {
+            // listen to message bus instead of window here because when embedded, in many situations, the
+            // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
+            void this.config.msgBus.emit(Msgs.AnnounceInjectedProvider, {
+                info: injectedProviderInfo,
+            })
+        }
+
+        mipdStore.getProviders().forEach((detail) => {
+            // don't forward ourselves to the iframe
+            if (detail.info.rdns === "tech.happy") return
+
+            void this.config.msgBus.emit(Msgs.AnnounceInjectedProvider, { info: detail.info })
         })
+    }
+
+    #onUserUpdate(user?: HappyUser) {
+        this.user = user
+        this.lastConnectedType = user?.type ?? this.lastConnectedType
+    }
+
+    #onAuthStateUpdate(authState: AuthState) {
+        this.authState = authState
+        if (authState === AuthState.Disconnected) {
+            this.lastConnectedType = undefined
+        }
     }
 
     /**
@@ -152,17 +150,17 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
      * injected wallet events are proxied through the iframe (which needs to learn of them),
      * then sent back.
      */
-    private handleProviderNativeEvent(data: ProviderMsgsFromWallet[Msgs.ProviderEvent]) {
+    #handleProviderNativeEvent(data: ProviderMsgsFromWallet[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private get activeHandler() {
+    get #activeHandler() {
         return this.lastConnectedType === WalletType.Injected && this.authState === AuthState.Connected
             ? this.injectedWalletHandler
             : this.socialWalletHandler
     }
 
-    private isConnectionRequest(
+    #isConnectionRequest(
         args: EIP1193RequestParameters,
     ): args is EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions"> {
         return (
@@ -171,17 +169,26 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
         )
     }
 
-    public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
+    async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         // wait until either authenticated or unauthenticated
         await waitForCondition(() => this.iframeReady)
 
         try {
-            return await this.activeHandler.request(args)
+            return await this.#activeHandler.request(args)
         } catch (e) {
-            const isConnectionRequest = this.isConnectionRequest(args)
+            const isConnectionRequest = this.#isConnectionRequest(args)
 
             if (e instanceof LoginRequiredError) {
-                const resp = await this.requestLogin(args)
+                const prevAuthState = this.authState
+                const prevUserType = this.user?.type
+
+                const resp = await this.#requestLogin(args)
+
+                // Wait for login handshake to complete and be acknowledged here before proceeding,
+                // otherwise we run the risk of passing the next request to socialWalletHandler
+                // (the default) when the injected wallet is being used but the local state here
+                // has not yet been informed
+                await waitForCondition(() => prevAuthState !== this.authState && prevUserType !== this.user?.type)
 
                 // If it was already a 'connection' request, we can simply return the results here.
                 if (isConnectionRequest) {
@@ -197,11 +204,11 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
         }
     }
 
-    private async requestLogin(args: EIP1193RequestParameters): Promise<ReturnType<typeof this.request>> {
+    async #requestLogin(args: EIP1193RequestParameters): Promise<ReturnType<typeof this.request>> {
         // Open Wallet
         this.config.msgBus?.emit(Msgs.RequestWalletDisplay, WalletDisplayAction.Open)
 
-        const isConnectionRequest = this.isConnectionRequest(args)
+        const isConnectionRequest = this.#isConnectionRequest(args)
         const req = {
             key: createUUID(),
             windowId: this.config.windowId,

@@ -1,14 +1,10 @@
-import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
+import type { Resolvers, UUID } from "@happy.tech/common"
+import { createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
 import { AuthState, BasePopupProvider, LoginRequiredError, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
 import { IFRAME_PATH } from "../env"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
-
-type InFlightCheck = {
-    resolve: (value: boolean) => void
-    reject: (reason?: unknown) => void
-}
 
 /**
  * SocialWalletHandler handles proxying EIP-1193 requests
@@ -21,36 +17,20 @@ type InFlightCheck = {
  */
 export class SocialWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
     // === SETUP ===================================================================================
-    protected popupBaseUrl = IFRAME_PATH
+    protected readonly popupBaseUrl
 
-    private inFlightChecks = new Map<string, InFlightCheck>()
-    private user: HappyUser | undefined
-    private authState: AuthState = AuthState.Initializing
+    #user: HappyUser | undefined
+    #authState: AuthState = AuthState.Initializing
+    #inFlightPermissionChecks = new Map<string, Resolvers<boolean>>()
 
     constructor(private config: HappyProviderConfig) {
         super(config.windowId)
+        this.popupBaseUrl = IFRAME_PATH
 
-        config.msgBus.on(Msgs.UserChanged, (_user) => {
-            this.user = _user
-        })
-
-        config.msgBus.on(Msgs.AuthStateChanged, (_authState) => {
-            this.authState = _authState
-        })
-
+        config.msgBus.on(Msgs.UserChanged, this.#setUser.bind(this))
+        config.msgBus.on(Msgs.AuthStateChanged, this.#setAuthState.bind(this))
         config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
-        config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
-    }
-
-    private async handlePermissionCheck(data: ProviderMsgsFromWallet[Msgs.PermissionCheckResponse]) {
-        const inFlight = this.inFlightChecks.get(data.key)
-        if (!inFlight) return
-        if (typeof data.payload === "boolean") {
-            inFlight.resolve(data.payload)
-        } else {
-            inFlight.reject(data.error)
-        }
-        this.inFlightChecks.delete(data.key)
+        config.providerBus.on(Msgs.PermissionCheckResponse, this.#handlePermissionCheck.bind(this))
     }
 
     // === ABSTRACT METHOD IMPLEMENTATION ==========================================================
@@ -65,10 +45,10 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         HappyProviderImplem.instance().displayError(OverlayErrorCode.PopupBlocked)
     }
 
-    protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+    protected override requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         const key = createUUID()
         const { promise, resolve, reject } = promiseWithResolvers<boolean>()
-        this.inFlightChecks.set(key, { resolve, reject })
+        this.#inFlightPermissionChecks.set(key, { resolve, reject })
 
         void this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
             key,
@@ -103,13 +83,13 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
      */
     protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
         // We are connected, no need for extra permissions, we needed approval before and still do.
-        if (this.user) return true
+        if (this.#user) return true
 
         // We are completely logged out, we need to log in.
         // HappyProvider will manage re-executing the original request if needed
         // and will resubmit here, or to the injectedHandler depending on what the user
         // connects with
-        if (this.authState === AuthState.Disconnected) {
+        if (this.#authState === AuthState.Disconnected) {
             // throw an error, so that login can be handled at the root HappyProvider
             // this is required so that if the user logs in with the injected wallet
             // we can continue the request there instead of here with the social wallet
@@ -139,5 +119,25 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         // Everything else (non-permission requests): required approval to begin with and still does.
         // Now that we are connected, these other requests can be made.
         return true
+    }
+
+    // === EVENT HANDLERS ==========================================================================
+
+    #handlePermissionCheck(data: ProviderMsgsFromWallet[Msgs.PermissionCheckResponse]) {
+        const inFlight = this.#inFlightPermissionChecks.get(data.key)
+        if (!inFlight) return
+        if (typeof data.payload === "boolean") {
+            inFlight.resolve(data.payload)
+        } else {
+            inFlight.reject(data.error)
+        }
+        this.#inFlightPermissionChecks.delete(data.key)
+    }
+
+    #setUser(user: HappyUser | undefined) {
+        this.#user = user
+    }
+    #setAuthState(authState: AuthState) {
+        this.#authState = authState
     }
 }

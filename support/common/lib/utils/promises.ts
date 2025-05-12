@@ -8,17 +8,13 @@ export type ResolveType<T> = (value: ResolveInputType<T>) => void
 // biome-ignore lint/suspicious/noExplicitAny: actual library type
 export type RejectType = (reason: any) => void
 
-/** Type for a promise's resolve and reject function. */
 export type Resolvers<T> = {
     resolve: ResolveType<T>
     reject: RejectType
 }
-
 /** Object containing a promise and it's resolve and reject function. */
-export type PromiseWithResolvers<T> = {
+export type PromiseWithResolvers<T> = Resolvers<T> & {
     promise: Promise<T>
-    resolve: ResolveType<T>
-    reject: RejectType
 }
 
 /** Creates a new promise and exposes its resolve and reject functions. */

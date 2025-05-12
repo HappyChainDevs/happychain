@@ -239,6 +239,7 @@
       "name": "demo-react",
       "version": "0.2.1",
       "dependencies": {
+        "@happy.tech/core": "workspace:0.2.1",
         "@happy.tech/react": "workspace:0.2.1",
         "@phosphor-icons/react": "^2.1.7",
         "react": "^19.1.0",

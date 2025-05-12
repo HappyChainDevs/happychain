@@ -115,6 +115,7 @@ describe("HappyProvider", () => {
 
         windowId = createUUID()
 
+        // @ts-ignore we will ignore the fact its a private constructor during tests
         provider = new HappyProviderImplem({
             iframePath: IFRAME_PATH,
             windowId: windowId,

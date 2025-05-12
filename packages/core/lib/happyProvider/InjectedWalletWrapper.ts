@@ -109,12 +109,17 @@ export class InjectedWalletWrapper {
                     ? (response as `0x${string}`[])
                     : await providerDetails.provider.request({ method: "eth_accounts" })
 
+            if (!address) throw new Error("User did not connect")
+
             this.info = providerDetails.info
             this.provider = providerDetails.provider
 
             void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address, request, response })
             this.addProviderListeners()
         } catch {
+            const failed = { request, rdns: undefined, address: undefined, response: undefined } as const
+            void this.config.msgBus.emit(Msgs.InjectedWalletConnected, failed)
+
             // Reached if eth_requestAccounts fails, meaning the user declined to give permission.
             // We just clear the existing provider in that case.
             void this.handleProviderDisconnectionRequest()
