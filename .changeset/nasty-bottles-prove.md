@@ -1,6 +1,5 @@
 ---
-"@happy.tech/common": minor
-"@happy.tech/iframe": minor
+"@happy.tech/iframe": patch
 ---
 
-Adds a section to the happy_loadAbi request popup to the display the contract name.
+Synchronises address display component styles.
