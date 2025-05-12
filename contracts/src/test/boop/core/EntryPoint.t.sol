@@ -240,7 +240,7 @@ contract EntryPointTest is BoopTestUtils {
     function testSimulationFeeTooLow() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
-        // Make sure that the boop.maxFeePerGas is lower than the tx.gasPrice, and send boop in simulatoin mode
+        // Make sure that the boop.maxFeePerGas is lower than the tx.gasPrice, and send boop in simulation mode
         vm.txGasPrice(boop.maxFeePerGas * 2);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
 
@@ -275,7 +275,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.expectRevert(InvalidNonce.selector);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         uint64 newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
@@ -285,7 +285,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
         vm.revertToState(id);
@@ -303,7 +303,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.expectRevert(InvalidNonce.selector);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         uint64 newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
