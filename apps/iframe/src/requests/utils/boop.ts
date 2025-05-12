@@ -10,7 +10,7 @@ import {
     SubmitterError,
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
-import { Map2, Mutex } from "@happy.tech/common"
+import { Map2, Mutex, parseBigInt } from "@happy.tech/common"
 import {
     EIP1474InternalError,
     EIP1474InvalidInput,
@@ -121,6 +121,7 @@ export async function sendBoop(
         }
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
+        if (!boopHash) throw new Error("Boop hash not computed") // temp: fix for boopHash being undefined
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop({ boopHash, value })
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
@@ -150,6 +151,39 @@ function serializeError(err: unknown) {
     }
 }
 
+/**
+ * Safely parses signature data from validatorData, returning default values if parsing fails
+ */
+function safeParseSignature(validatorData?: Hex) {
+    // Default signature values
+    const defaultSignature = {
+        r: "0x0" as Hex,
+        s: "0x0" as Hex,
+        v: 0n,
+        yParity: 0,
+    }
+
+    // If no validator data or too short, return defaults
+    if (!validatorData || validatorData.length < 132) {
+        return defaultSignature
+    }
+
+    try {
+        // Attempt to parse the signature
+        const { r, s, yParity } = parseSignature(validatorData)
+        return {
+            r,
+            s,
+            v: BigInt(yParity),
+            yParity,
+        }
+    } catch (error) {
+        // Log the error but don't fail the transaction formatting
+        reqLogger.trace("boop signature parsing failed", { validatorData, error })
+        return defaultSignature
+    }
+}
+
 export async function boopFromTransaction(account: Address, tx: ValidRpcTransactionRequest): Promise<Boop> {
     // TODO bigint casts need validation
 
@@ -164,7 +198,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
         validatorData: "0x", // we will fill after signing
         extraData: createValidatorExtraData(account, tx.to),
         // Use gas values from the transaction if they exist, for legacy txs, use gasPrice as maxFeePerGas
-        maxFeePerGas: tx.maxFeePerGas ? BigInt(tx.maxFeePerGas) : tx.gasPrice ? BigInt(tx.gasPrice) : 0n,
+        maxFeePerGas: parseBigInt(tx.maxFeePerGas) ?? parseBigInt(tx.gasPrice) ?? 0n,
         submitterFee: 0n,
         gasLimit: tx.gas ? Number(tx.gas) : 0,
         validateGasLimit: 0,
@@ -231,19 +265,7 @@ export function formatTransaction(
         chainId: Number(currentChain.chainId),
         accessList: [], // no way to retrieve without access to submitter tx, not important
         // Parse signature values from validatorData if available
-        ...(boop?.validatorData && boop.validatorData.length >= 132
-            ? (({ r, s, yParity }) => ({
-                  r,
-                  s,
-                  v: BigInt(yParity),
-                  yParity,
-              }))(parseSignature(boop.validatorData))
-            : {
-                  r: "0x0",
-                  s: "0x0",
-                  v: 0n,
-                  yParity: 0,
-              }),
+        ...safeParseSignature(boop?.validatorData),
         boop: receipt,
     } as TransactionEIP1559
 }
