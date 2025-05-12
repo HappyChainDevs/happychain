@@ -127,7 +127,7 @@ export const LinkToAddress = ({ address, short }: LinkToAddressProps) => {
             href={`${blockExplorerUrl}/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary border-b border-dashed hover:bg-primary/40"
+            className="text-primary border-b border-primary/60 hover:bg-primary/40"
         >
             {short ? shortenAddress(address) : address}
         </a>
