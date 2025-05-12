@@ -185,27 +185,25 @@ export const EthSendTransaction = ({
                 <SectionBlock>
                     <SubsectionBlock>
                         <SubsectionContent>
-                            {boopSimulationPending ? (
-                                <FieldLoader />
-                            ) : (
-                                `Cost: ${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
+                            <SubsectionTitle>Cost</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                {boopSimulationPending ? (
+                                    <FieldLoader />
+                                ) : (
+                                    `${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
+                                )}
+                            </FormattedDetailsLine>
+                            {!isSelfPaying && (
+                                <SubsectionTitle>
+                                    <LinkToAddress address={paymasterInUse}>
+                                        Sponsored by{" "}
+                                        <span className="text-accent">{getPaymasterName(paymasterInUse)}</span>
+                                    </LinkToAddress>
+                                </SubsectionTitle>
                             )}
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
-
-                {!isSelfPaying && (
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <SubsectionTitle>
-                                <LinkToAddress address={paymasterInUse}>
-                                    Sponsored by <span className="text-accent">{getPaymasterName(paymasterInUse)}</span>
-                                </LinkToAddress>
-                            </SubsectionTitle>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                )}
-
                 {decodedData && (
                     <DisclosureSection
                         title="Decoded Function Data"
