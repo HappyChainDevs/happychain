@@ -4,7 +4,11 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
+<<<<<<< HEAD
 import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
+=======
+import { WalletSendCalls } from "#src/components/requests/WalletSendCalls"
+>>>>>>> cb66b67f (minimal refactor of request popup)
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
