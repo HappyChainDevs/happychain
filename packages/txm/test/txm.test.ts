@@ -10,10 +10,10 @@ import {
     encodeFunctionData,
 } from "viem"
 import { http } from "viem"
-import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
+import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"
 import { afterAll, beforeAll, expect, test, vi } from "vitest"
-import { TxmHookType } from "../lib"
+import { type TransactionManagerConfig, TxmHookType } from "../lib"
 import { TransactionManager } from "../lib"
 import { AttemptType, TransactionStatus } from "../lib/Transaction"
 import type { Attempt, Transaction } from "../lib/Transaction"
@@ -40,7 +40,7 @@ import { cleanDB, getPersistedTransaction } from "./utils/db"
 
 const retryManager = new TestRetryManager()
 
-const txm = new TransactionManager({
+const txmConfig: TransactionManagerConfig = {
     privateKey: PRIVATE_KEY,
     chainId: CHAIN_ID,
     rpc: {
@@ -64,7 +64,9 @@ const txm = new TransactionManager({
     traces: {
         active: false,
     },
-})
+}
+
+const txm = new TransactionManager(txmConfig)
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
 
@@ -710,8 +712,8 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
 })
 
 test("Multiple transaction managers with different accounts work correctly", async () => {
-    const destinationAddress1 = "0xFa0C819aA6C37550784f1D32BCA0077e25E915D6"
-    const destinationAddress2 = "0xcc575f9170c5Bc1eb4e76f04e9Fe25CD95785173"
+    const destinationAddress1 = privateKeyToAddress(generatePrivateKey())
+    const destinationAddress2 = privateKeyToAddress(generatePrivateKey())
     const privateKeyFromTxm1 = PRIVATE_KEY_2
     const privateKeyFromTxm2 = PRIVATE_KEY_3
     const addressFromTxm1 = privateKeyToAddress(privateKeyFromTxm1)
@@ -721,67 +723,17 @@ test("Multiple transaction managers with different accounts work correctly", asy
     const numTransactions = 5
 
     const txm1 = new TransactionManager({
+        ...txmConfig,
         privateKey: privateKeyFromTxm1,
-        chainId: CHAIN_ID,
-        rpc: {
-            url: PROXY_URL,
-            pollingInterval: 200,
-            allowDebug: true,
-            livenessCheckInterval: 500,
-            livenessDownDelay: 1000,
-        },
-        abis: abis,
-        gasEstimator: new TestGasEstimator(),
-        retryPolicyManager: retryManager,
-        gas: {
-            baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
-            eip1559: ethereumDefaultEIP1559Parameters,
-            minPriorityFeePerGas: 10n,
-        },
-        metrics: {
-            active: false,
-        },
-        traces: {
-            active: false,
-        },
     })
 
     const txm2 = new TransactionManager({
+        ...txmConfig,
         privateKey: privateKeyFromTxm2,
-        chainId: CHAIN_ID,
-        rpc: {
-            url: PROXY_URL,
-            pollingInterval: 200,
-            allowDebug: true,
-            livenessCheckInterval: 500,
-            livenessDownDelay: 1000,
-        },
-        abis: abis,
-        gasEstimator: new TestGasEstimator(),
-        retryPolicyManager: retryManager,
-        gas: {
-            baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
-            eip1559: ethereumDefaultEIP1559Parameters,
-            minPriorityFeePerGas: 10n,
-        },
-        metrics: {
-            active: false,
-        },
-        traces: {
-            active: false,
-        },
     })
 
     await txm1.start()
     await txm2.start()
-
-    const initialBalance1 = await directBlockchainClient.getBalance({
-        address: destinationAddress1,
-    })
-
-    const initialBalance2 = await directBlockchainClient.getBalance({
-        address: destinationAddress2,
-    })
 
     const initialNonce1 = await directBlockchainClient.getTransactionCount({
         address: addressFromTxm1,
@@ -820,8 +772,8 @@ test("Multiple transaction managers with different accounts work correctly", asy
         address: destinationAddress2,
     })
 
-    expect(finalBalance1).toBe(initialBalance1 + quantityToSend * BigInt(numTransactions))
-    expect(finalBalance2).toBe(initialBalance2 + quantityToSend * BigInt(numTransactions))
+    expect(finalBalance1).toBe(quantityToSend * BigInt(numTransactions))
+    expect(finalBalance2).toBe(quantityToSend * BigInt(numTransactions))
 
     const finalNonce1 = await directBlockchainClient.getTransactionCount({
         address: addressFromTxm1,
