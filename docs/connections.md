@@ -60,7 +60,9 @@ will be detected using [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) and s
 Once this provider is connected and saved, the iframe will use the `InjectedWalletProxy` to execute 
 any future requests by forwarding them to `InjectedWalletWrapper`. If the iframe was being accessed 
 directly and not through an app, then the original user-selected provider will simply be used to 
-execute requests directly.
+execute requests directly. When the user 'disconnects' from the app (without logging out), we revoke
+the app's connection permission in the Happy Wallet, so that the app can't interact with the Happy Wallet anymore.
+However, the injected wallet remains connected to the app, such that we can still use the `InjectedWalletWrapper`/`InjectedWalletProxy` connection to interact with the chain from the Happy Wallet.
 
 ## Connection Result
 

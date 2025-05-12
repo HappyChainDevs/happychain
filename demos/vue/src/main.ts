@@ -17,10 +17,12 @@ import { VueQueryPlugin, queryClient } from "./query"
 // biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
-export const config = createHappyChainWagmiConfig(getChain(import.meta.env.VITE_CHAIN_ID)) as WagmiConfig
+const chainId = Number(import.meta.env.VITE_CHAIN_ID)
+
+export const config = createHappyChainWagmiConfig(getChain(chainId)) satisfies WagmiConfig
 
 createApp(App)
-    .use(HappyChainPlugin, { chainId: import.meta.env.VITE_CHAIN_ID })
+    .use(HappyChainPlugin, { chainId })
     .use(WagmiPlugin, { config })
     .use(VueQueryPlugin, { queryClient })
     .mount("#app")

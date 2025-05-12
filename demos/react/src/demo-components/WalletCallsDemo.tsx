@@ -1,3 +1,4 @@
+import { getCurrentUser } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -19,13 +20,18 @@ const WalletCallsDemo = () => {
     async function signMessage(message: string) {
         setIsSigning(true)
         try {
-            if (!user) throw new Error("No user is connected")
-
             setSignatureResult("")
 
             const signature = await walletClient.signMessage({ message })
 
-            const valid = await publicClient.verifyMessage({ address: user?.controllingAddress, message, signature })
+            const valid = await publicClient.verifyMessage({
+                // We will use `getCurrentUser` here instead of {useHappyWallet().user}
+                // since if the user was not connected, they will be prompted to before signing,
+                // but the `user` value captured in this function is `undefined`.
+                address: getCurrentUser()!.controllingAddress,
+                message,
+                signature,
+            })
 
             if (!valid) throw new Error("Invalid Signature")
 

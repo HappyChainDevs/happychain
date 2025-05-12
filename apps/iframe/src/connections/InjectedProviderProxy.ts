@@ -141,7 +141,6 @@ export class InjectedProviderProxy extends SafeEventEmitter {
                     const [address] = req.payload.params
                     const _user = await createHappyUserFromWallet(user.provider, address)
                     await setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
-                    grantPermissions(getAppURL(), "eth_accounts")
                 }
             }
         }

@@ -31,7 +31,7 @@ import { loadAbiForUser } from "#src/state/loadedAbis"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { checkUser, getUser } from "#src/state/user"
 import { addWatchedAsset } from "#src/state/watchedAssets"
-import { appForSourceID } from "#src/utils/appURL"
+import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendBoop } from "../utils/boop"
 
@@ -49,6 +49,19 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case HappyMethodNames.USER: {
             const acc = await sendToWalletClient({ method: "eth_accounts" })
             return acc.length ? user : undefined
+        }
+
+        case "personal_sign": {
+            checkUser(user)
+            return await sendToWalletClient({
+                method: "personal_sign",
+                params: [
+                    request.payload.params[0],
+                    // Need to substitute the user address with the controlling address
+                    // as the wallet is not aware of the session key functionality
+                    user.controllingAddress,
+                ],
+            })
         }
 
         case "eth_call": {
@@ -114,14 +127,15 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             let resp = await sendToWalletClient(request.payload)
 
             // wallet not connected, we will request permissions here
-            // This shouldn't happen however added as a precaution
+            // This shouldn't happen however added as a precaution. If there is a user
+            // there should _always_ be a wallet connected.
             if (!resp.length) {
                 resp = await sendToWalletClient({ method: "eth_requestAccounts" })
                 if (!resp.length) return []
             }
 
             // wallet connected as wrong user somehow
-            if (resp[0].toLowerCase() !== user.controllingAddress) return []
+            if (checkAndChecksumAddress(resp[0]) !== user.controllingAddress) return []
 
             grantPermissions(app, "eth_accounts")
 
@@ -161,10 +175,12 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_revokePermissions": {
-            const resp = await sendToWalletClient(request.payload)
+            // We only intentionally revoke injected connection if requested from within the iframe.
+            // This happens on an actual 'logout' action, not just an app disconnect.
+            if (isWallet(app)) await sendToWalletClient(request.payload)
             revokePermissions(app, request.payload.params[0])
             if (revokedSessionKeys.size > 0) await revokeSessionKeys(app, [...revokedSessionKeys.values()])
-            return resp
+            return null
         }
 
         case "wallet_addEthereumChain": {

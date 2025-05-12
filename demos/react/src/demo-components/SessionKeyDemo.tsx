@@ -1,38 +1,51 @@
 import { loadAbi } from "@happy.tech/core"
-import { requestSessionKey } from "@happy.tech/core"
+import { getCurrentUser, requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import type { Address } from "viem"
 import { publicClient, walletClient } from "../clients"
 import { abis, deployment } from "../deployments"
 
-const SessionKeyDemo = () => {
-    const { user } = useHappyWallet()
+function useCounter() {
     const [counter, setCounter] = useState<bigint | undefined>()
-    const [loading, setLoading] = useState(false)
+    const [isLoading, setLoading] = useState(false)
+    const { user } = useHappyWallet()
 
-    const updateCounterValue = useCallback(async () => {
-        if (!user?.address) {
-            setCounter(undefined)
-            return
-        }
+    const refetch = useCallback(async (account: Address) => {
         const count = await publicClient.readContract({
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "getCount",
-            account: user?.address,
+            account,
         })
         setCounter(count)
         return count
-    }, [user])
+    }, [])
 
+    // Sync counter value with current active user
     useEffect(() => {
         setLoading(true)
-        updateCounterValue().then(() => {
+        const updateCounterValue = async () => {
+            if (!user?.address) return setCounter(undefined)
+            await refetch(user?.address)
+        }
+
+        updateCounterValue().finally(() => {
             setLoading(false)
         })
-    }, [updateCounterValue])
+    }, [user, refetch])
+
+    return {
+        isLoading,
+        counter,
+        refetch,
+    }
+}
+
+const SessionKeyDemo = () => {
+    const { counter, isLoading, refetch } = useCounter()
 
     async function incrementCounter() {
         try {
@@ -42,14 +55,15 @@ const SessionKeyDemo = () => {
                 functionName: "increment",
             })
 
+            if (!hash) throw new Error("No hash returned")
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
             if (receipt.status === "reverted") {
                 toast.error("Boop reverted!")
                 return
             }
 
-            const newCount = await updateCounterValue()
-            toast.success(`Counter incremented to ${newCount}`)
+            const next = await refetch(getCurrentUser()!.address)
+            toast.success(`Counter incremented to ${next}`)
         } catch (error) {
             console.warn("[incrementCounter] error:", error)
             toast.error("Failed to increment counter: " + (error instanceof Error ? error.message : "Unknown error"))
@@ -69,7 +83,7 @@ const SessionKeyDemo = () => {
                 return
             }
 
-            const newCount = await updateCounterValue()
+            const newCount = await refetch(getCurrentUser()!.address)
             toast.success(`Counter incremented to ${newCount}`)
         } catch (error) {
             console.warn("[incrementCounter] error:", error)
@@ -120,7 +134,7 @@ const SessionKeyDemo = () => {
                 <pre className="text-sm font-semibold">Current counter value</pre>
                 {counter !== undefined ? (
                     <div className="text-4xl font-bold">{counter.toString()}</div>
-                ) : loading ? (
+                ) : isLoading ? (
                     <Spinner className="animate-spin mx-auto" size="2.25rem" />
                 ) : (
                     <div className="text-4xl font-bold">×</div>

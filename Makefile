@@ -162,6 +162,15 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
 
+demo-all.dev: setup shared.dev sdk.dev ## Serves all demo applications at once
+	$(MULTIRUN) --names "iframe,demo-js,demo-react,demo-vue" \
+		"cd apps/iframe && make dev" \
+		"cd demos/js && make dev" \
+		"cd demos/react && make dev" \
+		"cd demos/vue && make dev" \
+		;\
+.PHONY: demo-all.dev
+
 demo-js.dev: setup shared.dev sdk.dev ## Serves the VanillaJS demo application at http://localhost:6001
 	$(call with_optional_iframe, "demo-js", "demos/js", "dev")
 .PHONY: demo-js.dev

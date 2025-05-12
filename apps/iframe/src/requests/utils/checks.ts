@@ -14,6 +14,7 @@ import {
 import { checksum } from "ox/Address"
 import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex } from "viem"
 import { getAuthState } from "#src/state/authState"
+import { getUser } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 
@@ -40,7 +41,11 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
 
     // Validate addresses
     if (!isAddress(tx.to)) /****/ throw new EIP1474InvalidInput(`not an address: ${tx.to}`)
-    if (tx.from !== undefined && !isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
+    if (tx.from && !isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
+
+    // Validate that the from address is the current connected users account
+    if (tx.from && checksum(tx.from) !== getUser()?.address)
+        /**/ throw new EIP1474InvalidInput(`invalid 'from' address: ${tx.from}`)
 
     // Check if the value and nonce exist, and can be parsed as BigInt (allows zero values)
     if (tx.value !== undefined && parseBigInt(tx.value) === undefined)
