@@ -12,6 +12,7 @@ import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import { env } from "./env"
 import { type Repositories, repositories } from "./repositories"
+import authApi from "./routes/api/authRoutes"
 import gamesApi from "./routes/api/gamesRoutes"
 import guildsApi from "./routes/api/guildsRoutes"
 import leaderboardApi from "./routes/api/leaderboardRoutes"
@@ -45,9 +46,10 @@ const app = new Hono()
         <p>Visit the <a href="https://docs.happy.tech">Happy Docs</a> for more information, or the <a href="/docs">Open API Spec</a></p>`,
         ),
     )
+    .route("/auth", authApi)
     .route("/users", usersApi)
-    .route("/guilds", guildsApi)
     .route("/games", gamesApi)
+    .route("/guilds", guildsApi)
     .route("/leaderboards", leaderboardApi)
 
 // Serve OpenAPI JSON at /docs/openapi.json

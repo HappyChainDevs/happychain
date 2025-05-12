@@ -1,4 +1,4 @@
-import type { Address } from "@happy.tech/common"
+import type { Address, UUID } from "@happy.tech/common"
 import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
 
 // --- Branded ID types for strong nominal typing ---
@@ -7,6 +7,7 @@ export type GuildTableId = number & { _brand: "guilds_id" }
 export type GameTableId = number & { _brand: "games_id" }
 export type ScoreTableId = number & { _brand: "scores_id" }
 export type GuildMemberTableId = number & { _brand: "guild_members_id" }
+export type AuthSessionTableId = UUID
 
 // Main Kysely database schema definition
 export interface Database {
@@ -16,10 +17,11 @@ export interface Database {
     guild_members: GuildMemberTable
     games: GameTable
     user_game_scores: UserGameScoreTable
+    auth_sessions: AuthSessionTable
 }
 
 // Registered users
-export interface UserTable {
+interface UserTable {
     id: Generated<UserTableId>
     primary_wallet: Address // Primary wallet for the user
     username: string
@@ -28,7 +30,7 @@ export interface UserTable {
 }
 
 // User wallet addresses (allows multiple wallets per user)
-export interface UserWalletTable {
+interface UserWalletTable {
     id: Generated<number>
     user_id: UserTableId // FK to users
     wallet_address: Address
@@ -37,7 +39,7 @@ export interface UserWalletTable {
 }
 
 // Guilds (groups of users)
-export interface GuildTable {
+interface GuildTable {
     id: Generated<GuildTableId>
     name: string
     icon_url: string | null
@@ -47,7 +49,7 @@ export interface GuildTable {
 }
 
 // Guild membership JOIN table (users in guilds with role)
-export interface GuildMemberTable {
+interface GuildMemberTable {
     id: Generated<GuildMemberTableId>
     guild_id: GuildTableId // FK to guilds
     user_id: UserTableId // FK to users
@@ -56,7 +58,7 @@ export interface GuildMemberTable {
 }
 
 // Games available on the platform
-export interface GameTable {
+interface GameTable {
     id: Generated<GameTableId>
     name: string
     icon_url: string | null
@@ -67,7 +69,7 @@ export interface GameTable {
 }
 
 // User scores in games
-export interface UserGameScoreTable {
+interface UserGameScoreTable {
     id: Generated<ScoreTableId>
     user_id: UserTableId // FK to users
     game_id: GameTableId // FK to games
@@ -75,6 +77,15 @@ export interface UserGameScoreTable {
     metadata: string | null // JSON string for any additional game-specific data
     created_at: ColumnType<Date, string | undefined, never>
     updated_at: ColumnType<Date, string | undefined, string>
+}
+
+// Auth sessions
+interface AuthSessionTable {
+    id: AuthSessionTableId
+    user_id: UserTableId // FK to users
+    primary_wallet: Address
+    created_at: ColumnType<Date, string | undefined, never>
+    last_used_at: ColumnType<Date, string | undefined, string>
 }
 
 // Kysely helper types
@@ -136,4 +147,32 @@ export interface GameGuildLeaderboardEntry {
     icon_url: string | null
     total_score: number
     member_count: number
+}
+
+export type AuthSession = Selectable<AuthSessionTable>
+export type NewAuthSession = Insertable<AuthSessionTable>
+export type UpdateAuthSession = Updateable<AuthSessionTable>
+
+// Auth types for API
+export interface AuthChallengeRequest {
+    primary_wallet: Address
+}
+
+export interface AuthChallengeResponse {
+    message: string
+    primary_wallet: Address
+}
+
+export interface SignInRequest {
+    primary_wallet: Address
+    signature: string
+}
+
+export interface AuthResponse {
+    session_id: AuthSessionTableId
+    user: {
+        id: UserTableId
+        username: string
+        primary_wallet: Address
+    }
 }

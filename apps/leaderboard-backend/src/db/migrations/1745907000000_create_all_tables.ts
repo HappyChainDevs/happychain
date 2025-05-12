@@ -76,6 +76,17 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addForeignKeyConstraint("user_game_scores_game_id_fk", ["game_id"], "games", ["id"])
         .addUniqueConstraint("user_game_scores_unique", ["user_id", "game_id"])
         .execute()
+
+    // Auth sessions table
+    await db.schema
+        .createTable("auth_sessions")
+        .addColumn("id", "uuid", (col) => col.primaryKey().notNull())
+        .addColumn("user_id", "integer", (col) => col.notNull())
+        .addColumn("primary_wallet", "text", (col) => col.notNull())
+        .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
+        .addColumn("last_used_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
+        .addForeignKeyConstraint("auth_sessions_user_id_fk", ["user_id"], "users", ["id"])
+        .execute()
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: `any` is required here since migrations should be frozen in time. alternatively, keep a "snapshot" db interface.
@@ -86,4 +97,5 @@ export async function down(db: Kysely<any>): Promise<void> {
     await db.schema.dropTable("guilds").execute()
     await db.schema.dropTable("user_wallets").execute()
     await db.schema.dropTable("users").execute()
+    await db.schema.dropTable("auth_sessions").execute()
 }

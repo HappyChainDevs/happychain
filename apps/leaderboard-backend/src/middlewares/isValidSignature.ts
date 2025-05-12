@@ -1,14 +1,27 @@
-// TODO: Reserved for another PR, this is just stub, ignore this file for now
-
 import { createMiddleware } from "hono/factory"
+import type { AuthSessionTableId } from "../db/types"
 
 const isValidSignature = createMiddleware(async (c, next) => {
-    console.log(c.req)
-    console.log("TODO: import wagmi, make call to SCA.isValidSignature()")
+    const authHeader = c.req.header("Authorization")
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return c.json({ error: "Authentication required", ok: false }, 401)
+    }
+
+    const sessionId = authHeader.substring(7) as AuthSessionTableId
+
+    const { authRepo } = c.get("repos")
+    const session = await authRepo.verifySession(sessionId)
+
+    if (!session) {
+        return c.json({ error: "Invalid or expired session", ok: false }, 401)
+    }
+
+    c.set("userId", session.user_id)
+    c.set("primaryWallet", session.primary_wallet)
+    c.set("sessionId", session.id)
+
     await next()
-    // !Optional, modify response after it comes back from the handler
-    // c.res = undefined
-    // c.res = new Response('New Response')
 })
 
 export { isValidSignature }
