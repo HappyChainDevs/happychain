@@ -7,7 +7,7 @@ import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
 import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
-import { happyPaymaster } from "#src/constants/contracts.ts"
+import { getPaymaster, getPaymasterName } from "#src/constants/contracts.ts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
@@ -37,6 +37,7 @@ export const EthSendTransaction = ({
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
     const tx = params[0]
     const user = useAtomValue(userAtom)
+    const paymasterInUse = getPaymaster()
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
     const txType = classifyTxType(tx)
@@ -197,8 +198,8 @@ export const EthSendTransaction = ({
                     <SectionBlock>
                         <SubsectionBlock>
                             <SubsectionTitle>
-                                <LinkToAddress address={happyPaymaster}>
-                                    Sponsored by <span className="text-accent">HappyChain</span>
+                                <LinkToAddress address={paymasterInUse}>
+                                    Sponsored by <span className="text-accent">{getPaymasterName(paymasterInUse)}</span>
                                 </LinkToAddress>
                             </SubsectionTitle>
                         </SubsectionBlock>
