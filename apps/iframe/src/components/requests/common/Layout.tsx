@@ -116,9 +116,9 @@ export const FormattedDetailsLine = ({ children, isCode }: FormattedDetailsLineP
 
 interface LinkToAddressProps extends PropsWithChildren {
     address: Address
-    shorten?: boolean
+    short?: boolean
 }
-export const LinkToAddress = ({ address, shorten }: LinkToAddressProps) => {
+export const LinkToAddress = ({ address, short }: LinkToAddressProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     return (
@@ -129,7 +129,7 @@ export const LinkToAddress = ({ address, shorten }: LinkToAddressProps) => {
             rel="noopener noreferrer"
             className="text-primary border-b border-dashed hover:bg-primary/40"
         >
-            {shorten ? shortenAddress(address) : address}
+            {short ? shortenAddress(address) : address}
         </a>
     )
 }

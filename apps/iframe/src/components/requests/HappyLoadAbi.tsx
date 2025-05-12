@@ -32,7 +32,7 @@ export const HappyLoadAbi = ({
             headline={<>Import contract interface</>}
             description={
                 <>
-                    Transactions sent to <LinkToAddress address={params.address} shorten /> will be displayed in a
+                    Transactions sent to <LinkToAddress address={params.address} short /> will be displayed in a
                     human-readable way.
                 </>
             }
