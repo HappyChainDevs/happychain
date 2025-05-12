@@ -261,7 +261,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.expectRevert(InvalidNonce.selector);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         uint64 newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
@@ -271,7 +271,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
         vm.revertToState(id);
@@ -289,7 +289,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.expectRevert(InvalidNonce.selector);
         entryPoint.submit(boop.encode());
 
-        // Check that the once wasn't incremented
+        // Check that the nonce wasn't incremented
         uint64 newNonce = uint64(entryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
