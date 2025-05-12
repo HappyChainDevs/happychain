@@ -89,7 +89,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      *    See {interfaces/IAccount.execute} for compliant behaviour.
      *
      * 5. Collect payment from the paymaster or account.
-     *    Payment is taken from the paymaster's stake or sollicated from the account by calling
+     *    Payment is taken from the paymaster's stake or solicited from the account by calling
      *    {interfaces/IAccount.payout}.
      *
      * Gas estimation is possible by doing an `eth_call` on this function with `address(0)` as the
