@@ -40,9 +40,11 @@ export const HappyLoadAbi = ({
                 accept: {
                     children: "Import ABI",
                     onClick: () => {
-                        queryClient.invalidateQueries({
-                            queryKey: blockExplorerKeys.contracts.detail(params.address),
-                        })
+                        if (nameIsPending || contractDataFetchError) {
+                            queryClient.invalidateQueries({
+                                queryKey: blockExplorerKeys.contracts.detail(params.address),
+                            })
+                        }
                         accept({ method, params })
                     },
                 },
