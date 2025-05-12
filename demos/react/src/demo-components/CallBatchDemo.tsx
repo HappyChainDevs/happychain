@@ -1,4 +1,5 @@
 import { useHappyWallet } from "@happy.tech/react"
+import { toast } from "sonner"
 import { parseEther } from "viem"
 import { walletClient } from "../clients"
 
@@ -7,6 +8,7 @@ const CallBatchDemo = () => {
     async function getCapabilities() {
         try {
             const caps = await walletClient?.getCapabilities()
+            toast.info("Check console for supported capabilities!")
             console.log({ caps })
         } catch (error) {
             console.error(error)
