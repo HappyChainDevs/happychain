@@ -2,7 +2,7 @@ import { Onchain } from "@happy.tech/boop-sdk"
 import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { type Address, type RpcTransactionRequest, formatEther, formatGwei, isAddress, toHex } from "viem"
+import { type Address, formatEther, formatGwei, isAddress, toHex } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
@@ -35,7 +35,7 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    const tx: RpcTransactionRequest = params[0]
+    const tx = params[0]
     const user = useAtomValue(userAtom)
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
     const txValue = parseBigInt(tx.value) ?? 0n
@@ -74,20 +74,18 @@ export const EthSendTransaction = ({
     })
 
     const validTx = useMemo(() => {
-        if (!tx.from || !isAddress(tx.from)) throw new Error("Invalid or missing `from` address")
         if (!tx.to || !isAddress(tx.to)) throw new Error("Invalid or missing `to` address")
 
         return {
             ...tx,
-            maxFeePerGas: ifDef(txMaxFeePerGas, toHex),
+            maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
             maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
             gasPrice: ifDef(txGasPrice, toHex),
             gas: ifDef(txGasLimit, toHex),
             type: txType,
-            from: tx.from as Address,
-            to: tx.to as Address,
+            from: (tx.from ?? user?.address) as Address,
         } as ValidRpcTransactionRequest
-    }, [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType])
+    }, [tx, txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, txGasLimit, txType, user])
 
     // ====================================== Boop Gas details ======================================
 
@@ -103,7 +101,7 @@ export const EthSendTransaction = ({
     })
 
     const formatted = useMemo(() => {
-        if (!simulatedBoopData) return undefined
+        if (!simulatedBoopData || simulatedBoopData.status !== Onchain.Success || boopSimulationError) return
 
         if (simulatedBoopData.status === Onchain.Success) {
             const { maxFeePerGas: boopMaxFeePerGas, submitterFee = 0n, gas: boopGas } = simulatedBoopData
@@ -116,7 +114,7 @@ export const EthSendTransaction = ({
                 submitterFee: submitterFee,
             }
         }
-    }, [simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
+    }, [boopSimulationError, simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
 
     const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
 
@@ -186,13 +184,11 @@ export const EthSendTransaction = ({
                 <SectionBlock>
                     <SubsectionBlock>
                         <SubsectionContent>
-                            <FormattedDetailsLine>
-                                {boopSimulationPending ? (
-                                    <FieldLoader />
-                                ) : (
-                                    `Cost: ${formatted?.totalGas} HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
-                                )}
-                            </FormattedDetailsLine>
+                            {boopSimulationPending ? (
+                                <FieldLoader />
+                            ) : (
+                                `Cost: ${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
+                            )}
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
