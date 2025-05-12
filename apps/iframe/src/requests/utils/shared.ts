@@ -149,6 +149,24 @@ export async function eth_estimateGas(
     } catch (error) {
         // Catch and log any errors during the estimation process
         reqLogger.error("Gas estimation error", error)
-        throw error instanceof Error ? error : new EIP1474InternalError("Failed to estimate gas")
+
+        if (error instanceof Error) {
+            // If it's a Viem error with a code property, rethrow it
+            if ("code" in error && typeof error.code !== "undefined") {
+                throw error
+            }
+
+            // Otherwise, wrap in EIP1474InternalError with the original error message
+            throw new EIP1474InternalError(
+                `Failed to estimate gas: ${error.message}`,
+                { cause: error }, // Unimplemented
+            )
+        }
+
+        // For non-Error objects, create a new error
+        throw new EIP1474InternalError(
+            "Failed to estimate gas: unknown error",
+            { cause: error }, // Unimplemented
+        )
     }
 }

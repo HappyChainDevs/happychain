@@ -40,20 +40,21 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
     if (!isAddress(tx.to)) /****/ throw new EIP1474InvalidInput(`not an address: ${tx.to}`)
     if (!isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
 
-    if (tx.value && parseBigInt(tx.value) === undefined)
+    // Check if value exists and can be parsed as BigInt (allows zero values)
+    if (tx.value !== undefined && parseBigInt(tx.value) === undefined)
         throw new EIP1474InvalidInput(`value is not a number: ${tx.value}`)
-    if (tx.nonce && parseBigInt(tx.nonce) === undefined)
+    if (tx.nonce !== undefined && parseBigInt(tx.nonce) === undefined)
         throw new EIP1474InvalidInput(`nonce is not a number: ${tx.nonce}`)
 
     // Validate gas price parameters based on transaction type
     // Legacy transactions use gasPrice
-    if (tx.gasPrice && !parseBigInt(tx.gasPrice))
+    if (tx.gasPrice !== undefined && parseBigInt(tx.gasPrice) === undefined)
         throw new EIP1474InvalidInput(`gasPrice is not a number: ${tx.gasPrice}`)
 
     // EIP-1559 transactions use maxFeePerGas and maxPriorityFeePerGas
-    if (tx.maxFeePerGas && !parseBigInt(tx.maxFeePerGas))
+    if (tx.maxFeePerGas !== undefined && parseBigInt(tx.maxFeePerGas) === undefined)
         throw new EIP1474InvalidInput(`maxFeePerGas is not a number: ${tx.maxFeePerGas}`)
-    if (tx.maxPriorityFeePerGas && !parseBigInt(tx.maxPriorityFeePerGas))
+    if (tx.maxPriorityFeePerGas !== undefined && parseBigInt(tx.maxPriorityFeePerGas) === undefined)
         throw new EIP1474InvalidInput(`maxPriorityFeePerGas is not a number: ${tx.maxPriorityFeePerGas}`)
 
     if (tx.data && !isHex(tx.data)) return tx as ValidRpcTransactionRequest
