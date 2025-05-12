@@ -1,9 +1,10 @@
+import type { SimulateOutput } from "@happy.tech/boop-sdk"
 import type { Address } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import { entryPoint } from "#src/constants/contracts"
 import { boopFromTransaction } from "#src/requests/utils/boop"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
-import { boopClient } from "#src/state/boopClient"
+import { getBoopClient } from "#src/state/boopClient"
 
 export type UseSimulateBoopArgs = {
     userAddress: Address | undefined
@@ -12,7 +13,7 @@ export type UseSimulateBoopArgs = {
 }
 
 export type UseSimulateBoopReturn = {
-    simulatedBoopData: Awaited<ReturnType<typeof boopClient.simulate>> | undefined
+    simulatedBoopData: SimulateOutput | undefined
     isSimulationPending: boolean
     isSimulationError: boolean
     simulationQueryKey: readonly unknown[]
@@ -72,6 +73,9 @@ export const boopKeys = {
  * @returns Simulation results, status flags, and query key
  */
 export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArgs): UseSimulateBoopReturn {
+    const boopClient = getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+
     const simulationQueryKey = boopKeys.simulation.transaction(userAddress, tx)
     const shouldQuery = !!userAddress && !!tx && enabled
 
@@ -84,7 +88,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
         enabled: shouldQuery,
         queryFn: async () => {
             const boop = await boopFromTransaction(userAddress!, tx!)
-            return boopClient.simulate({ entryPoint, boop })
+            return await boopClient.simulate({ entryPoint, boop })
         },
     })
 
