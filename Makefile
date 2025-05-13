@@ -555,7 +555,7 @@ select-chain-local:
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
-	$(call update_env,apps/submitter/.env,RPC_URL,ws://127.0.0.1:8545)
+	$(call update_env,apps/randomness/.env,RPC_URL,ws://127.0.0.1:8545)
 
 	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)
