@@ -15,9 +15,13 @@ export {
     bigIntReplacer,
     bigIntReviver,
     bigIntToZeroPadded,
+    isBigIntString,
+    stringToBigInt,
+    bigintToString,
     serializeBigInt,
     deserializeBigInt,
     parseBigInt,
+    type BigIntString,
     type BigIntSerialized,
 } from "./utils/bigint"
 
