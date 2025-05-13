@@ -8,7 +8,7 @@ import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
-const { appURL, iframeURL, parentID, appURLMock } = await vi //
+const { appURL, walletURL, parentID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -25,11 +25,11 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
 
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
-        expect(getAllPermissions(iframeURL).length).toBe(1)
+        expect(getAllPermissions(walletURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         const response = await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL).length).toBe(1)
-        expect(getAllPermissions(iframeURL).length).toBe(1)
+        expect(getAllPermissions(walletURL).length).toBe(1)
         expect(getAllPermissions(appURL)).toStrictEqual(response)
         expect(response).toStrictEqual([
             {
@@ -74,13 +74,13 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
 
     test("only adds permissions once", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
-        expect(getAllPermissions(iframeURL).length).toBe(1)
+        expect(getAllPermissions(walletURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         expect(getAllPermissions(appURL).length).toBe(1)
-        expect(getAllPermissions(iframeURL).length).toBe(1)
+        expect(getAllPermissions(walletURL).length).toBe(1)
     })
 })

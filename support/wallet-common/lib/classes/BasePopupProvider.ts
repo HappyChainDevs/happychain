@@ -2,7 +2,7 @@ import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithRe
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { LoginRequiredError, parseRpcError, standardizeRpcError } from "../errors"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
-import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
+import type { Msgs, ProviderMsgsFromWallet } from "../interfaces/events"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -95,7 +95,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * The subclasses must make sure that this method gets called whenever the popup answers a
      * request.
      */
-    public handleRequestResolution(data: ProviderMsgsFromIframe[Msgs.RequestResponse]): void {
+    public handleRequestResolution(data: ProviderMsgsFromWallet[Msgs.RequestResponse]): void {
         const req = this.inFlightRequests.get(data.key)
         if (!req) return
 

@@ -13,7 +13,7 @@ import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts
 import { happyProviderBus } from "#src/services/eventBus"
 import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user.ts"
-import { appForSourceID, isIframe } from "#src/utils/appURL"
+import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { reqLogger } from "#src/utils/logger"
 import { iframeProvider } from "#src/wagmi/provider"
 
@@ -52,12 +52,12 @@ export async function sendResponse<Request extends ProviderEventPayload<Approved
             payload: payload ?? undefined,
         }
 
-        const _isIframe = isIframe(app)
+        const _isWallet = isWallet(app)
         const _isInjected = getUser()?.type === WalletType.Injected
 
-        if (_isIframe && _isInjected) {
+        if (_isWallet && _isInjected) {
             InjectedProviderProxy.getInstance().handleRequestResolution(response)
-        } else if (_isIframe) {
+        } else if (_isWallet) {
             iframeProvider.handleRequestResolution(response)
         } else {
             void happyProviderBus.emit(Msgs.RequestResponse, response)
@@ -80,12 +80,12 @@ export async function sendResponse<Request extends ProviderEventPayload<Approved
             payload: null,
         }
 
-        const isIframe_ = isIframe(app)
-        const isInjected_ = getUser()?.type === WalletType.Injected
+        const _isWallet = isWallet(app)
+        const _isInjected = getUser()?.type === WalletType.Injected
 
-        if (isIframe_ && isInjected_) {
+        if (_isWallet && _isInjected) {
             InjectedProviderProxy.getInstance().handleRequestResolution(response)
-        } else if (isIframe_) {
+        } else if (_isWallet) {
             iframeProvider.handleRequestResolution(response)
         } else {
             void happyProviderBus.emit(Msgs.RequestResponse, response)

@@ -1,5 +1,5 @@
 import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
-import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromIframe } from "@happy.tech/wallet-common"
+import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
 import { AuthState, BasePopupProvider, LoginRequiredError, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
 import { config } from "../config"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
@@ -42,7 +42,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    private async handlePermissionCheck(data: ProviderMsgsFromIframe[Msgs.PermissionCheckResponse]) {
+    private async handlePermissionCheck(data: ProviderMsgsFromWallet[Msgs.PermissionCheckResponse]) {
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {

@@ -2,7 +2,7 @@ import { debounce } from "@happy.tech/common"
 import { type HappyUser, Msgs } from "@happy.tech/wallet-common"
 import { hasPermissions } from "#src/state/permissions.ts"
 import { appMessageBus, happyProviderBus } from "../services/eventBus"
-import { getAppURL, isStandaloneIframe } from "./appURL"
+import { getAppURL, isStandaloneWallet } from "./appURL"
 
 /**
  * Emits user info to the connected app after checking permissions.
@@ -15,7 +15,7 @@ import { getAppURL, isStandaloneIframe } from "./appURL"
  * @emits {@link Msgs.ProviderEvent} (optional)
  */
 export const emitUserUpdate = debounce((user?: HappyUser) => {
-    if (isStandaloneIframe()) return
+    if (isStandaloneWallet()) return
 
     const hasPerms = user ? hasPermissions(getAppURL(), "eth_accounts") : false
     const _user = hasPerms ? user : undefined

@@ -4,7 +4,7 @@ import {
     type HappyUser,
     type Msgs,
     type MsgsFromApp,
-    type MsgsFromIframe,
+    type MsgsFromWallet,
     WalletType,
 } from "@happy.tech/wallet-common"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
@@ -61,7 +61,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
      * It gets set to false when onAuthChange response after the login attempt
      */
     private instanceIsConnecting = false
-    public async connect(request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
+    public async connect(request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
         this.instanceIsConnecting = true
         await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {

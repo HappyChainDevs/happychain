@@ -4,7 +4,7 @@ import { atom, getDefaultStore, useAtomValue } from "jotai"
 import { createStore } from "mipd"
 import { useMemo } from "react"
 import { appMessageBus } from "#src/services/eventBus.ts"
-import { isStandaloneIframe } from "#src/utils/appURL.ts"
+import { isStandaloneWallet } from "#src/utils/appURL.ts"
 import { userAtom } from "../state/user"
 import { GoogleConnector } from "./GoogleConnector"
 import { InjectedConnector } from "./InjectedConnector"
@@ -39,7 +39,7 @@ addProvider(new GoogleConnector())
  * if the wallet is embedded, then there are situations where these events, as well as injected
  * wallest such as window.ethereum are shielded from us, preventing us from detecting them.
  */
-if (isStandaloneIframe()) {
+if (isStandaloneWallet()) {
     const mipdStore = createStore()
 
     // load all initialized providers
@@ -70,8 +70,9 @@ if (isStandaloneIframe()) {
         )
     }
 } else {
-    // Instead of listening to the EIP-6963 events inside the iframe, the app listens to them and forwards them
-    // to us, as not every wallet will inject itself into iframes.
+    // Instead of listening to the EIP-6963 events inside the happy-wallet, the app listens to them
+    // and forwards them here, as not every injected wallet will allow itself to be
+    // injected into iframes.
     appMessageBus.on(Msgs.AnnounceInjectedProvider, (provider) => {
         if (provider.info.rdns === happyProviderInfo.rdns) return
         addProvider(

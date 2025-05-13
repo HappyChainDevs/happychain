@@ -8,7 +8,7 @@ import { getWatchedAssets } from "#src/state/watchedAssets.ts"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { dispatchApprovedRequest } from "../handlers/approved"
 
-const { iframeID, appURLMock } = await vi //
+const { walletID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -24,7 +24,7 @@ describe("walletClient wallet_watchAsset", () => {
 
     test("adds token", async () => {
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
-        const request = makePayload(iframeID, {
+        const request = makePayload(walletID, {
             method: "wallet_watchAsset",
             params: {
                 type: "ERC20",

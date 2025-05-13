@@ -2,68 +2,84 @@ import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
 
 export type AppURL = HTTPString & { _brand: "AppHTTPString" }
 
-export function getIframeURL(): AppURL {
+/** The full url of the app that the wallet is embedded in. */
+const _appURL = location.ancestorOrigins?.[0] ?? document.referrer
+
+/** the origin of the app that the wallet is embedded in, or empty if not embedded */
+const _appOrigin = _appURL ? new URL(_appURL).origin : ""
+
+/** The url of the App the wallet is embedded in, or empty if not embedded. */
+const appURL = _appOrigin && _appOrigin !== location.origin ? _appOrigin : ""
+
+/** ID passed to the iframe by the parent window (app). */
+export const _parentID = new URLSearchParams(window.location.search).get("windowId")
+
+/** ID generated for this wallet (tied to a specific app). */
+const _walletID = createUUID()
+
+if (!isWallet(getAppURL()) && !_parentID && process.env.NODE_ENV !== "test") {
+    console.warn("Wallet initialized without windowId")
+}
+
+/**
+ * Returns the URL of the wallet itself
+ */
+export function getWalletURL(): AppURL {
     return location.origin as AppURL
 }
 
-const _appURL = location.ancestorOrigins?.[0] ?? document.referrer
-const _appOrigin = _appURL ? new URL(_appURL).origin : ""
-const appURL = _appOrigin && _appOrigin !== getIframeURL() ? _appOrigin : ""
+/**
+ * Gets the URL of the current active 'app'. In embedded mode, this is the parent app,
+ * however in standalone mode, this is the wallet itself.
+ */
+export function getAppURL(): AppURL {
+    if (!appURL) return getWalletURL()
+    return appURL as AppURL
+}
 
 /**
- * Return true iff we're displayed the iframe directly (not embedded in an app).
+ * Return true iff we're displayed the wallet directly (not embedded in an app).
  */
-export function isStandaloneIframe(): boolean {
+export function isStandaloneWallet(): boolean {
     return !appURL
 }
 
 /**
- * Return true iff the given URL is the iframe.
+ * Return true iff we're displayed the wallet embedded in an app.
  */
-export function isIframe(app: AppURL): boolean {
-    return app === getIframeURL()
+export function isEmbeddedWallet(): boolean {
+    return !!appURL
+}
+
+/**
+ * Return true iff the given URL is the wallet.
+ */
+export function isWallet(app: AppURL): boolean {
+    return app === getWalletURL()
 }
 
 /**
  * Return true iff the given URL is the app.
  *
- * WARNING: In standalone mode this returns true as the iframe is the app.
- * Use {@link isIframe} or {@link isStandaloneIframe} to disambiguate
+ * WARNING: In standalone mode this returns true as the wallet is the app.
+ * Use {@link isWallet} or {@link isStandaloneWallet} to disambiguate
  */
 export function isApp(app: AppURL): boolean {
     return app === getAppURL()
 }
 
-export function getAppURL(): AppURL {
-    if (!appURL) {
-        // In standalone mode, the iframe IS the app.
-        return getIframeURL()
-    }
-    return appURL as AppURL
-}
-
-/** ID passed to the iframe by the parent window (app). */
-export const _parentID = new URLSearchParams(window.location.search).get("windowId")
-
-/** ID generated for this iframe (tied to a specific app). */
-const _iframeID = createUUID()
-
-if (!isIframe(getAppURL()) && !_parentID && process.env.NODE_ENV !== "test") {
-    console.warn("Iframe initialized without windowId")
-}
-
-/** ID generated for this iframe (tied to a specific app). */
+/** ID generated for this wallet (tied to a specific app). */
 // Expose as a function so that the function can be mocked.
-export function iframeID(): UUID {
-    return _iframeID
+export function walletID(): UUID {
+    return _walletID
 }
 
 /**
  * Returns the app URL for the source ID, or undefined if the source ID is not allowed (i.e. neither
  * the iframe nor its parent).
  */
-export function appForSourceID(sourceId: UUID): AppURL | undefined {
-    if (sourceId === _parentID) return getAppURL()
-    if (sourceId === _iframeID) return getIframeURL()
+export function appForSourceID(sourceID: UUID): AppURL | undefined {
+    if (sourceID === _parentID) return getAppURL()
+    if (sourceID === _walletID) return getWalletURL()
     return undefined
 }

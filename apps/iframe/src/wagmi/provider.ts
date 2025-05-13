@@ -12,7 +12,7 @@ import { addBanner } from "#src/state/banner.ts"
 import { getUser } from "#src/state/user.ts"
 import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
-import { getIframeURL, iframeID } from "../utils/appURL"
+import { getWalletURL, walletID } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequiresConfirmation"
 
 /**
@@ -26,10 +26,10 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequi
  * The provider routes the call to our logic in the `requests` directory.
  */
 export class IframeProvider extends BasePopupProvider {
-    protected popupBaseUrl = getIframeURL()
+    protected popupBaseUrl = getWalletURL()
 
     constructor() {
-        super(iframeID())
+        super(walletID())
     }
 
     protected onPopupBlocked() {
@@ -45,7 +45,7 @@ export class IframeProvider extends BasePopupProvider {
         // injected wallets don't need permissions here (handled by the wallet)
         if (this.isInjectedUser) return false
 
-        return checkIfRequestRequiresConfirmation(getIframeURL(), args)
+        return checkIfRequestRequiresConfirmation(getWalletURL(), args)
     }
 
     private get isInjectedUser() {
@@ -53,7 +53,7 @@ export class IframeProvider extends BasePopupProvider {
     }
 
     protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
-        const req = { key, windowId: iframeID(), error: null, payload: args }
+        const req = { key, windowId: walletID(), error: null, payload: args }
         if (this.isInjectedUser) {
             void handleInjectedRequest(req)
         } else {

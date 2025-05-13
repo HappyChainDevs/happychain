@@ -4,20 +4,20 @@ import type {
     EIP6963ProviderDetail,
     HappyUser,
     MsgsFromApp,
-    MsgsFromIframe,
+    MsgsFromWallet,
 } from "@happy.tech/wallet-common"
 import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider"
 import { getCurrentChain } from "#src/state/chains"
 import { setInjectedProvider } from "#src/state/injectedProvider"
-import { iframeID } from "#src/utils/appURL"
+import { walletID } from "#src/utils/appURL"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { connectWagmi, disconnectWagmi } from "#src/wagmi/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
 import { grantPermissions } from "../state/permissions"
-import { getAppURL, isStandaloneIframe } from "../utils/appURL"
+import { getAppURL, isStandaloneWallet } from "../utils/appURL"
 import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
 /**
@@ -90,7 +90,7 @@ export class InjectedConnector implements ConnectionProvider {
         setUserWithProvider(undefined, undefined)
     }
 
-    public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
+    public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
         this.setProvider()
         await this.onConnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
@@ -123,7 +123,7 @@ export class InjectedConnector implements ConnectionProvider {
          */
         const reconnectRequest = {
             key: createUUID(), // it's ok, there are no pending promises to be resolved by this
-            windowId: iframeID(), // reconnect was initialized internally, so the request is from iframe
+            windowId: walletID(), // reconnect was initialized internally, so the request originates from wallet
             payload: { method: "eth_requestAccounts" },
             error: null,
         } as const
@@ -148,14 +148,14 @@ export class InjectedConnector implements ConnectionProvider {
      * Returns the active provider to execute requests, dependant on context.
      */
     private get provider() {
-        return isStandaloneIframe() ? this.detail.provider : InjectedProviderProxy.getInstance()
+        return isStandaloneWallet() ? this.detail.provider : InjectedProviderProxy.getInstance()
     }
 
     private async connectToInjectedWallet(
         request: MsgsFromApp[Msgs.ConnectRequest],
-    ): Promise<{ user: HappyUser } & MsgsFromIframe[Msgs.ConnectResponse]> {
+    ): Promise<{ user: HappyUser } & MsgsFromWallet[Msgs.ConnectResponse]> {
         // not in iframe (direct access)
-        if (isStandaloneIframe()) {
+        if (isStandaloneWallet()) {
             const response = await this.detail.provider.request(request.payload)
             // get user accounts
             const [address] =
@@ -168,7 +168,7 @@ export class InjectedConnector implements ConnectionProvider {
             return { user, request, response }
         }
 
-        // (in iframe)
+        // (embedded in iframe)
         // we can't execute InjectedProviderProxy.getInstance().request(request.payload) yet, as the app-side
         // may have multiple injected providers available, and we have not yet selected one.
         // This will ensure the correct one is selected, connected, and executed. It will prepare
