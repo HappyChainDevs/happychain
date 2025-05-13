@@ -1,7 +1,6 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { isAddress } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
@@ -95,11 +94,9 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             return null
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
-            const user = getCheckedUser()
+            getCheckedUser()
             const target = checkAndChecksumAddress(request.payload.params[0])
-            checkSessionKeyAuthorized(app, target)
-            const sessionKey = getSessionKey(user.address, target)
-            return privateKeyToAccount(sessionKey).address
+            return checkSessionKeyAuthorized(app, target)
         }
 
         /* // FOR TESTING

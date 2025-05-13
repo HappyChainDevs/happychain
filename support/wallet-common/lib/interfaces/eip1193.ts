@@ -22,7 +22,7 @@ export type HappyMethods = [
     {
         Method: typeof HappyMethodNames.REQUEST_SESSION_KEY
         Parameters: [Address]
-        ReturnType: Address
+        ReturnType: undefined
     },
 ]
 
