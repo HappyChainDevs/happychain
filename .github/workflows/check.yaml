@@ -28,17 +28,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install Node23 (for tests)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 23.9.0
       - name: Install Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
           bun-version: 1.2.4
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
         with:
           version: stable
       - name: Fake contract deployment
@@ -60,7 +60,7 @@ jobs:
       # make sure the build system picks them up as fresh, and finally building.
 
       - name: Cache common support build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-common-support-build
         with:
           path: |
@@ -69,7 +69,7 @@ jobs:
           key: ${{ runner.os }}-build-support-common-${{ hashFiles('support/common/**/*', '!support/common/dist/**/*', '!support/node_modules/**/*') }}
 
       - name: Cache wallet-common support build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-wallet-common-support-build
         with:
           path: |
@@ -78,7 +78,7 @@ jobs:
           key: ${{ runner.os }}-build-support-wallet-common-${{ hashFiles('support/wallet-common/**/*', '!support/wallet-common/dist/**/*', '!support/wallet-common/node_modules/**/*') }}
 
       - name: Cache worker support build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-worker-support-build
         with:
           path: |
@@ -87,7 +87,7 @@ jobs:
           key: ${{ runner.os }}-build-support-worker-${{ hashFiles('support/worker/**/*', '!support/worker/dist/**/*', '!support/worker/node_modules/**/*') }}
 
       - name: Cache core package build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-core-package-build
         with:
           path: |
@@ -96,7 +96,7 @@ jobs:
           key: ${{ runner.os }}-build-core-${{ hashFiles('packages/core/**/*', '!packages/core/dist/**/*', '!packages/core/node_modules/**/*') }}
 
       - name: Cache react package build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-react-package-build
         with:
           path: |
@@ -105,7 +105,7 @@ jobs:
           key: ${{ runner.os }}-build-react-${{ hashFiles('packages/react/**/*', '!packages/react/dist/**/*', '!packages/react/node_modules/**/*') }}
 
       - name: Cache vue package build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-vue-package-build
         with:
           path: |
@@ -114,14 +114,14 @@ jobs:
           key: ${{ runner.os }}-build-vue-${{ hashFiles('packages/vue/**/*', '!packages/vue/dist/**/*', '!packages/vue/node_modules/**/*') }}
 
       - name: Cache iframe app build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-iframe-app-build
         with:
           path: apps/iframe/dist
           key: ${{ runner.os }}-build-iframe-${{ hashFiles('apps/iframe/**/*', '!apps/iframe/dist/**/*', '!apps/iframe/node_modules/**/*') }}
 
       - name: Cache txm package build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-txm-package-build
         with:
           path: |
@@ -130,7 +130,7 @@ jobs:
           key: ${{ runner.os }}-build-txm-${{ hashFiles('packages/txm/**/*', '!packages/txm/dist/**/*', '!packages/txm/node_modules/**/*') }}
 
       - name: Cache randomness app build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-randomness-app-build
         with:
           path: |
@@ -139,7 +139,7 @@ jobs:
           key: ${{ runner.os }}-build-randomness-${{ hashFiles('apps/randomness/**/*', '!apps/randomness/dist/**/*', '!apps/randomness/node_modules/**/*') }}
 
       - name: Cache submitter app build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-submitter-app-build
         with:
           path: |
@@ -148,7 +148,7 @@ jobs:
           key: ${{ runner.os }}-build-submitter-app-${{ hashFiles('apps/submitter/**/*', '!apps/submitter/dist/**/*', '!apps/submitter/node_modules/**/*') }}
 
       - name: Cache boop-sdk package build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-boop-sdk-package-build
         with:
           path: |
@@ -157,28 +157,28 @@ jobs:
           key: ${{ runner.os }}-build-boop-sdk-${{ hashFiles('packages/boop-sdk/**/*', '!packages/boop-sdk/dist/**/*', '!packages/boop-sdk/node_modules/**/*') }}
 
       - name: Cache js demo build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-js-demo-build
         with:
           path: demos/js/dist
           key: ${{ runner.os }}-build-demo-js-${{ hashFiles('demos/js/**/*', '!demos/js/dist/**/*', '!demos/js/node_modules/**/*') }}
 
       - name: Cache react demo build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-react-demo-build
         with:
           path: demos/react/dist
           key: ${{ runner.os }}-build-demo-react-${{ hashFiles('demos/react/**/*', '!demos/react/dist/**/*', '!demos/react/node_modules/**/*') }}
 
       - name: Cache vue demo build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-vue-demo-build
         with:
           path: demos/vue/dist
           key: ${{ runner.os }}-build-demo-vue-${{ hashFiles('demos/vue/**/*', '!demos/vue/dist/**/*', '!demos/vue/node_modules/**/*') }}
 
       - name: Cache contracts build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: cache-contracts-build
         with:
           path: |
