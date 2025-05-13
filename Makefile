@@ -603,3 +603,8 @@ enable-hooks:
 disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
+
+# updates all github action version pins: https://github.com/suzuki-shunsuke/pinact
+pinact:
+	pinact run
+.PHONY: pinact
