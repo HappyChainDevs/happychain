@@ -36,6 +36,7 @@ export class ApiClient {
             : {
                   method,
               }
+        console.log("Requesting", method, url, body, init)
         const response = await fetch(url, init)
         return await this.#handleResponse(response)
     }
