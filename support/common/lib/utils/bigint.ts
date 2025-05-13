@@ -17,18 +17,37 @@ export function bigIntMax(...values: bigint[]): bigint {
     })
 }
 
+export type BigIntString = `#bigint.${string}`
+
 /**
- * Function to handle `bigint` serialization
+ * Converts a bigint into a lossless representation as a `#bigint.${number}` string.
  */
-export const bigIntReplacer = (_key: string, value: unknown): unknown => {
-    return typeof value === "bigint" ? `#bigint.${value}` : value
+export function bigintToString(value: bigint): BigIntString {
+    return `#bigint.${value}`
 }
 
 /**
- * Function to handle `bigint` deserialization
+ * Restores a bigint from its lossless representation as a `#bigint.${number}` string.
+ */
+export function stringToBigInt(value: BigIntString): bigint {
+    return BigInt(value.slice(8))
+}
+
+export function isBigIntString(value: unknown): value is BigIntString {
+    return typeof value === "string" && value.startsWith("#bigint.")
+}
+/**
+ * Function to handle `bigint` lossless serialization
+ */
+export const bigIntReplacer = (_key: string, value: unknown): unknown => {
+    return typeof value === "bigint" ? bigintToString(value) : value
+}
+
+/**
+ * Function to handle `bigint` lossless deserialization
  */
 export const bigIntReviver = (_key: string, value: unknown): unknown => {
-    return typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value
+    return isBigIntString(value) && value.startsWith("#bigint.") ? stringToBigInt(value) : value
 }
 
 /**
