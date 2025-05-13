@@ -439,12 +439,12 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyCounter": "0x9fD331755649Bec56f3a7bA3C70a60aBfA4fb59C",
-  "MockGasBurner": "0x3a4c0aC739b33D391e87694fbFa58C12C80d9122",
-  "MockRevert": "0x2D041f4a3c47ACC2ABC0A406555418BCD2Bbe8bF",
-  "MockTokenA": "0xbb98107603864bE3BC3ed58FA8F23cC7b81f0676",
-  "MockTokenB": "0x912a262e5b3Dd8007B26d47e43F5a639B66CF5Df",
-  "MockTokenC": "0x1c9904A4C75C5B5f0b029EB058A746F03a698Ab2"
+  "HappyCounter": "0x148A74e18C4EDd428e0053ae6a55426090F8C134",
+  "MockGasBurner": "0x53aC62eF986e49D5bdd728B186E6e99D4962d06E",
+  "MockRevert": "0x34797eE72963AF0b1CABD171098c1c3F12956e46",
+  "MockTokenA": "0x6076aB3347d06CB284f2AdFc23c16DfcDe873d88",
+  "MockTokenB": "0xCea0c3E3ea05D6A50d17adC7d15f2DbFeD1235a9",
+  "MockTokenC": "0x5462f5d1CD8Ec0034FD195dCCc76945c7bd1d595"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
