@@ -8,7 +8,7 @@ import {
     parseAbiParameters,
 } from "viem"
 import { encodePacked, parseAbi } from "viem/utils"
-import { abis, deployment } from "#lib/env"
+import { abis, deployment, env } from "#lib/env"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 
