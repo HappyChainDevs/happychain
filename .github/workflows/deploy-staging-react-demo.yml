@@ -35,6 +35,7 @@ jobs:
           target: /home/deployer/staging-demo-react
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
+          overwrite: true
           debug: true
 
       - name: Deploy staging react demo to server
