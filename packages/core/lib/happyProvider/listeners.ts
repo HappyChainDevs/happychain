@@ -4,7 +4,7 @@ import {
     type HappyUser,
     Msgs,
     type MsgsFromApp,
-    type MsgsFromIframe,
+    type MsgsFromWallet,
     type OverlayErrorCode,
 } from "@happy.tech/wallet-common"
 
@@ -49,7 +49,7 @@ function createListener<T>(callbacks: Set<T>, callback: T): ListenerUnsubscribeF
     }
 }
 
-export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromApp>) {
+export function registerListeners(messageBus: EventBus<MsgsFromWallet, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onWalletVisibilityCallbacks = new Set<WalletVisibilityCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
@@ -59,7 +59,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
     messageBus.on(Msgs.UserChanged, (user) => executeCallbacks(onUserUpdateCallbacks, user))
     messageBus.on(Msgs.AuthStateChanged, (state) => executeCallbacks(onAuthStateUpdateCallbacks, state))
     messageBus.on(Msgs.WalletVisibility, (isOpen) => executeCallbacks(onWalletVisibilityCallbacks, isOpen))
-    messageBus.on(Msgs.IframeInit, (isInit) => executeCallbacks(onIframeInitCallbacks, isInit))
+    messageBus.on(Msgs.WalletInit, (isInit) => executeCallbacks(onIframeInitCallbacks, isInit))
     messageBus.on(Msgs.DisplayOverlayError, (errorCode) => executeCallbacks(onDisplayOverlayErrorCallbacks, errorCode))
 
     /**

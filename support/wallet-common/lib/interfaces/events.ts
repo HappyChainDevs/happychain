@@ -44,8 +44,8 @@ export enum Msgs {
 
     // --- EventsFromIframe ------------------------------------------------------------------------
 
-    /** Informs the SDK that the iframe has loaded and initialized. */
-    IframeInit = "iframe-init",
+    /** Informs the SDK that the wallet has loaded and initialized. */
+    WalletInit = "wallet-init",
 
     /** When sent from the iframe, this is received by the app and the overlay is displayed. */
     DisplayOverlayError = "display-overlay-error",
@@ -147,7 +147,7 @@ export type MsgsFromApp = {
               rdns: string
               address: `0x${string}`
               request: MsgsFromApp[Msgs.ConnectRequest]
-              response: MsgsFromIframe[Msgs.ConnectResponse]["response"]
+              response: MsgsFromWallet[Msgs.ConnectResponse]["response"]
           }
         | {
               // everything undefined means a disconnect
@@ -170,10 +170,10 @@ interface AuthResponse<
     response: EIP1193RequestResult<T> | null
 }
 /**
- * Events sent from the iframe to the app on the general message bus.
+ * Events sent from the wallet to the app on the general message bus.
  */
-export type MsgsFromIframe = {
-    [Msgs.IframeInit]: boolean
+export type MsgsFromWallet = {
+    [Msgs.WalletInit]: boolean
     [Msgs.DisplayOverlayError]: OverlayErrorCode
     [Msgs.ConnectResponse]: AuthResponse
     [Msgs.WalletVisibility]: { isOpen: boolean }
@@ -203,7 +203,7 @@ export type ProviderMsgsFromApp = {
  * Schema for messages that can be sent from the iframe to the app.
  */
 export type ProviderEvent = ProviderEventError<SerializedRpcError> | ProviderEventPayload<EIP1193RequestResult>
-export type ProviderMsgsFromIframe = {
+export type ProviderMsgsFromWallet = {
     [Msgs.RequestResponse]: ProviderEvent
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
     [Msgs.ExecuteInjectedRequest]: ProviderEventPayload<EIP1193RequestParameters>

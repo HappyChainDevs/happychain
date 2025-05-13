@@ -9,9 +9,9 @@ import {
     type EventBusOptions,
     Msgs,
     type MsgsFromApp,
-    type MsgsFromIframe,
+    type MsgsFromWallet,
     type ProviderMsgsFromApp,
-    type ProviderMsgsFromIframe,
+    type ProviderMsgsFromWallet,
     ProviderRpcError,
     serializeRpcError,
 } from "@happy.tech/wallet-common"
@@ -47,19 +47,19 @@ const emptyRpcBlock = {
 } satisfies RpcBlock
 
 function newIframeProviderBus(options: EventBusOptions) {
-    return new EventBus<ProviderMsgsFromApp, ProviderMsgsFromIframe>(options)
+    return new EventBus<ProviderMsgsFromApp, ProviderMsgsFromWallet>(options)
 }
 
 function newIframeMessageBus(options: EventBusOptions) {
-    return new EventBus<MsgsFromApp, MsgsFromIframe>(options)
+    return new EventBus<MsgsFromApp, MsgsFromWallet>(options)
 }
 
 function newAppProviderBus(options: EventBusOptions) {
-    return new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>(options)
+    return new EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>(options)
 }
 
 function newAppMessageBus(options: EventBusOptions) {
-    return new EventBus<MsgsFromIframe, MsgsFromApp>(options)
+    return new EventBus<MsgsFromWallet, MsgsFromApp>(options)
 }
 
 function createTestBusPair() {
@@ -127,7 +127,7 @@ describe("HappyProvider", () => {
 
     it("transmits payload using bus", async () => {
         // provider setup
-        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        void iframeMessageBus.emit(Msgs.WalletInit, true)
         test_autoApprovePermissionCheck()
         void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
@@ -160,7 +160,7 @@ describe("HappyProvider", () => {
 
     it("resolves on success", async () => {
         // provider setup
-        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        void iframeMessageBus.emit(Msgs.WalletInit, true)
         test_autoApprovePermissionCheck()
         void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
@@ -184,7 +184,7 @@ describe("HappyProvider", () => {
 
     it("rejects on error", async () => {
         // provider setup
-        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        void iframeMessageBus.emit(Msgs.WalletInit, true)
         test_autoApprovePermissionCheck()
         void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 

@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
 import { useCallback, useEffect, useState } from "react"
 import { FirebaseErrorCode, isFirebaseError } from "#src/connections/firebase/errors"
-import { iframeID } from "#src/utils/appURL"
+import { walletID } from "#src/utils/appURL"
 import { patchTimeoutOff, signalClosed } from "#src/utils/walletState"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
@@ -77,7 +77,7 @@ const ConnectContent = () => {
             // if no dapp-request exists here, we will initiate a new one
             const connectRequest = clientConnectionRequest ?? {
                 key: createUUID(),
-                windowId: iframeID(),
+                windowId: walletID(),
                 error: null,
                 payload: { method: "eth_requestAccounts" },
             }

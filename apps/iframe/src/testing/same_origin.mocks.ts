@@ -2,17 +2,18 @@ import { type UUID, createUUID } from "@happy.tech/common"
 import type { AppURL } from "#src/utils/appURL"
 
 export const appURL = "http://localhost:4321" as AppURL
-export const iframeID = createUUID()
+export const walletID = createUUID()
 
 export const appURLMock = async () => ({
     getAppURL: () => appURL,
-    getIframeURL: () => appURL,
-    iframeID: () => iframeID,
+    getWalletURL: () => appURL,
+    walletID: () => walletID,
     isApp: (_app: AppURL) => true,
-    isIframe: (_app: AppURL) => true,
-    isStandaloneIframe: () => true,
+    isWallet: (_app: AppURL) => true,
+    isStandaloneWallet: () => true,
+    isEmbeddedWallet: () => false,
     appForSourceID(sourceId: UUID): AppURL | undefined {
-        if (sourceId === iframeID) return appURL
+        if (sourceId === walletID) return appURL
         return undefined
     },
 })

@@ -9,7 +9,7 @@ import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
-const { appURL, iframeID, appURLMock } = await vi //
+const { appURL, walletID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -26,7 +26,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, {
+        const request = makePayload(walletID, {
             method: "wallet_requestPermissions",
             params: [{ eth_accounts: {} }],
         })
@@ -45,7 +45,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, {
+        const request = makePayload(walletID, {
             method: "wallet_requestPermissions",
             params: [
                 {
@@ -75,7 +75,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("only adds permissions once", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+        const request = makePayload(walletID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)
         await dispatchApprovedRequest(request)

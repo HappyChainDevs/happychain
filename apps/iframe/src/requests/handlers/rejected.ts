@@ -8,7 +8,7 @@ import {
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { happyProviderBus } from "#src/services/eventBus"
 import { getUser } from "#src/state/user.ts"
-import { appForSourceID, isIframe } from "#src/utils/appURL"
+import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { iframeProvider } from "#src/wagmi/provider"
 
 /**
@@ -32,12 +32,12 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
         return
     }
 
-    const _isIframe = isIframe(app)
+    const _isWallet = isWallet(app)
     const _isInjected = getUser()?.type === WalletType.Injected
 
-    if (_isIframe && _isInjected) {
+    if (_isWallet && _isInjected) {
         InjectedProviderProxy.getInstance().handleRequestResolution(response)
-    } else if (_isIframe) {
+    } else if (_isWallet) {
         iframeProvider.handleRequestResolution(response)
     } else {
         void happyProviderBus.emit(Msgs.RequestResponse, response)

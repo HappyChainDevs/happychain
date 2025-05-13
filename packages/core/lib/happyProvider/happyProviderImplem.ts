@@ -11,10 +11,10 @@ import {
     LoginRequiredError,
     Msgs,
     type MsgsFromApp,
-    type MsgsFromIframe,
+    type MsgsFromWallet,
     type OverlayErrorCode,
     type ProviderMsgsFromApp,
-    type ProviderMsgsFromIframe,
+    type ProviderMsgsFromWallet,
     SafeEventEmitter,
     WalletDisplayAction,
     WalletType,
@@ -42,8 +42,8 @@ const mipdStore = createStore()
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: UUID
-    providerBus: EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>
-    msgBus: EventBus<MsgsFromIframe, MsgsFromApp>
+    providerBus: EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>
+    msgBus: EventBus<MsgsFromWallet, MsgsFromApp>
 }
 
 /**
@@ -67,11 +67,11 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
                     : new HappyProviderImplem({
                           iframePath: config.iframePath,
                           windowId: windowId as UUID,
-                          providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
+                          providerBus: new EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>({
                               mode: EventBusMode.AppPort,
                               scope: "happy-chain-eip1193-provider",
                           }),
-                          msgBus: new EventBus<MsgsFromIframe, MsgsFromApp>({
+                          msgBus: new EventBus<MsgsFromWallet, MsgsFromApp>({
                               mode: EventBusMode.AppPort,
                               scope: "happy-chain-dapp-bus",
                           }),
@@ -90,7 +90,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
     private authState: AuthState = AuthState.Initializing
     private lastConnectedType: WalletType | undefined
 
-    private iframeMsgBus: EventBus<MsgsFromIframe, MsgsFromApp>
+    private iframeMsgBus: EventBus<MsgsFromWallet, MsgsFromApp>
 
     /**
      * Initializes the Happy Account wallet state and communication with the iframe.
@@ -152,7 +152,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
      * injected wallet events are proxied through the iframe (which needs to learn of them),
      * then sent back.
      */
-    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
+    private handleProviderNativeEvent(data: ProviderMsgsFromWallet[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
     }
 

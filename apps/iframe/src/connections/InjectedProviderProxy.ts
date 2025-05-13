@@ -15,7 +15,7 @@ import { happyProviderBus } from "#src/services/eventBus.ts"
 import { getInjectedProvider } from "#src/state/injectedProvider.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getUser } from "#src/state/user.ts"
-import { getAppURL, iframeID, isStandaloneIframe } from "#src/utils/appURL.ts"
+import { getAppURL, isStandaloneWallet, walletID } from "#src/utils/appURL.ts"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet.ts"
 import { iframeProvider } from "#src/wagmi/provider.ts"
 
@@ -47,7 +47,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
 
     private inFlight = new Map()
 
-    private isStandalone = isStandaloneIframe()
+    private isStandalone = isStandaloneWallet()
 
     private constructor() {
         super()
@@ -63,7 +63,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
     async request(args: EIP1193RequestParameters) {
         const req = {
             key: createUUID(),
-            windowId: iframeID(),
+            windowId: walletID(),
             error: null,
             payload: args,
         }
@@ -95,7 +95,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
     public handleRequestResolution(
         resp: ProviderEventError<SerializedRpcError> | ProviderEventPayload<EIP1193RequestResult>,
     ): void {
-        const iframeRequest = resp.windowId === iframeID()
+        const iframeRequest = resp.windowId === walletID()
         const pending = this.inFlight.get(resp.key)
         if (!pending && iframeRequest) iframeProvider.handleRequestResolution(resp)
         else if (pending?.reject && resp.error) pending.reject(standardizeRpcError(resp.error))

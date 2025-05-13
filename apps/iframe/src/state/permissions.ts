@@ -5,7 +5,7 @@ import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import { Permissions } from "#src/constants/permissions"
 import { StorageKey } from "../services/storage"
-import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
+import { type AppURL, getAppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { revokedSessionKeys } from "./interfaceState"
@@ -148,7 +148,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     // Permissions don't exist, create them.
 
     const baseAppPermissions: AppPermissions =
-        app === getIframeURL()
+        app === getWalletURL()
             ? {
                   // The iframe is always granted the `eth_accounts` permission.
                   eth_accounts: {
@@ -322,7 +322,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
         }
 
         // Accounts permission granted, which lets the app access the user object.
-        if (name === "eth_accounts" && isApp(app) && !isStandaloneIframe()) {
+        if (name === "eth_accounts" && isApp(app) && !isStandaloneWallet()) {
             emitUserUpdate(getUser())
         }
 

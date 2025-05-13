@@ -52,7 +52,7 @@ function Embed() {
 
         // If we initialized before the above listener is created, then
         // RequestWalletDisplay calls will be silently lost
-        void appMessageBus.emit(Msgs.IframeInit, true)
+        void appMessageBus.emit(Msgs.WalletInit, true)
         return unsubscribe
     }, [navigate, setSecondaryMenuVisibility, setDialogLogoutVisibility])
 

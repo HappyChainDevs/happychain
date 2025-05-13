@@ -9,7 +9,7 @@ import { setUser } from "#src/state/user"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 
-const { appURL, iframeID, appURLMock } = await vi //
+const { appURL, walletID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -25,7 +25,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(iframeID, { method: "eth_requestAccounts" })
+            const request = makePayload(walletID, { method: "eth_requestAccounts" })
             await expect(dispatchedPermissionlessRequest(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -42,7 +42,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("returns connected user address when requested", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(iframeID, { method: "eth_requestAccounts" })
+            const request = makePayload(walletID, { method: "eth_requestAccounts" })
             const response = await dispatchedPermissionlessRequest(request)
             expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
@@ -50,7 +50,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("does not add permissions", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(iframeID, { method: "eth_requestAccounts" })
+            const request = makePayload(walletID, { method: "eth_requestAccounts" })
             await dispatchedPermissionlessRequest(request)
             await dispatchedPermissionlessRequest(request)
             await dispatchedPermissionlessRequest(request)

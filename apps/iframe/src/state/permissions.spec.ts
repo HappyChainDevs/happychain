@@ -11,7 +11,7 @@ import {
 } from "#src/state/permissions.ts"
 import { setUser } from "../state/user"
 
-const { appURL, iframeURL, appURLMock } = await vi //
+const { appURL, walletURL, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -140,24 +140,24 @@ describe("PermissionsService", () => {
                     const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    grantPermissions(iframeURL, "eth_accounts")
+                    grantPermissions(walletURL, "eth_accounts")
 
                     const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
 
                 it("should not change state if eth_accounts permission is already granted", () => {
-                    grantPermissions(iframeURL, "eth_accounts")
+                    grantPermissions(walletURL, "eth_accounts")
                     const initialStateA = hasPermissions(appURL, "eth_accounts")
                     expect(initialStateA).toBe(false)
-                    const initialStateB = hasPermissions(iframeURL, "eth_accounts")
+                    const initialStateB = hasPermissions(walletURL, "eth_accounts")
                     expect(initialStateB).toBe(true)
 
-                    grantPermissions(iframeURL, "eth_accounts")
+                    grantPermissions(walletURL, "eth_accounts")
 
                     const finalStateA = hasPermissions(appURL, "eth_accounts")
                     expect(finalStateA).toBe(false)
-                    const finalStateB = hasPermissions(iframeURL, "eth_accounts")
+                    const finalStateB = hasPermissions(walletURL, "eth_accounts")
                     expect(finalStateB).toBe(true)
                 })
             })
@@ -170,13 +170,13 @@ describe("PermissionsService", () => {
                 it("should not grant eth_accounts permission", () => {
                     const initialStateA = hasPermissions(appURL, "eth_accounts")
                     expect(initialStateA).toBe(false)
-                    const initialStateB = hasPermissions(iframeURL, "eth_accounts")
+                    const initialStateB = hasPermissions(walletURL, "eth_accounts")
                     expect(initialStateB).toBe(false)
                     grantPermissions(appURL, "eth_accounts")
 
                     const finalStateA = hasPermissions(appURL, "eth_accounts")
                     expect(finalStateA).toBe(false)
-                    const finalStateB = hasPermissions(iframeURL, "eth_accounts")
+                    const finalStateB = hasPermissions(walletURL, "eth_accounts")
                     expect(finalStateB).toBe(false)
                 })
             })
@@ -241,7 +241,7 @@ describe("PermissionsService", () => {
                     const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(true)
 
-                    revokePermissions(iframeURL, "eth_accounts")
+                    revokePermissions(walletURL, "eth_accounts")
 
                     const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(true)
@@ -330,29 +330,29 @@ describe("PermissionsService", () => {
                 })
 
                 it("returns eth_accounts to iframe when no permissions have been granted", () => {
-                    expect(getPermissions(iframeURL, "eth_accounts").length).toBe(1)
+                    expect(getPermissions(walletURL, "eth_accounts").length).toBe(1)
                 })
 
                 it("returns all permissions granted to app (without caveats)", () => {
                     grantPermissions(appURL, "test_permission_app")
-                    grantPermissions(iframeURL, "test_permission_iframe")
+                    grantPermissions(walletURL, "test_permission_iframe")
 
                     expect(getPermissions(appURL, "test_permission_app").length).toBe(1)
                     expect(getPermissions(appURL, "test_permission_iframe").length).toBe(0)
 
-                    expect(getPermissions(iframeURL, "test_permission_app").length).toBe(0)
-                    expect(getPermissions(iframeURL, "test_permission_iframe").length).toBe(1)
+                    expect(getPermissions(walletURL, "test_permission_app").length).toBe(0)
+                    expect(getPermissions(walletURL, "test_permission_iframe").length).toBe(1)
                 })
 
                 it("returns all permissions granted to app (all caveats)", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
 
                     grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(iframeURL, { [Permissions.SessionKey]: { target: "0x4567" } })
+                    grantPermissions(walletURL, { [Permissions.SessionKey]: { target: "0x4567" } })
 
                     expect(getPermissions(appURL, Permissions.SessionKey).length).toBe(1)
                     expect(getPermissions(appURL, Permissions.SessionKey)[0].caveats.length).toBe(1)
-                    expect(getPermissions(iframeURL, Permissions.SessionKey)[0].caveats.length).toBe(1)
+                    expect(getPermissions(walletURL, Permissions.SessionKey)[0].caveats.length).toBe(1)
                 })
             })
 
@@ -364,7 +364,7 @@ describe("PermissionsService", () => {
 
                 it("returns empty array when no permissions have been granted", () => {
                     expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
-                    expect(getPermissions(iframeURL, "eth_accounts").length).toBe(0)
+                    expect(getPermissions(walletURL, "eth_accounts").length).toBe(0)
                 })
             })
         })
@@ -413,8 +413,8 @@ describe("PermissionsService", () => {
                     grantPermissions(appURL, "eth_accounts")
                     grantPermissions(appURL, "test_permission_app_1")
                     grantPermissions(appURL, "test_permission_app_2")
-                    grantPermissions(iframeURL, "test_permission_iframe")
-                    expect(getAllPermissions(iframeURL).length).toBe(2)
+                    grantPermissions(walletURL, "test_permission_iframe")
+                    expect(getAllPermissions(walletURL).length).toBe(2)
                 })
             })
         })

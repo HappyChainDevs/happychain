@@ -9,7 +9,7 @@ import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
-const { appURL, iframeID, appURLMock } = await vi //
+const { appURL, walletID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
@@ -25,7 +25,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(iframeID, {
+            const request = makePayload(walletID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
@@ -44,7 +44,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
 
         test("does not add permissions", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(iframeID, {
+            const request = makePayload(walletID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
