@@ -6,7 +6,6 @@ import {Staking} from "boop/core/Staking.sol";
 import {Utils} from "boop/core/Utils.sol";
 import {
     BoopExecutionStarted,
-    BoopSubmitted,
     CallReverted,
     ExecutionRejected,
     ExecutionReverted,
@@ -38,6 +37,35 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
     // ====================================================================================================
     // SUBMIT
+
+    /**
+     * This event exposes a Boop as an event for easier indexing of Boops and visibility on block explorers.
+     *
+     * @dev We deliberately choose to separate all the fields into dedicated arguments instead of
+     * having a single argument with the struct — this enables better display on some block explorers
+     * like Blockscout.
+     *
+     * @dev It is crucial that the fields here be identical to those in the {interfaces/Types.Boop} struct. Because
+     * Solidity refuses to emit events with more than 15 arguments, we simply use the abi-encoding of the struct to emit
+     * this event.
+     */
+    event BoopSubmitted(
+        address account,
+        address dest,
+        address payer,
+        uint256 value,
+        uint192 nonceTrack,
+        uint64 nonceValue,
+        uint256 maxFeePerGas,
+        int256 submitterFee,
+        uint32 gasLimit,
+        uint32 validateGasLimit,
+        uint32 validatePaymentGasLimit,
+        uint32 executeGasLimit,
+        bytes callData,
+        bytes validatorData,
+        bytes extraData
+    );
 
     /**
      * Execute a Boop, and tries to ensure that the submitter (tx.origin) receives payment for
