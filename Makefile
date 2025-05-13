@@ -43,7 +43,7 @@ BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 LEADERBOARD_PKGS := apps/leaderboard-backend,apps/leaderboard-frontend
 
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/leaderboard-backend
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},${LEADERBOARD_PKGS}
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
@@ -185,6 +185,18 @@ leaderboard-backend.prod: leaderboard-backend.build
 	cd apps/leaderboard-backend && make migrate;
 	cd apps/leaderboard-backend && make prod;
 .PHONY: leaderboard-backend.prod
+
+leaderboard-frontend.dev: setup.ts shared.dev
+	cd apps/leaderboard-frontend && make dev;
+.PHONY: leaderboard-frontend.dev
+
+leaderboard-frontend.build: shared.build
+	cd apps/leaderboard-frontend && make build;
+.PHONY: leaderboard-frontend.build
+
+leaderboard-frontend.prod: leaderboard-frontend.build
+	cd apps/leaderboard-frontend && make prod;
+.PHONY: leaderboard-frontend.prod
 
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
