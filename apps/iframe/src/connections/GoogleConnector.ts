@@ -6,7 +6,6 @@ import { StorageKey, storage } from "#src/services/storage.ts"
 import { getChains } from "#src/state/chains.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
-import { connectWagmi, disconnectWagmi } from "#src/wagmi/utils"
 import { FirebaseConnector } from "./firebase"
 import { googleLogo } from "./firebase/logos"
 
@@ -60,24 +59,19 @@ export class GoogleConnector extends FirebaseConnector {
          * to repeat on the next page refresh.
          */
         if (storage.get(StorageKey.HappyUser)?.type !== WalletType.Social) return
-        try {
-            // if wagmi wasn't previously successfully connected, this throws
-            await disconnectWagmi()
-        } catch {}
-        setUserWithProvider(undefined, undefined)
+
+        await setUserWithProvider(undefined, undefined)
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         await this.addSupportedChains(provider)
-        setUserWithProvider(user, provider)
-        await connectWagmi()
+        await setUserWithProvider(user, provider)
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
         await this.addSupportedChains(provider)
-        setUserWithProvider(user, provider)
+        await setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connectWagmi()
     }
 
     private async addSupportedChains(provider: EIP1193Provider) {

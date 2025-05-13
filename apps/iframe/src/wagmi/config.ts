@@ -3,7 +3,6 @@ import { convertToViemChain, chains as defaultChains } from "@happy.tech/wallet-
 import { createConfig } from "@wagmi/core"
 import { type Chain, createClient, custom } from "viem"
 import { getCurrentChain } from "../state/chains"
-import { happyConnector } from "./connector"
 import { iframeProvider } from "./provider"
 
 // cf. https://wagmi.sh/react/typescript#declaration-merging
@@ -13,15 +12,18 @@ declare module "wagmi" {
     }
 }
 
-const currentChain: Chain = convertToViemChain(getCurrentChain())
-const chains = [currentChain, ...defaultChains].filter(onlyUnique)
+const currentChain = convertToViemChain(getCurrentChain())
+const chains = [currentChain, ...defaultChains].filter(onlyUnique) as [Chain, ...Chain[]]
 
 /**
- * Create Wagmi Config with custom connector to support HappyChain Sepolia.
+ * Create Wagmi Config with custom client for our internal iframeProvider.
+ *
+ * note: do not set the connector here as it will result in a circular dependency
+ * with the InjectedProviderProxy. Instead we pass the connector explicitly to the connect
+ * function
  */
 export const config = createConfig({
-    chains: chains as unknown as readonly [Chain, ...Chain[]],
+    chains,
     multiInjectedProviderDiscovery: false,
     client: ({ chain }) => createClient({ chain, transport: custom(iframeProvider) }),
-    connectors: [happyConnector],
 })

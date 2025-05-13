@@ -13,7 +13,6 @@ import { getCurrentChain } from "#src/state/chains"
 import { setInjectedProvider } from "#src/state/injectedProvider"
 import { walletID } from "#src/utils/appURL"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
-import { connectWagmi, disconnectWagmi } from "#src/wagmi/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
 import { grantPermissions } from "../state/permissions"
@@ -71,23 +70,17 @@ export class InjectedConnector implements ConnectionProvider {
     }
 
     public async onConnect(user: HappyUser, provider: EIP1193Provider) {
-        setUserWithProvider(user, provider)
+        await setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connectWagmi()
     }
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
-        setUserWithProvider(user, provider)
+        await setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connectWagmi()
     }
 
     public async onDisconnect() {
-        try {
-            // if wagmi wasn't previously successfully connected, this throws
-            await disconnectWagmi()
-        } catch {}
-        setUserWithProvider(undefined, undefined)
+        await setUserWithProvider(undefined, undefined)
     }
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {

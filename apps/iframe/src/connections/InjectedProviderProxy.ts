@@ -111,22 +111,15 @@ export class InjectedProviderProxy extends SafeEventEmitter {
             // Forward the event to the front end
             this.emit("accountsChanged", accounts)
 
-            // We need to dynamically import here to avoid any circular dependencies with iframeProvider
-            const { connectWagmi, disconnectWagmi } = await import("#src/wagmi/utils")
             const user = getUser()
             if (!accounts.length) {
-                try {
-                    // if wagmi wasn't previously successfully connected, this throws
-                    await disconnectWagmi()
-                } catch {}
                 // Logout from the wallet when the user disconnects the injected wallet from the standalone wallet.
-                setUserWithProvider(undefined, undefined)
+                await setUserWithProvider(undefined, undefined)
             } else if (user) {
                 const [address] = accounts
                 const _user = await createHappyUserFromWallet(user.provider, address)
-                setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+                await setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
                 grantPermissions(getAppURL(), "eth_accounts")
-                await connectWagmi()
             }
         })
     }
@@ -141,23 +134,14 @@ export class InjectedProviderProxy extends SafeEventEmitter {
         // handle any required internal changes
         switch (req.payload.event) {
             case "accountsChanged": {
-                // We need to dynamically import here to avoid any circular dependencies with iframeProvider
-                const { connectWagmi, disconnectWagmi } = await import("#src/wagmi/utils")
                 const user = getUser()
                 if (Array.isArray(req.payload.params) && !req.payload.params.length) {
-                    // on disconnect, logout. alternatively could revoke permissions, but not much
-                    // point in that for injected wallets
-                    try {
-                        // if wagmi wasn't previously successfully connected, this throws
-                        await disconnectWagmi()
-                    } catch {}
-                    setUserWithProvider(undefined, undefined)
+                    await setUserWithProvider(undefined, undefined)
                 } else if (Array.isArray(req.payload.params) && user) {
                     const [address] = req.payload.params
                     const _user = await createHappyUserFromWallet(user.provider, address)
-                    setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+                    await setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
                     grantPermissions(getAppURL(), "eth_accounts")
-                    await connectWagmi()
                 }
             }
         }
