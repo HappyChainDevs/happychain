@@ -1,9 +1,9 @@
 import DisclosureSection from "./common/DisclosureSection"
 import { FormattedDetailsLine, Layout } from "./common/Layout"
 
-interface UnknownRequestProps {
+interface UnknownRequestProps<T = unknown> {
     method: string
-    params: unknown
+    params: T
     reject: () => void
 }
 
@@ -21,7 +21,9 @@ export const UnknownRequest = ({ method, params, reject }: UnknownRequestProps) 
         >
             <DisclosureSection title="Raw Request" isOpen>
                 <div className="grid gap-4 p-2">
-                    <FormattedDetailsLine isCode>{JSON.stringify({ method, params }, null, 2)}</FormattedDetailsLine>
+                    <FormattedDetailsLine isCode>
+                        {JSON.stringify({ method, params: params ?? null }, null, 2)}
+                    </FormattedDetailsLine>
                 </div>
             </DisclosureSection>
         </Layout>
