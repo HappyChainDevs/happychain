@@ -4,6 +4,7 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
+import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -137,10 +138,6 @@ function Request() {
         case HappyMethodNames.REQUEST_SESSION_KEY:
             return <HappyRequestSessionKey {...props} />
         default:
-            return (
-                <main>
-                    UNKNOWN REQUEST:<pre>{JSON.stringify(req)}</pre>
-                </main>
-            )
+            return <UnknownRequest {...(({ accept, ...rest }) => rest)(props)} />
     }
 }
