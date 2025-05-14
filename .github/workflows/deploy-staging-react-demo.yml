@@ -17,6 +17,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      
+      - name: Build code
+        env:
+          IFRAME_URL: "https://iframe-staging.happy.tech"
+          NODE_ENV: "production"
+        run: |
+          make demo-react.build
 
       - name: Copy files to server (via /tmp)
         uses: appleboy/scp-action@v0.1.7
