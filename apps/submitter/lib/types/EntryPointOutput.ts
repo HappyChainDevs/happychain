@@ -8,7 +8,7 @@ export enum CallStatus {
     EXECUTE_REVERTED = 3,
 }
 
-/** TypeScript version of the contract's SubmitOutput (in Types.sol). */
+/** TypeScript version of the contract's EntryPointOutput (in Types.sol). */
 export type EntryPointOutput = {
     /**
      * An overestimation of the minimum gas limit necessary to successfully call `EntryPoint.submit`

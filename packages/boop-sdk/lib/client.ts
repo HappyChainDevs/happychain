@@ -14,7 +14,7 @@ import {
     type SimulateInput,
     type SimulateOutput,
     type SubmitInput,
-    type SubmitOutput,
+    type EntryPointOutput,
     type WaitForReceiptInput,
     type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
@@ -87,9 +87,9 @@ export class BoopClient {
      * impose additional restrictions, such as requesting a higher submitterFee for the replacement
      * transaction.
      */
-    async submit(data: SubmitInput): Promise<SubmitOutput> {
+    async submit(data: SubmitInput): Promise<EntryPointOutput> {
         const response = await this.#client.post("/api/v1/boop/submit", serializeBigInt(data))
-        return this.#getSubmitOutput(response)
+        return this.#getEntryPointOutput(response)
     }
 
     /**
@@ -173,8 +173,8 @@ export class BoopClient {
 
     // == Formatting Utils =========================================================================
 
-    #getSubmitOutput(response: unknown): SubmitOutput {
-        return response as SubmitOutput
+    #getEntryPointOutput(response: unknown): EntryPointOutput {
+        return response as EntryPointOutput
     }
 
     #getExecuteOutput(response: unknown): ExecuteOutput {
