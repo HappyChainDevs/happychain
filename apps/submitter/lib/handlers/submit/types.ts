@@ -29,7 +29,7 @@ export const Submit = {
 export type SubmitStatus = (typeof Submit)[keyof typeof Submit]
 
 /** Output of a `submit` call (`boop/submit` route): either a successful submission, a failed submission. */
-export type EntryPointOutput = SubmitSuccess | SubmitError
+export type SubmitOutput = SubmitSuccess | SubmitError
 
 // =====================================================================================================================
 // OUTPUT (SUCCESS)
