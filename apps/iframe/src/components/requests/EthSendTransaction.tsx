@@ -74,15 +74,19 @@ export const EthSendTransaction = ({
         enabled: isValidTransaction,
     })
 
-    const validTx = {
-        ...tx,
-        maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
-        maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
-        gasPrice: ifDef(txGasPrice, toHex),
-        gas: ifDef(txGasLimit, toHex),
-        type: txType,
-        from: (tx.from ?? user?.address) as Address,
-    } as ValidRpcTransactionRequest
+    const validTx = useMemo(() => {
+        if (!txTo) return undefined
+        return {
+            ...tx,
+            from: (tx.from ?? user?.address) as Address,
+            to: txTo,
+            gas: ifDef(txGasLimit, toHex),
+            gasPrice: ifDef(txGasPrice, toHex),
+            maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
+            maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
+            type: txType,
+        } as ValidRpcTransactionRequest
+    }, [tx, txTo, txGasLimit, txGasPrice, txMaxFeePerGas, txMaxPriorityFeePerGas, txType, user?.address])
 
     // ====================================== Boop Gas details ======================================
 
@@ -93,8 +97,8 @@ export const EthSendTransaction = ({
         simulationQueryKey: boopQueryKey,
     } = useSimulateBoop({
         userAddress: user?.address,
-        tx: validTx,
-        enabled: isValidTransaction,
+        tx: validTx as ValidRpcTransactionRequest,
+        enabled: !!validTx && isValidTransaction,
     })
 
     const formatted = useMemo(() => {
@@ -146,7 +150,7 @@ export const EthSendTransaction = ({
                               : "Confirm",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
-                            if (isConfirmActionDisabled) return
+                            if (!validTx || isConfirmActionDisabled) return
                             accept({ method, params: [validTx], extraData: simulatedBoopData })
                             void queryClient.invalidateQueries({
                                 queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey, boopQueryKey],
