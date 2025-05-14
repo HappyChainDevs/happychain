@@ -3,9 +3,9 @@
 import { HappyRpcError, type HappyRpcErrorArgs } from "./HappyRpcError"
 
 /**
- * Standard Provider Error Codes ({@link https://eips.ethereum.org/EIPS/eip-1193#provider-errors})
+ * {@link https://eips.ethereum.org/EIPS/eip-1193#provider-errors | Standard Provider Error Codes}
  *
- * Non-Standard error codes from {@link https://github.com/wevm/viem/blob/9dc0724ae09827bd12c612df1d73b50fadf3c982/src/errors/rpc.ts#L64}
+ * Non-Standard error codes from {@link https://github.com/wevm/viem/blob/9dc0724ae09827bd12c612df1d73b50fadf3c982/src/errors/rpc.ts#L64 | Viem RPC Errors}
  *
  * See also {@link EIP1474ErrorCodes}
  */

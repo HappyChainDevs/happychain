@@ -1,3 +1,4 @@
+import type { Address } from "@happy.tech/common"
 import { type Chain, type HappyUser, defaultChain } from "@happy.tech/wallet-common"
 import {
     type CustomTransport,
@@ -22,7 +23,7 @@ import { getChain } from "./utils/getChain"
 export interface HappyPublicClient extends PublicClient<
     CustomTransport,
     undefined,
-    ParseAccount<`0x${string}`>,
+    ParseAccount<Address>,
     [...PublicRpcSchema]
 > {}
 
@@ -33,17 +34,8 @@ export function createHappyPublicClient(): HappyPublicClient {
     return createPublicClient({ transport: custom(happyProvider) })
 }
 
-/**
- * Return type for {@link createHappyWalletClient}.
- */
-// Interface so as to not pollute the documentation page for createHappyWalletClient
-// biome-ignore format: readability
-export interface HappyWalletClient extends WalletClient<
-    CustomTransport,
-    Chain,
-    ParseAccount<`0x${string}`>,
-    [...WalletRpcSchema]
-> {}
+export interface HappyWalletClient
+    extends WalletClient<CustomTransport, Chain, ParseAccount<Address>, [...WalletRpcSchema]> {}
 
 /**
  * Returns a Viem WalletClient instance made configured for use with the Happy Wallet.

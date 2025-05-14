@@ -4,7 +4,7 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.txm.json",
+    tsconfig: "../../packages/txm/tsconfig.build.json",
     // https://typedoc.org/options/input/
     name: "@happy.tech/txm",
     entryPoints: ["../../packages/txm/lib/index.ts"],

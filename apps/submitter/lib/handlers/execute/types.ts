@@ -36,7 +36,10 @@ export const Execute = {
  */
 export type ExecuteStatus = (typeof Execute)[keyof typeof Execute]
 
-/** Output of an `execute` call (`boop/execute` route): either a successful execution, or a failed execution. */
+/**
+ * Output of an `execute` call (`boop/execute` route): either a successful execution
+ * {@link ExecuteSuccess}, or a failed execution {@link ExecuteError}.
+ */
 export type ExecuteOutput = ExecuteSuccess | ExecuteError
 
 // =====================================================================================================================

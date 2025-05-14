@@ -40,6 +40,10 @@ describe("bytes", () => {
             expect(toBytes("000000ff", 4)).toBe("000000ff")
         })
 
+        it("should fail when invalid bytes are supplied as string", () => {
+            expect(() => toBytes("yz", 1)).toThrow("Invalid bytes: yz")
+        })
+
         it("should pad a bytestring", () => {
             expect(toBytes("f", 1)).toBe("0f")
             expect(toBytes("ff", 2)).toBe("00ff")

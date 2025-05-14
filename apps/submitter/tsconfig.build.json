@@ -1,12 +1,4 @@
 {
     "extends": ["./tsconfig.json", "@happy.tech/configs/tsconfig.types.json"],
-    "compilerOptions": {
-        "strict": true,
-        "jsx": "react-jsx",
-        "jsxImportSource": "hono/jsx",
-        "paths": {
-            "#lib/*": ["./lib/*"]
-        }
-    },
     "include": ["lib", "./package.json"]
 }

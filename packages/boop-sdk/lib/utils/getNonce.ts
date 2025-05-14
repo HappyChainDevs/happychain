@@ -1,7 +1,9 @@
 import { stringify } from "@happy.tech/common"
 
 export type GetNonceInput = {
+    /** Happy Account Address */
     address: `0x${string}`
+    /** Nonce Track */
     nonceTrack: bigint
 }
 

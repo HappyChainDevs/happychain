@@ -19,7 +19,6 @@ build: typedoc vocs ## Generates the latest docs from source code
 
 clean: typedoc.clean ## Removes build artifacts
 	rm -rf src/dist
-	rm -rf vocs.config.ts.timestamp-*
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
@@ -30,7 +29,6 @@ preview: ## Previews previously built docs
 # build vocs docs from supplied markdown
 vocs:
 	vocs build;
-	rm -rf vocs.config.ts.timestamp-*
 .PHONY: vocs
 
 # build and watch for changes using dev server
@@ -57,10 +55,6 @@ typedoc.clean:
 # generate JS markdown API reference
 typedoc-js:
 	typedoc --options ./typedoc.core.js;
-	@# Relative link inherited from Viem docs triggers a dead link
-	sed -i.bak 's|/docs/glossary/terms#filter|https://viem.sh/docs/glossary/terms#filter|g' \
-		./src/pages/sdk/js/api/interfaces/HappyPublicClient.mdx;
-	rm ./src/pages/sdk/js/api/interfaces/HappyPublicClient.mdx.bak
 .PHONY: typedoc-js
 
 # generate React markdown API reference

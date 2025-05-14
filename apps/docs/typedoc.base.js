@@ -26,6 +26,7 @@ export default {
     hideGenerator: true,
     searchInComments: true,
     searchInDocuments: true,
+    githubPages: false,
     highlightLanguages: ["html", "javascript", "json", "jsonc", "json5", "jsx", "tsx", "typescript"],
     visibilityFilters: {
         protected: false,
@@ -62,6 +63,7 @@ export default {
     hidePageHeader: true,
     hideBreadcrumbs: true,
     useCodeBlocks: true,
+    useHTMLAnchors: false,
     expandObjects: true,
     expandParameters: true,
 
@@ -77,7 +79,12 @@ export default {
         [
             "remark-link-rewrite",
             // remove .mdx from generated typedoc links
-            { replacer: (url) => url.replace(/\.mdx$/, "") },
+            {
+                replacer: (url) => {
+                    if (url === "/docs/glossary/terms#filter") return "https://viem.sh/docs/glossary/terms#filter"
+                    return url.replace(/\.mdx$/, "")
+                },
+            },
         ],
     ],
 }
