@@ -143,7 +143,7 @@ async function getReceiptForTransaction(transaction: Transaction): Promise<Trans
         transaction.attempts.map((attempt) =>
             directBlockchainClient
                 .getTransactionReceipt({
-                    boopHash: attempt.hash,
+                    hash: attempt.hash,
                 })
                 .catch(() => undefined),
         ),
@@ -156,7 +156,7 @@ async function getExecutedAttemptForTransaction(transaction: Transaction): Promi
         transaction.attempts.map((attempt) =>
             directBlockchainClient
                 .getTransactionReceipt({
-                    boopHash: attempt.hash,
+                    hash: attempt.hash,
                 })
                 .then((receipt) => (receipt ? attempt : undefined))
                 .catch(() => undefined),
@@ -312,7 +312,7 @@ test("Simple transaction executed", async () => {
     if (!assertIsDefined(retrievedTransaction)) return
 
     const receipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: retrievedTransaction.attempts[0].hash,
+        hash: retrievedTransaction.attempts[0].hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
@@ -358,7 +358,7 @@ test("A transaction created using calldata is executed correctly", async () => {
     if (!assertIsDefined(executedTransactionValue)) return
 
     const receipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: executedTransactionValue.attempts[0].hash,
+        hash: executedTransactionValue.attempts[0].hash,
     })
 
     expect(persistedTransaction.status).toBe(TransactionStatus.Success)
@@ -395,7 +395,7 @@ test("Transaction retried", async () => {
 
     await expect(
         directBlockchainClient.getTransactionReceipt({
-            boopHash: latestAttemptPending.hash,
+            hash: latestAttemptPending.hash,
         }),
     ).rejects.toThrow()
 
@@ -412,7 +412,7 @@ test("Transaction retried", async () => {
     if (!assertIsDefined(transactionSuccess)) return
 
     const successReceipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: transactionSuccess.attempts[0].hash,
+        hash: transactionSuccess.attempts[0].hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
@@ -453,7 +453,7 @@ test("Transaction failed", async () => {
     if (!assertIsDefined(transactionReverted)) return
 
     const revertReceipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: transactionReverted.attempts[0].hash,
+        hash: transactionReverted.attempts[0].hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
@@ -506,7 +506,7 @@ test("Transaction failed for out of gas", async () => {
     if (!assertIsDefined(transactionReverted)) return
 
     const revertReceipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: transactionReverted.attempts[0].hash,
+        hash: transactionReverted.attempts[0].hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
@@ -641,7 +641,7 @@ test("Execute a transaction with value", async () => {
     })
 
     const blockchainTransactionReceipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: blockchainTransaction.hash,
+        hash: blockchainTransaction.hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transactionToSend.intentId)
@@ -675,7 +675,7 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     if (!assertIsDefined(transactionBurnerExecuted)) return
 
     const burnerReceipt = await directBlockchainClient.getTransactionReceipt({
-        boopHash: transactionBurnerExecuted.attempts[0].hash,
+        hash: transactionBurnerExecuted.attempts[0].hash,
     })
 
     const incrementerTransaction = await createCounterTransaction()
