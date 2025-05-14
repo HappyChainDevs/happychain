@@ -34,7 +34,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           source: "demos/react/dist"
           target: /tmp/demo-react-upload
-          strip_components: 3
+          strip_components: 2
           rm: true
 
       - name: Deploy staging react demo to server
