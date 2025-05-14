@@ -235,18 +235,6 @@ contract EntryPointTest is BoopTestUtils {
         entryPoint.submit(boop.encode());
     }
 
-    function testSimulationFeeTooLow() public {
-        Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-
-        // Make sure that the boop.maxFeePerGas is lower than the tx.gasPrice, and send boop in simulatoin mode
-        vm.txGasPrice(boop.maxFeePerGas * 2);
-        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-
-        // In simulation mode, insufficient fee sets feeTooLowDuringSimulation=true instead of reverting
-        EntryPointOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedEntryPointOutput(output, false, false, false, true, CallStatus.SUCCEEDED, new bytes(0));
-    }
-
     function testInsufficientStake() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         boop.payer = dest; // An address which hasn't staked to the entrypoint
@@ -741,14 +729,12 @@ contract EntryPointTest is BoopTestUtils {
         bool validityUnknownDuringSimulation,
         bool paymentValidityUnknownDuringSimulation,
         bool futureNonceDuringSimulation,
-        bool feeTooLowDuringSimulation,
         CallStatus callStatus,
         bytes memory revertData
     ) internal pure {
         assertEq(output.validityUnknownDuringSimulation, validityUnknownDuringSimulation);
         assertEq(output.paymentValidityUnknownDuringSimulation, paymentValidityUnknownDuringSimulation);
         assertEq(output.futureNonceDuringSimulation, futureNonceDuringSimulation);
-        assertEq(output.feeTooLowDuringSimulation, feeTooLowDuringSimulation);
         assertEq(uint8(output.callStatus), uint8(callStatus));
         assertEq(output.revertData, revertData);
     }

@@ -21,7 +21,6 @@ export const simulateOutputSchema = z.discriminatedUnion("status", [
         validityUnknownDuringSimulation: z.boolean().openapi({}),
         paymentValidityUnknownDuringSimulation: z.boolean().openapi({}),
         futureNonceDuringSimulation: z.boolean().openapi({}),
-        feeTooLowDuringSimulation: z.boolean().openapi({}),
         callStatus: z.nativeEnum(CallStatus),
         revertData: z.string().refine(isHexString),
     }),
