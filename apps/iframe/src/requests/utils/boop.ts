@@ -1,9 +1,7 @@
 import {
     type Boop,
     type BoopReceipt,
-    type EVMReceipt,
     type ExecuteOutput,
-    type Log,
     Onchain,
     type SimulateOutput,
     type SimulateSuccess,
@@ -19,7 +17,16 @@ import {
     type HappyRpcError,
     RevertRpcError,
 } from "@happy.tech/wallet-common"
-import { type Address, type Hash, type Hex, type TransactionEIP1559, parseSignature, zeroAddress } from "viem"
+import {
+    type Address,
+    type Hash,
+    type Hex,
+    type Log,
+    type TransactionEIP1559,
+    type TransactionReceipt,
+    parseSignature,
+    zeroAddress,
+} from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
@@ -97,7 +104,7 @@ export type SendBoopArgs = {
 
 export async function sendBoop(
     { account, tx, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
-    retry = 0, // TODO: temp 0, should be 2
+    retry = 0, // TODO: set to 1?
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
     const value = tx.value ? BigInt(tx.value) : 0n
@@ -210,25 +217,27 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
 /**
  * Format a boop receipt in a transaction receipt returned by `eth_getTransactionReceipt`
  */
-export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): EVMReceipt {
+export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): TransactionReceipt & { boop: BoopReceipt } {
     return {
-        // TODO tmp commenting out while working on submitter
-        blockHash: receipt.txReceipt.blockHash,
-        blockNumber: receipt.txReceipt.blockNumber,
-        // contractAddress: receipt.txReceipt.contractAddress,
-        // cumulativeGasUsed: receipt.txReceipt.cumulativeGasUsed,
-        effectiveGasPrice: receipt.txReceipt.effectiveGasPrice,
-        from: receipt.account,
-        gasUsed: receipt.gasUsed,
-        logs: receipt.logs as Log[], // TODO parse boop logs
-        // logsBloom: receipt.txReceipt.logsBloom,
+        blockHash: receipt.blockHash,
+        blockNumber: receipt.blockNumber,
+        contractAddress: null,
+        effectiveGasPrice: receipt.gasPrice,
+        from: receipt.boop.account,
+        gasUsed: BigInt(receipt.boop.gasLimit), // TODO incorrect, but ok enough approximation for now
+        logs: receipt.logs as Log<bigint, number, false>[],
         status: receipt.status === Onchain.Success ? "success" : "reverted",
         to: "0x0", // TODO include Boop inside receipt and read from there
         transactionHash: hash,
-        // transactionIndex: receipt.txReceipt.transactionIndex,
-        type: receipt.txReceipt.type,
+        type: "eip1559",
+
         boop: receipt,
-    } as EVMReceipt
+
+        // skipped fields
+        cumulativeGasUsed: undefined as unknown as bigint,
+        logsBloom: undefined as unknown as Hex,
+        transactionIndex: 0,
+    } satisfies TransactionReceipt & { boop: BoopReceipt }
 }
 
 /**
@@ -237,11 +246,14 @@ export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): EVMR
  */
 export function formatTransaction(
     hash: Hash,
-    { boop, receipt }: BoopCacheEntry,
+    { boop: cachedBoop, receipt }: BoopCacheEntry,
     simulation?: SimulateSuccess,
-): TransactionEIP1559 {
+): TransactionEIP1559 & { boop?: BoopReceipt } {
     const currentChain = getCurrentChain()
-
+    const boop = {
+        ...(cachedBoop ? cachedBoop : {}),
+        ...(receipt ? receipt.boop : {}),
+    }
     // NOTES(norswap)
     // - maxPriorityFeePerGas: The submitter might have put some. We can compute this by subtracting the tx receipt's
     //    effectiveGasPrive minus the basefee. But getting the basefee requires an onchain call. Probably not worth it.
@@ -249,18 +261,18 @@ export function formatTransaction(
     // - nonce, input, value: incorrect if receipt is missing
     // - null = missing
     return {
-        boopHash: hash,
-        blockHash: receipt?.txReceipt.blockHash || null,
-        blockNumber: receipt?.txReceipt.blockNumber || null,
-        from: receipt?.account || boop?.account,
-        to: boop?.dest ?? null, // TODO should be in the receipt too!
-        gas: boop?.gasLimit ?? receipt?.gasUsed, // TODO boop in receipt
+        hash,
+        blockHash: receipt?.blockHash || null,
+        blockNumber: receipt?.blockNumber || null,
+        from: boop.account!, // TODO need to guarantee one boop is defined at least
+        to: boop.dest ?? null,
+        gas: BigInt(boop.gasLimit ?? 0n),
         maxPriorityFeePerGas: 0n,
-        maxFeePerGas: boop?.maxFeePerGas ?? receipt?.txReceipt.effectiveGasPrice ?? simulation?.maxFeePerGas,
-        nonce: receipt?.nonceValue ? Number(receipt.nonceValue) : -1,
-        input: boop?.callData || "0x",
-        value: boop?.value ?? 0n,
-        transactionIndex: null, // receipt?.txReceipt?.transactionIndex || null, // TODO tmp while working on submitter
+        maxFeePerGas: boop.maxFeePerGas ?? simulation?.maxFeePerGas ?? 0n,
+        nonce: Number(boop.nonceValue ?? 0),
+        input: boop.callData || "0x",
+        value: boop.value ?? 0n,
+        transactionIndex: null,
         type: "eip1559", // it's a boop, so we're just putting the most usual thing in here
         typeHex: "0x2",
         chainId: Number(currentChain.chainId),
@@ -268,7 +280,7 @@ export function formatTransaction(
         // Parse signature values from validatorData if available
         ...safeParseSignature(boop?.validatorData),
         boop: receipt,
-    } as TransactionEIP1559
+    } satisfies TransactionEIP1559 & { boop?: BoopReceipt }
 }
 
 function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcError {
@@ -310,7 +322,7 @@ function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcErr
         default: {
             // Type check exhaustiveness.
             const _: never = output
+            return null as unknown as HappyRpcError
         }
     }
-    return null as unknown as HappyRpcError
 }

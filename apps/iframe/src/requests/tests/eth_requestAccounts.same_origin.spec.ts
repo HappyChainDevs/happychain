@@ -3,10 +3,10 @@ import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
+import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
-import { setAuthState } from "../../state/authState"
-import { setUser } from "../../state/user"
-import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
+import { setUser } from "#src/state/user"
+import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 
 const { appURL, iframeID, appURLMock } = await vi //

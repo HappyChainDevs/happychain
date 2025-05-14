@@ -2,10 +2,10 @@
  * Core request handler logic shared between two or more handlers.
  */
 
-import { type EVMReceipt, GetState, Onchain } from "@happy.tech/boop-sdk"
+import { GetState, Onchain } from "@happy.tech/boop-sdk"
 import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
-import { type Address, type Transaction, toHex } from "viem"
+import { type Address, type Transaction, type TransactionReceipt, toHex } from "viem"
 import { entryPoint } from "#src/constants/contracts"
 import {
     boopFromTransaction,
@@ -38,7 +38,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
     try {
         const boopClient = getBoopClient()
         if (!boopClient) throw new Error("Boop client not initialized")
-        const output = await boopClient.getState({ hash })
+        const output = await boopClient.getState({ boopHash: hash })
         if (output.status === GetState.Receipt) {
             const receipt = output.receipt
             const cached = boopCache.putReceipt(hash, receipt)
@@ -71,7 +71,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
  * tries to fetch it. If the hash is not found, the function returns {@link FORWARD} to signal that the request should
  * be passed to the public client to find an actual Ethereum transaction receipt.
  */
-export async function getTransactionReceipt(hash: Hash): Promise<EVMReceipt | Forward | null> {
+export async function getTransactionReceipt(hash: Hash): Promise<TransactionReceipt | Forward | null> {
     // TODO fill cache from sending side
     const cached = boopCache.get(hash)
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
@@ -79,7 +79,7 @@ export async function getTransactionReceipt(hash: Hash): Promise<EVMReceipt | Fo
     try {
         const boopClient = getBoopClient()
         if (!boopClient) throw new Error("Boop client not initialized")
-        const state = await boopClient.getState({ hash })
+        const state = await boopClient.getState({ boopHash: hash })
         if (state.status !== GetState.Receipt) {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
             return cached || state.status === GetState.Simulated ? null : FORWARD
