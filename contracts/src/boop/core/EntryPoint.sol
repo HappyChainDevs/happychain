@@ -21,7 +21,7 @@ import {
 } from "boop/interfaces/EventsAndErrors.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
-import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus, Validity, EntryPointOutput} from "boop/interfaces/Types.sol";
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "openzeppelin/utils/ReentrancyGuardTransient.sol";
 
@@ -99,16 +99,16 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * paymaster validation if their results are the encoded {interfaces/EventsAndErrors.UnknownDuringSimulation}
      * errors.
      *
-     * The function returns a filled-in {interfaces/Types.SubmitOutput} structure. This is needed during
+     * The function returns a filled-in {interfaces/Types.EntryPointOutput} structure. This is needed during
      * simulation, as the logs are not available with `eth_call`.
      *
      * NOTE: When `eth_simulateV1` (which does allow simple RPC log access) becomes broadly
-     * available, the `SubmitOutput` structure can be removed entirely, and the function doesn't
+     * available, the `EntryPointOutput` structure can be removed entirely, and the function doesn't
      * need to return anything. Also note that `debug_traceCall` is not an acceptable substitute,
      * given that it requires a custom tracer and that those are incompatible between node
      * implementations.
      */
-    function submit(bytes calldata encodedBoop) external nonReentrant returns (SubmitOutput memory output) {
+    function submit(bytes calldata encodedBoop) external nonReentrant returns (EntryPointOutput memory output) {
         uint256 gasStart = gasleft();
         Boop memory boop = Encoding.decode(encodedBoop);
         bool isSimulation = tx.origin == address(0);
