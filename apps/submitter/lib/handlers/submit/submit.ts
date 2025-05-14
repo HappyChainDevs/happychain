@@ -2,33 +2,32 @@ import type { Hash } from "@happy.tech/common"
 import { abis, deployment } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { simulate } from "#lib/handlers/simulate"
-import { boopNonceManager, computeHash, dbService } from "#lib/services"
+import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
+import { boopNonceManager, computeHash, dbService, receiptService } from "#lib/services"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
-import { type Boop, Onchain } from "#lib/types"
+import { Onchain } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
+import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
 import { walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import type { SubmitInput, SubmitOutput } from "./types"
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
-    const { txHash, ...output } = await submitInternal(input, false)
+    const { txHash, receiptPromise, ...output } = await submitInternal(input, true)
     return output
 }
 
 export async function submitInternal(
-    input: SubmitInput,
+    input: SubmitInput & { timeout?: number },
     earlyExit: boolean,
-): Promise<SubmitOutput & { txHash?: Hash }> {
-    const { entryPoint = deployment.EntryPoint, boop } = input
-    const boopHash = computeHash(boop, { cache: true })
+): Promise<SubmitOutput & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> }> {
+    const { entryPoint = deployment.EntryPoint, boop: ogBoop, timeout } = input
+    let boop = ogBoop
+    const boopHash = computeHash(boop)
     try {
         logger.trace("Submitting boop with hash", boopHash)
-        await dbService.saveBoop(entryPoint, boop, boopHash)
-
         let simulation = await simulate(input, true)
-
         if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
-
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation) {
             return {
                 status: Onchain.ValidationReverted,
@@ -37,7 +36,12 @@ export async function submitInternal(
             }
         }
 
-        const afterSimulationPromise = (async (): Promise<SubmitOutput & { txHash?: Hash }> => {
+        boop = updateBoopFromSimulation(boop, simulation)
+        // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path
+        // so that we can service incoming waitForReceipt requests.
+        await dbService.saveBoop(entryPoint, boop)
+
+        const afterSimulationPromise = (async (): ReturnType<typeof submitInternal> => {
             if (simulation.futureNonceDuringSimulation) {
                 const isBlocked = await boopNonceManager.checkIfBlocked(entryPoint, boop)
                 if (isBlocked.isErr()) return { ...isBlocked.error, stage: "submit" }
@@ -49,27 +53,18 @@ export async function submitInternal(
                     if (resp.isErr()) return resp.error
                     simulation = await simulate(input) // update simulation
                     if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+                    boop = updateBoopFromSimulation(boop, simulation)
+                    await dbService.saveBoop(entryPoint, boop)
                 }
             }
 
             const account = findExecutionAccount(input.boop)
             logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
-            // TODO make simulate return an updated boop
-            const updatedBoop = {
-                ...input.boop,
-                gasLimit: simulation.gas, // TODO should probably be lower than the gas limit
-                validateGasLimit: simulation.validateGas,
-                validatePaymentGasLimit: simulation.validatePaymentGas,
-                executeGasLimit: simulation.executeGas,
-                maxFeePerGas: simulation.maxFeePerGas,
-                submitterFee: simulation.submitterFee,
-            } satisfies Boop
-
             // TODO make sure this does no extra needless simulations
             const txHash = await walletClient.writeContract({
                 address: input.entryPoint ?? deployment.EntryPoint,
-                args: [encodeBoop(updatedBoop)],
+                args: [encodeBoop(boop)],
                 abi: abis.EntryPoint,
                 functionName: "submit",
                 gas: BigInt(simulation.gas),
@@ -80,15 +75,15 @@ export async function submitInternal(
 
             logger.trace("Successfully submitted", boopHash, txHash)
             boopNonceManager.incrementLocalNonce(boop)
-            return { status: Onchain.Success, hash: boopHash, entryPoint, txHash }
+            // We need to monitor the receipt to detect if we're stuck, and to be able to construct the receipt
+            // (requires knowing the txHash).
+            const receiptPromise = receiptService.waitForInclusion({ boopHash, txHash, timeout })
+            return { status: Onchain.Success, boopHash, entryPoint, txHash, receiptPromise }
         })()
 
-        if (earlyExit) return { status: Onchain.Success, hash: boopHash, entryPoint }
+        if (earlyExit) return { status: Onchain.Success, boopHash, entryPoint }
         else return await afterSimulationPromise
     } catch (error) {
-        return {
-            ...outputForGenericError(error),
-            stage: "submit",
-        }
+        return { ...outputForGenericError(error), stage: "submit" }
     }
 }

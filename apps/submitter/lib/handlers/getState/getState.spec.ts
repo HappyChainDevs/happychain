@@ -2,12 +2,13 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { env } from "#lib/env"
 import type { ExecuteSuccess } from "#lib/handlers/execute"
-import { computeHash } from "#lib/services"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
-import { GetState, type GetStateReceipt, type GetStateSimulated, type GetStateUnknown } from "./types"
+import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -37,8 +38,8 @@ describe("submitter_state", () => {
             .then((a) => a.json())) as ExecuteSuccess
         expect(response.status).toBe(Onchain.Success)
         expect(response.receipt).toBeDefined()
-        const state = (await client.api.v1.boop.state[":hash"]
-            .$get({ param: { hash: response.receipt.boopHash } })
+        const state = (await client.api.v1.boop.state[":boopHash"]
+            .$get({ param: { boopHash: response.receipt.boopHash } })
             .then((a) => a.json())) as GetStateReceipt
         expect(state.status).toBe(GetState.Receipt)
         expect(state.receipt.boopHash).toBe(response.receipt.boopHash)
@@ -46,9 +47,9 @@ describe("submitter_state", () => {
     })
 
     it("fetches state of an unknown tx", async () => {
-        const state = (await client.api.v1.boop.state[":hash"]
-            .$get({ param: { hash: smartAccount } })
-            .then((a) => a.json())) as GetStateUnknown
+        const state = (await client.api.v1.boop.state[":boopHash"]
+            .$get({ param: { boopHash: smartAccount } })
+            .then((a) => a.json())) as GetStateError
         expect(state.status).toBe(GetState.UnknownBoop)
     })
 
@@ -56,14 +57,14 @@ describe("submitter_state", () => {
         const nonce = nonceValue + 1n // future nonce so that is submits, but doesn't finalize
         const futureUnsignedTx = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
         const futureSignedTx = await sign(futureUnsignedTx)
-        const boopHash = computeHash(futureSignedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, futureSignedTx)
         // submit transaction, but don't wait for it to complete
         const blockedTx = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
 
         await new Promise((resolve) => setTimeout(resolve, 100))
 
-        const state = (await client.api.v1.boop.state[":hash"]
-            .$get({ param: { hash: boopHash } })
+        const state = (await client.api.v1.boop.state[":boopHash"]
+            .$get({ param: { boopHash } })
             .then((a) => a.json())) as GetStateSimulated
 
         expect(state.status).toBe(GetState.Simulated)

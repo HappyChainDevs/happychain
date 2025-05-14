@@ -46,7 +46,7 @@ const SessionKeyDemo = () => {
         try {
             const hash = await submitIncrement()
             if (!hash) throw new Error("No hash returned")
-            const receipt = await publicClient.waitForTransactionReceipt({ hash })
+            const receipt = await publicClient.waitForTransactionReceipt({ boopHash: hash })
             if (receipt.status === "reverted") {
                 toast.error("UserOp reverted!")
                 return

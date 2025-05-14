@@ -1,5 +1,6 @@
 import type { Hex } from "@happy.tech/common"
 import { type Log, decodeEventLog, toEventSelector } from "viem"
+import type { BoopLog } from "#lib/types"
 import { eventsAbi } from "./abis"
 
 /**
@@ -15,10 +16,10 @@ export type DecodedEvent = {
 /**
  * Attempts to decode the given log against known abis, returning the result or undefined if not known.
  */
-export function decodeEvent(log: Log): DecodedEvent | undefined {
+export function decodeEvent(log: BoopLog): DecodedEvent | undefined {
     try {
         // the cast is safe: args may be `readonly string[]` but we always specify argument names in the ABI
-        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: log.topics }) as DecodedEvent
+        return decodeEventLog({ abi: eventsAbi, data: log.data, topics: (log as Log).topics }) as DecodedEvent
     } catch {
         return
     }

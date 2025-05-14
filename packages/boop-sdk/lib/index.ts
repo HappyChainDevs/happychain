@@ -32,6 +32,9 @@ export {
     //
     // Generic
     //
+    type Boop,
+    type BoopReceipt,
+    type BoopLog,
     type EntryPointOutput,
     Onchain,
     type OnchainStatus,
@@ -47,7 +50,6 @@ export {
     type CreateAccountInput,
     type CreateAccountOutput,
     type CreateAccountSuccess,
-    type CreateAccountFailed,
     //
     // Simulate
     //
@@ -56,7 +58,6 @@ export {
     type SimulateInput,
     type SimulateOutput,
     type SimulateSuccess,
-    type SimulateFailed,
     type SimulateError,
     //
     // Submit
@@ -66,7 +67,6 @@ export {
     type SubmitInput,
     type SubmitOutput,
     type SubmitSuccess,
-    type SubmitSimulationFailed,
     type SubmitError,
     //
     // Execute
@@ -76,7 +76,6 @@ export {
     type ExecuteInput,
     type ExecuteOutput,
     type ExecuteSuccess,
-    type ExecuteFailedOnchain,
     type ExecuteError,
     //
     // GetState
@@ -96,7 +95,6 @@ export {
     type WaitForReceiptOutput,
     type WaitForReceiptSuccess,
     type WaitForReceiptError,
-    type WaitForReceiptUnknown,
     //
     // GetPending
     //
@@ -108,23 +106,12 @@ export {
     type GetPendingError,
     type PendingBoopInfo,
     //
-    // Boop Generic Types
-    //
-    type Boop,
-    type BoopReceipt,
-    //
-    // Ethereum Types
-    //
-    type Log,
-    type EVMReceipt,
-    type TransactionTypeName,
-    TransactionType,
-    //
     // Utilities
     //
     computeBoopHash,
-
-    // TODO might miss some stuff
+    decodeBoop,
+    encodeBoop,
+    updateBoopFromSimulation,
 } from "@happy.tech/submitter/client"
 
 export {

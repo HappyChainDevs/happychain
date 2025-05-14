@@ -10,14 +10,15 @@ export type ComputeHashOptions = {
 
 /**
  * Internal version of {@link computeBoopHash}, which inlines the chain ID & performs caching.
+ *
+ * IMPORTANT: Tests must use {@link computeBoopHash} has they edit boops in place!
  */
-export function computeHash(boop: Boop, options: ComputeHashOptions = { cache: false }): Hash {
+export function computeHash(boop: Boop): Hash {
     // We sneakily piggyback the boopHash on the boop as a form of caching.
     // We must never edit boop object in place!
-    //
     const cached = getProp(boop, "boopHash", "string")
     if (cached) return cached as Hash
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
-    if (options.cache) Object.assign(boop, { boopHash })
+    Object.assign(boop, { boopHash })
     return boopHash
 }

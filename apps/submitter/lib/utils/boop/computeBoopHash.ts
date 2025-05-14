@@ -1,4 +1,4 @@
-import type { Hash } from "@happy.tech/common"
+import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
 import type { Boop } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
@@ -20,12 +20,10 @@ export function computeBoopHash(chainId: bigint | number, boop: Boop): Hash {
     const boopToHash: Boop = { ...boop, validatorData: "0x" }
 
     if (boop.payer === boop.account) {
-        // TODO
         // For self-paying boops, all fields have to be specified!
         for (const key in zeroGasData) {
-            // @ts-ignore
-            if (boopToHash[key] === undefined)
-                throw new Error(`Can't compute Boop hash: Field ${key} is undefined for a self-paying Boop.`)
+            if (getProp(boopToHash, key) === undefined)
+                throw new Error(`Can't compute boop hash: Field ${key} is undefined for a self-paying Boop.`)
         }
     } else {
         // If not self-paying, zero all the gas related values.

@@ -3,8 +3,8 @@ import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
-import { computeHash } from "#lib/services"
 import type { Boop } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
 
@@ -30,13 +30,13 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const boopHash = computeHash(signedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
 
-        const state = (await client.api.v1.boop.receipt[":hash"]
-            .$get({ param: { hash: boopHash }, query: { timeout: "0" } })
+        const state = (await client.api.v1.boop.receipt[":boopHash"]
+            .$get({ param: { boopHash }, query: { timeout: "0" } })
             .then((a) => a.json())) as WaitForReceiptSuccess
 
         expect(state.status).toBe(WaitForReceipt.Success)
@@ -45,17 +45,17 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const boopHash = computeHash(signedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
-        // submit transaction but don't wait to complete
-        client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+        // Submit transaction but don't for inclusion.
+        await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
-            client.api.v1.boop.receipt[":hash"]
-                .$get({ param: { hash: boopHash }, query: { timeout: "100" } }) // return near immediately
+            client.api.v1.boop.receipt[":boopHash"]
+                .$get({ param: { boopHash }, query: { timeout: "100" } }) // return near immediately
                 .then((a) => a.json() as any as WaitForReceiptError),
-            client.api.v1.boop.receipt[":hash"]
-                .$get({ param: { hash: boopHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
+            client.api.v1.boop.receipt[":boopHash"]
+                .$get({ param: { boopHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
                 .then((a) => a.json() as any as WaitForReceiptSuccess),
         ])
 
@@ -66,7 +66,16 @@ describe("submitter_receipt", () => {
         if (env.AUTOMINE_TESTS) return // instantly included with auto-mining, so the following will fail
 
         expect(stateSimulated.status).toBe(WaitForReceipt.ReceiptTimeout)
-        expect(stateSimulated.simulation).toBeDefined()
         expect((stateSimulated as any).receipt).toBeUndefined()
+    })
+    it("should reject immediately if the boop isn't known", async () => {
+        const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
+        const result = await client.api.v1.boop.receipt[":boopHash"].$get({
+            param: { boopHash },
+            query: { timeout: "2000" },
+        })
+        const output = (await result.json()) as WaitForReceiptError
+        expect(result.status).toBe(404)
+        expect(output.status).toBe(WaitForReceipt.UnknownBoop)
     })
 })

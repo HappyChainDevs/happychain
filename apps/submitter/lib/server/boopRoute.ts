@@ -45,7 +45,7 @@ export default new Hono()
         },
     )
     .get(
-        "/state/:hash", //
+        "/state/:boopHash", //
         getStateDescription,
         getStateValidation,
         async (c) => {
@@ -56,14 +56,14 @@ export default new Hono()
         },
     )
     .get(
-        "/receipt/:hash", //
+        "/receipt/:boopHash", //
         waitForReceiptDescription,
         waitForReceiptParamValidation,
         waitForReceiptQueryValidation,
         async (c) => {
-            const { hash } = c.req.valid("param")
+            const { boopHash } = c.req.valid("param")
             const { timeout } = c.req.valid("query")
-            const output = await waitForReceipt({ hash, timeout })
+            const output = await waitForReceipt({ boopHash, timeout })
             const [response, code] = makeResponse(output)
             return c.json(response, code)
         },

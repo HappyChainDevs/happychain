@@ -170,3 +170,10 @@ export type ObjectFromTuples<KeyTuple extends PropertyKey[], ValueTuple extends 
             : Record<never, never>
       : Record<never, never>
 >
+
+/**
+ * Returns a version of `T` where all fields of type `Src` have been replaced by a field of type `Dst`, recursively.
+ */
+export type RecursiveReplace<T, Src, Dst> = Prettify<{
+    [K in keyof T]: T[K] extends Src ? Dst : T[K] extends object ? RecursiveReplace<T[K], Src, Dst> : T[K]
+}>

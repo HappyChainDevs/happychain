@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { SimulateFailed, SimulateOutput, SimulateSuccess } from "#lib/handlers/simulate"
+import type { SimulateError, SimulateOutput, SimulateSuccess } from "#lib/handlers/simulate"
 import type { Boop } from "#lib/types"
 import { CallStatus, Onchain } from "#lib/types"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
@@ -95,7 +95,7 @@ describe("submitter_simulate", () => {
             // execute so that this nonce has been used
             await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>
             const response = (await results.json()) as any
             expect(results.status).toBe(400)
             expect(response.status).toBe(Onchain.InvalidNonce)
@@ -107,8 +107,8 @@ describe("submitter_simulate", () => {
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
-            const response = (await results.json()) as SimulateFailed
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>
+            const response = (await results.json()) as SimulateError
             expect(results.status).toBe(402)
             expect(response.status).toBe(Onchain.PayoutFailed)
         })
@@ -118,8 +118,8 @@ describe("submitter_simulate", () => {
             unsignedTx.dest = smartAccount
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
-            const response = (await results.json()) as SimulateFailed
+            const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>
+            const response = (await results.json()) as SimulateError
             expect(results.status).toBe(422)
             expect(response.status).toBe(Onchain.CallReverted)
             expect(response.revertData).toBe("0x")

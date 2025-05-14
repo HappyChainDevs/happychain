@@ -16,6 +16,7 @@ export {
     bigIntReviver,
     bigIntToZeroPadded,
     serializeBigInt,
+    deserializeBigInt,
     parseBigInt,
     type BigIntSerialized,
 } from "./utils/bigint"
@@ -64,6 +65,7 @@ export type {
     UnionToTuple,
     MapTuple,
     ObjectFromTuples,
+    RecursiveReplace,
 } from "./utils/types"
 
 export { isAddress } from "./utils/address"
@@ -76,7 +78,7 @@ export { binaryPartition, partition } from "./utils/iterables"
 export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
 export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
 export { Mutex } from "./utils/mutex"
-export { getProp, hasDefinedKey, hasKey, ifDef } from "./utils/objects"
+export { getProp, hasDefinedKey, hasKey, hasOwnKey, ifDef } from "./utils/objects"
 export { promiseWithResolvers } from "./utils/promises"
 export type { PromiseWithResolvers, RejectType, ResolveInputType, ResolveType } from "./utils/promises"
 export { entries, keys } from "./utils/records"

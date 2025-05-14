@@ -1,12 +1,11 @@
-import type { Address, Hex } from "@happy.tech/common"
-import { BaseError, createWalletClient } from "viem"
+import type { Address } from "@happy.tech/common"
+import { createWalletClient } from "viem"
 import { abis, deployment } from "#lib/env"
 import { accountDeployer } from "#lib/services/evmAccounts"
-import { SubmitterError } from "#lib/types"
 import { config, publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import { extractErrorMessage } from "#lib/utils/parsing"
 import { decodeEvent } from "#lib/utils/parsing"
+import { outputForGenericError } from "../errors"
 import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
 import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
 
@@ -15,8 +14,6 @@ const walletClient = createWalletClient({ ...config, account: accountDeployer })
 export async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
         const predictedAddress = computeHappyAccountAddress(salt, owner)
-        // For reference, fetch onchain with `_getPredictedAddressOnchain(salt, owner)`
-
         logger.trace("Predicted account address for owner", predictedAddress, owner, salt)
 
         // Check if a contract is already deployed at the predicted address
@@ -58,29 +55,10 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             return { status, owner, salt, address }
         }
 
-        logger.error("Account creation failed onchain", owner, salt, receipt)
-        return {
-            status: CreateAccount.Failed,
-            owner,
-            salt,
-            description: "Account creation failed onchain",
-        }
+        const description = "Account creation failed onchain"
+        logger.error(description, owner, salt, receipt)
+        return { status: CreateAccount.Failed, owner, salt, description }
     } catch (error) {
-        if (error instanceof BaseError) {
-            const status = SubmitterError.RpcError
-            return { status, owner, salt, description: error.message }
-        }
-        const status = SubmitterError.UnexpectedError
-        return { status, owner, salt, description: extractErrorMessage(error) }
+        return { ...outputForGenericError(error), owner, salt }
     }
-}
-
-// For reference
-async function _getPredictedAddressOnchain(salt: Hex, owner: Address): Promise<Address> {
-    return await publicClient.readContract({
-        address: deployment.HappyAccountBeaconProxyFactory,
-        abi: abis.HappyAccountBeaconProxyFactory,
-        functionName: "getAddress",
-        args: [salt, owner],
-    })
 }

@@ -1,16 +1,26 @@
 import type { Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
-import type { SimulateError, SimulateFailed } from "#lib/handlers/simulate"
 import { boopNonceManager } from "#lib/services"
-import { type Boop, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
+import { type Boop, Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 import { type DecodedRevertError, decodeRawError, extractErrorMessage } from "#lib/utils/parsing"
+
+export type SubmitterErrorOutput = {
+    status: SubmitterErrorStatus
+    description: string
+}
+
+export type OnchainErrorOutput = {
+    status: Exclude<OnchainStatus, typeof Onchain.Success>
+    revertData?: Hex
+    description: string
+}
 
 /**
  * Return error information for a generic error.
  * If we could determine that the error was a contract revert, call {@link outputForRevertError} instead.
  */
-export function outputForGenericError(error: unknown): SimulateError {
+export function outputForGenericError(error: unknown): SubmitterErrorOutput {
     if (error instanceof BaseError)
         return {
             status: SubmitterError.RpcError,
@@ -19,7 +29,7 @@ export function outputForGenericError(error: unknown): SimulateError {
 
     return {
         status: SubmitterError.UnexpectedError,
-        description: extractErrorMessage(error),
+        description: extractErrorMessage(error) ?? "An unknown error occured.",
     }
 }
 
@@ -31,13 +41,14 @@ export function outputForRevertError(
     boopHash: Hash,
     decoded: DecodedRevertError | undefined,
     simulation = false,
-): SimulateFailed | SimulateError {
+): OnchainErrorOutput {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
             // We don't necessarily need to reset the nonce here if we're in simulation, but we do it anyway to be safe.
             boopNonceManager.resetLocalNonce(boop)
             return {
                 status: Onchain.InvalidNonce,
+                description: "The nonce of the boop is too low.",
             }
         }
         case "InsufficientStake": {
@@ -180,6 +191,7 @@ export function outputForRevertError(
             logger.error("Got unexpected revert error during simulation, most likely out of gas", {})
             return {
                 status: Onchain.UnexpectedReverted,
+                description: "The boop caused an unexpected revert.",
             }
         }
     }
@@ -189,7 +201,7 @@ export function outputForRevertError(
  * Returns error information for an `execute` error, which do not trigger a revert from the EntryPoint and are thus
  * handled separately.
  */
-export function outputForExecuteError(status: OnchainStatus, revertData: Hex): SimulateFailed {
+export function outputForExecuteError(status: OnchainStatus, revertData: Hex): OnchainErrorOutput {
     switch (status) {
         case Onchain.CallReverted:
             return {
@@ -201,14 +213,12 @@ export function outputForExecuteError(status: OnchainStatus, revertData: Hex): S
             const decodedReason = decodeRawError(revertData)
             if (decodedReason?.errorName === "InvalidExtensionValue")
                 return {
-                    // TODO does this need to be a separate status?
                     status: Onchain.InvalidExtensionValue,
                     description:
                         "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
                 }
             if (decodedReason?.errorName === "ExtensionNotRegistered")
                 return {
-                    // TODO does this need to be a separate status?
                     status: Onchain.ExtensionNotRegistered,
                     description:
                         "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",

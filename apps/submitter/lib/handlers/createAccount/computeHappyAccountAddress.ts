@@ -8,7 +8,8 @@ import {
     parseAbiParameters,
 } from "viem"
 import { encodePacked, parseAbi } from "viem/utils"
-import { deployment } from "#lib/env"
+import { abis, deployment } from "#lib/env"
+import { publicClient } from "#lib/utils/clients"
 
 /**
  * Computes the predicted address of the account the submitter would deploy
@@ -38,6 +39,16 @@ export function computeHappyAccountAddress(salt: Hex, owner: Address): Address {
         ),
     )
     return formatAddress(`0x${hash.slice(26)}`) // keep last 20 bytes, chop off 12 bytes + 0x
+}
+
+// For reference
+async function _getPredictedAddressOnchain(salt: Hex, owner: Address): Promise<Address> {
+    return await publicClient.readContract({
+        address: deployment.HappyAccountBeaconProxyFactory,
+        abi: abis.HappyAccountBeaconProxyFactory,
+        functionName: "getAddress",
+        args: [salt, owner],
+    })
 }
 
 const initializeAbi = parseAbi(["function initialize(address owner)"])

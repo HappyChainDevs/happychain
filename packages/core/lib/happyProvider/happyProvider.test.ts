@@ -27,7 +27,7 @@ const emptyRpcBlock = {
     extraData: "0x",
     gasLimit: "0x",
     gasUsed: "0x",
-    hash: null,
+    boopHash: null,
     logsBloom: null,
     miner: "0x",
     mixHash: "0x",

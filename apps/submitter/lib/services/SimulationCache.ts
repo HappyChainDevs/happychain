@@ -2,7 +2,7 @@ import type { Address } from "@happy.tech/common"
 import type { Hex } from "viem"
 import { env } from "#lib/env"
 import type { SimulateInput, SimulateOutput } from "#lib/handlers/simulate"
-import { computeHash } from "./computeHash"
+import { computeHash } from "../utils/boop/computeHash"
 
 /**
  * A LRU cache to store simulation outputs.

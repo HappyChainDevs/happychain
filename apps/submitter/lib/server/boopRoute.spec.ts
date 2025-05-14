@@ -1,8 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { computeHash } from "#lib/services"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMockTokenMint, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -41,18 +42,18 @@ describe("routes: api/submitter", () => {
         })
         it("should fetch state by hash", async () => {
             await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
-            const hash = computeHash(unsignedTx)
-            const result = await client.api.v1.boop.state[":hash"].$get({ param: { hash } })
+            const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
+            const result = await client.api.v1.boop.state[":boopHash"].$get({ param: { boopHash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {
-            const hash = computeHash(unsignedTx)
-            const [result] = await Promise.all([
-                client.api.v1.boop.receipt[":hash"].$get({ param: { hash }, query: { timeout: "2000" } }),
-                // don't need results, just need it to complete
-                client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } }),
-            ])
-            console.log(await result.json())
+            // We can't send the wait at the same time as the submitter rejects if the boop is unknown.
+            await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
+            const result = await client.api.v1.boop.receipt[":boopHash"].$get({
+                param: { boopHash },
+                query: { timeout: "2000" },
+            })
             expect(result.status).toBe(200)
         })
         it("should fetch pending tx's by account", async () => {

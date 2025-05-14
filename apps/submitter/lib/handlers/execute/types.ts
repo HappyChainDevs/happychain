@@ -1,34 +1,48 @@
-import type { Address } from "@happy.tech/common"
-import {
-    type Boop,
-    type BoopReceipt,
-    Onchain,
-    type OnchainStatus,
-    SubmitterError,
-    type SubmitterErrorStatus,
-} from "#lib/types"
+import type { Address, Bytes } from "@happy.tech/common"
+import { type Boop, type BoopReceipt, Onchain, SubmitterError } from "#lib/types"
 
-/**
- * Possible results of a `submit` call.
- */
-export const Execute = {
-    ...Onchain,
-    ...SubmitterError,
-} as const
+// =====================================================================================================================
+// INPUT
 
-export type ExecuteStatus = (typeof Execute)[keyof typeof Execute]
-
+/** Input of an `execute` call (`boop/execute` route). */
 export type ExecuteInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
 
     /** Boop to execute. */
     boop: Boop
+
+    /**
+     * Optional time to wait for the receipt, otherwise the submitter will use its default value.
+     *
+     * The submitter is free to honor this timeout or not based on its own policies (e.g. it
+     * might not apply a timeout that is too low or set a cap on the maximum timeout value).
+     */
+    timeout?: number
 }
 
-export type ExecuteOutput = ExecuteSuccess | ExecuteFailedOnchain | ExecuteError
+// =====================================================================================================================
+// OUTPUT
 
-/** Output of successful `execute` calls`. */
+/** Possible output status of an `execute` call (`boop/execute` route). */
+export const Execute = {
+    ...Onchain,
+    ...SubmitterError,
+} as const
+
+/**
+ * @inheritDoc Execute
+ * cf. {@link Execute}
+ */
+export type ExecuteStatus = (typeof Execute)[keyof typeof Execute]
+
+/** Output of an `execute` call (`boop/execute` route): either a successful execution, or a failed execution. */
+export type ExecuteOutput = ExecuteSuccess | ExecuteError
+
+// =====================================================================================================================
+// OUTPUT (SUCCESS)
+
+/** Successful `execute` call. */
 export type ExecuteSuccess = {
     status: typeof Onchain.Success
 
@@ -36,33 +50,33 @@ export type ExecuteSuccess = {
     receipt: BoopReceipt
 }
 
-/** Output of `execute` calls that fail for "onchain" reasons. */
-export type ExecuteFailedOnchain = {
-    status: Exclude<OnchainStatus, typeof Onchain.Success>
+// =====================================================================================================================
+// OUTPUT (ERROR)
+
+/** Failed `execute` call. */
+export type ExecuteError = {
+    status: Exclude<ExecuteStatus, typeof Onchain.Success>
 
     /** Whether the error occurred at the simulation or execution stages. */
     stage: "simulate" | "submit" | "execute"
 
     /**
-     * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted` status, or
-     * the the returned encoded error matching an `Onchain.*Rejected` status. This pertains to simulation.
+     * If the status string ends in "Reverted" or "Rejected", this will hold the associated revert or rejection data,
+     * if available.
+     *
+     * Note that this will be different from the revert data of the simulation or onchain execution
+     * of the EVM tx that carried the boop, as first of all it might not have reverted (e.g.
+     * {@link Onchain.ExecuteReverted} does not cause the transaction to revert when executed
+     * onchain), and second we use carrier error to commit the errors back to the submitter.
+     *
+     * TODO - Info about simulation vs execution (right now this is always simulation, but I think we can use an event
+     *        to get this from execution too).
+     *      - After, copy this docstring to the other `revertData` fields.
      */
-    revertData?: string
-
-    /** Receipt for the boop, if available. */
-    receipt?: BoopReceipt
+    revertData?: Bytes
 
     /** Description of the problem. */
-    description?: string
+    description: string
 }
 
-/** Output of `execute` calls that fail for other reasons. */
-export type ExecuteError = {
-    status: SubmitterErrorStatus
-
-    /** Whether the error occurred at the simulation stage or at the submit stage. */
-    stage: "simulate" | "submit" | "execute"
-
-    /** Description of the problem. */
-    description?: string
-}
+// =====================================================================================================================

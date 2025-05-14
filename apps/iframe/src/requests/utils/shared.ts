@@ -38,7 +38,7 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
     try {
         const boopClient = getBoopClient()
         if (!boopClient) throw new Error("Boop client not initialized")
-        const output = await boopClient.state({ hash })
+        const output = await boopClient.getState({ hash })
         if (output.status === GetState.Receipt) {
             const receipt = output.receipt
             const cached = boopCache.putReceipt(hash, receipt)
@@ -79,7 +79,7 @@ export async function getTransactionReceipt(hash: Hash): Promise<EVMReceipt | Fo
     try {
         const boopClient = getBoopClient()
         if (!boopClient) throw new Error("Boop client not initialized")
-        const state = await boopClient.state({ hash })
+        const state = await boopClient.getState({ hash })
         if (state.status !== GetState.Receipt) {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
             return cached || state.status === GetState.Simulated ? null : FORWARD
