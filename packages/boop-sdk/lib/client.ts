@@ -3,6 +3,7 @@ import {
     type BoopReceipt,
     type CreateAccountInput,
     type CreateAccountOutput,
+    type EntryPointOutput,
     type ExecuteInput,
     type ExecuteOutput,
     GetPending,
@@ -14,7 +15,6 @@ import {
     type SimulateInput,
     type SimulateOutput,
     type SubmitInput,
-    type EntryPointOutput,
     type WaitForReceiptInput,
     type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
