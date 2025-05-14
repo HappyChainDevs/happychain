@@ -10,7 +10,7 @@ import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
 import { walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import type { SubmitInput, EntryPointOutput } from "./types"
+import type { EntryPointOutput, SubmitInput } from "./types"
 
 export async function submit(input: SubmitInput): Promise<EntryPointOutput> {
     const { txHash, receiptPromise, ...output } = await submitInternal(input, true)
