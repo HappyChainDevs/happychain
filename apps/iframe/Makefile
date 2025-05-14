@@ -4,12 +4,11 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/help.mk
 
 # Routes must be built before tsc runs.
-dist: routes
+dist: src/routeTree.gen.ts
 
 # Regenerates tanstack router routes
-routes:
+src/routeTree.gen.ts: $(shell ls src/routes/**/*.tsx)
 	tsr generate;
-.PHONY: routes
 
 test: ## Runs tests
 	@vitest run;
