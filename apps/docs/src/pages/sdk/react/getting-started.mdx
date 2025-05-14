@@ -6,6 +6,9 @@ addition to those provided in [`@happy.tech/core`][js-getting-started].
 [js-getting-started]: /sdk/js/getting-started
 
 ## Install 
+
+### Using a package manager
+
 :::code-group
 
 ```bash [npm]
@@ -27,6 +30,8 @@ bun add @happy.tech/core @happy.tech/react
 :::
 
 ## Setup
+
+### Wallet component
 
 After installing, the first thing you will need to do, is wrap your app in the [`HappyWalletProvider`].
 
@@ -69,7 +74,7 @@ Of particular relevance to React users, we provide an easy way to create a Wagmi
 [`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
 [`connect`]: https://wagmi.sh/core/api/actions/connect
 
-### Getting the Active User
+### Getting the active user
 
 The [`useHappyWallet`] hook returns the current user as a [`HappyUser`]
 if the user is connected, otherwise it returns undefined.
@@ -97,7 +102,7 @@ in the "Getting started with JavaScript/TypeScript" page.
 
 [js-active-user]: /sdk/js/getting-started#getting-the-active-user
 
-### UI Component
+### UI component
 
 The Happy Wallet component (the orb on the right side of the screen that opens up the wallet)
 is automatically added to the page by the `HappyWalletProvider`.
@@ -107,7 +112,7 @@ The button turns into a badge displaying the username and avatar after connectin
 
 [`ConnectButton`]: /sdk/react/api/functions/ConnectButton
 
-The `ConnectButton` component wraps the `happychain-connect-button` webcomponent, allowing it to be
+The `ConnectButton` component wraps the `happychain-connect-button` [Web Component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), allowing it to be
 used from JSX.
 
 You can disable the default styles by passing the `disableStyles` property. In this case, you
@@ -131,4 +136,4 @@ to the [`HappyWalletProvider`].
 ### More
 
 Don't forget to check the ["Getting started with Javascript/Typescript"][js-getting-started] page,
-as it includes other options that are relevant in React.
+as it includes features you'll want to use on top of the features in the React package.

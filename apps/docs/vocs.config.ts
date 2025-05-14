@@ -7,6 +7,14 @@ export default defineConfig({
     vite: {
         server: { port: 4000, strictPort: true },
         preview: { port: 4000, strictPort: true },
+        resolve: {
+            alias: {
+                "@happy.tech/submitter/client": "../submitter/lib/client",
+                "@happy.tech/submitter": "../submitter/lib",
+                "@happy.tech/boop-sdk": "../../packages/boop-sdk/lib",
+                "@happy.tech/common": "../../support/common/lib",
+            },
+        },
     },
     socials: [
         {
@@ -103,6 +111,24 @@ export default defineConfig({
                 {
                     text: "Rest API",
                     link: "/boop/rest-api",
+                },
+            ],
+        },
+        {
+            text: "Plaintext Docs (for LLMs)",
+            collapsed: true,
+            items: [
+                {
+                    text: "Docs List",
+                    // Note: this needs to be an absolute URL, or else the SPA routing
+                    // will take over and result in a 404 when the page is not directly accessed.
+                    link: "https://docs.happy.tech/llms.txt",
+                },
+                {
+                    text: "Full Docs",
+                    // Note: this needs to be an absolute URL, or else the SPA routing
+                    // will take over and result in a 404 when the page is not directly accessed.
+                    link: "https://docs.happy.tech/llms-full.txt",
                 },
             ],
         },

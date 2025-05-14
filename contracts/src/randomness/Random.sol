@@ -11,12 +11,12 @@ import {RandomCommitment} from "src/randomness/RandomCommitment.sol";
  * in the same storage slot (currently 0x00), because that is the slot used by the sequencer to retrieve the owner's address.
  */
 contract Random is RandomCommitment, Drand {
-    /*
-    * The amount of time in seconds by which we delay reading the values from the Drand network.
-    * 
-    * This is necessary, because whenever a Drand value is generated at time T, it is not possible to guarantee it 
-    * will be posted on a block with timestamp T (even if such a block exists) because of network delays.
-    */
+    /**
+     * The amount of time in seconds by which we delay reading the values from the Drand network.
+     *
+     * This is necessary, because whenever a Drand value is generated at time T, it is not possible to guarantee it
+     * will be posted on a block with timestamp T (even if such a block exists) because of network delays.
+     */
     uint256 public constant DRAND_DELAY_SECONDS = 4;
 
     /**

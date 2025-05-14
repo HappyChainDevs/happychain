@@ -3,7 +3,7 @@ import { toBytes, toDynamicLengthBytes } from "@happy.tech/common"
 import type { Boop } from "#lib/types"
 
 /**
- * Encodes a Boop to encoded form for onchain submission.
+ * Encodes a Boop into the encoded {@link Hex} form for onchain submission.
  */
 export function encodeBoop(boop: Boop): Hex {
     // Static fields

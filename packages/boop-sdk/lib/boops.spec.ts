@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { bytesToHex } from "@happy.tech/common"
+import { type Hex, bytesToHex } from "@happy.tech/common"
 import { ExtraDataKey, decodeExtraData, encodeExtraData } from "./boops"
 
 const ValidatorKey = ExtraDataKey.Validator
@@ -20,7 +20,7 @@ describe("ExtraData", () => {
     })
 
     it("should encode multi-key extra data correctly", () => {
-        const data = {
+        const data: Record<Hex, number | Hex> = {
             [ValidatorKey]: 1234,
             [ExecutorKey]: 5678901234,
             "0xcafe": "0xdeadbeef",

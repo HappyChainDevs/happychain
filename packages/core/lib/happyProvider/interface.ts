@@ -16,7 +16,7 @@ import type {
 } from "./listeners"
 
 /**
- * HappyProvider is an EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193} and
+ * HappyProvider is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider } and
  * an {@link https://nodejs.org/docs/latest/api/events.html | EventEmitter}.
  *
  * @example

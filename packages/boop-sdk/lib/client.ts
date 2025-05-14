@@ -47,9 +47,6 @@ export class BoopClient {
     // == Account API Routes ===========================================================================
     /**
      * Create a new HappyAccount. If the account already exists, it will be returned.
-     * @param data User Creation Options
-     * @param data.owner User EOA address
-     * @param data.salt Salt for the account creation
      */
     async createAccount(data: CreateAccountInput): Promise<CreateAccountOutput> {
         const response = await this.#client.post("/api/v1/accounts/create", data)
@@ -58,9 +55,6 @@ export class BoopClient {
 
     /**
      * Fetches an accounts nonce.
-     * @param data Nonce Fetch Options
-     * @param data.address Account address
-     * @param data.nonceTrack Nonce track
      */
     async getNonce(data: GetNonceInput): Promise<GetNonceOutput> {
         const response = await getNonce(this.#config.rpcUrl, this.#config.entryPoint, data)
@@ -69,7 +63,7 @@ export class BoopClient {
 
     // == Submit API Routes ============================================================================
 
-    /*
+    /**
      * Given a boop, sends it to the submitter which will either accept it and return its hash,
      * or fail with a rejection status.
      *
@@ -104,10 +98,6 @@ export class BoopClient {
      *
      * The submitter is nonce-aware and will buffer up to a certain amount of boop per nonce track,
      * depending on its configuration. It will submit boop whenever their nonces becomes eligible.
-     * *
-     * @param data
-     * @param data.entryPoint EntryPoint address (optional)
-     * @param data.boop boop to be submitted
      */
     async execute(data: ExecuteInput): Promise<ExecuteOutput> {
         const response = await this.#client.post("/api/v1/boop/execute", serializeBigInt(data))
@@ -126,10 +116,6 @@ export class BoopClient {
      * by the submitter.
      *
      * Calling this endpoint does *not* create a state for the Boop on the submitter.
-     * *
-     * @param data
-     * @param data.entryPoint EntryPoint address (optional)
-     * @param data.boop boop to be submitted
      */
     async simulate(data: SimulateInput): Promise<SimulateOutput> {
         const response = await this.#client.post("/api/v1/boop/simulate", serializeBigInt(data))
@@ -143,7 +129,8 @@ export class BoopClient {
      * even if he did see the Boop before. In this case he should answer with a status of
      * {@link GetState.UnknownBoop}.
      */
-    async getState({ boopHash }: GetStateInput): Promise<GetStateOutput> {
+    async getState(data: GetStateInput): Promise<GetStateOutput> {
+        const { boopHash } = data
         const response = await this.#client.get(`/api/v1/boop/state/${boopHash}`)
         return this.#getStateOutput(response)
     }
@@ -155,7 +142,8 @@ export class BoopClient {
      *
      * The submitter can return without a receipt if the Boop submission failed for other reasons.
      */
-    async waitForReceipt({ boopHash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
+    async waitForReceipt(data: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
+        const { boopHash, timeout } = data
         const response = await this.#client.get(`/api/v1/boop/receipt/${boopHash}`, { timeout: timeout })
         return this.#getReceiptOutput(response)
     }
@@ -163,8 +151,6 @@ export class BoopClient {
     /**
      * Returns a list of pending (not yet included on chain) boops for the given account, identified by their hash and
      * nonce.
-     * @param data
-     * @returns
      */
     async getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {
         const response = await this.#client.get(`/api/v1/boop/pending/${account}`)

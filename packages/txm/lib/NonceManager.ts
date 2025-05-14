@@ -4,8 +4,7 @@ import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
 import { logger } from "./utils/logger"
 
-/*
-/*
+/**
  * This class manages the nonce of the account that the transaction manager is using.
  *
  * This is critical because a gap in the nonces would mean that transactions sent by the manager are never included onchain.

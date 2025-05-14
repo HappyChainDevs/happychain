@@ -15,7 +15,14 @@ export function toBytes(data: string | bigint | number | undefined, bytes: numbe
         .toString(16)
         .replace(/^0x/, "")
         .padStart(bytes * 2, "0")
-    return getBytes(full, 0, bytes)
+
+    const trimmed = getBytes(full, 0, bytes)
+
+    if (!/^[0-9a-fA-F]+$/.test(trimmed)) {
+        throw new Error(`Invalid bytes: ${trimmed}`)
+    }
+
+    return trimmed
 }
 
 /**
@@ -62,7 +69,15 @@ export function bytesToHex(bytes: string | bigint | number | undefined, minLengt
  * Prefixes a raw bytestring with 0x and checksums it to a valid Address
  */
 export function bytesToAddress(bytes: string | bigint | number | undefined): Address {
-    return getAddress(`0x${toBytes(bytes, 20)}`)
+    const safeBytes = (() => {
+        try {
+            return toBytes(bytes, 20)
+        } catch {
+            // invalid bytes, but will let getAddress throw
+            return bytes
+        }
+    })()
+    return getAddress(`0x${safeBytes}`)
 }
 
 /**

@@ -2,6 +2,9 @@ import type { Hex } from "@happy.tech/common"
 import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "@happy.tech/common"
 import type { Boop } from "#lib/types"
 
+/**
+ * Decodes a {@link Hex} encoded {@link Boop}.
+ */
 export function decodeBoop(encoded: Hex): Boop {
     const encodedBytes = encoded.replace(/^0x/, "")
 

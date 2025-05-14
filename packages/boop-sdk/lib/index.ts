@@ -1,7 +1,7 @@
 export { BoopClient } from "./client"
 export type { BoopClientConfig } from "./client"
 
-export { ExtensionType, encodeExtraData, ExtraDataKey } from "./boops"
+export { ExtensionType, encodeExtraData, ExtraDataKey, type ExtraData } from "./boops"
 
 export type {
     Address,
@@ -50,6 +50,7 @@ export {
     type CreateAccountInput,
     type CreateAccountOutput,
     type CreateAccountSuccess,
+    type CreateAccountError,
     //
     // Simulate
     //

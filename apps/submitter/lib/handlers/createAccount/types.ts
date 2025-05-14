@@ -6,7 +6,9 @@ import { SubmitterError } from "#lib/types"
 
 /** Input of a `createAccount` call (`accounts/create` route). */
 export type CreateAccountInput = {
+    /** User EOA address */
     owner: Address
+    /** Salt for the account creation */
     salt: Address
 }
 
@@ -31,8 +33,9 @@ export const CreateAccount = {
 export type CreateAccountStatus = (typeof CreateAccount)[keyof typeof CreateAccount]
 
 /**
- * Output of an `createAccount call (`account/create` route): either an
- * account successfully created (or previously created), or an error.
+ * Output of a `createAccount` call (`account/create` route): either an
+ * account successfully created (or previously created) {@link CreateAccountSuccess},
+ * or an error {@link CreateAccountError}.
  */
 export type CreateAccountOutput = CreateAccountSuccess | CreateAccountError
 

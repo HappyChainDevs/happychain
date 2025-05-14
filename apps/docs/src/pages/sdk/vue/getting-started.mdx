@@ -1,22 +1,31 @@
 # Getting Started With Vue
 
+The `@happy.tech/vue` package provides Vue-specific functionality, to be used instead or in
+addition to those provided in [`@happy.tech/core`][js-getting-started].
+
+[js-getting-started]: /sdk/js/getting-started
+
+
 ## Install 
+
+### Using a package manager
+
 :::code-group
 
 ```bash [npm]
-npm install @happy.tech/vue
+npm install @happy.tech/core @happy.tech/vue
 ```
 
 ```bash [pnpm]
-pnpm add @happy.tech/vue
+pnpm add @happy.tech/core @happy.tech/vue
 ```
 
 ```bash [yarn]
-yarn add @happy.tech/vue
+yarn add @happy.tech/core @happy.tech/vue
 ```
 
 ```bash [bun]
-bun add @happy.tech/vue
+bun add @happy.tech/core @happy.tech/vue
 ```
 
 :::
@@ -37,7 +46,7 @@ createApp(App)
 
 ## Usage
 
-### Getting the Active User with the Composition API
+### Getting the active user
 
 The `useHappyWallet` composable returns the current authenticated user's data as 
 [HappyUser](/sdk/js/api/type-aliases/HappyUser), or `undefined` when no user is connected.
@@ -56,3 +65,8 @@ const { user } = useHappyWallet()
 </div>
 </template>
 ```
+
+### More
+
+Don't forget to check the ["Getting started with Javascript/Typescript"][js-getting-started] page,
+as it includes features you'll want to use on top of the features in the Vue package.

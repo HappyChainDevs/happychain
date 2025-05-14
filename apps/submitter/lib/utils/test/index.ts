@@ -7,7 +7,7 @@ import type { z } from "zod"
 import { abis, deployment, env } from "#lib/env"
 import { findExecutionAccount } from "#lib/services"
 import type { Boop } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash.ts"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { publicClient, walletClient } from "#lib/utils/clients"
 import type { inputSchema as ExecuteInputSchema } from "#lib/utils/validation/boop"
 

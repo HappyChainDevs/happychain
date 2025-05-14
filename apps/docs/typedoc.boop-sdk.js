@@ -4,7 +4,7 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.boop-sdk.json",
+    tsconfig: "../../packages/boop-sdk/tsconfig.build.json",
     // https://typedoc.org/options/input/
     name: "@happy.tech/boop-sdk",
     entryPoints: ["../../packages/boop-sdk/lib/index.ts"],

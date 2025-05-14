@@ -1,5 +1,13 @@
 # Getting started with the Boop SDK
 
+The **Boop SDK** is a TypeScript library for interaction with the Boop account abstraction stack.
+
+Boop is an account abstraction stack built for speed, efficiency, and simplicity.
+It's an alternative to the ERC-4337 spec, optimized for low-latency end-to-end transaction processing.
+
+While it thrives on HappyChain, it's fully chain-agnostic and ready to plug into any EVM-compatible
+network where the Boop Contracts are deployed.
+
 ## Install
 
 ### Using a package manager
@@ -23,3 +31,65 @@ bun add @happy.tech/boop-sdk
 ```
 
 :::
+
+## Setup
+
+### Instantiate the SDK
+
+The first thing you will need to do is create a new [BoopClient](/boop/sdk/api/classes/BoopClient).
+```ts twoslash
+import { BoopClient } from "@happy.tech/boop-sdk"
+
+const boopClient = new BoopClient()
+```
+
+## Usage
+
+Once a [`BoopClient`](/boop/sdk/getting-started#instantiate-the-sdk) has been created,
+the next thing you will likely want to do is determine the HappyAccount address of the user. 
+This can be accomplished with [`createAccount`](/boop/sdk/api/classes/BoopClient#createaccount)
+
+### Create an account
+
+```tsx
+const result = await boopClient.createAccount({
+    owner: '0x123', // The address of the user
+    salt: '0x1', // A unique salt for the user
+})
+
+if (result.status === CreateAccount.Success) {
+    console.log(`Account created: ${result.account}`)
+} else if (result.status === CreateAccount.AlreadyCreated) {
+    console.log(`Account already existed: ${result.account}`)
+} else {
+    console.log(`Account creation failed: ${result.description}`)
+}
+```
+
+### Submit a Boop
+Once you have the account address, you can submit a Boop to the network. There are two ways to 
+accomplish this. 
+
+The first is to use the [execute](/boop/sdk/api/classes/BoopClient#execute) method. This will submit 
+the boop, and wait for the receipt to confirm onchain inclusion. 
+
+```ts
+const boop: Boop = { /* BoopData */ }
+const receipt = await boopClient.execute({ boop })
+console.log(receipt.status) 
+```
+
+The second is to use the [submit](/boop/sdk/api/classes/BoopClient#submit) method.
+This will return quickly with the boop hash. Following successful submission, its recommended to 
+wait for the receipt to confirm onchain inclusion. . Note that calling `waitForReceipt` before `submit` returns **will not work**.
+
+```ts
+const boop: Boop = { /* BoopData */}
+const result = await boopClient.submit({ boop })
+if (result.status !== Submit.Success) throw new Error(result.description)
+const receipt = await boopClient.waitForReceipt({ boopHash: result.boopHash })
+```
+
+## More 
+
+For more information on submitting Boops or checking the status of a Boop, see the [BoopClient](/boop/sdk/api/classes/BoopClient#methods) API documentation.

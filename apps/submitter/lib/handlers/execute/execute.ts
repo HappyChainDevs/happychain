@@ -2,7 +2,7 @@ import { outputForGenericError } from "#lib/handlers/errors"
 import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt } from "#lib/handlers/waitForReceipt"
 import { Onchain } from "#lib/types"
-import { computeHash } from "#lib/utils/boop/computeHash.ts"
+import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
 import type { ExecuteInput, ExecuteOutput } from "./types"
 

@@ -6,5 +6,11 @@
             // Without this the docs are unable to resolve the #lib/ links within the submitter package.
             "#lib/*": ["../../apps/submitter/lib/*"]
         }
-    }
+    },
+    "references": [
+        {
+            // Alternative to importing the submitter package in package.json.
+            "path": "../../apps/submitter/tsconfig.build.json"
+        }
+    ]
 }
