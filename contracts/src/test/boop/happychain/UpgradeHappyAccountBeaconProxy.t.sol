@@ -9,9 +9,9 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
-import {DeployBoopContracts} from "./../../../deploy/DeployBoop.s.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {DeployBoopContracts} from "src/deploy/DeployBoop.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
 
 contract UpgradeHappyAccountBeaconProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
