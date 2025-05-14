@@ -84,7 +84,7 @@ enum Validity {
  * Output structure returned by the {core/EntryPoint.submit} function containing gas estimations and execution
  * results.
  */
-struct SubmitOutput {
+struct EntryPointOutput {
     /**
      * An overestimation of the minimum gas limit necessary to successfully call {core/EntryPoint.submit}
      * at the top-level of a transaction.

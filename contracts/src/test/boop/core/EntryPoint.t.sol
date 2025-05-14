@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Encoding} from "boop/core/Encoding.sol";
 import {
     CallStatus,
-    SubmitOutput,
+    EntryPointOutput,
     InsufficientStake,
     PaymentValidationRejected,
     PaymentValidationReverted,
@@ -88,8 +88,8 @@ contract EntryPointTest is BoopTestUtils {
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance of the smart account should decrease after paying for the tx.
         uint256 finalBalance = getEthBalance(smartAccount);
@@ -105,8 +105,8 @@ contract EntryPointTest is BoopTestUtils {
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance of the paymaster should decrease after paying for the tx.
         uint256 finalStake = entryPoint.balanceOf(paymaster);
@@ -126,8 +126,8 @@ contract EntryPointTest is BoopTestUtils {
 
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         vm.prank(submitter, submitter);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance should be the same as before, as the submitter payed for the tx.
         uint256 finalBalance = getEthBalance(submitter);
@@ -154,8 +154,8 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -184,8 +184,8 @@ contract EntryPointTest is BoopTestUtils {
         boop.maxFeePerGas = 1200000000;
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -214,8 +214,8 @@ contract EntryPointTest is BoopTestUtils {
         boop.maxFeePerGas = 1200000000;
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -245,8 +245,8 @@ contract EntryPointTest is BoopTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
 
         // In simulation mode, insufficient fee sets feeTooLowDuringSimulation=true instead of reverting
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, true, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, true, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     function testInsufficientStake() public {
@@ -310,8 +310,8 @@ contract EntryPointTest is BoopTestUtils {
         // simulation
         uint256 id = vm.snapshotState();
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, true, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, true, false, CallStatus.SUCCEEDED, new bytes(0));
         assertTrue(output.futureNonceDuringSimulation);
         vm.revertToState(id);
     }
@@ -379,10 +379,10 @@ contract EntryPointTest is BoopTestUtils {
 
         // The function should return output.validationStatus = UnknownDuringSimulation.selector
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
         // The output should have UnknownDuringSimulation = true
-        _assertExpectedSubmitOutput(output, true, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedEntryPointOutput(output, true, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
         assertTrue(output.validityUnknownDuringSimulation, "output.validityUnknownDuringSimulation");
     }
 
@@ -398,7 +398,7 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
         // The output.validateGas gives the gas usage for validate() call
         assertGt(output.validateGas, 0);
@@ -454,8 +454,8 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, sessionKey);
 
         // Submit the transaction (should succeed)
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // Now remove the validator extension and remove the session key
         bytes memory uninstallData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target));
@@ -518,7 +518,7 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
         // The output.validatePaymentGas gives the gas usage for validatePayment() call
         assertGt(output.validatePaymentGas, 0);
@@ -546,17 +546,17 @@ contract EntryPointTest is BoopTestUtils {
         Boop memory boop = createSignedBoop(smartAccount, dest, paymaster, privKey, new bytes(10));
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
     function testExecuteMockRevertIntentionalRevert() public {
         Boop memory boop = createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
 
         // The result should be output.callStatus = CallReverted
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
-        _assertExpectedSubmitOutput(
+        _assertExpectedEntryPointOutput(
             output,
             false,
             false,
@@ -571,8 +571,8 @@ contract EntryPointTest is BoopTestUtils {
         Boop memory boop = createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
     function testExecuteWithHighBoopValueGreaterThanSmartAccountBalance() public {
@@ -586,8 +586,8 @@ contract EntryPointTest is BoopTestUtils {
 
         // The call should fail because the smartAccount address doesn't have enough funds
         vm.deal(smartAccount, 0);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
 
         // Account balance should remain unchanged since the transaction would be unsuccessful
         uint256 newEthBalance = (smartAccount).balance;
@@ -605,7 +605,7 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
         // The output.executeGas gives the gas usage for execute() call
         assertGt(output.executeGas, 0);
@@ -621,8 +621,8 @@ contract EntryPointTest is BoopTestUtils {
         boop2.validatorData = signBoop(boop2, privKey);
 
         // This should succeed now if the execute-gas-limit estimation is accurate
-        SubmitOutput memory output2 = entryPoint.submit(boop2.encode());
-        _assertExpectedSubmitOutput(output2, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output2 = entryPoint.submit(boop2.encode());
+        _assertExpectedEntryPointOutput(output2, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     // ====================================================================================================
@@ -636,7 +636,7 @@ contract EntryPointTest is BoopTestUtils {
         boop.validatorData = signBoop(boop, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
 
         // The output.executeGas gives the gas usage for execute() call
         assertGt(output.executeGas, 0);
@@ -653,10 +653,10 @@ contract EntryPointTest is BoopTestUtils {
 
         // Execute the transaction - note that execute() running out of gas doesn't cause a revert
         // in the entry point, but instead sets the callStatus to EXECUTE_REVERTED
-        SubmitOutput memory output2 = entryPoint.submit(boop2.encode());
+        EntryPointOutput memory output2 = entryPoint.submit(boop2.encode());
 
         // The execution should have reverted due to out of gas
-        _assertExpectedSubmitOutput(output2, false, false, false, false, CallStatus.EXECUTE_REVERTED, new bytes(0));
+        _assertExpectedEntryPointOutput(output2, false, false, false, false, CallStatus.EXECUTE_REVERTED, new bytes(0));
     }
 
     // ====================================================================================================
@@ -671,8 +671,8 @@ contract EntryPointTest is BoopTestUtils {
 
         // Submit the transaction
         vm.txGasPrice(boop.maxFeePerGas / 2);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     function testSelfPayoutRevertsOverFlow() public {
@@ -712,8 +712,8 @@ contract EntryPointTest is BoopTestUtils {
 
         // Submit the transaction
         vm.txGasPrice(boop.maxFeePerGas / 2);
-        SubmitOutput memory output = entryPoint.submit(boop.encode());
-        _assertExpectedSubmitOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        EntryPointOutput memory output = entryPoint.submit(boop.encode());
+        _assertExpectedEntryPointOutput(output, false, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     function testPayoutFailsDueToLowPaymasterBalance() public {
@@ -738,8 +738,8 @@ contract EntryPointTest is BoopTestUtils {
     // ====================================================================================================
     // HELPERS
 
-    function _assertExpectedSubmitOutput(
-        SubmitOutput memory output,
+    function _assertExpectedEntryPointOutput(
+        EntryPointOutput memory output,
         bool validityUnknownDuringSimulation,
         bool paymentValidityUnknownDuringSimulation,
         bool futureNonceDuringSimulation,
