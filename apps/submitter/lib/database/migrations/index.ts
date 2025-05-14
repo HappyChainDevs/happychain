@@ -1,15 +1,5 @@
-import * as fs from "node:fs"
-import * as path from "node:path"
-import type { Migration } from "kysely"
+import * as initialize from "./1746950606173_initialize"
 
-const migrationFiles = fs
-    .readdirSync(__dirname)
-    .filter((file) => file !== "index.ts" && file.endsWith(".ts"))
-    .sort()
-
-export const migrations: Record<string, Migration> = {}
-
-for (const file of migrationFiles) {
-    const fileName = path.basename(file, ".ts")
-    migrations[fileName] = await import(`./${file}`)
+export const migrations = {
+    initialize,
 }
