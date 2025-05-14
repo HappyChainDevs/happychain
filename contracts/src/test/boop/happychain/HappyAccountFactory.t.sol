@@ -7,7 +7,6 @@ import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {HappyAccountBeacon} from "boop/happychain/HappyAccountBeacon.sol";
 import {HappyAccountRegistry} from "boop/happychain/HappyAccountRegistry.sol";
 import {Test} from "forge-std/Test.sol";
-import {Test} from "forge-std/Test.sol";
 
 contract HappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));

@@ -16,10 +16,8 @@ import {
 } from "boop/core/EntryPoint.sol";
 import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
-import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
-import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop, ExtensionType} from "boop/interfaces/Types.sol";
 import {Boop} from "boop/interfaces/Types.sol";

@@ -10,9 +10,9 @@ import {HappyAccountUUPSProxy} from "boop/happychain/HappyAccountUUPSProxy.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {Encoding} from "./../../../boop/core/Encoding.sol";
-import {MockERC20} from "./../../../mocks/MockERC20.sol";
-import {BoopTestUtils} from "./../Utils.sol";
+import {Encoding} from "boop/core/Encoding.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
+import {BoopTestUtils} from "src/test/boop/Utils.sol";
 
 contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
     using Encoding for Boop;
