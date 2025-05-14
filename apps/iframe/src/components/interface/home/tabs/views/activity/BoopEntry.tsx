@@ -83,7 +83,7 @@ export const BoopEntry = ({ boop }: BoopEntryProps) => {
             )}
             {boop.boopReceipt?.status === Onchain.Success && (
                 <a
-                    href={`${blockExplorerUrl}/tx/${boop.boopReceipt.receipt.txReceipt.transactionHash}`}
+                    href={`${blockExplorerUrl}/tx/${boop.boopReceipt.receipt.evmTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="View on explorer"
