@@ -1,4 +1,4 @@
-import type { Hex } from "viem"
+import type { Hex } from "@happy.tech/common"
 import { z } from "zod"
 
 export const hexSchema = z

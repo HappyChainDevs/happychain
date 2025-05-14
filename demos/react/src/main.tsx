@@ -1,10 +1,8 @@
+import { happyProvider } from "@happy.tech/core"
+import { HappyWalletProvider } from "@happy.tech/react"
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { Toaster } from "sonner"
-
-import { happyProvider } from "@happy.tech/core"
-import { HappyWalletProvider } from "@happy.tech/react"
-
 import App from "./App.tsx"
 
 /**

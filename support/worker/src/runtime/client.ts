@@ -1,12 +1,6 @@
+import type { RpcPayload } from "./payload"
+import { makeDispatchPayload, makePingPayload, makeRpcRequestPayload, parseServerPayload } from "./payload"
 import type { MessageCallback } from "./types"
-
-import {
-    type RpcPayload,
-    makeDispatchPayload,
-    makePingPayload,
-    makeRpcRequestPayload,
-    parseServerPayload,
-} from "./payload"
 
 type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker

@@ -2,9 +2,8 @@
  * Functions used for signing boops.
  */
 
-import type { Hex } from "@happy.tech/common"
+import type { Hash, Hex } from "@happy.tech/common"
 import { EIP1193DisconnectedError } from "@happy.tech/wallet-common"
-import type { Hash } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { getWalletClient } from "#src/state/walletClient"
 

@@ -1,7 +1,5 @@
 /// <reference lib="WebWorker" />
 
-import type { MessageCallback, ServerInterface } from "./types"
-
 import {
     makeBroadcastPayload,
     makeConsolePayload,
@@ -9,6 +7,7 @@ import {
     makeRpcResponsePayload,
     parseClientPayload,
 } from "./payload"
+import type { MessageCallback, ServerInterface } from "./types"
 
 type Fn = (...rest: unknown[]) => unknown
 

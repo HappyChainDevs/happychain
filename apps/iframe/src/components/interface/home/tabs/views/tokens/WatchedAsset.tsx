@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react"
-import { useERC20Balance } from "#src/hooks/useERC20Balance"
-
 import type { HappyUser } from "@happy.tech/wallet-common"
+import { useMemo, useState } from "react"
 import type { Address, WatchAssetParameters } from "viem"
+import { useERC20Balance } from "#src/hooks/useERC20Balance"
 import BalanceDisplay from "./BalanceDisplay"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 

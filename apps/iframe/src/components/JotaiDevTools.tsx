@@ -1,5 +1,4 @@
 import { DevTools, useAtomsDebugValue } from "jotai-devtools"
-
 import "jotai-devtools/styles.css"
 
 export function JotaiDevTools() {

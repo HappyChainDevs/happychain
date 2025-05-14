@@ -1,6 +1,5 @@
-import type { Address, Hex } from "viem"
+import type { Address, Hex } from "@happy.tech/common"
 import { concat, encodeDeployData, encodeFunctionData, getAddress, keccak256 } from "viem"
-
 import { abis } from "../../deployments/anvil/happy-aa/abis"
 import { ERC1967_CREATION_CODE } from "./creationCode/ERC1967Code"
 

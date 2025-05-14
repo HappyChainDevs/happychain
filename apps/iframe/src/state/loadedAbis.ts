@@ -1,7 +1,8 @@
+import type { Address } from "@happy.tech/common"
 import type { RecordAbiPayload } from "@happy.tech/wallet-common"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Abi, Address } from "viem"
+import type { Abi } from "viem"
 import { StorageKey } from "#src/services/storage"
 
 type AbiStorageRecord = Record<Address, Abi>

@@ -1,5 +1,5 @@
+import type { Address } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
-import type { Address } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { contractMetadataSchema } from "#src/utils/blockExplorerDataValidator"
 

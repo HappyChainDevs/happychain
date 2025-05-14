@@ -1,7 +1,6 @@
 import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
+import type { Address, Hex } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
-import type { Address } from "abitype"
-import type { Hex } from "viem"
 import type { StoredBoop } from "#src/state/boopHistory"
 
 export enum StorageKey {

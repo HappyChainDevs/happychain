@@ -1,5 +1,4 @@
-import { atomWithCompare } from "@happy.tech/common"
-import { accessorsFromAtom } from "@happy.tech/common"
+import { accessorsFromAtom, atomWithCompare } from "@happy.tech/common"
 import { EIP1193DisconnectedError, type HappyUser } from "@happy.tech/wallet-common"
 import { atom } from "jotai"
 import { getAddress as checksumAddress } from "viem"

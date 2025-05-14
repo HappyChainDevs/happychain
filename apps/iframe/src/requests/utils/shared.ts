@@ -3,9 +3,9 @@
  */
 
 import { GetState, Onchain } from "@happy.tech/boop-sdk"
-import type { Hash, Hex } from "@happy.tech/common"
+import type { Address, Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
-import { type Address, type Transaction, type TransactionReceipt, toHex } from "viem"
+import { type Transaction, type TransactionReceipt, toHex } from "viem"
 import { entryPoint } from "#src/constants/contracts"
 import {
     boopFromTransaction,

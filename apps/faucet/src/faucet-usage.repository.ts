@@ -1,6 +1,6 @@
 import { unknownToError } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
-import type { Address } from "viem"
 import { db } from "./db/driver"
 import { env } from "./env"
 import { FaucetUsage } from "./faucet-usage.entity"

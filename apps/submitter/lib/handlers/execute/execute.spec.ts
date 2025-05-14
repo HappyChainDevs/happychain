@@ -7,7 +7,6 @@ import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
-
 import {
     createMockTokenAMintBoop,
     fundAccount,

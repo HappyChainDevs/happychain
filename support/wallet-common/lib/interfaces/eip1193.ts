@@ -1,5 +1,5 @@
-import type { HappyMethodNames } from "@happy.tech/common"
-import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, PublicRpcSchema, WalletRpcSchema } from "viem"
+import type { Address, HappyMethodNames } from "@happy.tech/common"
+import type { Abi, EIP1193EventMap, EIP1193Parameters, PublicRpcSchema, WalletRpcSchema } from "viem"
 import type { HappyUser } from "./happyUser"
 
 export type RecordAbiPayload = {

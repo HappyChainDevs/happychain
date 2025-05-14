@@ -1,4 +1,6 @@
-import { type Address, type ContractFunctionParameters, erc20Abi, formatUnits } from "viem"
+import type { Address } from "@happy.tech/common"
+import { erc20Abi, formatUnits } from "viem"
+import type { ContractFunctionParameters } from "viem"
 import { type UseReadContractsReturnType, useReadContracts } from "wagmi"
 
 type ERC20BalanceQueryData = {

@@ -1,4 +1,4 @@
-import type { UUID } from "@happy.tech/common"
+import type { Hex, UUID } from "@happy.tech/common"
 import { getUrlProtocol } from "@happy.tech/common"
 import { trace } from "@opentelemetry/api"
 import type { MetricReader } from "@opentelemetry/sdk-metrics"
@@ -6,7 +6,6 @@ import type { SpanExporter } from "@opentelemetry/sdk-trace-node"
 import type { Result } from "neverthrow"
 import {
     type Abi,
-    type Hex,
     type Transport as ViemTransport,
     createPublicClient,
     createWalletClient,

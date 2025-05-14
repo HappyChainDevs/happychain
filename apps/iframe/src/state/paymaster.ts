@@ -1,8 +1,9 @@
 import { accessorsFromAtom } from "@happy.tech/common"
+import type { Address, Hex } from "@happy.tech/common"
 import { convertToViemChain } from "@happy.tech/wallet-common"
 import { type Atom, atom } from "jotai"
 import { type PimlicoClient, createPimlicoClient } from "permissionless/clients/pimlico"
-import { http, type Address, type Hex } from "viem"
+import { http } from "viem"
 import {
     type GetPaymasterDataParameters,
     type GetPaymasterStubDataParameters,

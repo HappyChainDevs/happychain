@@ -1,5 +1,5 @@
 import { CreateAccount } from "@happy.tech/boop-sdk"
-import type { Address } from "viem"
+import type { Address } from "@happy.tech/common"
 import { getBoopClient } from "#src/state/boopClient"
 import { logger, reqLogger } from "#src/utils/logger"
 

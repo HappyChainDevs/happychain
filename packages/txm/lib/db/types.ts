@@ -1,5 +1,4 @@
-import type { Hex, UUID } from "@happy.tech/common"
-import type { Address } from "viem"
+import type { Address, Hex, UUID } from "@happy.tech/common"
 import type { TransactionStatus } from "../Transaction"
 
 export interface TransactionTable {

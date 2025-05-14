@@ -1,7 +1,7 @@
 import { createBigIntStorage } from "@happy.tech/common"
+import type { Address, Hash } from "@happy.tech/common"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Address, Hash } from "viem"
 import type { UserOperationReceipt } from "viem/account-abstraction"
 import { StorageKey } from "../services/storage"
 import { userAtom } from "./user"
