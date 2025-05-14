@@ -159,7 +159,7 @@ export class TransactionSubmitter {
         if (saveAttempt) {
             transaction.addAttempt({
                 type: attempt.type,
-                boopHash: hash,
+                hash,
                 nonce: attempt.nonce,
                 maxFeePerGas: attempt.maxFeePerGas,
                 maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
