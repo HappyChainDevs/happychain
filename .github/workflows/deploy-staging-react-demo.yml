@@ -36,6 +36,7 @@ jobs:
           target: /tmp/demo-react-upload
           strip_components: 2
           rm: true
+          debug: true
 
       - name: Deploy staging react demo to server
         uses: appleboy/ssh-action@v1.1.0
