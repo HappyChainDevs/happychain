@@ -10,9 +10,9 @@ import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
 import { walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import type { SubmitInput, SubmitOutput } from "./types"
+import type { SubmitInput, EntryPointOutput } from "./types"
 
-export async function submit(input: SubmitInput): Promise<SubmitOutput> {
+export async function submit(input: SubmitInput): Promise<EntryPointOutput> {
     const { txHash, receiptPromise, ...output } = await submitInternal(input, true)
     return output
 }
@@ -20,7 +20,7 @@ export async function submit(input: SubmitInput): Promise<SubmitOutput> {
 export async function submitInternal(
     input: SubmitInput & { timeout?: number },
     earlyExit: boolean,
-): Promise<SubmitOutput & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> }> {
+): Promise<EntryPointOutput & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> }> {
     const { entryPoint = deployment.EntryPoint, boop: ogBoop, timeout } = input
     let boop = ogBoop
     const boopHash = computeHash(boop)

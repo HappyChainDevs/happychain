@@ -34,7 +34,7 @@ const EVENTS_AND_ERRORS_MAPPINGS: Record<string, "event" | "error"> = {
 const TYPES_MAPPINGS: Record<string, "struct" | "enum"> = {
     // Structs
     Boop: "struct",
-    SubmitOutput: "struct",
+    EntryPointOutput: "struct",
     ExecutionOutput: "struct",
     CallInfo: "struct",
     // Enums
