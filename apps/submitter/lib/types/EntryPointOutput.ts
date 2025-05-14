@@ -48,11 +48,6 @@ export type EntryPointOutput = {
      */
     futureNonceDuringSimulation: boolean
     /**
-     * If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the
-     * current gas price.
-     */
-    feeTooLowDuringSimulation: boolean
-    /**
      * Status of the call specified by the boop.
      */
     callStatus: CallStatus
