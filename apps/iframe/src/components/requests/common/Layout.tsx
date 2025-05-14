@@ -107,7 +107,9 @@ interface FormattedDetailsLineProps extends PropsWithChildren {
 
 export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: FormattedDetailsLineProps) => {
     const formattedContent =
-        formatAsNumber && typeof children === "string" ? new Intl.NumberFormat().format(Number(children)) : children
+        formatAsNumber && typeof children === "string" && !Number.isNaN(Number(children))
+            ? new Intl.NumberFormat().format(Number(children))
+            : children
 
     return (
         <pre
