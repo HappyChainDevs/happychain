@@ -126,7 +126,7 @@ export const AuthVerifyRequestSchema = z
     .object({
         primary_wallet: z.string().refine(isHex),
         message: z.string(),
-        signature: z.string().startsWith("0x", "Signature must start with 0x"),
+        signature: z.string().refine(isHex),
     })
     .strict()
     .openapi({

@@ -1,36 +1,10 @@
 import { createUUID } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
-import { abis, deployment } from "@happy.tech/contracts/boop/anvil"
-
 import type { Kysely } from "kysely"
-import { http, createPublicClient } from "viem"
-import { localhost } from "viem/chains"
-
 import type { AuthSession, AuthSessionTableId, Database, NewAuthSession, UserTableId } from "../db/types"
-import { env } from "../env"
 
 export class AuthRepository {
-    private publicClient: ReturnType<typeof createPublicClient>
-
-    constructor(private db: Kysely<Database>) {
-        this.publicClient = createPublicClient({
-            chain: localhost,
-            transport: http(env.RPC_URL),
-        })
-    }
-
-    async generateChallenge(primary_wallet: Address): Promise<string> {
-        const nonce = await this.publicClient.readContract({
-            address: deployment.EntryPoint,
-            abi: abis.EntryPoint,
-            functionName: "nonceValues",
-            args: [primary_wallet, 0n],
-        })
-
-        const timestamp = Date.now()
-
-        return `${nonce}${timestamp}`
-    }
+    constructor(private db: Kysely<Database>) {}
 
     async createSession(userId: UserTableId, walletAddress: Address): Promise<AuthSession | undefined> {
         try {

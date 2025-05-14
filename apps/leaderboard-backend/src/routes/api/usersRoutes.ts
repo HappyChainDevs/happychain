@@ -52,9 +52,8 @@ export default new Hono()
     /**
      * Create a new user.
      * POST /users
-     * @security BearerAuth
      */
-    .post("/", requireAuth, UserCreateDescription, UserCreateValidation, async (c) => {
+    .post("/", UserCreateDescription, UserCreateValidation, async (c) => {
         const userData = c.req.valid("json")
         const { userRepo } = c.get("repos")
 

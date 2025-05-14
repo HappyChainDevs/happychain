@@ -7,6 +7,12 @@ import { env } from "../env"
 // ERC-1271 magic value constant
 const EIP1271_MAGIC_VALUE = "0x1626ba7e"
 
+// Singleton publicClient for all signature verifications
+export const publicClient = createPublicClient({
+    chain: localhost,
+    transport: http(env.RPC_URL),
+})
+
 /**
  * Verifies a signature against a wallet address using ERC-1271 standard
  * Makes an RPC call to the smart contract account for signature verification
@@ -18,11 +24,6 @@ const EIP1271_MAGIC_VALUE = "0x1626ba7e"
  */
 export async function verifySignature(walletAddress: Address, message: Hex, signature: Hex): Promise<boolean> {
     try {
-        const publicClient = createPublicClient({
-            chain: localhost,
-            transport: http(env.RPC_URL),
-        })
-
         const messageHash = hashMessage({ raw: message })
         const result = await publicClient.readContract({
             address: walletAddress,

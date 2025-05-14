@@ -1,3 +1,4 @@
+import type { Address } from "@happy.tech/common"
 import { Scalar } from "@scalar/hono-api-reference"
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
@@ -10,6 +11,8 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
+
+import type { AuthSessionTableId, UserTableId } from "./db/types"
 import { env } from "./env"
 import { type Repositories, repositories } from "./repositories"
 import authApi from "./routes/api/authRoutes"
@@ -18,9 +21,13 @@ import guildsApi from "./routes/api/guildsRoutes"
 import leaderboardApi from "./routes/api/leaderboardRoutes"
 import usersApi from "./routes/api/usersRoutes"
 
+// Extend Hono's ContextVariableMap to include all custom context fields used across the app
 declare module "hono" {
     interface ContextVariableMap {
-        repos: Repositories
+        repos: Repositories // Database repositories, set globally in middleware
+        userId: UserTableId // Authenticated user's ID, set by requireAuth
+        primaryWallet: Address // Authenticated user's wallet address, set by requireAuth
+        sessionId: AuthSessionTableId // Current session ID, set by requireAuth
     }
 }
 
@@ -62,20 +69,6 @@ app.get(
                 version: "0.1.0",
                 description: "Leaderboard backend for HappyChain",
             },
-            components: {
-                securitySchemes: {
-                    bearerAuth: {
-                        type: "http",
-                        scheme: "bearer",
-                        bearerFormat: "UUID",
-                    },
-                },
-            },
-            security: [
-                {
-                    bearerAuth: [],
-                },
-            ],
             servers: [
                 {
                     url: `http://localhost:${env.PORT || 4545}`,

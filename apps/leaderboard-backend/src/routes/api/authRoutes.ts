@@ -1,7 +1,9 @@
 import type { Address, Hex } from "@happy.tech/common"
 import { Hono } from "hono"
+import { deleteCookie, setCookie } from "hono/cookie"
 import { requireAuth, verifySignature } from "../../auth"
 import type { AuthSessionTableId } from "../../db/types"
+import { env } from "../../env"
 import {
     AuthChallengeDescription,
     AuthChallengeValidation,
@@ -10,7 +12,6 @@ import {
     AuthSessionsDescription,
     AuthVerifyDescription,
     AuthVerifyValidation,
-    SessionIdValidation,
 } from "../../validation/auth"
 
 export default new Hono()
@@ -20,12 +21,8 @@ export default new Hono()
      */
     .post("/challenge", AuthChallengeDescription, AuthChallengeValidation, async (c) => {
         const { primary_wallet } = c.req.valid("json")
-        const { authRepo } = c.get("repos")
-
-        // Generate challenge message
-        const message = authRepo.generateChallenge(primary_wallet)
-
-        // Return the challenge message for the frontend to request signature
+        // Use a hardcoded, Ethereum-style message for leaderboard authentication
+        const message = `\x19Leaderboard Signed Message:\nHappyChain Leaderboard Authentication Request for ${primary_wallet}`
         return c.json({
             message,
             primary_wallet,
@@ -47,19 +44,23 @@ export default new Hono()
             return c.json({ error: "Invalid signature", ok: false }, 401)
         }
 
-        // Find or create user
         const user = await userRepo.findByWalletAddress(primary_wallet, true)
-
         if (!user) {
             return c.json({ error: "User not found", ok: false }, 404)
         }
 
-        // Create a new session
         const session = await authRepo.createSession(user.id, primary_wallet)
-
         if (!session) {
             return c.json({ error: "Failed to create session", ok: false }, 500)
         }
+
+        setCookie(c, "session_id", session.id, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "Lax",
+            path: "/",
+            maxAge: env.SESSION_EXPIRY,
+        })
 
         // Return success with session ID and user info
         return c.json({
@@ -69,7 +70,7 @@ export default new Hono()
                 username: user.username,
                 primary_wallet: user.primary_wallet,
                 wallets: user.wallets,
-                sessionId: c.get("sessionId"),
+                sessionId: session.id,
             },
         })
     })
@@ -104,17 +105,25 @@ export default new Hono()
     /**
      * Logout (delete session)
      * POST /auth/logout
+     * @security BearerAuth
      */
-    .post("/logout", AuthLogoutDescription, SessionIdValidation, async (c) => {
-        const { session_id } = c.req.valid("json")
+    .post("/logout", AuthLogoutDescription, requireAuth, async (c) => {
+        const sessionId = c.get("sessionId")
         const { authRepo } = c.get("repos")
 
-        const success = await authRepo.deleteSession(session_id as AuthSessionTableId)
+        const success = await authRepo.deleteSession(sessionId as AuthSessionTableId)
 
-        return c.json({
-            ok: success,
-            message: success ? "Logged out successfully" : "Session not found",
+        if (!success) {
+            return c.json({ error: "Failed to delete session", ok: false }, 500)
+        }
+
+        // Delete the session cookie
+        deleteCookie(c, "session_id", {
+            path: "/",
+            secure: false,
         })
+
+        return c.json({ ok: true, message: "Logged out successfully" })
     })
 
     /**

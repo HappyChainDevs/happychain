@@ -1,29 +1,17 @@
-import type { Address } from "@happy.tech/common"
 import type { MiddlewareHandler } from "hono"
+import { getCookie } from "hono/cookie"
 import { createMiddleware } from "hono/factory"
-import type { AuthSessionTableId, UserTableId } from "../../db/types"
-
-// Define the context variables we'll set in the middleware
-declare module "hono" {
-    interface ContextVariableMap {
-        userId: UserTableId
-        primaryWallet: Address
-        sessionId: AuthSessionTableId
-    }
-}
+import type { AuthSessionTableId } from "../../db/types"
 
 /**
  * Middleware that verifies if a user is authenticated via session
- * Requires Authorization header with Bearer token containing the session ID
+ * Checks for session ID in cookie
  */
 export const requireAuth: MiddlewareHandler = createMiddleware(async (c, next) => {
-    const authHeader = c.req.header("Authorization")
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const sessionId = getCookie(c, "session_id") as AuthSessionTableId | undefined
+    if (!sessionId) {
         return c.json({ error: "Authentication required", ok: false }, 401)
     }
-
-    const sessionId = authHeader.substring(7) as AuthSessionTableId
 
     const { authRepo } = c.get("repos")
     const session = await authRepo.verifySession(sessionId)
