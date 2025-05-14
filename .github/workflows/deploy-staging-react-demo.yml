@@ -18,13 +18,7 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build code
-        env:
-          IFRAME_URL: "https://iframe-staging.happy.tech"
-          NODE_ENV: "production"
-        run: |
-          make demo-react.build
-      - name: Copy files to server
+      - name: Copy files to server (via /tmp)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -32,11 +26,9 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "demos/react/dist"
-          target: /home/deployer/staging-demo-react
-          strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
-          rm: false
-          overwrite: true
-          debug: true
+          target: /tmp/demo-react-upload
+          strip_components: 3
+          rm: true
 
       - name: Deploy staging react demo to server
         uses: appleboy/ssh-action@v1.1.0
@@ -46,10 +38,9 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            chmod -R o+rX /home/deployer/staging-demo-react
-            mv /home/deployer/staging-demo-react /tmp
+            chmod -R o+rX /tmp/demo-react-upload
             sudo -u staging_demo_react bash -c '
               rm -rf /var/www/staging-demo-react/*
-              cp -r /tmp/staging-demo-react/* /var/www/staging-demo-react
+              cp -r /tmp/demo-react-upload/* /var/www/staging-demo-react
             '
-            rm -rf /tmp/staging-demo-react
+            rm -rf /tmp/demo-react-upload
