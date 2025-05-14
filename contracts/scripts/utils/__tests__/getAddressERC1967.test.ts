@@ -1,6 +1,6 @@
-import { type Address, type Hex, pad, toHex } from "viem"
+import type { Address, Hex } from "@happy.tech/common"
+import { pad, toHex } from "viem"
 import { describe, expect, test } from "vitest"
-
 import { getAddressERC1967 } from "../getAddressERC1967"
 
 describe("getAddressERC1967", () => {

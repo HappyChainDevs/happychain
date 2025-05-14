@@ -1,6 +1,7 @@
+import type { Address } from "@happy.tech/common"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Address, WatchAssetParameters } from "viem"
+import type { WatchAssetParameters } from "viem"
 import { StorageKey } from "#src/services/storage"
 
 export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>

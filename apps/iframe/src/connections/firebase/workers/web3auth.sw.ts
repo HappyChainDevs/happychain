@@ -1,3 +1,4 @@
+// Important! has to be the first import!
 import "./web3auth/polyfill"
 
 import type { Address } from "@happy.tech/common"

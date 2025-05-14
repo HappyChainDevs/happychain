@@ -3,7 +3,6 @@ import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
 import { watchedAssetsAtom } from "#src/state/watchedAssets"
 import UserNotFoundWarning from "../UserNotFoundWarning"
-
 import { TriggerImportTokensDialog } from "./ImportTokensDialog"
 import WatchedAsset from "./WatchedAsset"
 

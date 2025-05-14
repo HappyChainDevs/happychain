@@ -1,4 +1,4 @@
-import type { Address } from "viem"
+import type { Address } from "@happy.tech/common"
 
 /**
  * Truncates an address into a shorter representation by displaying the first `digits` characters

@@ -1,6 +1,6 @@
+import type { Address } from "@happy.tech/common"
 import { TransactionManager } from "@happy.tech/txm"
 import { type Result, err, ok } from "neverthrow"
-import type { Address } from "viem"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
 import { FaucetUsage } from "../faucet-usage.entity"

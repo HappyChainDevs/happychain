@@ -1,7 +1,7 @@
 import { fetchWithRetry, nowInSeconds, promiseWithResolvers, sleep, unknownToError } from "@happy.tech/common"
+import type { Hex } from "@happy.tech/common"
 import type { TransactionManager } from "@happy.tech/txm"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
-import type { Hex } from "viem"
 import { z } from "zod"
 import { Drand } from "./Drand"
 import type { DrandRepository } from "./DrandRepository"

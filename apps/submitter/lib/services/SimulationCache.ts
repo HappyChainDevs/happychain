@@ -1,5 +1,4 @@
-import type { Address } from "@happy.tech/common"
-import type { Hex } from "viem"
+import type { Address, Hex } from "@happy.tech/common"
 import { env } from "#lib/env"
 import type { SimulateInput, SimulateOutput } from "#lib/handlers/simulate"
 import { computeHash } from "../utils/boop/computeHash"

@@ -1,12 +1,11 @@
 import { Dialog, Field } from "@ark-ui/react"
 import { Plus, X } from "@phosphor-icons/react"
+import { cx } from "class-variance-authority"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
-
-import { cx } from "class-variance-authority"
 import { FieldInput } from "#src/components/primitives/input/FieldInput"
 import { Input } from "#src/components/primitives/input/Input"
 import { recipeTextInput } from "#src/components/primitives/input/variants.ts"

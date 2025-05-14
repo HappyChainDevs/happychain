@@ -1,5 +1,6 @@
+import type { Address } from "@happy.tech/common"
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
-import type { Address, PrivateKeyAccount } from "viem"
+import type { PrivateKeyAccount } from "viem"
 import { zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"

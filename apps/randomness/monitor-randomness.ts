@@ -1,5 +1,7 @@
+import type { Hex } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/random/anvil"
-import { http, type Block, type Hex, createPublicClient, encodeAbiParameters, encodePacked, keccak256 } from "viem"
+import type { Block } from "viem"
+import { http, createPublicClient, encodeAbiParameters, encodePacked, keccak256 } from "viem"
 import { anvil } from "viem/chains"
 import { z } from "zod"
 

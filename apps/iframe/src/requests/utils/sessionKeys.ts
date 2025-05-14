@@ -3,9 +3,9 @@
  */
 
 import { ExtensionType, ExtraDataKey, encodeExtraData } from "@happy.tech/boop-sdk"
-import type { Address } from "@happy.tech/common"
+import type { Address, Hex } from "@happy.tech/common"
 import { EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
-import { type Hex, encodeFunctionData } from "viem"
+import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { Permissions } from "#src/constants/permissions"

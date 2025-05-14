@@ -22,8 +22,8 @@ import type {
  * @example
  * ### Setting up viem client
  * ```ts twoslash
- * import { createPublicClient, custom } from 'viem'
- * import { happyProvider } from '@happy.tech/core'
+ * import { createPublicClient, custom } from "viem"
+ * import { happyProvider } from "@happy.tech/core"
  *
  * const publicClient = createPublicClient({
  *   transport: custom(happyProvider)

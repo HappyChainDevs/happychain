@@ -1,9 +1,9 @@
 import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
 import { binaryPartition, createBigIntStorage } from "@happy.tech/common"
+import type { Address, Hash } from "@happy.tech/common"
 import { atom } from "jotai"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Address, Hash } from "viem"
 import { StorageKey } from "../services/storage"
 import { userAtom } from "./user"
 

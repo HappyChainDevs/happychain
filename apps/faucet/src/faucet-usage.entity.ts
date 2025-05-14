@@ -1,4 +1,4 @@
-import type { Address } from "viem"
+import type { Address } from "@happy.tech/common"
 import type { FaucetUsageRow } from "./db/types"
 
 export class FaucetUsage {

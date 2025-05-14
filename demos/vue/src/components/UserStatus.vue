@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { useHappyWallet } from "@happy.tech/vue"
 import { useAccount } from "@wagmi/vue"
-
 import Container from "./Container.vue"
 import SelectArrow from "./SelectArrow.vue"
-const { user } = useHappyWallet()
 
-// wagmi
+const { user } = useHappyWallet()
 const { address } = useAccount()
 </script>
 

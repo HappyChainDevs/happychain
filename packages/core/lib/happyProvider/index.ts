@@ -11,8 +11,8 @@ export const internalProvider: HappyProviderInternal = HappyProviderImplem.insta
  * @example
  * ### Setting up viem client
  * ```ts twoslash
- * import { createPublicClient, custom } from 'viem'
- * import { happyProvider } from '@happy.tech/core'
+ * import { createPublicClient, custom } from "viem"
+ * import { happyProvider } from "@happy.tech/core"
  * // ---cut---
  * const publicClient = createPublicClient({
  *   transport: custom(happyProvider)

@@ -1,6 +1,7 @@
 import { HappyMethodNames } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
-import type { Abi, Address } from "viem"
+import type { Abi } from "viem"
 import { internalProvider } from "./happyProvider"
 import type { ListenerUnsubscribeFn, UserUpdateCallback } from "./happyProvider/listeners"
 
