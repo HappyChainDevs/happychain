@@ -1,3 +1,4 @@
+import type { Hash } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
 import { ExecutorHeap } from "./ExecutorHeap"
 
@@ -48,30 +49,30 @@ export class ExecutorCacheService {
      * an executor it will return it, but first cancel the previous ttl, and create a new ttl
      * starting now, resulting in a rolling ttl per-hash
      */
-    get(hash: `0x${string}`, account: string, nonceTrack: bigint): Account {
+    get(boopHash: Hash, account: string, nonceTrack: bigint): Account {
         const key = `${account}-${nonceTrack}`
         const expiry = this.expiryMap.get(key)
 
         if (!expiry) {
-            const executor = this.createExpiry(hash, key)
+            const executor = this.createExpiry(boopHash, key)
             return executor
         }
 
-        const executor = this.resetExpiry(hash, key, expiry)
+        const executor = this.resetExpiry(boopHash, key, expiry)
         return executor
     }
 
-    private createExpiry(hash: `0x${string}`, key: string): Account {
+    private createExpiry(boopHash: Hash, key: string): Account {
         // get the least used account
         const executor = this.heap.peek()
         if (!executor) throw new Error("No available executors")
         this.heap.increment(executor.account.address)
         const hashExpirations = new Map([
             [
-                hash,
+                boopHash,
                 setTimeout(() => {
                     this.heap.decrement(executor.account.address)
-                    this.expiryMap.get(key)?.hashExpirations.delete(hash)
+                    this.expiryMap.get(key)?.hashExpirations.delete(boopHash)
                     if (!this.expiryMap.get(key)?.hashExpirations.size) {
                         this.expiryMap.delete(key)
                     }
@@ -87,10 +88,10 @@ export class ExecutorCacheService {
         return executor.account
     }
 
-    private resetExpiry(hash: `0x${string}`, key: string, expiry: Expiry): Account {
+    private resetExpiry(boopHash: Hash, key: string, expiry: Expiry): Account {
         // Check if the hash exists and reset its associated timeout
-        if (expiry.hashExpirations.has(hash)) {
-            const oldTimeoutId = expiry.hashExpirations.get(hash)!
+        if (expiry.hashExpirations.has(boopHash)) {
+            const oldTimeoutId = expiry.hashExpirations.get(boopHash)!
             clearTimeout(oldTimeoutId)
         } else {
             // If this hash is new, increment the job count
@@ -100,14 +101,14 @@ export class ExecutorCacheService {
         // Set a new timeout for this hash
         const newTimeoutId = setTimeout(() => {
             this.heap.decrement(expiry.executor.account.address)
-            expiry.hashExpirations.delete(hash)
+            expiry.hashExpirations.delete(boopHash)
             if (!expiry.hashExpirations.size) {
                 this.expiryMap.delete(key)
             }
         }, this.ttl)
 
         // Update the expiration entry for this hash
-        expiry.hashExpirations.set(hash, newTimeoutId)
+        expiry.hashExpirations.set(boopHash, newTimeoutId)
 
         return expiry.executor.account
     }

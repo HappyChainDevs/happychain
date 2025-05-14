@@ -66,8 +66,16 @@ export const appSchema = z.object({
     RECEIPT_TIMEOUT: z.coerce.number().default(8000),
 
     /**
+     * Max timeout that caller can specify for the `boop/receipt` route.
+     */
+    MAX_RECEIPT_TIMEOUT: z.coerce.number().default(8000),
+
+    /**
      * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time, but skipping some tests
      * that are timing-dependent.
      */
-    AUTOMINE_TESTS: z.coerce.boolean().default(false),
+    AUTOMINE_TESTS: z
+        .string()
+        .default("false")
+        .transform((str) => str !== "false" && str !== "0"),
 })

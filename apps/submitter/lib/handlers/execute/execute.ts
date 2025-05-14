@@ -1,105 +1,18 @@
-import type { Hex } from "@happy.tech/common"
-import { deployment, env } from "#lib/env"
-import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
+import { outputForGenericError } from "#lib/handlers/errors"
 import { submitInternal } from "#lib/handlers/submit/submit"
-import { receiptService } from "#lib/services"
-import { computeHash, simulationCache } from "#lib/services"
-import { Onchain, type OnchainStatus } from "#lib/types"
-import { SubmitterError } from "#lib/types"
-import { logger } from "#lib/utils/logger"
-import { decodeEvent, decodeRawError } from "#lib/utils/parsing"
+import { WaitForReceipt } from "#lib/handlers/waitForReceipt"
+import { Onchain } from "#lib/types"
 import type { ExecuteInput, ExecuteOutput } from "./types"
 
-export async function execute(data: ExecuteInput): Promise<ExecuteOutput> {
-    const entryPoint = data.entryPoint ?? deployment.EntryPoint
-    const boopHash = computeHash(data.boop, { cache: true })
-    const { txHash, ...submission } = await submitInternal(data, false)
-
-    if (submission.status !== Onchain.Success) return submission
-
-    logger.trace("Waiting for receipt", boopHash)
-    const receipt = await receiptService.waitForInclusion(data.boop, txHash!, env.RECEIPT_TIMEOUT)
-    if (receipt.isErr())
-        return {
-            status: SubmitterError.ReceiptTimeout,
-            stage: "execute",
-            description:
-                "Timed out while waiting for the boop receipt.\n" +
-                "The boop may still be included onchain later if the timeout was low.",
-        }
-
-    const boopReceipt = receipt.value
-    logger.trace("Found receipt", boopHash, boopReceipt.status)
-
-    if (boopReceipt.txReceipt.status === "success") {
-        // TODO note misbehaviour
-        // EntryPoint.submit succeeded, but check that the execution actually succeeded.
-        let output: ExecuteOutput | undefined
-        for (const log of boopReceipt.logs) {
-            const decoded = decodeEvent(log)
-            if (!decoded) continue
-            const status = getEntryPointStatusFromEventName(decoded?.eventName)
-            if (!status) continue
-            // Don't get pranked by contracts emitting the same event.
-            if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
-            output = {
-                ...outputForExecuteError(status, decoded.args.revertData as Hex),
-                stage: "execute",
-            }
-            break
-        }
-        if (output) {
-            logger.trace("Execute reverted onchain", boopHash)
-            return output
-        } else {
-            logger.trace("Successfully executed", boopHash)
-            return { status: Onchain.Success, receipt: boopReceipt }
-        }
-    }
-
-    const decoded = decodeRawError(boopReceipt.revertData)
-    const output = outputForRevertError(data.boop, boopHash, decoded)
-
-    const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
-
-    if (
-        output.status === Onchain.UnexpectedReverted &&
-        simulation &&
-        simulation.status === Onchain.Success &&
-        boopReceipt.txReceipt.gasUsed === BigInt(simulation.gas)
-    ) {
-        if (data.boop.payer === data.boop.account) {
-            logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
-            // TODO note account as problematic
-        } else {
-            logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
-        }
-        return {
-            status: Onchain.EntryPointOutOfGas,
-            stage: "execute",
-            receipt: boopReceipt,
-            description:
-                "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
-                "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
-        }
-    }
-
-    if (output.status === Onchain.UnexpectedReverted) {
-        logger.warn("Execute failed onchain with an unexpected revert", boopHash, output)
-    } else {
-        logger.trace("Execute failed onchain", boopHash)
-    }
-
-    return { ...output, stage: "execute" }
-}
-
-function getEntryPointStatusFromEventName(eventName: string): OnchainStatus | undefined {
-    switch (eventName) {
-        case "CallReverted":
-            return Onchain.CallReverted
-        case "ExecutionRejected":
-            return Onchain.ExecuteRejected
-        case "ExecutionReverted":
-            return Onchain.ExecuteReverted
+export async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
+    try {
+        const { txHash, receiptPromise, ...submission } = await submitInternal(input, false)
+        if (submission.status !== Onchain.Success) return submission
+        const waitOutput = await receiptPromise!
+        return waitOutput.status === WaitForReceipt.Success
+            ? waitOutput
+            : ({ ...waitOutput, stage: "execute" } satisfies Omit<ExecuteOutput, "status"> as ExecuteOutput)
+    } catch (error) {
+        return { ...outputForGenericError(error), stage: "execute" }
     }
 }

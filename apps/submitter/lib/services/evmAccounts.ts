@@ -5,7 +5,7 @@ import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import type { Boop } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import { computeHash } from "./computeHash"
+import { computeHash } from "../utils/boop/computeHash"
 
 /**
   flowchart TD

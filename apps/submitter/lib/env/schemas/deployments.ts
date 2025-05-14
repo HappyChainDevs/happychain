@@ -19,8 +19,6 @@ export const deploymentsSchema = z.object({
      */
     RPC_URL: z.string().url().optional(),
 
-    // TODO make sure the deployment address is deterministic (no metadata)
-
     /**
      * The address of the EntryPoint contract to submit boops to.
      * Defaults to the latest stable EntryPoint release from Happy Devs.

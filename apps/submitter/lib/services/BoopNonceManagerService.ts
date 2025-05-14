@@ -1,4 +1,4 @@
-import { Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
+import { type Hash, Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
 import { abis, env } from "#lib/env"
@@ -6,11 +6,11 @@ import type { PendingBoopInfo } from "#lib/handlers/getPending"
 import type { SubmitError } from "#lib/handlers/submit"
 import { type Boop, SubmitterError } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
-import { computeHash } from "./computeHash"
+import { computeHash } from "../utils/boop/computeHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
-type BlockedBoop = { hash: `0x${string}`; resolve: (value: Result<undefined, SubmitError>) => void }
+type BlockedBoop = { boopHash: Hash; resolve: (value: Result<undefined, SubmitError>) => void }
 
 const MAX_WAIT_TIMEOUT_MS = 30_000
 
@@ -38,7 +38,7 @@ export class BoopNonceManagerService {
                 return {
                     nonceTrack,
                     nonceValue,
-                    hash: tx.hash,
+                    boopHash: tx.boopHash,
                     submitted: false,
                 } satisfies PendingBoopInfo
             })
@@ -82,7 +82,7 @@ export class BoopNonceManagerService {
         this.blockedTxMap
             .getOrSet(boop.account, boop.nonceTrack, () => new Map())
             .set(boop.nonceValue, {
-                hash: computeHash(boop),
+                boopHash: computeHash(boop),
                 resolve: (response: Result<undefined, SubmitError>) => {
                     clearTimeout(timeout)
                     resolve(response)

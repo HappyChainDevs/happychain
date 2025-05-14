@@ -3,8 +3,8 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import type { ExecuteError, ExecuteFailedOnchain } from "#lib/handlers/execute"
-import type { SimulateFailed } from "#lib/handlers/simulate"
+import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
+import type { SimulateError } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 
@@ -53,12 +53,11 @@ describe("submitter_execute", () => {
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
-            const response = (await result.json()) as any
+            const response = (await result.json()) as unknown as ExecuteSuccess
             const afterBalance = await getMockTokenABalance(smartAccount)
-            expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(response.status).toBe(Onchain.Success)
-            expect(response.receipt.txReceipt.transactionHash).toBeString()
+            expect(response.receipt.evmTxHash).toBeString()
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
@@ -68,9 +67,9 @@ describe("submitter_execute", () => {
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateFailed>
+            const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateError>
             const response = (await results.json()) as ExecuteError
-            expect(response.status).toBe(SubmitterError.InvalidGasValues)
+            expect(response.status).toBe(SubmitterError.InvalidValues)
             expect(response.stage).toBe("simulate")
             expect(results.status).toBe(400)
         })
@@ -79,50 +78,41 @@ describe("submitter_execute", () => {
     describe("payer", () => {
         it("proper response structure (mint tokens success)", async () => {
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
-            const response = (await result.json()) as any
-            expect(response.error).toBeUndefined()
+            const response = (await result.json()) as unknown as ExecuteSuccess
             expect(result.status).toBe(200)
             expect(response.status).toBe(Onchain.Success)
             expect(response.receipt).not.toBeEmpty()
             expect(response.receipt.boopHash).toBeString()
-            expect(response.receipt.account).toBeString()
-            expect(BigInt(response.receipt.nonceTrack)).toBeGreaterThanOrEqual(0n)
-            expect(BigInt(response.receipt.nonceValue)).toBeGreaterThanOrEqual(0n)
-            expect(response.receipt.entryPoint).toBeString()
             expect(response.receipt.status).toBe(Onchain.Success)
-            expect(response.receipt.logs.length).toBe(1)
+            expect(response.receipt.description).toBeString()
+            expect(response.receipt.entryPoint).toBeString()
+
             expect(response.receipt.revertData).toBe("0x")
-            expect(BigInt(response.receipt.gasUsed)).toBeGreaterThan(0n)
-            expect(BigInt(response.receipt.gasCost)).toBeGreaterThan(0n)
-            expect(BigInt(response.receipt.txReceipt.blobGasPrice || 0)).toBe(1n)
-            expect(response.receipt.txReceipt.blobGasUsed).toBeUndefined()
-            expect(response.receipt.txReceipt.transactionHash).toBeString()
-            expect(response.receipt.txReceipt.blockHash).toBeString()
-            expect(BigInt(response.receipt.txReceipt.blockNumber)).toBeGreaterThan(0n)
-            expect(response.receipt.txReceipt.contractAddress).toBe(null)
-            expect(BigInt(response.receipt.txReceipt.cumulativeGasUsed)).toBeGreaterThan(0n)
-            expect(BigInt(response.receipt.txReceipt.effectiveGasPrice)).toBeGreaterThan(0n)
-            expect(response.receipt.txReceipt.from).toBeString()
-            expect(BigInt(response.receipt.txReceipt.gasUsed)).toBeGreaterThan(0n)
-            expect(response.receipt.txReceipt.logs.length).toBe(3)
-            expect(response.receipt.txReceipt.logs[0]).toMatchObject({
+            expect(response.receipt.evmTxHash).toBeString()
+            expect(response.receipt.blockHash).toBeString()
+            expect(BigInt(response.receipt.blockNumber)).toBeGreaterThan(0n)
+            expect(BigInt(response.receipt.gasPrice)).toBeGreaterThan(0n)
+            expect(response.receipt.logs.length).toBe(1)
+            expect(response.receipt.logs[0]).toMatchObject({
                 address: expect.any(String),
-                blockHash: expect.any(String),
-                blockNumber: expect.any(String),
-                blockTimestamp: expect.any(String),
-                data: expect.any(String),
-                logIndex: expect.any(Number),
-                removed: expect.any(Boolean),
                 topics: expect.any(Array),
-                transactionHash: expect.any(String),
-                transactionIndex: expect.any(Number),
+                data: expect.any(String),
             })
-            expect(response.receipt.txReceipt.logsBloom).toBeString()
-            expect(response.receipt.txReceipt.status).toBe("success")
-            expect(response.receipt.txReceipt.to).toBeString()
-            expect(response.receipt.txReceipt.transactionHash).toBeString()
-            expect(Number(response.receipt.txReceipt.transactionIndex)).toBeGreaterThanOrEqual(0)
-            expect(response.receipt.txReceipt.type).toBeString()
+            expect(response.receipt.boop.account).toBeString()
+            expect(response.receipt.boop.dest).toBeString()
+            expect(response.receipt.boop.payer).toBeString()
+            expect(BigInt(response.receipt.boop.value)).toBeGreaterThanOrEqual(0n)
+            expect(BigInt(response.receipt.boop.nonceTrack)).toBeGreaterThanOrEqual(0n)
+            expect(BigInt(response.receipt.boop.nonceValue)).toBeGreaterThanOrEqual(0n)
+            expect(BigInt(response.receipt.boop.maxFeePerGas)).toBeGreaterThanOrEqual(0n)
+            expect(BigInt(response.receipt.boop.submitterFee)).toBeGreaterThanOrEqual(0n)
+            expect(response.receipt.boop.gasLimit).toBeGreaterThan(0)
+            expect(response.receipt.boop.validateGasLimit).toBeGreaterThan(0)
+            expect(response.receipt.boop.validatePaymentGasLimit).toBeGreaterThanOrEqual(0)
+            expect(response.receipt.boop.executeGasLimit).toBeGreaterThan(0)
+            expect(response.receipt.boop.callData).toBeString()
+            expect(response.receipt.boop.validatorData).toBeString()
+            expect(response.receipt.boop.extraData).toBeString()
         })
 
         it("mints tokens", async () => {
@@ -172,7 +162,7 @@ describe("submitter_execute", () => {
             // mints a different amount of tokens, computes a difference hash, same nonce though
             const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack, 5n * 10n ** 18n))
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
-            const response = (await result.json()) as ExecuteFailedOnchain
+            const response = (await result.json()) as ExecuteError
             expect(result.status).toBe(400)
             expect(response.stage).toBe("simulate")
             expect(response.status).toBe(Onchain.InvalidNonce)

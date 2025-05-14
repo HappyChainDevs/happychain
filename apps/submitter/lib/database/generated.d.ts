@@ -4,47 +4,38 @@
  */
 
 export interface Boop {
-  account: `0x${string}`;
-  boopHash: `0x${string}`;
-  callData: `0x${string}`;
-  dest: `0x${string}`;
-  entryPoint: `0x${string}`;
+  account: Address;
+  boopHash: Hash;
+  callData: Hex;
+  dest: Address;
+  entryPoint: Address;
   executeGasLimit: number;
-  extraData: `0x${string}`;
+  extraData: Hex;
   gasLimit: number;
   maxFeePerGas: bigint;
   nonceTrack: bigint;
   nonceValue: bigint;
-  payer: `0x${string}`;
+  payer: Address;
   submitterFee: bigint;
   validateGasLimit: number;
   validatePaymentGasLimit: number;
-  validatorData: `0x${string}`;
+  validatorData: Hex;
   value: bigint;
 }
 
-export interface EvmReceipt {
-  blockHash: `0x${string}`;
-  blockNumber: bigint;
-  boopHash: `0x${string}`;
-  effectiveGasPrice: bigint;
-  from: `0x${string}`;
-  gasUsed: bigint;
-  status: string;
-  to: `0x${string}`;
-  transactionHash: `0x${string}`;
-}
-
 export interface Receipt {
-  boopHash: `0x${string}`;
-  gasCost: bigint;
-  revertData: `0x${string}`;
-  status: string;
-  txHash: `0x${string}`;
+  blockHash: Hash;
+  blockNumber: bigint;
+  boopHash: Hash;
+  description: string;
+  evmTxHash: Hash;
+  gasPrice: bigint;
+  logs: string;
+  revertData: Hex;
+  status: OnchainStatus;
 }
 
 export interface DB {
   boops: Boop;
-  evm_receipts: EvmReceipt;
   receipts: Receipt;
 }

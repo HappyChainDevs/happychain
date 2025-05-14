@@ -1,16 +1,10 @@
 import type { Address, Bytes } from "@happy.tech/common"
-import {
-    type Boop,
-    type EntryPointOutput,
-    Onchain,
-    type OnchainStatus,
-    SubmitterError,
-    type SubmitterErrorStatus,
-} from "#lib/types"
+import { type Boop, type EntryPointOutput, Onchain, SubmitterError } from "#lib/types"
 
-/**
- * Input for a `simulate` call.
- */
+// =====================================================================================================================
+// INPUT
+
+/** Input for a `simulate` call (`boop/simulate` route) */
 export type SimulateInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
@@ -19,10 +13,14 @@ export type SimulateInput = {
     boop: Boop
 }
 
+// =====================================================================================================================
+// OUTPUT
+
 /**
- * Possible result of a `simulate` call: either the status from a successfully attempted
- * simulation ({@link OnchainStatus}), which may be either successful or unsuccessful, or an error status indicating
- * the simulation could not be carried out ({@link SubmitterError}.
+ * Possible output status of a `simulate` call (`boop/simulate` route).
+ *
+ * Either the status from a successfully attempted simulation ({@link OnchainStatus}), which may be either successful
+ * or unsuccessful, or an error status indicating the simulation could not be carried out ({@link SubmitterError}.
  */
 export const Simulate = {
     ...Onchain,
@@ -35,15 +33,13 @@ export const Simulate = {
  */
 export type SimulateStatus = (typeof Simulate)[keyof typeof Simulate]
 
-/**
- * Output of a `simulate` call: either a successful simulation, or a failed
- * simulation, or a simulation that could not be carried out for other reasons.
- */
-export type SimulateOutput = SimulateSuccess | SimulateFailed | SimulateError
+/** Output of a `simulate` call (`boop/simulate` route): either a successful simulation, or a failed simulation. */
+export type SimulateOutput = SimulateSuccess | SimulateError
 
-/**
- * Output of a successful simulation.
- */
+// =====================================================================================================================
+// OUTPUT (SUCCESS)
+
+/** Successful `simulate` call. */
 export type SimulateSuccess = EntryPointOutput & {
     status: typeof Onchain.Success
 
@@ -54,30 +50,26 @@ export type SimulateSuccess = EntryPointOutput & {
     submitterFee: bigint
 }
 
-/**
- * Output of a simulation that was attempted, but failed onchain, most likely due validation or checks.
- */
-export type SimulateFailed = {
-    status: Exclude<OnchainStatus, typeof Onchain.Success>
+// =====================================================================================================================
+// OUTPUT (ERROR)
 
-    /**
-     * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted`
-     * status, or the the returned encoded error matching an `Onchain.*Rejected` status.
-     */
+/**
+ * Failed `simulate` call.
+ *
+ * It was either attempted but failed onchain (mostly likely due to failing validation), or it failed to be carried
+ * out for offchain operational reasons (communication with the node, submitter capacity, etc...).
+ *
+ * You can use call {@link isOnchain} and {@link isSubmitterError} function
+ * on the status to check if the error belongs to the respective categories.
+ */
+export type SimulateError = {
+    status: Exclude<SimulateStatus, typeof Onchain.Success>
+
+    /** TODO copy from execute/types.ts */
     revertData?: Bytes
 
     /** Description of the problem. */
-    description?: string
+    description: string
 }
 
-/**
- * Output of a simulation that failed to be carried out for offchain operational
- * reasons (communication with the node, submitter capacity, etc...).
- */
-export type SimulateError = {
-    // check with `isSubmitterError(status)`
-    status: SubmitterErrorStatus
-
-    /** Description of the problem. */
-    description?: string
-}
+// =====================================================================================================================

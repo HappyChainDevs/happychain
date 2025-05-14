@@ -75,7 +75,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
     })
 
     const receipt = useWaitForTransactionReceipt({
-        hash,
+        boopHash: hash,
         query: { enabled: !!hash },
     })
 

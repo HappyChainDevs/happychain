@@ -40,7 +40,6 @@ export async function simulate(
                 : Promise.resolve(null)
 
         // TODO make sure nonce is gucci / prefetched?
-        // TODO inline boop into return value
         const [{ result: entryPointOutput }, gasPrice, balance] = await Promise.all([
             simulatePromise,
             gasPricePromise,
@@ -91,7 +90,7 @@ export async function simulate(
  */
 function validateGasInput(boop: Boop, forSubmit: boolean, selfPaying: boolean): SimulateOutput | undefined {
     function out(description: string) {
-        return { status: SubmitterError.InvalidGasValues, description }
+        return { status: SubmitterError.InvalidValues, description }
     }
 
     if (forSubmit && selfPaying && (boop.gasLimit === 0 || boop.executeGasLimit === 0 || boop.validateGasLimit === 0)) {

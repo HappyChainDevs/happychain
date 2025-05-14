@@ -1,6 +1,10 @@
 import type { Address, Bytes, Hash } from "@happy.tech/common"
-import { type Boop, Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
+import { type Boop, Onchain, SubmitterError } from "#lib/types"
 
+// =====================================================================================================================
+// INPUT
+
+/** Input of a `submit` call (`boop/submit` route). */
 export type SubmitInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
@@ -9,9 +13,10 @@ export type SubmitInput = {
     boop: Boop
 }
 
-/**
- * Possible result of a `submit` call.
- */
+// =====================================================================================================================
+// OUTPUT
+
+/** Possible output status of a `submit` call (`boop/submit` route). */
 export const Submit = {
     ...Onchain,
     ...SubmitterError,
@@ -23,54 +28,38 @@ export const Submit = {
  */
 export type SubmitStatus = (typeof Submit)[keyof typeof Submit]
 
-/**
- * Output of a `submit` call: either a successful submission, a
- * failed submission, or an offchain failure for other reasons.
- */
-export type SubmitOutput = SubmitSuccess | SubmitSimulationFailed | SubmitError
+/** Output of a `submit` call (`boop/submit` route): either a successful submission, a failed submission. */
+export type SubmitOutput = SubmitSuccess | SubmitError
 
-/** Output type of successful `submit` calls. */
+// =====================================================================================================================
+// OUTPUT (SUCCESS)
+
+/** Successful `submit` call. */
 export type SubmitSuccess = {
     status: typeof Onchain.Success
+
     /** Hash of the submitted Boop */
-    hash: Hash
+    boopHash: Hash
+
     /** EntryPoint to which the boop was submitted onchain. */
     entryPoint: Address
 }
 
-/** Output type of `submit` who failed simulation "onchain". */
-export type SubmitSimulationFailed = {
-    status: Exclude<OnchainStatus, typeof Onchain.Success>
+// =====================================================================================================================
+// OUTPUT (ERROR)
+
+/** Failed `submit` call. */
+export type SubmitError = {
+    status: Exclude<SubmitStatus, typeof Onchain.Success>
 
     /** Whether the error occurred at the simulation stage or at the submit stage. */
     stage: "simulate" | "submit"
 
-    /**
-     * Depending on the status, either missing, or the revert data matching an `Onchain.*Reverted` status, or
-     * the the returned encoded error matching an `Onchain.*Rejected` status. This pertains to simulation.
-     */
+    /** TODO copy from execute/types.ts */
     revertData?: Bytes
 
     /** Description of the problem. */
-    description?: string
+    description: string
 }
 
-/** Output type of  `submit` calls that failed for other reasons. */
-export type SubmitError = {
-    status: SubmitterErrorStatus
-
-    /** Whether the error occurred at the simulation stage or at the submit stage. */
-    stage: "simulate" | "submit"
-
-    /** Description of the problem. */
-    description?: string
-}
-
-// TODO implement cancel
-export enum SubmitCancelStatus {
-    /** The cancellation was successfully submitted — it can still fail. */
-    Success = "executeCancelSuccess",
-
-    /** The cancellation failed because the original was included onchain. */
-    OriginalIncluded = "executeCancelFailure",
-}
+// =====================================================================================================================

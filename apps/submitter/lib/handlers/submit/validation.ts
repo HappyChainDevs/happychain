@@ -11,7 +11,7 @@ import { Submit } from "./types"
 const outputSchema = z.discriminatedUnion("status", [
     z.object({
         status: z.literal(Success).openapi({ example: Submit.Success }),
-        hash: z
+        boopHash: z
             .string()
             .refine(isHexString)
             .openapi({ example: "0xa972fee74164415894187e2bdc820b38d3cca7786aa58db903b6bce7c5b535d7" }),

@@ -33,17 +33,17 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.InvalidExtensionValue:
         case Onchain.ExecuteRejected:
             return [response, 400] // Bad Request
-        case SubmitterError.InvalidGasValues:
+        case SubmitterError.InvalidValues:
             return [response, 400] // Bad Request
         case Onchain.InsufficientStake:
         case Onchain.PayoutFailed:
             return [response, 402] // Payment Required
-        // TODO is this actually a useful thing to distinguish from ValidationRejected?
         case Onchain.InvalidSignature:
         case Onchain.ValidationRejected:
         case Onchain.PaymentValidationRejected:
             return [response, 403] // Forbidden
         case GetState.UnknownBoop:
+        case GetState.UnknownState:
             return [response, 404] // Not Found
         case SubmitterError.SimulationTimeout:
         case SubmitterError.SubmitTimeout:
@@ -70,7 +70,11 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case SubmitterError.OverCapacity:
             // TODO set Retry-After HTTP header
             return [response, 503] // Service Unavailable
-        default:
+        case SubmitterError.ClientError:
+            throw "BUG" // only thrown on client
+        default: {
+            const _: never = output.status // exhaustive check
             return [response, 500]
+        }
     }
 }

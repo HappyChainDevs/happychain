@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
+import type { SubmitSuccess } from "#lib/handlers/submit"
 import { type Boop, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
@@ -29,10 +30,10 @@ describe("submitter_submit", () => {
 
     it("submits 'mint token' tx successfully.", async () => {
         const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
-        const response = (await result.json()) as any
+        const response = (await result.json()) as unknown as SubmitSuccess
         expect(result.status).toBe(200)
         expect(response.status).toBe(Onchain.Success)
-        expect((response as { hash: string }).hash).toBeString()
+        expect((response as { boopHash: string }).boopHash).toBeString()
     })
 
     it("submits 50 'mint token' tx's quickly and successfully.", async () => {

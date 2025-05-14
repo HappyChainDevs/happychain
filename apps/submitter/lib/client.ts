@@ -10,6 +10,7 @@ export * from "./handlers/getPending/types"
 
 // === UTILITIES ===================================================================================
 
-export { computeBoopHash } from "./services/computeBoopHash"
+export { computeBoopHash } from "./utils/boop/computeBoopHash"
 export { decodeBoop } from "./utils/boop/decodeBoop"
 export { encodeBoop } from "./utils/boop/encodeBoop"
+export { updateBoopFromSimulation } from "./utils/boop/updateBoopFromSimulation"

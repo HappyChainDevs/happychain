@@ -11,5 +11,6 @@ export const receiptService = new ReceiptService()
 export const boopNonceManager = new BoopNonceManagerService()
 export const simulationCache = new SimulationCache()
 
-export { computeHash } from "./computeHash"
+export type { WaitForInclusionArgs } from "./ReceiptService"
+export { computeHash } from "../utils/boop/computeHash"
 export { findExecutionAccount } from "./evmAccounts"

@@ -25,9 +25,12 @@ library Utils {
      * @param encodedBoopLength Length of the encoded boop
      */
     function estimateSubmitterTxGas(uint256 submitGas, uint256 encodedBoopLength) internal pure returns (uint32) {
-        return uint32(encodedBoopLength + 280 * 16 + submitGas + 21_000 + 3000);
+        uint32 regularGas = uint32(encodedBoopLength + 280 * 16 + submitGas + 21_000 + 3000);
+        uint32 eip7623Gas = uint32(encodedBoopLength + 280 * 40);
+        return regularGas > eip7623Gas ? regularGas : eip7623Gas;
         // 280 = maximum size of tx with an empty access list, including allowance for 4 bytes selector
         // 16 = calldata cost for non-zero byte
+        // 40 = calldata cost for non-zero byte if the EIP-7623 regime kicks in
         // 21_000 = fixed intrinsic gas
         // 3000 = overestimation of {EntryPoint.submit} dispatch overhead
     }

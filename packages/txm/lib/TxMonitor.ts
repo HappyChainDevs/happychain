@@ -129,7 +129,7 @@ export class TxMonitor {
                 inAirAttempts.map(
                     async (attempt): Promise<Result<AttemptWithReceipt | null, GetTransactionReceiptErrorType>> => {
                         const receiptResult = await this.transactionManager.viemClient.safeGetTransactionReceipt({
-                            hash: attempt.hash,
+                            boopHash: attempt.hash,
                         })
 
                         if (receiptResult.isOk()) {

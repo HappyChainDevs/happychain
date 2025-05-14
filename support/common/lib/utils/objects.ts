@@ -12,8 +12,8 @@ type TypeMap = {
 }
 
 /**
- * Type guard to check that the value is an object with the given property key, and optionally with
- * the given property type.
+ * Type guard to check that the value is an object with the given property key, and optionally with the given
+ * property type. If the optional {@link own} is passed as true, this will only check the object's own properties.
  *
  * Valid values for {@link type} are the valid return values of the `typeof` operator, plus "null" and "array".
  *
@@ -26,8 +26,9 @@ export function hasKey<K extends string, V extends keyof TypeMap>(
     value: unknown,
     key: K,
     type?: V,
+    own?: boolean,
 ): value is { [k in K]: TypeMap[V] } {
-    const keyPresent = typeof value === "object" && value !== null && key in value
+    const keyPresent = typeof value === "object" && value !== null && (own ? Object.hasOwn(value, key) : key in value)
     if (keyPresent && type) {
         // biome-ignore lint/suspicious/noExplicitAny: needed for access
         // biome-ignore lint/suspicious/useValidTypeof: needed for check
@@ -43,6 +44,18 @@ export function hasKey<K extends string, V extends keyof TypeMap>(
         return actualType === type
     }
     return keyPresent
+}
+
+/**
+ * Syntactic convenient for calling {@link hasOwn} with the `own` parameter
+ * set as true — meaning it will only lookup the object's own properties.
+ */
+export function hasOwnKey<K extends string, V extends keyof TypeMap>(
+    value: unknown,
+    key: K,
+    type?: V,
+): value is { [k in K]: TypeMap[V] } {
+    return hasKey(value, key, type, true)
 }
 
 /**

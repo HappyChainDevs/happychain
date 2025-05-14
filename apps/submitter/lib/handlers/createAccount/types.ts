@@ -1,9 +1,19 @@
-import type { Address } from "@happy.tech/common"
+import type { Address, Prettify } from "@happy.tech/common"
 import { SubmitterError } from "#lib/types"
 
-/**
- * Possible results of an `account/create` call.
- */
+// =====================================================================================================================
+// INPUT
+
+/** Input of a `createAccount` call (`accounts/create` route). */
+export type CreateAccountInput = {
+    owner: Address
+    salt: Address
+}
+
+// =====================================================================================================================
+// OUTPUT
+
+/** Possible output status of a `createAccount` call (`accounts/create` route). */
 export const CreateAccount = {
     ...SubmitterError,
     /** The account was successfully created. */
@@ -20,28 +30,36 @@ export const CreateAccount = {
  */
 export type CreateAccountStatus = (typeof CreateAccount)[keyof typeof CreateAccount]
 
-export type CreateAccountInput = {
-    owner: Address
-    salt: Address
-}
-
 /**
- * Output of an `account/create` call: either an account successfully created (or previously created), or a failure.
+ * Output of an `createAccount call (`account/create` route): either an
+ * account successfully created (or previously created), or an error.
  */
-export type CreateAccountOutput = CreateAccountSuccess | CreateAccountFailed
+export type CreateAccountOutput = CreateAccountSuccess | CreateAccountError
+
+// =====================================================================================================================
+// OUTPUT (SUCCESS)
 
 /** Successful account creation (or creation previously successful). */
-export type CreateAccountSuccess = CreateAccountInput & {
-    status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
+export type CreateAccountSuccess = Prettify<
+    CreateAccountInput & {
+        status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
 
-    /** The address of the account. */
-    address: Address
-}
+        /** The address of the account. */
+        address: Address
+    }
+>
+
+// =====================================================================================================================
+// OUTPUT (ERROR)
 
 /** Failed account creation. */
-export type CreateAccountFailed = CreateAccountInput & {
-    status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
+export type CreateAccountError = Prettify<
+    CreateAccountInput & {
+        status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
 
-    /** Optional description of the problem. */
-    description?: string
-}
+        /** Description of the problem. */
+        description: string
+    }
+>
+
+// =====================================================================================================================

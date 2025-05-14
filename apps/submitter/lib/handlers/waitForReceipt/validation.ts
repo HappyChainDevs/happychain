@@ -10,7 +10,7 @@ import { boopReceiptSchema } from "#lib/utils/validation/boopReceipt"
 import { isHexString } from "#lib/utils/validation/isHexString"
 
 export const paramSchema = z.object({
-    hash: z
+    boopHash: z
         .string()
         .refine(isHexString)
         .openapi({ example: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc" }),

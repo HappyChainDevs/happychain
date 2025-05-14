@@ -249,7 +249,7 @@ export function formatTransaction(
     // - nonce, input, value: incorrect if receipt is missing
     // - null = missing
     return {
-        hash,
+        boopHash: hash,
         blockHash: receipt?.txReceipt.blockHash || null,
         blockNumber: receipt?.txReceipt.blockNumber || null,
         from: receipt?.account || boop?.account,
@@ -278,7 +278,7 @@ function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcErr
         case Onchain.InvalidNonce:
         case Onchain.ExecuteRejected:
         case Onchain.InvalidExtensionValue:
-        case SubmitterError.InvalidGasValues:
+        case SubmitterError.InvalidValues:
             return new EIP1474InvalidInput(output.description, output)
         case Onchain.ValidationRejected:
         case Onchain.PaymentValidationRejected:

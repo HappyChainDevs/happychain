@@ -3,7 +3,6 @@ import {
     type BoopReceipt,
     type CreateAccountInput,
     type CreateAccountOutput,
-    type EVMReceipt,
     type ExecuteInput,
     type ExecuteOutput,
     GetPending,
@@ -144,8 +143,8 @@ export class BoopClient {
      * even if he did see the Boop before. In this case he should answer with a status of
      * {@link GetState.UnknownBoop}.
      */
-    async state({ hash }: GetStateInput): Promise<GetStateOutput> {
-        const response = await this.#client.get(`/api/v1/boop/state/${hash}`)
+    async getState({ boopHash }: GetStateInput): Promise<GetStateOutput> {
+        const response = await this.#client.get(`/api/v1/boop/state/${boopHash}`)
         return this.#getStateOutput(response)
     }
 
@@ -156,8 +155,8 @@ export class BoopClient {
      *
      * The submitter can return without a receipt if the Boop submission failed for other reasons.
      */
-    async receipt({ hash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
-        const response = await this.#client.get(`/api/v1/boop/receipt/${hash}`, { timeout: timeout })
+    async waitForReceipt({ boopHash, timeout }: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
+        const response = await this.#client.get(`/api/v1/boop/receipt/${boopHash}`, { timeout: timeout })
         return this.#getReceiptOutput(response)
     }
 
@@ -167,7 +166,7 @@ export class BoopClient {
      * @param data
      * @returns
      */
-    async pending({ account }: GetPendingInput): Promise<GetPendingOutput> {
+    async getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {
         const response = await this.#client.get(`/api/v1/boop/pending/${account}`)
         return this.#getPendingOutput(response)
     }
@@ -247,20 +246,13 @@ export class BoopClient {
     #getBoopReceiptOutput(receipt: BoopReceipt): BoopReceipt {
         return {
             ...receipt,
-            nonceTrack: BigInt(receipt.nonceTrack),
-            nonceValue: BigInt(receipt.nonceValue),
-            gasUsed: BigInt(receipt.gasUsed),
-            gasCost: BigInt(receipt.gasCost),
-            txReceipt: this.#getTxReceiptOutput(receipt.txReceipt),
-        }
-    }
-
-    #getTxReceiptOutput(receipt: EVMReceipt): EVMReceipt {
-        return {
-            ...receipt,
             blockNumber: BigInt(receipt.blockNumber),
-            effectiveGasPrice: BigInt(receipt.effectiveGasPrice),
-            gasUsed: BigInt(receipt.gasUsed),
+            gasPrice: BigInt(receipt.gasPrice),
+            boop: {
+                ...receipt.boop,
+                nonceTrack: BigInt(receipt.boop.nonceTrack),
+                nonceValue: BigInt(receipt.boop.nonceValue),
+            },
         }
     }
 }
