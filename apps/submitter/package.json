@@ -21,6 +21,10 @@
         "./client": {
             "types": "./dist/client.es.d.ts",
             "default": "./dist/client.es.js"
+        },
+        "./migrate": {
+            "types": "./dist/migrate.es.d.ts",
+            "default": "./dist/migrate.es.js"
         }
     },
     "devDependencies": {
