@@ -40,7 +40,7 @@ export function getRevertError(err: unknown): RevertErrorInfo {
     // should not be able to revert arbitrarily: we intercept the call's revert and wrap it in one of our own errors.
 
     // However, let's keep going, because we can. The approach that follows is pulled from Viem's `call` implementation.
-    // `err.walk()` follow the `.cause` chain until the end. The cast is unsafe but we validate access.
+    // `err.walk()` follows the `.cause` chain until the end. The cast is unsafe but we validate access.
     const rawErr = err.walk() as RawContractError
 
     const raw = typeof rawErr?.data === "object" ? rawErr.data?.data : rawErr.data
