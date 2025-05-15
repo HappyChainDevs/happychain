@@ -3,11 +3,11 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
-import { env } from "#lib/env"
 
 import {
     createMockTokenAMintBoop,
