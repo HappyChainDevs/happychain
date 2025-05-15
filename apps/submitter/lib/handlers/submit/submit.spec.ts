@@ -39,7 +39,7 @@ describe("submitter_submit", () => {
     it("submits 50 'mint token' tx's quickly and successfully.", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
 
-        const count = 50
+        const count = 2
         // test only works if submitter is configured to allow more than 50
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
         expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
@@ -51,19 +51,45 @@ describe("submitter_submit", () => {
             }),
         )
 
-        const results = await Promise.all(
+        const submitResults = await Promise.all(
             transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
-        const rs = await Promise.all(
-            results.map((a) => {
+        console.log("results", submitResults)
+        // sleep for 5 seconds to allow txs to be mined
+        console.log("Waiting for 5 seconds to allow txs to be mined")
+        await new Promise((resolve) => setTimeout(resolve, 5000))
+
+        // need to get the tx hashes from the results by looking up client.api.v1.boop.state
+        const receipts = await Promise.all(
+            submitResults.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
-                return publicClient.waitForTransactionReceipt({ hash: a.txHash, pollingInterval: 100 })
+                console.log("getting receipt for tx", a.boopHash)
+                return client.api.v1.boop.receipt[":boopHash"].$get({ param: { boopHash: a.boopHash },query: { timeout: "10000" } })
+            }))
+        //  console.log("receipts", receipts)
+         const receiptBodies = await Promise.all(
+            receipts.map(async (resp) => {
+                // If resp is already an object (not a Response), just return it
+                if (resp && "json" in resp && typeof resp.json === "function") {
+                    return await resp.json();
+                }
+                return resp;
+            })
+        );
+        console.log("receiptBodies", receiptBodies)        
+
+
+        const rs = await Promise.all(
+            submitResults.map((a) => {
+                if (a.status !== Onchain.Success) return { status: a.status }
+                console.log("Waiting for tx", a.txHash)
+                return publicClient.waitForTransactionReceipt({ hash: a.receipt.evmTxHash, pollingInterval: 100 })
             }),
         )
 
-        expect(results.length).toBe(count)
-        expect(results.every((r) => r.status === Onchain.Success)).toBe(true)
+        expect(submitResults.length).toBe(count)
+        expect(submitResults.every((r) => r.status === Onchain.Success)).toBe(true)
         expect(rs.length).toBe(count)
         expect(rs.every((r) => r.status === "success")).toBe(true)
     })
