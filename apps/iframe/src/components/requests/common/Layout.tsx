@@ -2,7 +2,7 @@ import { shortenAddress } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import type React from "react"
 import type { PropsWithChildren } from "react"
-import type { Address } from "viem"
+import { isAddress } from "viem"
 import { Button, type ButtonProps } from "#src/components/primitives/button/Button"
 import { currentChainAtom } from "#src/state/chains"
 import { userAtom } from "#src/state/user"
@@ -121,21 +121,27 @@ export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: Forma
 }
 
 interface LinkToAddressProps extends PropsWithChildren {
-    address: Address
+    addressLabel: string
     short?: boolean
 }
-export const LinkToAddress = ({ address, short }: LinkToAddressProps) => {
+
+export const LinkToAddress = ({ addressLabel, short }: LinkToAddressProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     return (
         <a
             title="Open on explorer"
-            href={`${blockExplorerUrl}/address/${address}`}
+            href={`${blockExplorerUrl}/address/${addressLabel}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary border-b border-primary/60 hover:bg-primary/40"
         >
-            {short ? shortenAddress(address) : address}
+            {
+                // biome-ignore format: tidy
+                isAddress(addressLabel) ? 
+                    (short ? shortenAddress(addressLabel) : addressLabel) : 
+                    addressLabel
+            }
         </a>
     )
 }

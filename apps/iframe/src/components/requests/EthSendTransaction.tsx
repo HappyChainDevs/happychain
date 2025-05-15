@@ -1,5 +1,5 @@
 import { Onchain } from "@happy.tech/boop-sdk"
-import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
+import { ifDef, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { type Address, formatEther, formatGwei, isAddress, toHex } from "viem"
@@ -13,7 +13,6 @@ import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import FieldLoader from "../loaders/FieldLoader"
-import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
 import {
@@ -93,16 +92,17 @@ export const EthSendTransaction = ({
     const {
         simulatedBoopData,
         isSimulationPending: boopSimulationPending,
-        isSimulationError: boopSimulationError,
-        simulationQueryKey: boopQueryKey,
+        simulatedBoopError,
     } = useSimulateBoop({
         userAddress: user?.address,
         tx: validTx as ValidRpcTransactionRequest,
         enabled: !!validTx && isValidTransaction,
     })
 
+    const showSimulationResult = !boopSimulationPending && (simulatedBoopData || simulatedBoopError)
+
     const formatted = useMemo(() => {
-        if (!simulatedBoopData || simulatedBoopData.status !== Onchain.Success || boopSimulationError) return
+        if (!simulatedBoopData || simulatedBoopData.status !== Onchain.Success || simulatedBoopError) return
 
         if (simulatedBoopData.status === Onchain.Success) {
             const { maxFeePerGas: boopMaxFeePerGas, submitterFee = 0n, gas: boopGas } = simulatedBoopData
@@ -115,7 +115,7 @@ export const EthSendTransaction = ({
                 submitterFee: submitterFee,
             }
         }
-    }, [boopSimulationError, simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
+    }, [simulatedBoopError, simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
 
     const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
 
@@ -125,15 +125,38 @@ export const EthSendTransaction = ({
         areFeesPending ||
         isGasLimitPending ||
         notEnoughFunds ||
-        boopSimulationError
+        !!simulatedBoopError
 
-    if (!isValidTransaction) {
-        // biome-ignore format: compact
-        const description =
-                !user?.address ? "Disconnected from wallet" :
-                !isSupportedTxType ? `Invalid transaction type: ${txType}` :
-                !tx.to ? "Invalid transaction: missing receiver address" :
-                `Invalid receiver address: ${tx.to}`
+    if (boopSimulationPending) {
+        return (
+            <Layout
+                headline="Confirm transaction"
+                actions={{
+                    reject: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                }}
+            >
+                <SectionBlock>
+                    <SubsectionBlock>
+                        <FieldLoader />
+                    </SubsectionBlock>
+                </SectionBlock>
+            </Layout>
+        )
+    }
+
+    if (!isValidTransaction || simulatedBoopError) {
+        const description = !user?.address
+            ? "Disconnected from wallet"
+            : !isSupportedTxType
+              ? `Invalid transaction type: ${txType}`
+              : !tx.to
+                ? "Invalid transaction: missing receiver address"
+                : simulatedBoopError
+                  ? simulatedBoopError.description
+                  : `Invalid receiver address: ${tx.to}`
         return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
     }
 
@@ -149,11 +172,12 @@ export const EthSendTransaction = ({
                               ? "Preparing..."
                               : "Confirm",
                         "aria-disabled": isConfirmActionDisabled,
+                        "aria-hidden": simulatedBoopError,
                         onClick: () => {
                             if (!validTx || isConfirmActionDisabled) return
                             accept({ method, params: [validTx], extraData: simulatedBoopData })
                             void queryClient.invalidateQueries({
-                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey, boopQueryKey],
+                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey],
                             })
                         },
                     },
@@ -163,78 +187,77 @@ export const EthSendTransaction = ({
                     },
                 }}
             >
-                <SectionBlock>
-                    <SubsectionBlock>
-                        {txTo && (
-                            <SubsectionContent>
-                                <SubsectionTitle>Receiver address</SubsectionTitle>
-                                <FormattedDetailsLine>
-                                    <LinkToAddress address={txTo}>{txTo}</LinkToAddress>
-                                </FormattedDetailsLine>
-                            </SubsectionContent>
-                        )}
-
-                        {txValue > 0n && (
-                            <SubsectionContent>
-                                <SubsectionTitle>Sending amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formatted?.value} HAPPY</FormattedDetailsLine>
-                            </SubsectionContent>
-                        )}
-                    </SubsectionBlock>
-                </SectionBlock>
-                <SectionBlock>
-                    <SubsectionBlock>
-                        <SubsectionContent>
-                            <SubsectionTitle>Cost</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                {boopSimulationPending ? (
-                                    <FieldLoader />
-                                ) : (
-                                    `${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
+                {!showSimulationResult ? (
+                    <FieldLoader />
+                ) : (
+                    <>
+                        <SectionBlock>
+                            <SubsectionBlock>
+                                {txTo && (
+                                    <SubsectionContent>
+                                        <SubsectionTitle>Receiver address</SubsectionTitle>
+                                        <FormattedDetailsLine>
+                                            <LinkToAddress addressLabel={txTo}>{txTo}</LinkToAddress>
+                                        </FormattedDetailsLine>
+                                    </SubsectionContent>
                                 )}
-                            </FormattedDetailsLine>
-                            {!isSelfPaying && (
-                                <SubsectionTitle>
-                                    <LinkToAddress address={paymasterInUse}>
-                                        Sponsored by{" "}
-                                        <span className="text-accent">{getPaymasterName(paymasterInUse)}</span>
-                                    </LinkToAddress>
-                                </SubsectionTitle>
-                            )}
-                        </SubsectionContent>
-                    </SubsectionBlock>
-                </SectionBlock>
-                {decodedData && (
-                    <DisclosureSection
-                        title="Decoded Function Data"
-                        showWarning
-                        warningText={"This ABI is not verified."}
-                        isOpen={true}
-                    >
-                        <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
-                            <span className="opacity-75 text-xs">Function Name:</span>
-                            <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
-                                {decodedData.abiFuncDef.name}
-                            </span>
-                        </div>
 
-                        {decodedData.args?.length && (
-                            <div className="w-full">
-                                <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
-                            </div>
+                                {txValue > 0n && (
+                                    <SubsectionContent>
+                                        <SubsectionTitle>Sending amount</SubsectionTitle>
+                                        <FormattedDetailsLine>{formatted?.value} HAPPY</FormattedDetailsLine>
+                                    </SubsectionContent>
+                                )}
+                            </SubsectionBlock>
+                        </SectionBlock>
+                        <SectionBlock>
+                            <SubsectionBlock>
+                                <SubsectionContent>
+                                    <SubsectionTitle>Cost</SubsectionTitle>
+                                    <FormattedDetailsLine>
+                                        {boopSimulationPending ? (
+                                            <FieldLoader />
+                                        ) : (
+                                            `${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
+                                        )}
+                                    </FormattedDetailsLine>
+                                    {!isSelfPaying && (
+                                        <SubsectionTitle>
+                                            Sponsored by{" "}
+                                            <LinkToAddress addressLabel={getPaymasterName(paymasterInUse)} short />
+                                        </SubsectionTitle>
+                                    )}
+                                </SubsectionContent>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                        {decodedData && (
+                            <DisclosureSection
+                                title="Decoded Function Data"
+                                showWarning
+                                warningText={"This ABI is not verified."}
+                                isOpen={true}
+                            >
+                                <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
+                                    <span className="opacity-75 text-xs">Function Name:</span>
+                                    <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
+                                        {decodedData.abiFuncDef.name}
+                                    </span>
+                                </div>
+
+                                {decodedData.args?.length && (
+                                    <div className="w-full">
+                                        <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
+                                    </div>
+                                )}
+                            </DisclosureSection>
                         )}
-                    </DisclosureSection>
-                )}
 
-                <DisclosureSection title="Raw Request">
-                    <div className="grid gap-4 p-2">
-                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                    </div>
-                </DisclosureSection>
-                {tx.type === TransactionType.EIP4844 && (
-                    <SectionBlock>
-                        <BlobTxWarning onReject={reject} />
-                    </SectionBlock>
+                        <DisclosureSection title="Raw Request">
+                            <div className="grid gap-4 p-2">
+                                <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                            </div>
+                        </DisclosureSection>
+                    </>
                 )}
             </Layout>
         </>

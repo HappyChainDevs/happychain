@@ -1,4 +1,4 @@
-import type { SimulateOutput } from "@happy.tech/boop-sdk"
+import { Onchain, type SimulateError, type SimulateSuccess } from "@happy.tech/boop-sdk"
 import type { Address } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import { entryPoint } from "#src/constants/contracts"
@@ -13,10 +13,10 @@ export type UseSimulateBoopArgs = {
 }
 
 export type UseSimulateBoopReturn = {
-    simulatedBoopData: SimulateOutput | undefined
+    simulatedBoopData?: SimulateSuccess
+    simulatedBoopError?: SimulateError
     isSimulationPending: boolean
     isSimulationError: boolean
-    simulationQueryKey: readonly unknown[]
 }
 
 /**
@@ -80,7 +80,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
     const shouldQuery = !!userAddress && !!tx && enabled
 
     const {
-        data: simulatedBoopData,
+        data,
         isPending: isSimulationPending,
         isError: isSimulationError,
     } = useQuery({
@@ -90,12 +90,25 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
             const boop = await boopFromTransaction(userAddress!, tx!)
             return await boopClient.simulate({ entryPoint, boop })
         },
+        select(result) {
+            if (result.status === Onchain.Success) {
+                return {
+                    simulatedBoopData: result as SimulateSuccess,
+                    simulatedBoopError: undefined,
+                }
+            } else {
+                return {
+                    simulatedBoopData: undefined,
+                    simulatedBoopError: result as SimulateError,
+                }
+            }
+        },
     })
 
     return {
-        simulatedBoopData,
+        simulatedBoopData: data?.simulatedBoopData,
+        simulatedBoopError: data?.simulatedBoopError,
         isSimulationPending,
         isSimulationError,
-        simulationQueryKey,
     }
 }

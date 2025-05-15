@@ -31,7 +31,7 @@ export const HappyLoadAbi = ({
             headline={<>Import contract interface</>}
             description={
                 <>
-                    Transactions sent to <LinkToAddress address={params.address} short /> will be displayed in a
+                    Transactions sent to <LinkToAddress addressLabel={params.address} short /> will be displayed in a
                     human-readable way.
                 </>
             }
@@ -54,7 +54,7 @@ export const HappyLoadAbi = ({
                         <SubsectionTitle>Address</SubsectionTitle>
                         <div className="grid relative">
                             <FormattedDetailsLine>
-                                <LinkToAddress address={params.address}>{params.address}</LinkToAddress>
+                                <LinkToAddress addressLabel={params.address}>{params.address}</LinkToAddress>
                             </FormattedDetailsLine>
                         </div>
                     </SubsectionContent>
