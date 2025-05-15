@@ -187,4 +187,20 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
         (bool success,) = payable(to).call{value: amount}("");
         require(success, "Failed to withdraw funds");
     }
+
+    /**
+     * @notice Returns the current UserInfo for a given address.
+     * If both `lastUpdated` and `userGasBudget` are 0, the user is treated as having the max gas budget.
+     * @param user The address of the user to query.
+     * @return info The effective UserInfo.
+     */
+    function getUserInfo(address user) external view returns (UserInfo memory info) {
+        UserInfo memory stored = userInfo[user];
+
+        if (stored.lastUpdated == 0) {
+            return UserInfo({lastUpdated: 0, userGasBudget: uint32(MAX_GAS_BUDGET)});
+        }
+
+        return stored;
+    }
 }

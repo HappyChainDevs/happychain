@@ -504,7 +504,7 @@ publish: build test  ## Build, test, then publish current packages
 .PHONY: publish
 
 
-pack: build ## Packs the tarbal, ready to publish manually
+pack: build ## Packs the tarball, ready to publish manually
 	$(call forall_make , $(SDK_ONLY_PKGS) , pack)
 .PHONY: pack
 
