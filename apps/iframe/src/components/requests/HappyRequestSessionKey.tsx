@@ -28,8 +28,8 @@ export const HappyRequestSessionKey = ({
                 <>
                     <div className="mb-4">
                         <p className="mb-2">
-                            The app will be able to send transactions to <LinkToAddress addressLabel={targetAddress} short />{" "}
-                            without approval.
+                            The app will be able to send transactions to{" "}
+                            <LinkToAddress addressLabel={targetAddress} short /> without approval.
                         </p>
                         <p>You can revoke automatic approvals from the wallet.</p>
                     </div>
