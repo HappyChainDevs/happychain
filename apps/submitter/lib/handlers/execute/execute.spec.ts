@@ -256,11 +256,11 @@ describe("submitter_execute", () => {
             )
             console.log("transactions", transactions)
             const results = await Promise.all(
-                transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
+                transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
             console.log("results", results)
             expect(results.length).toBe(count)
             expect(results.every((r) => r.status === Onchain.Success)).toBe(true)
-        }, 60_000)
+        })
     })
 })
