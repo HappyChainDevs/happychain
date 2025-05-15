@@ -42,7 +42,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
         .addColumn("guild_id", "integer", (col) => col.notNull())
         .addColumn("user_id", "integer", (col) => col.notNull())
-        .addColumn("is_admin", "boolean", (col) => col.notNull().defaultTo(false))
+        .addColumn("role", "text", (col) => col.notNull().defaultTo("member")) // Only values from GuildRole enum allowed; enforced in code
         .addColumn("joined_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
         .addForeignKeyConstraint("guild_members_guild_id_fk", ["guild_id"], "guilds", ["id"])
         .addForeignKeyConstraint("guild_members_user_id_fk", ["user_id"], "users", ["id"])
@@ -68,6 +68,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
         .addColumn("user_id", "integer", (col) => col.notNull())
         .addColumn("game_id", "integer", (col) => col.notNull())
+        .addColumn("role", "text", (col) => col.notNull().defaultTo("player")) // Only values from GameRole enum allowed; enforced in code
         .addColumn("score", "integer", (col) => col.notNull())
         .addColumn("metadata", "text", (col) => col)
         .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())

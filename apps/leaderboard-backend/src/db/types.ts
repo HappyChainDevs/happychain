@@ -1,5 +1,6 @@
 import type { Address, UUID } from "@happy.tech/common"
 import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
+import type { GameRole, GuildRole } from "../auth/roles"
 
 // --- Branded ID types for strong nominal typing ---
 export type UserTableId = number & { _brand: "users_id" }
@@ -48,12 +49,11 @@ interface GuildTable {
     updated_at: ColumnType<Date, string | undefined, string>
 }
 
-// Guild membership JOIN table (users in guilds with role)
 interface GuildMemberTable {
     id: Generated<GuildMemberTableId>
     guild_id: GuildTableId // FK to guilds
     user_id: UserTableId // FK to users
-    is_admin: boolean // Whether user is an admin of this guild
+    role: GuildRole // Enum-based role in guild
     joined_at: ColumnType<Date, string | undefined, never>
 }
 
@@ -73,6 +73,7 @@ interface UserGameScoreTable {
     id: Generated<ScoreTableId>
     user_id: UserTableId // FK to users
     game_id: GameTableId // FK to games
+    role: GameRole // Enum-based role in game
     score: number // The actual score
     metadata: string | null // JSON string for any additional game-specific data
     created_at: ColumnType<Date, string | undefined, never>

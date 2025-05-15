@@ -14,35 +14,52 @@ export enum GameRole {
     CREATOR = "creator", // Game creator (can manage game)
 }
 
-export const Permissions = {
-    User: {
-        READ: [UserRole.AUTHENTICATED, UserRole.SELF], // Anyone can read user profiles
-        CREATE: [UserRole.AUTHENTICATED], // Any authenticated user can create a profile
-        UPDATE: [UserRole.SELF], // Only the user can update their profile
-        DELETE: [UserRole.SELF], // Only the user can delete their profile
-        MANAGE_WALLETS: [UserRole.SELF], // Only the user can manage their wallets
-    },
+export enum ResourceType {
+    USER = "user",
+    GUILD = "guild",
+    GAME = "game",
+    SCORE = "score",
+}
 
-    Guild: {
-        READ: [UserRole.AUTHENTICATED], // Anyone can read guild info
-        CREATE: [UserRole.AUTHENTICATED], // Any authenticated user can create a guild
-        UPDATE: [GuildRole.ADMIN, GuildRole.CREATOR], // Admins and creators can update guild
-        DELETE: [GuildRole.CREATOR], // Only creator can delete guild
-        ADD_MEMBER: [GuildRole.ADMIN, GuildRole.CREATOR], // Admins and creators can add members
-        REMOVE_MEMBER: [GuildRole.ADMIN, GuildRole.CREATOR], // Admins and creators can remove members
-        PROMOTE_MEMBER: [GuildRole.CREATOR], // Only creator can promote members to admin
-    },
+export enum ActionType {
+    READ = "read",
+    CREATE = "create",
+    UPDATE = "update",
+    DELETE = "delete",
+    MANAGE = "manage",
+    ADD_MEMBER = "add_member",
+    REMOVE_MEMBER = "remove_member",
+    PROMOTE_MEMBER = "promote_member",
+    SUBMIT_SCORE = "submit_score",
+    MANAGE_SCORES = "manage_scores",
+}
 
-    Game: {
-        READ: [UserRole.AUTHENTICATED], // Anyone can read game info
-        CREATE: [UserRole.AUTHENTICATED], // Any authenticated user can create a game
-        UPDATE: [GameRole.CREATOR], // Only creator can update game
-        DELETE: [GameRole.CREATOR], // Only creator can delete game
-        SUBMIT_SCORE: [UserRole.AUTHENTICATED], // Any authenticated user can submit scores
-        MANAGE_SCORES: [GameRole.CREATOR], // Only creator can manage/delete scores
+export const Permissions: Record<ResourceType, Partial<Record<ActionType, RoleType[]>>> = {
+    [ResourceType.USER]: {
+        [ActionType.READ]: [UserRole.AUTHENTICATED, UserRole.SELF],
+        [ActionType.CREATE]: [UserRole.AUTHENTICATED],
+        [ActionType.UPDATE]: [UserRole.SELF],
+        [ActionType.DELETE]: [UserRole.SELF],
+        [ActionType.MANAGE]: [UserRole.SELF],
     },
+    [ResourceType.GUILD]: {
+        [ActionType.READ]: [UserRole.AUTHENTICATED],
+        [ActionType.CREATE]: [UserRole.AUTHENTICATED],
+        [ActionType.UPDATE]: [GuildRole.ADMIN, GuildRole.CREATOR],
+        [ActionType.DELETE]: [GuildRole.CREATOR],
+        [ActionType.ADD_MEMBER]: [GuildRole.ADMIN, GuildRole.CREATOR],
+        [ActionType.REMOVE_MEMBER]: [GuildRole.ADMIN, GuildRole.CREATOR],
+        [ActionType.PROMOTE_MEMBER]: [GuildRole.CREATOR],
+    },
+    [ResourceType.GAME]: {
+        [ActionType.READ]: [UserRole.AUTHENTICATED],
+        [ActionType.CREATE]: [UserRole.AUTHENTICATED],
+        [ActionType.UPDATE]: [GameRole.CREATOR],
+        [ActionType.DELETE]: [GameRole.CREATOR],
+        [ActionType.SUBMIT_SCORE]: [UserRole.AUTHENTICATED],
+        [ActionType.MANAGE_SCORES]: [GameRole.CREATOR],
+    },
+    [ResourceType.SCORE]: {},
 }
 
 export type RoleType = UserRole | GuildRole | GameRole
-export type ResourceType = "user" | "guild" | "game" | "score"
-export type ActionType = "read" | "create" | "update" | "delete" | "manage"
