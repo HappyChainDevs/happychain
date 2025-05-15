@@ -1,4 +1,5 @@
-import { type Chain, type ChainRpcUrls, anvil, happyChainSepolia } from "@happy.tech/wallet-common"
+import type { Chain, ChainRpcUrls } from "@happy.tech/wallet-common"
+import { anvil, happyChainSepolia } from "@happy.tech/wallet-common"
 
 /**
  * Returns a {@link Chain} object based on the provided chain ID.

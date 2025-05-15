@@ -1,8 +1,10 @@
 /// <reference types="vitest" />
+
+import sharedConfig from "@happy.tech/configs/vite.config.ts"
 import { SharedWorkerPlugin } from "@happy.tech/worker"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig, loadEnv } from "vite"
+import { defineConfig, loadEnv, mergeConfig } from "vite"
 import z from "zod"
 
 const envConfigSchema = z.object({
@@ -28,14 +30,16 @@ export default defineConfig(({ command, mode }) => {
         console.error(validateConfig.error.errors)
         process.exit(1)
     }
-    return {
+
+    return mergeConfig(sharedConfig, {
         optimizeDeps: {
             // Vite seems unable to properly optimize shared-workers with code-gen when switching
             // between branches.
             exclude: command === "serve" ? ["@happy.tech/worker"] : [],
         },
-        server: { port: 5160, strictPort: true },
-        preview: { port: 5160, strictPort: true },
+
+        server: { port: 5160 },
+        preview: { port: 5160 },
         plugins: [
             TanStackRouterVite(),
             react({ babel: { presets: ["jotai/babel/preset"] } }),
@@ -59,20 +63,12 @@ export default defineConfig(({ command, mode }) => {
         build: {
             rollupOptions: {
                 external: [/\\.mocks$/],
-                onwarn(warning, defaultHandler) {
-                    if (
-                        warning.code === "INVALID_ANNOTATION" &&
-                        warning.message.includes("contains an annotation that Rollup cannot interpret")
-                    )
-                        return // silence pesky annotations from wevm/ox
-                    defaultHandler(warning)
-                },
             },
         },
         test: {
             environment: "happy-dom",
         },
-    }
+    })
 })
 
 /**

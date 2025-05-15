@@ -50,7 +50,7 @@ DIST_DEPS := $(shell find . \
 # timestamp then the new `dist`.
 FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
-# You can add dependencies to this rule in the Makefile in which `vite.mk` is inluded.
+# You can add dependencies to this rule in the Makefile in which `vite.mk` is included.
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@rm -f node_modules/.tmp/.dev;
 	@if [ -d dist.prod ]; then \

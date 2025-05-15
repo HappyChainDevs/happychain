@@ -1,6 +1,5 @@
 import type { UUID } from "@happy.tech/common"
 import { BasePopupProvider, type EIP1193RequestParameters, Msgs } from "@happy.tech/wallet-common"
-import { chain } from "../config"
 import { InjectedWalletWrapper } from "./InjectedWalletWrapper"
 import type { HappyProviderConfig } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
@@ -33,10 +32,6 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         this.wrapper = new InjectedWalletWrapper(config)
 
         config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
-    }
-
-    protected chainId(): number {
-        return chain.id
     }
 
     isConnected(): boolean {

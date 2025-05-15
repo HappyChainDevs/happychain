@@ -1,15 +1,14 @@
 import type { UUID } from "@happy.tech/common"
+import type { EIP1193RequestParameters } from "@happy.tech/wallet-common"
 import {
     AuthState,
     BasePopupProvider,
-    type EIP1193RequestParameters,
     EIP1193UserRejectedRequestError,
     WalletType,
     waitForCondition,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { addBanner } from "#src/state/banner"
-import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user"
 import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
@@ -31,10 +30,6 @@ export class IframeProvider extends BasePopupProvider {
 
     constructor() {
         super(walletID())
-    }
-
-    protected chainId(): number {
-        return Number(getCurrentChain().chainId)
     }
 
     protected onPopupBlocked() {

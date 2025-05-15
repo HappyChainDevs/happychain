@@ -1,7 +1,6 @@
 import { defaultChain } from "@happy.tech/wallet-common"
 import define from "preact-custom-element"
 import { defineBadgeComponent } from "./badge/define"
-import { chain } from "./config"
 import { windowId } from "./happyProvider"
 import { HappyOverlay } from "./overlay/HappyOverlay"
 import { HappyWallet } from "./wallet/HappyWallet"
@@ -62,8 +61,6 @@ export function unloadHappyWallet() {
 }
 
 function registerWallet(opts: LoadHappyWalletOptions) {
-    chain.id = Number(opts.chainId)
-
     if (!customElements.get("happy-wallet")) {
         define(HappyWallet, "happy-wallet", [], { shadow: true })
         void defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)

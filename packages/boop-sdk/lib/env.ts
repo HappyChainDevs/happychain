@@ -1,18 +1,12 @@
 import type { Address, HTTPString } from "@happy.tech/common"
-import { deployment as anvilDeployment } from "@happy.tech/contracts/boop/anvil"
-import { deployment as happySepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
+import { deployment } from "@happy.tech/contracts/boop/sepolia"
 
-const { SUBMITTER_URL, RPC_URL, ENTRYPOINT } = import.meta.env
+// Defaults to HappyChain Sepolia, can be configured in consuming app via new `BoopClient({ ...options })`.
+const SUBMITTER_URL = import.meta.env.SUBMITTER_URL ?? "https://submitter.happy.tech"
+const RPC_URL = import.meta.env.RPC_URL ?? "https://rpc.testnet.happy.tech"
+const ENTRYPOINT = import.meta.env.ENTRYPOINT ?? deployment.EntryPoint
 
-// biome-ignore format: clarity
-export const env = {
-    SUBMITTER_URL: SUBMITTER_URL ?? "https://submitter.happy.tech",
-    RPC_URL: RPC_URL ?? "https://rpc.testnet.happy.tech",
-    ENTRYPOINT: ENTRYPOINT ??
-        RPC_URL === "http://localhost:8545"
-            ? anvilDeployment.EntryPoint
-            : happySepoliaDeployment.EntryPoint
-} as {
+export const env = { SUBMITTER_URL, RPC_URL, ENTRYPOINT } as {
     SUBMITTER_URL: HTTPString
     RPC_URL: HTTPString
     ENTRYPOINT: Address
