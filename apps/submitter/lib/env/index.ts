@@ -22,7 +22,7 @@ export type Environment = z.infer<typeof envSchema>
 /**
  * Provides access to the Boop contract addreses.
  */
-export const deployment = getDeployment(env)
+export const deployment = await getDeployment(env)
 
 export {
     /** Provides access to the ABIs of the contracts available in {@link deployment}. */

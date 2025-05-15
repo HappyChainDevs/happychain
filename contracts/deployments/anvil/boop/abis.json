@@ -1617,6 +1617,19 @@
       "stateMutability": "view"
     },
     {
+      "type": "function",
+      "name": "getProxyCreationCode",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
       "type": "event",
       "name": "Deployed",
       "inputs": [
