@@ -243,7 +243,6 @@ describe("submitter_execute", () => {
             expect(response.status).toBe(Onchain.ValidationReverted)
         })
         it("executes 50 'mint token' tx's quickly and successfully.", async () => {
-            if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
             const count = 50
             // test only works if submitter is configured to allow more than 50
             expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
