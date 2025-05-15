@@ -254,7 +254,7 @@ describe("submitter_execute", () => {
                     return await sign(dummyBoop)
                 }),
             )
-             const results = await Promise.all(
+            const results = await Promise.all(
                 transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
