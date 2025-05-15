@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely"
+import { GameRole } from "../auth/roles"
 import type { Database, Game, GameTableId, NewGame, UpdateGame, UserGameScore, UserTableId } from "../db/types"
 
 export class GameRepository {
@@ -99,6 +100,7 @@ export class GameScoreRepository {
                 "user_game_scores.id",
                 "user_game_scores.game_id",
                 "user_game_scores.user_id",
+                "user_game_scores.role",
                 "user_game_scores.score",
                 "user_game_scores.metadata",
                 "user_game_scores.created_at",
@@ -117,6 +119,7 @@ export class GameScoreRepository {
                 "user_game_scores.id",
                 "user_game_scores.game_id",
                 "user_game_scores.user_id",
+                "user_game_scores.role",
                 "user_game_scores.score",
                 "user_game_scores.metadata",
                 "user_game_scores.created_at",
@@ -155,6 +158,7 @@ export class GameScoreRepository {
                 .values({
                     user_id: userId,
                     game_id: gameId,
+                    role: GameRole.PLAYER, // Default role for new score submissions
                     score,
                     metadata,
                     created_at: now,

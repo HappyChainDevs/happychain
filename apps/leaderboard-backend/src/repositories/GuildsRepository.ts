@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely"
+import { GuildRole } from "../auth/roles"
 import type {
     Database,
     Guild,
@@ -107,7 +108,7 @@ export class GuildRepository {
                 .values({
                     guild_id: newGuild.id,
                     user_id: newGuild.creator_id,
-                    is_admin: true,
+                    role: GuildRole.CREATOR,
                     joined_at: now,
                 })
                 .execute()
@@ -153,7 +154,7 @@ export class GuildRepository {
                 "guild_members.id",
                 "guild_members.guild_id",
                 "guild_members.user_id",
-                "guild_members.is_admin",
+                "guild_members.role",
                 "guild_members.joined_at",
                 "users.username",
                 "users.primary_wallet",
@@ -198,12 +199,15 @@ export class GuildRepository {
             return undefined
         }
 
+        // Determine role based on isAdmin parameter
+        const role = isAdmin ? GuildRole.ADMIN : GuildRole.MEMBER
+
         await this.db
             .insertInto("guild_members")
             .values({
                 guild_id: guildId,
                 user_id: userId,
-                is_admin: isAdmin,
+                role: role,
                 joined_at: new Date().toISOString(),
             })
             .execute()
@@ -212,7 +216,7 @@ export class GuildRepository {
             .selectFrom("guild_members")
             .where("guild_id", "=", guildId)
             .where("user_id", "=", userId)
-            .select(["id", "guild_id", "user_id", "is_admin", "joined_at"])
+            .select(["id", "guild_id", "user_id", "role", "joined_at"])
             .executeTakeFirst()
     }
 
@@ -221,9 +225,12 @@ export class GuildRepository {
         userId: UserTableId,
         isAdmin: boolean,
     ): Promise<GuildMember | undefined> {
+        // Convert boolean isAdmin to appropriate GuildRole enum value
+        const role = isAdmin ? GuildRole.ADMIN : GuildRole.MEMBER
+
         return await this.db
             .updateTable("guild_members")
-            .set({ is_admin: isAdmin })
+            .set({ role: role })
             .where("guild_id", "=", guildId)
             .where("user_id", "=", userId)
             .returningAll()

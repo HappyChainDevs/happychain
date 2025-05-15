@@ -1,7 +1,5 @@
 import type { Context, MiddlewareHandler } from "hono"
 import { createMiddleware } from "hono/factory"
-
-import type { GuildTableId, UserTableId } from "../../db/types"
 import { type ActionType, Permissions, type ResourceType, type RoleType, UserRole } from "../roles"
 
 /**
@@ -37,7 +35,7 @@ export function requirePermission({
             if (!role) role = UserRole.AUTHENTICATED
         }
 
-        // Find allowed roles from the Permissions object (now enums)
+        // Find allowed roles from the Permissions object
         const allowed = Permissions?.[resource]?.[action]
         if (!allowed) {
             return c.json({ ok: false, error: `Permission config not found for ${resource}.${action}` }, 500)
@@ -51,16 +49,4 @@ export function requirePermission({
 
         return c.json({ ok: false, error: "Forbidden: insufficient role/permissions" }, 403)
     })
-}
-
-/**
- * Example getUserRole implementation for guilds.
- * Looks up the user's role in the guild_members table.
- */
-export async function getGuildUserRole(c: Context): Promise<string | undefined> {
-    const userId = c.get("userId") as UserTableId
-    const guildId = c.req.param("id")
-    const { guildRepo } = c.get("repos")
-    const member = await guildRepo.findGuildMember(Number.parseInt(guildId, 10) as GuildTableId, userId)
-    return member?.role
 }

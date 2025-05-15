@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi"
 import { resolver } from "hono-openapi/zod"
 import { type Address, isHex } from "viem"
+import { GuildRole } from "../../auth/roles"
 
 // ====================================================================================================
 // Response Schemas
@@ -31,7 +32,7 @@ const GuildMemberResponseSchema = z
         id: z.number().int(),
         guild_id: z.number().int(),
         user_id: z.number().int(),
-        is_admin: z.boolean(),
+        role: z.nativeEnum(GuildRole),
         joined_at: z.string(),
         // Extended properties when including user details
         username: z.string().optional(),
@@ -47,7 +48,7 @@ const GuildMemberResponseSchema = z
             id: 1,
             guild_id: 1,
             user_id: 1,
-            is_admin: true,
+            role: GuildRole.ADMIN,
             joined_at: "2023-01-01T00:00:00.000Z",
             username: "player1",
             primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
@@ -118,7 +119,7 @@ export const GuildMemberAddRequestSchema = z
     .object({
         user_id: z.number().int().optional(),
         username: z.string().min(1).optional(),
-        is_admin: z.boolean().default(false).optional(),
+        role: z.nativeEnum(GuildRole).default(GuildRole.MEMBER).optional(),
     })
     .strict()
     .refine((data) => data.user_id !== undefined || data.username !== undefined, {
@@ -127,19 +128,19 @@ export const GuildMemberAddRequestSchema = z
     .openapi({
         example: {
             username: "aryan",
-            is_admin: false,
+            role: GuildRole.MEMBER,
         },
     })
 
 // Guild member update request schema (for PATCH /guilds/:id/members/:userId)
 export const GuildMemberUpdateRequestSchema = z
     .object({
-        is_admin: z.boolean(),
+        role: z.nativeEnum(GuildRole),
     })
     .strict()
     .openapi({
         example: {
-            is_admin: true,
+            role: GuildRole.ADMIN,
         },
     })
 

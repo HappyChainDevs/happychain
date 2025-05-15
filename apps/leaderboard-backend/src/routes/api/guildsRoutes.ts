@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { requireAuth, requireGuildRole } from "../../auth"
+import { ActionType, GuildRole, ResourceType, getGuildUserRole, requireAuth, requirePermission } from "../../auth"
 import type { GuildTableId, UserTableId } from "../../db/types"
 import {
     GuildCreateDescription,
@@ -51,29 +51,36 @@ export default new Hono()
      * POST /guilds
      * @security BearerAuth
      */
-    .post("/", requireAuth, GuildCreateDescription, GuildCreateValidation, async (c) => {
-        try {
-            const guildData = c.req.valid("json")
-            const { guildRepo } = c.get("repos")
+    .post(
+        "/",
+        requireAuth,
+        requirePermission({ resource: ResourceType.GUILD, action: ActionType.CREATE }),
+        GuildCreateDescription,
+        GuildCreateValidation,
+        async (c) => {
+            try {
+                const guildData = c.req.valid("json")
+                const { guildRepo } = c.get("repos")
 
-            // Check if guild name already exists
-            const existingGuilds = await guildRepo.findByName(guildData.name)
-            if (existingGuilds.length > 0) {
-                return c.json({ ok: false, error: "Guild name already exists" }, 409)
+                // Check if guild name already exists
+                const existingGuilds = await guildRepo.findByName(guildData.name)
+                if (existingGuilds.length > 0) {
+                    return c.json({ ok: false, error: "Guild name already exists" }, 409)
+                }
+
+                const newGuild = await guildRepo.create({
+                    name: guildData.name,
+                    icon_url: guildData.icon_url || null,
+                    creator_id: guildData.creator_id as UserTableId,
+                })
+
+                return c.json(newGuild, 201)
+            } catch (err) {
+                console.error("Error creating guild:", err)
+                return c.json({ ok: false, error: "Internal Server Error" }, 500)
             }
-
-            const newGuild = await guildRepo.create({
-                name: guildData.name,
-                icon_url: guildData.icon_url || null,
-                creator_id: guildData.creator_id as UserTableId,
-            })
-
-            return c.json(newGuild, 201)
-        } catch (err) {
-            console.error("Error creating guild:", err)
-            return c.json({ ok: false, error: "Internal Server Error" }, 500)
-        }
-    })
+        },
+    )
 
     /**
      * Get a guild by ID (optionally include members).
@@ -108,7 +115,7 @@ export default new Hono()
     .patch(
         "/:id",
         requireAuth,
-        requireGuildRole("ADMIN"),
+        requirePermission({ resource: ResourceType.GUILD, action: ActionType.UPDATE, getUserRole: getGuildUserRole }),
         GuildUpdateDescription,
         GuildIdParamValidation,
         GuildUpdateValidation,
@@ -180,14 +187,18 @@ export default new Hono()
     .post(
         "/:id/members",
         requireAuth,
-        requireGuildRole("ADMIN"),
+        requirePermission({
+            resource: ResourceType.GUILD,
+            action: ActionType.ADD_MEMBER,
+            getUserRole: getGuildUserRole,
+        }),
         GuildMemberAddDescription,
         GuildIdParamValidation,
         GuildMemberAddValidation,
         async (c) => {
             try {
                 const { id } = c.req.valid("param")
-                let { user_id, username, is_admin } = c.req.valid("json")
+                let { user_id, username, role } = c.req.valid("json")
                 const { guildRepo, userRepo } = c.get("repos")
 
                 // Ensure guild exists
@@ -217,7 +228,7 @@ export default new Hono()
                 }
 
                 // Add member to guild
-                const member = await guildRepo.addMember(guildId, user_id as UserTableId, is_admin || false)
+                const member = await guildRepo.addMember(guildId, user_id as UserTableId, role === GuildRole.ADMIN)
                 if (!member) {
                     return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
                 }
@@ -239,7 +250,11 @@ export default new Hono()
     .patch(
         "/:id/members/:member_id",
         requireAuth,
-        requireGuildRole("ADMIN"),
+        requirePermission({
+            resource: ResourceType.GUILD,
+            action: ActionType.PROMOTE_MEMBER,
+            getUserRole: getGuildUserRole,
+        }),
         GuildMemberUpdateDescription,
         GuildIdParamValidation,
         GuildMemberIdParamValidation,
@@ -248,7 +263,7 @@ export default new Hono()
             try {
                 const { id, member_id } = c.req.valid("param")
 
-                const { is_admin } = c.req.valid("json")
+                const { role } = c.req.valid("json")
                 const { guildRepo } = c.get("repos")
 
                 // Check if guild exists
@@ -260,7 +275,9 @@ export default new Hono()
                 }
 
                 // Update member role
-                const updatedMember = await guildRepo.updateMemberRole(guildId, userId, is_admin)
+                // Convert role enum to boolean for backward compatibility with repository
+                const isAdmin = role === GuildRole.ADMIN
+                const updatedMember = await guildRepo.updateMemberRole(guildId, userId, isAdmin)
                 if (!updatedMember) {
                     return c.json({ ok: false, error: "Member not found in guild" }, 404)
                 }
@@ -282,7 +299,11 @@ export default new Hono()
     .delete(
         "/:id/members/:member_id",
         requireAuth,
-        requireGuildRole("ADMIN"),
+        requirePermission({
+            resource: ResourceType.GUILD,
+            action: ActionType.REMOVE_MEMBER,
+            getUserRole: getGuildUserRole,
+        }),
         GuildMemberDeleteDescription,
         GuildIdParamValidation,
         GuildMemberIdParamValidation,

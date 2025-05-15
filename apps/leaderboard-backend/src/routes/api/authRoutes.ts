@@ -59,7 +59,7 @@ export default new Hono()
             secure: false,
             sameSite: "Lax",
             path: "/",
-            maxAge: env.SESSION_EXPIRY,
+            maxAge: Number.parseInt(env.SESSION_EXPIRY, 10),
         })
 
         // Return success with session ID and user info
