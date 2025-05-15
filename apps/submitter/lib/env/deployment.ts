@@ -8,27 +8,6 @@ import { anvil, happychainTestnet } from "viem/chains"
 import type { Environment } from "#lib/env/index"
 
 /**
- * Fetches the proxy creation code from the factory contract
- */
-async function fetchCreationCode(chainId: number, factoryAddress: Address): Promise<Hex> {
-    try {
-        const publicClient = createPublicClient({
-            chain: chainId === anvil.id ? anvil : happychainTestnet,
-            transport: http(),
-        })
-        const creationCode = (await publicClient.readContract({
-            address: factoryAddress,
-            abi: abis.HappyAccountBeaconProxyFactory,
-            functionName: "getProxyCreationCode",
-        })) as Hex
-
-        return creationCode
-    } catch (error) {
-        throw new Error(`Failed to fetch proxy creation code from factory at ${factoryAddress}: ${error}`)
-    }
-}
-
-/**
  * Gets the base deployment based on the chain ID
  */
 function getBaseDeployment(chainId: number) {
@@ -39,6 +18,28 @@ function getBaseDeployment(chainId: number) {
             return deploymentAnvil
         default:
             return deploymentHappyChainSepolia
+    }
+}
+
+/**
+ * Fetches the proxy creation code from the factory contract
+ */
+async function fetchProxyCreationCode(env: Environment, factoryAddress: Address): Promise<Hex> {
+    try {
+        const publicClient = createPublicClient({
+            chain: env.CHAIN_ID === anvil.id ? anvil : happychainTestnet,
+            transport: http(env.RPC_URL),
+        })
+
+        const creationCode = (await publicClient.readContract({
+            address: factoryAddress,
+            abi: abis.HappyAccountBeaconProxyFactory,
+            functionName: "getProxyCreationCode",
+        })) as Hex
+
+        return creationCode
+    } catch {
+        return "0x"
     }
 }
 
@@ -56,7 +57,7 @@ export async function getDeployment(env: Environment) {
 
     // Fetch or use provided creation code
     const creationCode =
-        env.DEPLOYMENT_ACCOUNT_FACTORY_CREATION_CODE ?? (await fetchCreationCode(env.CHAIN_ID, factoryAddress))
+        env.DEPLOYMENT_ACCOUNT_FACTORY_CREATION_CODE ?? (await fetchProxyCreationCode(env, factoryAddress))
 
     // Return the final deployment configuration
     return {
