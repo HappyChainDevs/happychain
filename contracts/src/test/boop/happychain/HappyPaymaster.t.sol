@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
+import {HappyPaymaster, UserInfo} from "boop/happychain/HappyPaymaster.sol";
 import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Boop} from "boop/interfaces/Types.sol";
@@ -141,5 +141,30 @@ contract HappyPaymasterTest is BoopTestUtils {
         vm.prank(nonOwner);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
         HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+    }
+
+    // ====================================================================================================
+    // USER INFO TESTS
+
+    function testGetUserInfoDefaultsToMaxBudget() public view {
+        // Make sure the user has no stored info
+        UserInfo memory info = HappyPaymaster(payable(paymaster)).getUserInfo(smartAccount);
+        assertEq(info.lastUpdated, 0);
+        assertEq(info.userGasBudget, uint32(HappyPaymaster(payable(paymaster)).MAX_GAS_BUDGET()));
+    }
+
+    function testGetUserInfoReturnsStoredValue() public {
+        // Trigger a valid payment to store budget
+        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
+        boop.maxFeePerGas = 1;
+        boop.gasLimit = 100_000;
+        boop.submitterFee = 0;
+
+        vm.prank(_entryPoint);
+        HappyPaymaster(payable(paymaster)).validatePayment(boop);
+
+        UserInfo memory info = HappyPaymaster(payable(paymaster)).getUserInfo(smartAccount);
+        assertGt(info.lastUpdated, 0);
+        assertLt(info.userGasBudget, uint32(HappyPaymaster(payable(paymaster)).MAX_GAS_BUDGET()));
     }
 }
