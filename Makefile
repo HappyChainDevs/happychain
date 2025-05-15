@@ -545,11 +545,11 @@ select-submitter-prod:
 .PHONY: select-submitter-prod
 
 select-iframe-local:
-	$(call update_env,packages/core/.env,IFRAME_URL,http://localhost:5160)
+	$(call update_env,packages/core/.env,VITE_IFRAME_URL,http://localhost:5160)
 .PHONY: select-iframe-local
 
 select-iframe-testnet:
-	$(call update_env,packages/core/.env,IFRAME_URL,https://iframe.happy.tech)
+	$(call update_env,packages/core/.env,VITE_IFRAME_URL,https://iframe.happy.tech)
 .PHONY: select-iframe-local
 
 select-chain-local:
@@ -558,7 +558,7 @@ select-chain-local:
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
-	$(call update_env,apps/randomness/.env,RPC_URL,http://127.0.0.1:8545)
+	$(call update_env,apps/randomness/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)

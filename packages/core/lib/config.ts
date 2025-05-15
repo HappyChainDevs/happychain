@@ -1,11 +1,8 @@
 /**
  * Shared configuration between the SDK and the iframe.
  */
-export const config = {
-    iframePath: import.meta.env.IFRAME_URL || "http://localhost:5160",
-}
+const fallbackDomain = import.meta.env.DEV ? "http://127.0.0.1:5160" : "https://iframe.happy.tech"
 
-/** Box to hold the chainId loaded with {@link loadHappyWallet}. */
-export const chain = {
-    id: 0xdeadbeef,
+export const config = {
+    iframePath: import.meta.env.VITE_IFRAME_URL || fallbackDomain,
 }

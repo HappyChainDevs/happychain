@@ -20,7 +20,7 @@ jobs:
 
       - name: Build code
         env:
-          IFRAME_URL: "https://iframe.happy.tech"
+          VITE_IFRAME_URL: "https://iframe.happy.tech"
           NODE_ENV: "production"
         run: |
           make demo-react.build

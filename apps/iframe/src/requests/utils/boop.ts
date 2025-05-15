@@ -1,8 +1,9 @@
-import { GetState, Onchain, SubmitterError, computeBoopHash } from "@happy.tech/boop-sdk"
+import { GetNonce, GetState, Onchain, SubmitterError, computeBoopHash } from "@happy.tech/boop-sdk"
 import type {
     Boop,
     BoopReceipt,
     ExecuteOutput,
+    GetNonceOutput,
     GetStateOutput,
     SimulateOutput,
     SimulateSuccess,
@@ -20,14 +21,12 @@ import {
 } from "@happy.tech/wallet-common"
 import { parseSignature, zeroAddress } from "viem"
 import type { Log, TransactionEIP1559, TransactionReceipt } from "viem"
-import { entryPoint, entryPointAbi } from "#src/constants/contracts"
+import { entryPoint } from "#src/constants/contracts"
 import { type BoopCacheEntry, boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
-import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { getBoopClient } from "#src/state/boopClient"
 import { addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
-import { getPublicClient } from "#src/state/publicClient"
 import { reqLogger } from "#src/utils/logger"
 import { createValidatorExtraData } from "./sessionKeys"
 
@@ -60,19 +59,12 @@ export async function getNextNonce(account: Address, nonceTrack = 0n): Promise<b
 /**
  * Returns the nonce from the EntryPoint contract for a given account.
  */
-export async function getOnchainNonce(
-    account: Address,
-    nonceTrack = 0n,
-    block: BlockParam = "latest",
-): Promise<bigint> {
-    const publicClient = getPublicClient()
-    return await publicClient.readContract({
-        address: entryPoint,
-        abi: entryPointAbi,
-        functionName: "nonceValues",
-        args: [account, nonceTrack],
-        ...parseBlockParam(block),
-    })
+async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
+    const boopClient = getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+    const results = await boopClient.getNonce({ address: account, nonceTrack })
+    if (results.status !== GetNonce.Success) throw translateBoopError(results)
+    return results.nonceValue
 }
 
 /**
@@ -281,7 +273,8 @@ export function formatTransaction(
     } satisfies TransactionEIP1559 & { boop?: BoopReceipt }
 }
 
-function translateBoopError(output: ExecuteOutput | SimulateOutput | GetStateOutput): HappyRpcError {
+type Outputs = ExecuteOutput | SimulateOutput | GetStateOutput | GetNonceOutput
+function translateBoopError(output: Outputs): HappyRpcError {
     switch (output.status) {
         case Onchain.MissingValidationInformation:
         case Onchain.MissingGasValues:
@@ -321,6 +314,9 @@ function translateBoopError(output: ExecuteOutput | SimulateOutput | GetStateOut
         case GetState.UnknownState:
         case GetState.UnknownBoop:
             return new EIP1474ResourceNotfound("Requesting state of unknown boop", output)
+        case GetNonce.Error:
+            return new EIP1474InternalError("Failed to get nonce from boop client", output)
+        case GetNonce.Success:
         case Onchain.Success:
         case GetState.Receipt:
         case GetState.Simulated:

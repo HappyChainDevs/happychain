@@ -1,3 +1,4 @@
+import { loadAbi } from "@happy.tech/core"
 import { requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { Spinner } from "@phosphor-icons/react"
@@ -33,22 +34,17 @@ const SessionKeyDemo = () => {
         })
     }, [updateCounterValue])
 
-    async function submitIncrement() {
-        if (!walletClient || !user?.address) throw new Error("Wallet not connected")
-        return await walletClient.writeContract({
-            address: deployment.HappyCounter,
-            abi: abis.HappyCounter,
-            functionName: "increment",
-        })
-    }
-
     async function incrementCounter() {
         try {
-            const hash = await submitIncrement()
-            if (!hash) throw new Error("No hash returned")
+            const hash = await walletClient.writeContract({
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
+                functionName: "increment",
+            })
+
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
             if (receipt.status === "reverted") {
-                toast.error("UserOp reverted!")
+                toast.error("Boop reverted!")
                 return
             }
 
@@ -56,8 +52,36 @@ const SessionKeyDemo = () => {
             toast.success(`Counter incremented to ${newCount}`)
         } catch (error) {
             console.warn("[incrementCounter] error:", error)
-            toast.error("Failed to increment counter")
+            toast.error("Failed to increment counter: " + (error instanceof Error ? error.message : "Unknown error"))
         }
+    }
+    async function resetCounter() {
+        try {
+            const hash = await walletClient.writeContract({
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
+                functionName: "reset",
+            })
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash })
+            if (receipt.status === "reverted") {
+                toast.error("Boop reverted!")
+                return
+            }
+
+            const newCount = await updateCounterValue()
+            toast.success(`Counter incremented to ${newCount}`)
+        } catch (error) {
+            console.warn("[incrementCounter] error:", error)
+            toast.error("Failed to reset counter: " + (error instanceof Error ? error.message : "Unknown error"))
+        }
+    }
+
+    async function loadAbiStub() {
+        await loadAbi(deployment.HappyCounter, abis.HappyCounter)
+        toast.success(
+            `ABI loaded for ${deployment.MockTokenA}! Click on the Mint Token button to see the ABI in use within the request popup.`,
+        )
     }
 
     async function addSessionKeyToCounterContract() {
@@ -78,6 +102,14 @@ const SessionKeyDemo = () => {
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >
                 Add Session Key
+            </button>
+
+            <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Load ABI
+            </button>
+
+            <button type="button" onClick={resetCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Reset
             </button>
 
             <button type="button" onClick={incrementCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">

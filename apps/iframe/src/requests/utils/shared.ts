@@ -6,18 +6,18 @@ import { GetState, Onchain } from "@happy.tech/boop-sdk"
 import type { Address, Hash, Hex } from "@happy.tech/common"
 import { EIP1474InternalError, type HappyUser } from "@happy.tech/wallet-common"
 import { type Transaction, type TransactionReceipt, toHex } from "viem"
-import { entryPoint } from "#src/constants/contracts"
+import { entryPoint, entryPointAbi } from "#src/constants/contracts"
 import {
     boopFromTransaction,
     formatTransaction,
     formatTransactionReceipt,
     getCurrentNonce,
-    getOnchainNonce,
 } from "#src/requests/utils/boop"
 import { boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
-import type { BlockParam } from "#src/requests/utils/eip1474"
+import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { getBoopClient } from "#src/state/boopClient"
+import { getPublicClient } from "#src/state/publicClient.ts"
 import { reqLogger } from "#src/utils/logger"
 
 export const FORWARD = Symbol("FORWARD")
@@ -105,9 +105,23 @@ export async function getTransactionCount(
     return user && address.toLowerCase() === user.address.toLowerCase()
         ? block === "pending"
             ? toHex(await getCurrentNonce(address as Address))
-            : toHex(await getOnchainNonce(address as Address, 0n, block))
+            : toHex(await getNonceAtBlock(address as Address, 0n, block))
         : FORWARD
     // NOTE: We could lookup to see if the address is that of another boop account. Not worth the hassle for now.
+}
+
+/**
+ * Fetches the nonce for the given block.
+ */
+async function getNonceAtBlock(account: Address, nonceTrack: bigint, block: BlockParam): Promise<bigint> {
+    const publicClient = getPublicClient()
+    return await publicClient.readContract({
+        address: entryPoint,
+        abi: entryPointAbi,
+        functionName: "nonceValues",
+        args: [account, nonceTrack],
+        ...parseBlockParam(block),
+    })
 }
 
 /**

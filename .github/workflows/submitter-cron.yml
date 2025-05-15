@@ -6,7 +6,7 @@ on:
     - cron: '*/30 * * * *'       # every 30 min
 env:
     CHAIN_ID: 216
-    SUBMITTER_URL: "https://submitter.happy.tech"
+    VITE_SUBMITTER_URL: "https://submitter.happy.tech"
 jobs:
   test:
     runs-on: ubuntu-latest

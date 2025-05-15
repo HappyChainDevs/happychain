@@ -34,6 +34,7 @@ export const EthSendTransaction = ({
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
     const tx = params[0]
+
     const user = useAtomValue(userAtom)
     const paymasterInUse = getPaymaster()
     const txTo = tx.to && isAddress(tx.to) ? tx.to : undefined
