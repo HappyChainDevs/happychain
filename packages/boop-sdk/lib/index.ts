@@ -65,6 +65,7 @@ export {
     Submit,
     type SubmitStatus,
     type SubmitInput,
+    type SubmitOutput,
     type SubmitSuccess,
     type SubmitError,
     //
