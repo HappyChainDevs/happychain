@@ -27,6 +27,10 @@ contract HappyAccountUUPSProxyFactory is HappyAccountFactoryBase {
         return HappyAccountUUPSProxy(account).getImplementation();
     }
 
+    function getProxyCreationCode() external pure override returns (bytes memory) {
+        return type(ERC1967Proxy).creationCode;
+    }
+
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
     function _prepareContractCode(address owner) internal view override returns (bytes memory) {
         bytes memory creationCode = type(ERC1967Proxy).creationCode;

@@ -78,6 +78,12 @@ abstract contract HappyAccountFactoryBase {
      */
     function getAccountImplementation(address payable account) external view virtual returns (address);
 
+    /**
+     * Returns the creation code for the proxy contract.
+     * Used in off-chain deterministic address prediction.
+     */
+    function getProxyCreationCode() external view virtual returns (bytes memory);
+
     // ====================================================================================================
     // INTERNAL FUNCTIONS
 
