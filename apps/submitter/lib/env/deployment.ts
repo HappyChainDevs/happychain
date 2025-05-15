@@ -3,8 +3,8 @@ import {
     // abis as abisHappyChainSepolia,
     deployment as deploymentHappyChainSepolia,
 } from "@happy.tech/contracts/boop/sepolia"
+import { http, type Address, type Hex, createPublicClient } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
-import { type Address, type Hex, http, createPublicClient } from "viem"
 import type { Environment } from "#lib/env/index"
 
 /**
