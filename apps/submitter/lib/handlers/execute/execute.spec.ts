@@ -242,23 +242,19 @@ describe("submitter_execute", () => {
             expect(result.status).toBe(422)
             expect(response.status).toBe(Onchain.ValidationReverted)
         })
-        
         it("executes 50 'mint token' tx's quickly and successfully.", async () => {
             if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
-    
             const count = 50
             // test only works if submitter is configured to allow more than 50
             expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
             expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
-    
             const transactions = await Promise.all(
                 Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
                     const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
                     return await sign(dummyBoop)
                 }),
             )
-    
-            const results = await Promise.all(
+             const results = await Promise.all(
                 transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
