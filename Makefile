@@ -149,15 +149,15 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 # ==================================================================================================
 ##@ Demos & Apps
 
-submitter.dev: setup.ts shared.dev
-	cd contracts && make setup;
-	make anvil > /dev/null 2>&1 &
-	cd contracts && make deploy-boop;
-	cd contracts && make deploy-mocks;
-
+submitter.dev: setup.ts shared.dev ## Runs the submitter app at http://localhost:3001
 	cd apps/submitter && make migrate;
 	cd apps/submitter && make dev;
 .PHONY: submitter.dev
+
+submitter-local.dev: setup.ts shared.dev setup-local-chain select-submitter-local ## Runs the submitter app on Anvil at http://localhost:3001
+	cd apps/submitter && make migrate-fresh;
+	cd apps/submitter && make dev;
+.PHONY: submitter-local.dev
 
 submitter.build: shared.build
 	cd apps/submitter && make build;
@@ -542,7 +542,7 @@ select-submitter-prod:
 .PHONY: select-submitter-prod
 
 select-iframe-local:
-	$(call update_env,packages/core/.env,IFRAME_URL,http://localhost:4160)
+	$(call update_env,packages/core/.env,IFRAME_URL,http://localhost:5160)
 .PHONY: select-iframe-local
 
 select-iframe-testnet:
@@ -555,7 +555,7 @@ select-chain-local:
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
 
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
-	$(call update_env,apps/submitter/.env,RPC_URL,http://127.0.0.1:8545)
+	$(call update_env,apps/randomness/.env,RPC_URL,http://127.0.0.1:8545)
 
 	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)
