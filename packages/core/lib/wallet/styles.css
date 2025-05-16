@@ -17,6 +17,10 @@
  * close, instead of waiting for an actual hover then popping out
  */
 .wallet-container {
+    --happy-translate-x: 0rem;
+    --transition-property: none;
+    --transition-duration: 0s;
+    --margin: 0.5rem;
     position: fixed;
     inset-inline-end: 0;
     top: 0;
@@ -24,6 +28,13 @@
     align-items: center;
     padding: 0;
     z-index: 1234567890; /* display on top of everything */
+    margin: var(--margin);
+
+    transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))
+        skew(var(--happy-skew-x)) skewY(var(--happy-skew-y)) scaleX(var(--happy-scale-x)) scaleY(var(--happy-scale-y));
+    transition-property: var(--transition-property);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--transition-duration);
 
     @media (min-width: 768px) {
         padding-block: 0.25rem;
@@ -31,27 +42,20 @@
         background: rgb(31 41 55);
         border-start-start-radius: 9999px;
         border-end-start-radius: 9999px;
+        --margin: 0;
     }
-
-    --happy-translate-x: 0rem;
-    transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))
-        skew(var(--happy-skew-x)) skewY(var(--happy-skew-y)) scaleX(var(--happy-scale-x)) scaleY(var(--happy-scale-y));
-    --transition-property: none;
-    --transition-duration: 0s;
-    transition-property: var(--transition-property);
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: var(--transition-duration);
 
     &[data-open-state="false"],
     &[data-drag-state="false"] {
-        --transition-property: transform;
+        --transition-property: transform margin;
         --transition-duration: 0.15s;
     }
 
     &[data-open-state="true"],
     &[data-drag-state="true"] {
-        --transition-property: none;
-        --transition-duration: 0s;
+        --transition-property: margin;
+        --transition-duration: 0.15s;
+        margin: 0;
     }
 
     &[data-open-state="true"] {
@@ -135,10 +139,7 @@
 
     &[data-open-state="false"][data-has-user="true"],
     &[data-open-state="false"][data-has-user="false"][data-auth-state="unauthenticated"] {
-        --happy-border-radius: 0.5rem 0 0.5rem 1.5rem;
-        @media (min-width: 768px) {
-            --happy-border-radius: 1.5rem;
-        }
+        --happy-border-radius: 1.5rem;
     }
 
     @media (prefers-reduced-motion) {

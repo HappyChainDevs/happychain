@@ -4,7 +4,7 @@
 
 import { ExtensionType, ExtraDataKey, encodeExtraData } from "@happy.tech/boop-sdk"
 import type { Address, Hex } from "@happy.tech/common"
-import { EIP1193DisconnectedError, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
+import { EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
@@ -16,7 +16,7 @@ import { revokedSessionKeys } from "#src/state/interfaceState"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getCheckedUser } from "#src/state/user"
-import { getWalletClient } from "#src/state/walletClient"
+import { checkWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { sessionKeyLogger } from "#src/utils/logger"
 
@@ -44,8 +44,7 @@ export async function isSessionKeyValidatorInstalled(accountAddress: Address): P
  */
 async function installSessionKeyExtension(account: Address, target?: Address, sessionKeyAddress?: Address) {
     sessionKeyLogger.trace("installSessionKeyExtension", { account, target, sessionKeyAddress })
-    const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
+    checkWalletClient()
     // If a session key is provided, the installData of the `addExtension` call is an encoded
     // call to add the session key.
     const installData =
@@ -91,8 +90,7 @@ async function registerSessionKey(account: Address, target: Address, sessionKeyA
 
 export async function removeSessionKey(account: Address, target: Address) {
     sessionKeyLogger.trace("removeSessionKey", { account, target })
-    const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
+    checkWalletClient()
     await sendBoop({
         account,
         signer: eoaSigner,
@@ -110,8 +108,7 @@ export async function removeSessionKey(account: Address, target: Address) {
 
 export async function uninstallSessionKeyExtension(account: Address) {
     sessionKeyLogger.trace("uninstallSessionKeyExtension", { account })
-    const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
+    checkWalletClient()
     await sendBoop({
         account,
         signer: eoaSigner,
@@ -202,8 +199,7 @@ export function authorizeSessionKey(app: AppURL, account: Address, target: Addre
 
 export async function removeSessionKeys(account: Address, targets: Address[]) {
     sessionKeyLogger.trace("removeSessionKeys", { account, targets })
-    const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
+    checkWalletClient()
     await sendBoop({
         account,
         signer: eoaSigner,

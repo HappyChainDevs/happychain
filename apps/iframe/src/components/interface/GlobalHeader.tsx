@@ -15,23 +15,23 @@ const GlobalHeader = () => {
     const optionsLabel = isVisible ? "Close options menu" : "Open options menu"
 
     return (
-        <div className="relative max-w-prose mx-auto items-center w-full py-1.5 hidden lg:flex">
+        <div className="relative max-w-prose mx-auto items-center w-full py-3 hidden lg:flex">
             {location.pathname !== "/embed" && (
                 <Link to={"/embed"}>
                     <ArrowLeft weight="bold" className="text-base-content absolute start-2 top-1/2 -translate-y-1/2" />
                 </Link>
             )}
 
-            <span className="text-base-content text-[0.825rem] font-bold mx-auto hidden lg:flex justify-center">
+            <span className="text-base-content text-sm font-bold mx-auto hidden lg:flex justify-center">
                 🤠 HappyChain
             </span>
 
-            <div className="flex flex-row gap-1 items-center absolute end-2">
+            <div className="flex flex-row gap-1 items-center absolute end-3 text-xl">
                 <button
                     title={optionsLabel}
                     type="button"
                     aria-label={optionsLabel}
-                    className="dark:opacity-60 text-lg"
+                    className="dark:opacity-60"
                     onClick={() => {
                         // Don't toggle visibility: the menu will close if clicking the gear while the menu is open
                         // via the menu's own `onInteractOutsideHandler`.
@@ -44,7 +44,7 @@ const GlobalHeader = () => {
                     title="Hide wallet"
                     type="button"
                     aria-label="Click to hide wallet"
-                    className="dark:opacity-60 text-lg"
+                    className="dark:opacity-60"
                     onClick={signalClosed}
                 >
                     <ArrowsInSimple weight="bold" />

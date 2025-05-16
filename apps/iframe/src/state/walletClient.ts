@@ -1,4 +1,5 @@
 import { type Address, accessorsFromAtom } from "@happy.tech/common"
+import { EIP1193DisconnectedError } from "@happy.tech/wallet-common"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
 import { type PublicRpcSchema, type WalletRpcSchema, createWalletClient } from "viem"
@@ -22,4 +23,15 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
     return createWalletClient({ account: user.controllingAddress, transport })
 })
 
-export const { getValue: getWalletClient } = accessorsFromAtom(walletClientAtom)
+const { getValue } = accessorsFromAtom(walletClientAtom)
+
+export function getWalletClient(): AccountWalletClient {
+    const client = getValue()
+    if (!client) throw new EIP1193DisconnectedError()
+    return client
+}
+
+export function checkWalletClient(): void {
+    const client = getValue()
+    if (!client) throw new EIP1193DisconnectedError()
+}
