@@ -68,12 +68,11 @@ export const EthSendTransaction = ({
             cost,
             submitterFee: simulateOutput.submitterFee,
             f: {
-                value: formatEther(txValue),
                 cost: cost < MIN_DISPLAY_WEI ? MIN_DISPLAY_STR : formatEther(roundedCost),
                 submitterFee: formatEther(submitterFee),
             },
         }
-    }, [txValue, simulateOutput])
+    }, [simulateOutput])
 
     const notEnoughFunds = !!userBalance?.value && !!values?.cost && userBalance.value < txValue + values.cost
 
@@ -129,7 +128,7 @@ export const EthSendTransaction = ({
                         {txValue > 0n && (
                             <SubsectionContent>
                                 <SubsectionTitle>Sending amount</SubsectionTitle>
-                                <FormattedDetailsLine>{values?.f.value} HAPPY</FormattedDetailsLine>
+                                <FormattedDetailsLine>{formatEther(txValue)} HAPPY</FormattedDetailsLine>
                             </SubsectionContent>
                         )}
                     </SubsectionBlock>
