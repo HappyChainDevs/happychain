@@ -17,8 +17,8 @@ export const _parentID = new URLSearchParams(window.location.search).get("window
 /** ID generated for this wallet (tied to a specific app). */
 const _walletID = createUUID()
 
-if (!isWallet(getAppURL()) && !_parentID && process.env.NODE_ENV !== "test") {
-    console.warn("Wallet initialized without windowId")
+if (!isWallet(getAppURL()) && !_parentID) {
+    console.warn("Embedded Wallet initialized without windowId")
 }
 
 /**

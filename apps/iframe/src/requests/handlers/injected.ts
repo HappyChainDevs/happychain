@@ -91,8 +91,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             //
             // We'll need to handle this flow in prod whenever we're
             // thinking to do a contract update in a released environment.
-            if (import.meta.env.NODE_ENV === "development")
-                isAuthorized &&= await isSessionKeyValidatorInstalled(user.address)
+            if (import.meta.env.DEV) isAuthorized &&= await isSessionKeyValidatorInstalled(user.address)
 
             if (isAuthorized) {
                 const sessionKey = getSessionKey(user.address, target)
