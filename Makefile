@@ -25,7 +25,7 @@ SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 BOOP_SDK_PKGS := apps/submitter,packages/boop-sdk
 
 # packages needed to build the iframe
-IFRAME_PKGS := $(BOOP_SDK_PKGS),$(SHARED_PKGS),apps/iframe
+IFRAME_PKGS := $(SHARED_PKGS),$(BOOP_SDK_PKGS),apps/iframe
 
 # packages needed to build the sdk and iframe
 ACCOUNT_PKGS := $(IFRAME_PKGS),$(SDK_ONLY_PKGS)

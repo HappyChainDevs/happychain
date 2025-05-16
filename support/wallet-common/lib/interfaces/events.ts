@@ -1,5 +1,5 @@
-import type { SimulateOutput } from "@happy.tech/boop-sdk"
 import type { OverlayErrorCode, SerializedRpcError } from "../errors"
+import type { SimulateSuccess } from "./boop"
 import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
@@ -221,7 +221,7 @@ export type ProviderMsgsFromWallet = {
  */
 
 type RequestExtraDataTypeMap = {
-    eth_sendTransaction: SimulateOutput
+    eth_sendTransaction: SimulateSuccess
 }
 
 /**
