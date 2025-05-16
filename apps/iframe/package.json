@@ -12,6 +12,7 @@
         "@happy.tech/common": "workspace:*",
         "@happy.tech/contracts": "workspace:0.2.0",
         "@happy.tech/wallet-common": "workspace:*",
+        "@legendapp/state": "^3.0.0-beta.30",
         "@metamask/safe-event-emitter": "^3.1.1",
         "@phosphor-icons/react": "^2.1.10",
         "@tanstack/react-query": "^5.56.2",

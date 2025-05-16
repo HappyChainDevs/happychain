@@ -9,3 +9,9 @@ export abstract class HappySettingsError extends Error {
         this.statusCode = statusCode
     }
 }
+
+export class PermissionNotFoundError extends HappySettingsError {
+    constructor(message?: string, options?: ErrorOptions) {
+        super(404, message || "Permission not found", options)
+    }
+}

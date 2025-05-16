@@ -14,12 +14,12 @@ export const outputSchema = z.object({
     message: z.string().optional(),
 })
 
-export const createConfigDescription = describeRoute({
+export const updateConfigDescription = describeRoute({
     validateResponse: !isProduction,
-    description: "Create a new config",
+    description: "Update config",
     responses: {
-        201: {
-            description: "Config created",
+        200: {
+            description: "Config updated",
             content: {
                 "application/json": {
                     schema: resolver(outputSchema),
@@ -29,4 +29,4 @@ export const createConfigDescription = describeRoute({
     },
 })
 
-export const createConfigValidation = zv("json", inputSchema)
+export const updateConfigValidation = zv("json", inputSchema)

@@ -11,6 +11,9 @@ import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { revokedSessionKeys } from "./interfaceState"
 import { getUser, userAtom } from "./user"
+import { syncedCrud } from '@legendapp/state/sync-plugins/crud'
+import { observable } from "@legendapp/state"
+import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage";
 
 // STORE INSTANTIATION
 const store = getDefaultStore()
@@ -86,6 +89,54 @@ export type SessionKeyRequest = {
  * PermissionRequestObject}.
  */
 export type PermissionsRequest = string | PermissionRequestObject
+
+
+const permissionsMapLegend = observable(syncedCrud({
+    list: async ({ lastSync }) => {
+        const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266${lastSync ? `&lastUpdated=${lastSync}` : ""}`)
+        const data =  await response.json()
+
+
+
+        return data.data
+    },
+    create: async (data: PermissionsMap) => {
+        const response = await fetch("http://localhost:3000/api/v1/settings/create", {
+            method: "POST",
+            body: JSON.stringify(data),
+        })
+        return await response.json()
+    },
+    update: async (data: PermissionsMap) => {
+        console.log("update", data)
+
+        const response = await fetch("http://localhost:3000/api/v1/settings/update", {
+            method: "POST",
+            body: JSON.stringify(data),
+        })
+        return await response.json()
+    },
+    subscribe: ({ refresh }) => {
+        // Set up an interval to refresh messages every 5 seconds
+        const intervalId = setInterval(() => {
+          console.log("Refreshing config (5-second interval)");
+          refresh();
+        }, 5000);
+        
+        // Return cleanup function to clear the interval when unsubscribing
+        return () => {
+          clearInterval(intervalId);
+        };
+    },
+    persist: {
+        plugin: ObservablePersistLocalStorage,
+        name: 'config-legend',
+        retrySync: true // Retry sync after reload
+    },
+    fieldUpdatedAt: 'updatedAt',
+    fieldDeleted: 'deleted',
+    changesSince: 'last-sync'
+}))
 
 /**
  * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
@@ -208,6 +259,20 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
             [user.address]: { ...prev[user.address], [app]: appPermissions },
         }
     })
+
+    const id = createUUID()
+
+    permissionsMapLegend[id].set({
+        id,
+        type: "WalletPermissions",
+        user: user.address,
+        invoker: app,
+        parentCapability: appPermissions.eth_accounts.parentCapability,
+        caveats: appPermissions.eth_accounts.caveats,
+        date: appPermissions.eth_accounts.date,
+        deleted: false,
+        updatedAt: Date.now(),
+    })
 }
 
 // === CLEAR PERMISSIONS ===========================================================================
@@ -222,6 +287,13 @@ export function clearPermissions(): void {
         const { [user.address]: _, ...rest } = prev
         return rest
     })
+
+    Object.values(permissionsMapLegend).forEach((p) => {
+        if (p.user === user.address) {
+            p.deleted = true
+        }
+    })
+    
 }
 
 /**

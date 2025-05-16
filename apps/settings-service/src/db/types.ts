@@ -1,6 +1,6 @@
 import type { Hex } from "@happy.tech/common"
 import type { HTTPString, UUID } from "@happy.tech/common"
-import type { ColumnType, Selectable } from "kysely"
+import type { ColumnType } from "kysely"
 
 export type AppURL = HTTPString & { _brand: "AppHTTPString" }
 
@@ -29,10 +29,8 @@ export type WalletPermissionTable = {
     // Not in the EIP, but Viem wants this.
     id: UUID
     updatedAt: number
-    deleted: boolean
+    deleted: ColumnType<number, boolean, boolean>
 }
-
-export type WalletPermission = Selectable<WalletPermissionTable>
 
 export interface Database {
     walletPermissions: WalletPermissionTable

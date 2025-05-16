@@ -26,3 +26,5 @@ export const walletPermission = z.object({
     updatedAt: z.number().openapi({ example: 1715702400 }),
     deleted: z.boolean().openapi({ example: false }),
 })
+
+export type WalletPermission = z.infer<typeof walletPermission>

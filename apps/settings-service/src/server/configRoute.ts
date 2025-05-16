@@ -1,8 +1,11 @@
 import { Hono } from "hono"
 import { createConfig } from "../handlers/createConfig/createConfig"
 import { createConfigDescription, createConfigValidation } from "../handlers/createConfig/validation"
-import { listConfig } from "../handlers/listConfig.ts"
-import { listConfigDescription, listConfigValidation } from "../handlers/listConfig.ts"
+import { deleteConfig } from "../handlers/deleteConfig/deleteConfig"
+import { deleteConfigDescription, deleteConfigValidation } from "../handlers/deleteConfig/validation"
+import { listConfig, listConfigDescription, listConfigValidation } from "../handlers/listConfig"
+import { updateConfig } from "../handlers/updateConfig/updateConfig"
+import { updateConfigDescription, updateConfigValidation } from "../handlers/updateConfig/validation"
 import { makeResponse } from "./makeResponse"
 
 export default new Hono()
@@ -18,5 +21,19 @@ export default new Hono()
         const output = await listConfig(input)
 
         const [response, code] = makeResponse(output)
+        return c.json(response, code)
+    })
+    .put("/update", updateConfigDescription, updateConfigValidation, async (c) => {
+        const input = c.req.valid("json")
+        const result = await updateConfig(input)
+
+        const [response, code] = makeResponse(result)
+        return c.json(response, code)
+    })
+    .delete("/delete/:id", deleteConfigDescription, deleteConfigValidation, async (c) => {
+        const input = c.req.valid("param")
+        const result = await deleteConfig(input)
+
+        const [response, code] = makeResponse(result)
         return c.json(response, code)
     })
