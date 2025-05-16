@@ -78,7 +78,7 @@ export const EthSendTransaction = ({
     const isConfirmActionDisabled =
         !isValidTransaction || (shouldQueryBalance && isBalancePending) || notEnoughFunds || !simulateOutput
 
-    if (!isValidTransaction) {
+    if (!isValidTransaction || simulateError) {
         // biome-ignore format: compact
         const description =
                 !user?.address ? "Disconnected from wallet" :
