@@ -85,7 +85,7 @@ export async function getTransactionReceipt(hash: Hash): Promise<TransactionRece
             return cached || state.status === GetState.Simulated ? null : FORWARD
         }
 
-        boopCache.put(hash, { boop: cached?.boop, receipt: state.receipt })
+        boopCache.putReceipt(hash, state.receipt)
         return formatTransactionReceipt(hash, state.receipt)
     } catch (err) {
         // This *could* be an EVM tx hash, but we only land here if there is a submitter failure,

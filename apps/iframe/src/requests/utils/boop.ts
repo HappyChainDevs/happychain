@@ -13,7 +13,7 @@ import {
 import { parseSignature, zeroAddress } from "viem"
 import type { Log, TransactionEIP1559, TransactionReceipt } from "viem"
 import { entryPoint, entryPointAbi } from "#src/constants/contracts"
-import type { BoopCacheEntry } from "#src/requests/utils/boopCache"
+import { type BoopCacheEntry, boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { getBoopClient } from "#src/state/boopClient"
@@ -95,9 +95,9 @@ export async function sendBoop(
     const value = tx.value ? BigInt(tx.value) : 0n
 
     try {
-        const boop = await boopFromTransaction(account, tx)
         const boopClient = getBoopClient()
         if (!boopClient) throw new Error("Boop client not initialized")
+        const boop = await boopFromTransaction(account, tx)
 
         if (!isSponsored) {
             const output = await boopClient.simulate({ entryPoint, boop })
@@ -113,7 +113,8 @@ export async function sendBoop(
         }
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
-        if (!boopHash) throw new Error("Boop hash not computed") // temp: fix for boopHash being undefined
+        boopCache.putBoop(boopHash, boop)
+
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
         addPendingBoop({ boopHash, value })
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
