@@ -1,0 +1,7 @@
+{
+    "extends": ["../../support/configs/tsconfig.base.json", "../../support/configs/tsconfig.types.json"],
+    "compilerOptions": {
+        "strict": true
+    },
+    "include": ["src", "./package.json"]
+}

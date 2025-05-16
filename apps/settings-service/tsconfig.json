@@ -1,0 +1,7 @@
+{
+    "extends": ["../../support/configs/tsconfig.base.json"],
+    "compilerOptions": {
+        "strict": true
+    },
+    "include": ["*.ts", "src", "./package.json"]
+}
