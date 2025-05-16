@@ -1,13 +1,15 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import {
     EIP1193SwitchChainError,
+    EIP1193UnauthorizedError,
     EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
+    WalletType,
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
 import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
-import { sendToInjectedClient, sendToPublicClient } from "#src/requests/utils/sendToClient"
+import { sendToPublicClient, sendToWalletClient } from "#src/requests/utils/sendToClient"
 import {
     getSessionKey,
     installNewSessionKey,
@@ -37,11 +39,15 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const user = getUser()
 
+    // If user exists, it _must_ be an injected wallet
+    // if user does not exist, it may be connecting
+    if (user && user.type !== WalletType.Injected) throw new EIP1193UnauthorizedError("User is not an injected wallet")
+
     switch (request.payload.method) {
         // Different from permissionless.ts as this actually calls the provider
         // to ensure we still have a connection with the extension wallet
         case HappyMethodNames.USER: {
-            const acc = await sendToInjectedClient({ method: "eth_accounts" })
+            const acc = await sendToWalletClient({ method: "eth_accounts" })
             return acc.length ? user : undefined
         }
 
@@ -105,12 +111,12 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             // not logged in
             if (!user) return []
 
-            let resp = await sendToInjectedClient(request.payload)
+            let resp = await sendToWalletClient(request.payload)
 
             // wallet not connected, we will request permissions here
             // This shouldn't happen however added as a precaution
             if (!resp.length) {
-                resp = await sendToInjectedClient({ method: "eth_requestAccounts" })
+                resp = await sendToWalletClient({ method: "eth_requestAccounts" })
                 if (!resp.length) return []
             }
 
@@ -124,7 +130,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
 
         case "eth_requestAccounts": {
             checkUser(user)
-            const resp = await sendToInjectedClient(request.payload)
+            const resp = await sendToWalletClient(request.payload)
 
             // wallet not connected, we will revoke permissions (they should already be revoked)
             if (!resp.length) {
@@ -144,7 +150,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             //       use HappyMethodNames.REQUEST_SESSION_KEY.
             const [{ eth_accounts, ...rest }] = request.payload.params
             if (eth_accounts) {
-                const injectedResponse = await sendToInjectedClient({
+                const injectedResponse = await sendToWalletClient({
                     method: request.payload.method,
                     params: [{ eth_accounts }],
                 })
@@ -155,7 +161,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_revokePermissions": {
-            const resp = await sendToInjectedClient(request.payload)
+            const resp = await sendToWalletClient(request.payload)
             revokePermissions(app, request.payload.params[0])
             if (revokedSessionKeys.size > 0) await revokeSessionKeys(app, [...revokedSessionKeys.values()])
             return resp
@@ -166,14 +172,14 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             const isValid = isAddChainParams(params)
             if (!isValid) throw new EIP1474InvalidInput("Invalid wallet_addEthereumChain request body")
 
-            const resp = await sendToInjectedClient(request.payload)
+            const resp = await sendToWalletClient(request.payload)
 
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
 
             // Some wallets (Metamask, Rabby, ...) automatically switch to the newly-added chain.
             // Normalize behavior by always switching.
             // This usually does not result in an additional prompt in auto-switching wallets.
-            await sendToInjectedClient({
+            await sendToWalletClient({
                 method: "wallet_switchEthereumChain",
                 params: [{ chainId: params.chainId }],
             })
@@ -188,7 +194,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             const chainId = request.payload.params[0].chainId
             if (!(chainId in chains))
                 throw new EIP1193SwitchChainError("Unrecognized chain ID, try adding the chain first.")
-            const resp = await sendToInjectedClient(request.payload)
+            const resp = await sendToWalletClient(request.payload)
             setCurrentChain(chains[chainId])
             return resp
         }
@@ -204,7 +210,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         default: {
-            return await sendToInjectedClient(request.payload)
+            return await sendToWalletClient(request.payload)
         }
     }
 }

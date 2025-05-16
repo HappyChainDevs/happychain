@@ -3,7 +3,6 @@
  */
 
 import type { Hash, Hex } from "@happy.tech/common"
-import { EIP1193DisconnectedError } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
 import { getWalletClient } from "#src/state/walletClient"
 
@@ -12,7 +11,6 @@ import { getWalletClient } from "#src/state/walletClient"
  */
 export async function eoaSigner(data: Hex): Promise<Hex> {
     const walletClient = getWalletClient()
-    if (!walletClient) throw new EIP1193DisconnectedError()
     return await walletClient.signMessage({
         account: walletClient.account.address,
         message: { raw: data },

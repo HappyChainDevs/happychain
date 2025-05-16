@@ -8,7 +8,7 @@ const mobile = {
     open: {
         // Could be done by settings --happy-open-xxxx in styles.css, but changed here to leave
         // flexibility for more advanced animations in the future
-        height: ["var(--happy-closed-size)", "100vh"],
+        height: ["var(--happy-closed-size)", "100dvh"],
         width: ["var(--happy-closed-size)", "100vw"],
         transform: ["translateY(0)", "translateY(var(--wallet-offset-y))"],
     },

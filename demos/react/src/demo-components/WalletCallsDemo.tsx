@@ -7,6 +7,7 @@ const WalletCallsDemo = () => {
     const [signDelayCountdown, setSignDelayCountdown] = useState(0)
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
+    const [isSigning, setIsSigning] = useState(false)
 
     const { user } = useHappyWallet()
 
@@ -16,6 +17,7 @@ const WalletCallsDemo = () => {
     }
 
     async function signMessage(message: string) {
+        setIsSigning(true)
         try {
             if (!user) throw new Error("No user is connected")
 
@@ -32,6 +34,8 @@ const WalletCallsDemo = () => {
         } catch (e) {
             toast.error((e as Error)?.message || "Error signing message")
             setSignatureResult("")
+        } finally {
+            setIsSigning(false)
         }
     }
 
@@ -63,15 +67,17 @@ const WalletCallsDemo = () => {
                 <div className="h-full flex flex-col gap-4">
                     <button
                         type="button"
+                        disabled={isSigning}
                         onClick={() => signMessage("Hello, World!")}
-                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
                     >
                         Sign Message
                     </button>
                     <button
                         type="button"
+                        disabled={isSigning}
                         onClick={() => signMessageWithDelay("Hello, World!")}
-                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
                     >
                         {signDelayCountdown || "Sign with Delay"}
                         <small className="block text-sm text-gray-700">(for popup blocking)</small>

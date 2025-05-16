@@ -4,7 +4,8 @@ import { defineConfig } from "vite"
 // will accept connections from. It is not needed in most cases, but is required when testing
 // across multiple devices on the same network.
 const allowedHosts =
-    import.meta.env.DEV && import.meta.env.ALLOWED_SERVER_HOSTS?.split(", ").map((a: string) => a.trim())
+    import.meta.env?.NODE_ENV === "development" &&
+    import.meta.env.ALLOWED_SERVER_HOSTS?.split(", ").map((a: string) => a.trim())
 if (allowedHosts?.length) console.log("\nVite Allowing access from hosts:", allowedHosts)
 const serverHostConfig = allowedHosts?.length ? { host: true, allowedHosts: allowedHosts } : {}
 
