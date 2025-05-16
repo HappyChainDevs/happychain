@@ -91,7 +91,7 @@ function classifyBoop(boop: StoredBoop): ActivityDetails {
     if (boop?.status !== BoopStatus.Success || boop.boopReceipt.status !== Onchain.Success)
         return { type: OperationType.Failed }
 
-    for (const log of boop.boopReceipt.logs) {
+    for (const log of boop.boopReceipt.receipt.logs) {
         switch (log.topics[0]?.toLowerCase()) {
             case EVENT_SIGNATURES.ERC20_TRANSFER:
                 return { type: OperationType.ERC20Transfer }
