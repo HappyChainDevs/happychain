@@ -105,15 +105,32 @@ interface FormattedDetailsLineProps extends PropsWithChildren {
     formatAsNumber?: boolean
 }
 
+/**
+ * Renders a formatted detail line, optionally formatting numbers in US decimal style
+ * and applying code-style whitespace rendering.
+ *
+ * - If `formatAsNumber` is true and `children` is a numeric string, it removes commas,
+ *   parses it as a number, and formats it with `toLocaleString("en-US")`.
+ * - Applies `whitespace-pre` or `whitespace-pre-line` based on `isCode`.
+ */
 export const FormattedDetailsLine = ({ children, isCode, formatAsNumber }: FormattedDetailsLineProps) => {
-    const formattedContent =
-        formatAsNumber && typeof children === "string" && !Number.isNaN(Number(children))
-            ? new Intl.NumberFormat().format(Number(children))
-            : children
+    let formattedContent = children
+
+    if (formatAsNumber && typeof children === "string") {
+        const numericString = children.replace(/,/g, "") // remove commas
+        const numberValue = Number(numericString)
+
+        if (!Number.isNaN(numberValue)) {
+            // Format to US-style numbers (e.g. 1,234.56)
+            formattedContent = numberValue.toLocaleString("en-US")
+        }
+    }
 
     return (
         <pre
-            className={`overflow-auto text-ellipsis text-sm scrollbar-thin ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
+            className={`overflow-auto text-ellipsis text-sm scrollbar-thin ${
+                isCode ? "whitespace-pre" : "whitespace-pre-line"
+            }`}
         >
             {formattedContent}
         </pre>

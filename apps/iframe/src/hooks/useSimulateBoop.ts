@@ -1,4 +1,4 @@
-import { Simulate, type SimulateError, type SimulateSuccess } from "@happy.tech/boop-sdk"
+import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
 import { type Address, getProp } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import type { RpcTransactionRequest } from "viem"
