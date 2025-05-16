@@ -1,6 +1,7 @@
-import type { SimulateOutput } from "@happy.tech/boop-sdk"
-import type { Address } from "@happy.tech/common"
+import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
+import { type Address, getProp } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
+import type { RpcTransactionRequest } from "viem"
 import { entryPoint } from "#src/constants/contracts"
 import { boopFromTransaction } from "#src/requests/utils/boop"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
@@ -8,15 +9,14 @@ import { getBoopClient } from "#src/state/boopClient"
 
 export type UseSimulateBoopArgs = {
     userAddress: Address | undefined
-    tx: ValidRpcTransactionRequest
+    tx: RpcTransactionRequest
     enabled: boolean
 }
 
 export type UseSimulateBoopReturn = {
-    simulatedBoopData: SimulateOutput | undefined
-    isSimulationPending: boolean
-    isSimulationError: boolean
-    simulationQueryKey: readonly unknown[]
+    simulateOutput: SimulateSuccess | undefined
+    simulateError: Error | undefined
+    isSimulatePending: boolean
 }
 
 /**
@@ -25,7 +25,9 @@ export type UseSimulateBoopReturn = {
  * @param tx The transaction request to create a key from
  * @returns A stable object suitable for use in a React Query key
  */
-function serializeTransactionForQueryKey(tx: ValidRpcTransactionRequest) {
+function serializeTransactionForQueryKey(tx?: ValidRpcTransactionRequest) {
+    if (!tx) return undefined
+
     const { to, from, value, data, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas } = tx
 
     return {
@@ -76,26 +78,34 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
     const boopClient = getBoopClient()
     if (!boopClient) throw new Error("Boop client not initialized")
 
-    const simulationQueryKey = boopKeys.simulation.transaction(userAddress, tx)
-    const shouldQuery = !!userAddress && !!tx && enabled
+    const filledTx = tx.to
+        ? ({
+              ...tx,
+              to: tx.to,
+              from: (tx.from ?? userAddress) as Address,
+          } satisfies RpcTransactionRequest & { from: Address; to: Address })
+        : undefined
 
     const {
-        data: simulatedBoopData,
-        isPending: isSimulationPending,
-        isError: isSimulationError,
+        data,
+        error,
+        isPending: isSimulatePending,
     } = useQuery({
-        queryKey: simulationQueryKey,
-        enabled: shouldQuery,
+        queryKey: boopKeys.simulation.transaction(userAddress, filledTx!), // TODO
+        enabled: !!userAddress && enabled,
         queryFn: async () => {
-            const boop = await boopFromTransaction(userAddress!, tx!)
+            const boop = await boopFromTransaction(userAddress!, filledTx!)
             return await boopClient.simulate({ entryPoint, boop })
         },
     })
 
     return {
-        simulatedBoopData,
-        isSimulationPending,
-        isSimulationError,
-        simulationQueryKey,
+        simulateOutput: data?.status === Simulate.Success ? data : undefined,
+        simulateError:
+            error ??
+            (data && data.status !== Simulate.Success //
+                ? new Error(getProp(data, "description", "string"))
+                : undefined),
+        isSimulatePending,
     }
 }

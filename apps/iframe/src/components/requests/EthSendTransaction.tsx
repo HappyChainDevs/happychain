@@ -1,17 +1,14 @@
-import { Onchain } from "@happy.tech/boop-sdk"
-import { TransactionType, ifDef, parseBigInt } from "@happy.tech/common"
+import { TransactionType, parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { type Address, formatEther, formatGwei, isAddress, toHex } from "viem"
+import { formatEther, isAddress } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
-import { useTxGasLimit } from "#src/components/requests/utils/useTxGasLimit"
 import { getPaymaster, getPaymasterName } from "#src/constants/contracts.ts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
-import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks.ts"
 import { userAtom } from "#src/state/user"
-import { queryClient } from "#src/tanstack-query/config"
+
 import FieldLoader from "../loaders/FieldLoader"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
@@ -27,7 +24,9 @@ import {
 } from "./common/Layout"
 import { RequestDisabled } from "./common/RequestDisabled"
 import type { RequestConfirmationProps } from "./props"
-import { useTxFees } from "./utils/useTxFees"
+
+const MIN_DISPLAY_WEI = 100_000_000_000_000n // 0.0001 HAPPY
+const MIN_DISPLAY_STR = "0.0001"
 
 export const EthSendTransaction = ({
     method,
@@ -42,98 +41,54 @@ export const EthSendTransaction = ({
     const txValue = parseBigInt(tx.value) ?? 0n
     const txType = classifyTxType(tx)
     const isSupportedTxType = isSupported(txType)
-    const isValidTransaction = (!!user?.address && !isSupportedTxType) || !!txTo
+    const isValidTransaction = !!user?.address && isSupportedTxType && !!txTo
     const isSelfPaying = false // currently we always sponsor
     const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
 
-    // ====================================== Contract ABI details ======================================
-
     const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
 
-    // ====================================== Tx details ======================================
-
-    const {
-        data: userBalance,
-        isPending: isBalancePending,
-        queryKey: balanceQueryKey,
-    } = useBalance({
+    const { data: userBalance, isPending: isBalancePending } = useBalance({
         address: user?.address,
         query: { enabled: shouldQueryBalance },
     })
 
-    const { txMaxFeePerGas, txMaxPriorityFeePerGas, txGasPrice, areFeesPending, feesQueryKey } = useTxFees({
-        tx,
-        txType,
-        enabled: isValidTransaction,
-    })
-
-    const { txGasLimit, isGasLimitPending, gasLimitQueryKey } = useTxGasLimit({
-        tx,
-        txValue,
-        account: user?.address,
-        enabled: isValidTransaction,
-    })
-
-    const validTx = useMemo(() => {
-        if (!txTo) return undefined
-        return {
-            ...tx,
-            from: (tx.from ?? user?.address) as Address,
-            to: txTo,
-            gas: ifDef(txGasLimit, toHex),
-            gasPrice: ifDef(txGasPrice, toHex),
-            maxFeePerGas: ifDef(txMaxFeePerGas ?? txGasPrice, toHex),
-            maxPriorityFeePerGas: ifDef(txMaxPriorityFeePerGas, toHex),
-            type: txType,
-        } as ValidRpcTransactionRequest
-    }, [tx, txTo, txGasLimit, txGasPrice, txMaxFeePerGas, txMaxPriorityFeePerGas, txType, user?.address])
-
-    // ====================================== Boop Gas details ======================================
-
-    const {
-        simulatedBoopData,
-        isSimulationPending: boopSimulationPending,
-        isSimulationError: boopSimulationError,
-        simulationQueryKey: boopQueryKey,
-    } = useSimulateBoop({
+    const { simulateOutput, simulateError, isSimulatePending } = useSimulateBoop({
         userAddress: user?.address,
-        tx: validTx as ValidRpcTransactionRequest,
-        enabled: !!validTx && isValidTransaction,
+        tx,
+        enabled: isValidTransaction,
     })
 
-    const formatted = useMemo(() => {
-        if (!simulatedBoopData || simulatedBoopData.status !== Onchain.Success || boopSimulationError) return
-
-        if (simulatedBoopData.status === Onchain.Success) {
-            const { maxFeePerGas: boopMaxFeePerGas, submitterFee = 0n, gas: boopGas } = simulatedBoopData
-
-            const maxFeePerGas = txMaxFeePerGas ?? txGasPrice ?? boopMaxFeePerGas
-            const gasLimit = txGasLimit ?? BigInt(boopGas)
-            return {
+    const values = useMemo(() => {
+        if (!simulateOutput) return
+        const { maxFeePerGas, submitterFee, gas } = simulateOutput
+        const cost = BigInt(gas) * maxFeePerGas + submitterFee
+        let roundedCost = (cost / MIN_DISPLAY_WEI) * MIN_DISPLAY_WEI
+        roundedCost += cost % MIN_DISPLAY_WEI > MIN_DISPLAY_WEI / 2n ? MIN_DISPLAY_WEI : 0n
+        return {
+            cost,
+            submitterFee: simulateOutput.submitterFee,
+            f: {
                 value: formatEther(txValue),
-                totalGas: ifDef(maxFeePerGas * gasLimit + submitterFee, formatGwei),
-                submitterFee: submitterFee,
-            }
+                cost: cost < MIN_DISPLAY_WEI ? MIN_DISPLAY_STR : formatEther(roundedCost),
+                submitterFee: formatEther(submitterFee),
+            },
         }
-    }, [boopSimulationError, simulatedBoopData, txGasLimit, txGasPrice, txValue, txMaxFeePerGas])
+    }, [txValue, simulateOutput])
 
-    const notEnoughFunds = !!userBalance?.value && userBalance.value < txValue + (txGasLimit ?? 0n)
+    const notEnoughFunds = !!userBalance?.value && !!values?.cost && userBalance.value < txValue + values.cost
 
     const isConfirmActionDisabled =
-        !isValidTransaction ||
-        (shouldQueryBalance && isBalancePending) ||
-        areFeesPending ||
-        isGasLimitPending ||
-        notEnoughFunds ||
-        boopSimulationError
+        !isValidTransaction || (shouldQueryBalance && isBalancePending) || notEnoughFunds || !simulateOutput
 
     if (!isValidTransaction) {
         // biome-ignore format: compact
         const description =
                 !user?.address ? "Disconnected from wallet" :
                 !isSupportedTxType ? `Invalid transaction type: ${txType}` :
-                !tx.to ? "Invalid transaction: missing receiver address" :
-                `Invalid receiver address: ${tx.to}`
+                !tx.to ? `Invalid receiver address: ${tx.to}` :
+                simulateError ? `Failed to simulate transaction: ${simulateError.message}` :
+                "Unknown error"
+
         return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
     }
 
@@ -150,11 +105,8 @@ export const EthSendTransaction = ({
                               : "Confirm",
                         "aria-disabled": isConfirmActionDisabled,
                         onClick: () => {
-                            if (!validTx || isConfirmActionDisabled) return
-                            accept({ method, params: [validTx], extraData: simulatedBoopData })
-                            void queryClient.invalidateQueries({
-                                queryKey: [feesQueryKey, gasLimitQueryKey, balanceQueryKey, boopQueryKey],
-                            })
+                            if (isConfirmActionDisabled) return
+                            accept({ method, params: [tx], extraData: simulateOutput })
                         },
                     },
                     reject: {
@@ -177,7 +129,7 @@ export const EthSendTransaction = ({
                         {txValue > 0n && (
                             <SubsectionContent>
                                 <SubsectionTitle>Sending amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formatted?.value} HAPPY</FormattedDetailsLine>
+                                <FormattedDetailsLine>{values?.f.value} HAPPY</FormattedDetailsLine>
                             </SubsectionContent>
                         )}
                     </SubsectionBlock>
@@ -187,19 +139,19 @@ export const EthSendTransaction = ({
                         <SubsectionContent>
                             <SubsectionTitle>Cost</SubsectionTitle>
                             <FormattedDetailsLine>
-                                {boopSimulationPending ? (
+                                {isSimulatePending ? (
                                     <FieldLoader />
                                 ) : (
-                                    `${formatted?.totalGas} $HAPPY ${formatted?.submitterFee && formatted.submitterFee > 0n ? `(Submitter Fee: ${formatted.submitterFee})` : ""}`
-                                )}
+                                    `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
+                                )}{" "}
                             </FormattedDetailsLine>
                             {!isSelfPaying && (
-                                <SubsectionTitle>
+                                <span className="text-accent text-xs">
+                                    Sponsored by{" "}
                                     <LinkToAddress address={paymasterInUse}>
-                                        Sponsored by{" "}
-                                        <span className="text-accent">{getPaymasterName(paymasterInUse)}</span>
+                                        {getPaymasterName(paymasterInUse)}
                                     </LinkToAddress>
-                                </SubsectionTitle>
+                                </span>
                             )}
                         </SubsectionContent>
                     </SubsectionBlock>
