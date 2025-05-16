@@ -50,7 +50,7 @@ describe("submitter_receipt", () => {
         // Submit transaction but don't wait for inclusion.
         await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
 
-        const [stateSimulated, stateResolved] = await Promise.all([
+        const [_stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.boop.receipt[":boopHash"]
                 .$get({ param: { boopHash }, query: { timeout: "100" } }) // return near immediately
                 .then((a) => a.json() as any as WaitForReceiptError),

@@ -47,7 +47,6 @@ describe("submitter_pending", () => {
         const pending = (await client.api.v1.boop.pending[":account"]
             .$get({ param: { account: smartAccount } })
             .then((a) => a.json())) as any
-        
         expect(pending.error).toBeUndefined()
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)
         expect(pending.pending[0].boopHash).toBeString()
