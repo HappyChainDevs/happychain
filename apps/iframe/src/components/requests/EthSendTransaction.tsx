@@ -57,6 +57,24 @@ export const EthSendTransaction = ({
         enabled: isValidTransaction,
     })
 
+    /**
+     * Computes and formats gas-related costs from the simulation output.
+     *
+     * - Calculates the total estimated cost: `(gas * maxFeePerGas) + submitterFee`
+     * - Rounds the total cost to a minimum display precision
+     * - Formats both total cost and submitter fee as strings in ETH units
+     *
+     * Returns:
+     * {
+     *   cost: `bigint` — raw total cost in wei,
+     *   submitterFee: `bigint` — raw submitter fee in wei,
+     *   f: {
+     *     cost: `string` — formatted total cost in ETH (or a fallback like "0.0001"),
+     *     submitterFee: `string` — formatted submitter fee in ETH
+     *   }
+     * }
+     */
+
     const values = useMemo(() => {
         if (!simulateOutput) return
         const { maxFeePerGas, submitterFee, gas } = simulateOutput
@@ -78,13 +96,18 @@ export const EthSendTransaction = ({
     const isConfirmActionDisabled =
         !isValidTransaction || (shouldQueryBalance && isBalancePending) || notEnoughFunds || !simulateOutput
 
-    if (!isValidTransaction || simulateError) {
+    const isRequestDisabled = !isValidTransaction || simulateError || simulateOutput?.feeTooLowDuringSimulation
+
+    if (isRequestDisabled) {
         // biome-ignore format: compact
         const description =
+                // request payload is invalid
                 !user?.address ? "Disconnected from wallet" :
                 !isSupportedTxType ? `Invalid transaction type: ${txType}` :
                 !tx.to ? `Invalid receiver address: ${tx.to}` :
+                // issues with boop simulation
                 simulateError ? `Failed to simulate transaction: ${simulateError.message}` :
+                simulateOutput?.feeTooLowDuringSimulation ? "Provided maxFeePerGas is lower than the current gas price." :
                 "Unknown error"
 
         return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
