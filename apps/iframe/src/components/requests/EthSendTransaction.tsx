@@ -1,16 +1,15 @@
-import { TransactionType, parseBigInt } from "@happy.tech/common"
+import { parseBigInt } from "@happy.tech/common"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { formatEther, isAddress } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
-import { getPaymaster, getPaymasterName } from "#src/constants/contracts.ts"
-import { useSimulateBoop } from "#src/hooks/useSimulateBoop.ts"
+import { getPaymaster, getPaymasterName } from "#src/constants/contracts"
+import { useSimulateBoop } from "#src/hooks/useSimulateBoop"
 import { userAtom } from "#src/state/user"
 
 import FieldLoader from "../loaders/FieldLoader"
-import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
 import {
@@ -146,10 +145,7 @@ export const EthSendTransaction = ({
                             </FormattedDetailsLine>
                             {!isSelfPaying && (
                                 <span className="text-accent text-xs">
-                                    Sponsored by{" "}
-                                    <LinkToAddress address={paymasterInUse}>
-                                        {getPaymasterName(paymasterInUse)}
-                                    </LinkToAddress>
+                                    Sponsored by <LinkToAddress address={getPaymasterName(paymasterInUse)} />
                                 </span>
                             )}
                         </SubsectionContent>
@@ -182,11 +178,6 @@ export const EthSendTransaction = ({
                         <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
                     </div>
                 </DisclosureSection>
-                {tx.type === TransactionType.EIP4844 && (
-                    <SectionBlock>
-                        <BlobTxWarning onReject={reject} />
-                    </SectionBlock>
-                )}
             </Layout>
         </>
     )
