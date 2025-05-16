@@ -10,12 +10,9 @@ export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
     const chainKey = chainId && `0x${BigInt(chainId).toString(16)}`
     const chains = getChains()
-    const chain =
-        chainKey && chainKey in chains //
-            ? chains[chainKey]
-            : defaultChains.defaultChain
-
-    return chain
+    return chainKey && chainKey in chains //
+        ? chains[chainKey]
+        : defaultChains.defaultChain
 }
 
 function getDefaultChainsRecord() {

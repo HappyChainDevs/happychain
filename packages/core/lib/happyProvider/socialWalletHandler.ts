@@ -2,6 +2,7 @@ import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
 import { AuthState, BasePopupProvider, LoginRequiredError, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
 import { config } from "../config"
+import { chain } from "../loadHappyWallet"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
 
@@ -54,6 +55,10 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     }
 
     // === ABSTRACT METHOD IMPLEMENTATION ==========================================================
+
+    protected chainId(): number {
+        return chain.id
+    }
 
     public isConnected(): boolean {
         // The social provider is always connected: it can always access the iframe's provider

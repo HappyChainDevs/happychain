@@ -6,6 +6,11 @@ import { HappyOverlay } from "./overlay/HappyOverlay"
 import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
+/** Box to hold the chainId loaded with {@link loadHappyWallet}. */
+export const chain = {
+    id: 0xdeadbeef,
+}
+
 /**
  * Options for the {@link loadHappyWallet} function.
  */
@@ -61,6 +66,8 @@ export function unloadHappyWallet() {
 }
 
 function registerWallet(opts: LoadHappyWalletOptions) {
+    chain.id = Number(opts.chainId)
+
     if (!customElements.get("happy-wallet")) {
         define(HappyWallet, "happy-wallet", [], { shadow: true })
         void defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
