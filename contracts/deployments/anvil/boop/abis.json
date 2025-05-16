@@ -304,7 +304,7 @@
         {
           "name": "output",
           "type": "tuple",
-          "internalType": "struct SubmitOutput",
+          "internalType": "struct EntryPointOutput",
           "components": [
             {
               "name": "gas",
