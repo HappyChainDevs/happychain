@@ -526,59 +526,78 @@ define update_env
 		}' $(1) > $(1).tmp && mv $(1).tmp $(1)
 endef
 
+select-submitter:
+	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,$(url))
+	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,$(url))
+.PHONY: select-submitter
+
+select-iframe:
+	$(call update_env,packages/core/.env,VITE_IFRAME_URL,$(url))
+	$(call update_env,apps/iframe/.env,VITE_IFRAME_URL,$(url))
+	$(call update_env,demos/js/.env,VITE_IFRAME_URL,$(url))
+	$(call update_env,demos/react/.env,VITE_IFRAME_URL,$(url))
+	$(call update_env,demos/vue/.env,VITE_IFRAME_URL,$(url))
+.PHONY: select-iframe
+
+select-chain:
+	$(call update_env,apps/submitter/.env,CHAIN_ID,$(chain))
+	$(call update_env,apps/randomness/.env,CHAIN_ID,$(chain))
+	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,$(chain))
+	$(call update_env,demos/js/.env,VITE_CHAIN_ID,$(chain))
+	$(call update_env,demos/react/.env,VITE_CHAIN_ID,$(chain))
+	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,$(chain))
+.PHONY: select-chain
+
+select-rpc:
+	$(call update_env,apps/submitter/.env,RPC_URL,$(url))
+	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
+	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
+	$(call update_env,apps/iframe/.env,VITE_DEV_RPC_URL,$(url))
+	$(call update_env,demos/js/.env,VITE_DEV_RPC_URL,$(url))
+	$(call update_env,demos/react/.env,VITE_DEV_RPC_URL,$(url))
+	$(call update_env,demos/vue/.env,VITE_DEV_RPC_URL,$(url))
+.PHONY: select-rpc
+
+# Sets the allowed hosts for Vite.
+select-allowed-hosts:
+	$(call update_env,apps/iframe/.env,VITE_ALLOWED_HOSTS,$(url))
+	$(call update_env,demos/js/.env,VITE_ALLOWED_HOSTS,$(url))
+	$(call update_env,demos/react/.env,VITE_ALLOWED_HOSTS,$(url))
+	$(call update_env,demos/vue/.env,VITE_ALLOWED_HOSTS,$(url))
+.PHONY: select-allowed-hosts
+
 select-submitter-local:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,http://localhost:3001)
-	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,http://localhost:3001)
+	make select-submitter url=http://localhost:3001
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-local
 
 select-submitter-staging:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter-staging.happy.tech)
-	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter-staging.happy.tech)
+	make select-submitter url=https://submitter-staging.happy.tech
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter.happy.tech)
-	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter.happy.tech)
+	make select-submitter url=https://submitter.happy.tech
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-prod
 
 select-iframe-local:
-	$(call update_env,packages/core/.env,VITE_IFRAME_URL,http://localhost:5160)
+	make select-iframe url=http://localhost:5160
 .PHONY: select-iframe-local
 
 select-iframe-testnet:
-	$(call update_env,packages/core/.env,VITE_IFRAME_URL,https://iframe.happy.tech)
+	make select-iframe url=https://iframe.happy.tech
 .PHONY: select-iframe-local
 
 select-chain-local:
-	$(call update_env,apps/submitter/.env,CHAIN_ID,31337)
-	$(call update_env,apps/submitter/.env,RPC_URL,http://localhost:8545)
-	$(call update_env,packages/boop-sdk/.env,RPC_URL,http://localhost:8545)
-
-	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
-	$(call update_env,apps/randomness/.env,RPC_URL,http://localhost:8545)
-
-	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/react/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,31337)
+	make select-chain chain=31337
+	make select-rpc url=http://127.0.0.1:8545
 .PHONY: select-chain-local
 
 select-chain-testnet:
-	$(call update_env,apps/submitter/.env,CHAIN_ID,216)
-	$(call update_env,apps/submitter/.env,RPC_URL,https://rpc.testnet.happy.tech)
-	$(call update_env,packages/boop-sdk/.env,RPC_URL,https://rpc.testnet.happy.tech)
-
-	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
-	$(call update_env,apps/randomness/.env,RPC_URL,https://rpc.testnet.happy.tech)
-
-	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/js/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/react/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,216)
-.PHONY: select-chain-testnet
+	make select-chain chain=216
+	make select-rpc url=https://rpc.testnet.happy.tech
+.PHONY: select-chain-local
 
 setup-local-chain: select-chain-local
 	@cd contracts && make anvil-background
