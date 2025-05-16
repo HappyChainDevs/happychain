@@ -3,7 +3,7 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
-import { type Boop, Onchain } from "#lib/types"
+import { type Boop, type BoopReceipt, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
@@ -73,11 +73,12 @@ describe("submitter_submit", () => {
                 return resp
             }),
         )
-        console.log("receiptBodies", receiptBodies)
         const rs = await Promise.all(
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
-                return publicClient.waitForTransactionReceipt({ hash: a.receipt.evmTxHash, pollingInterval: 100 })
+                if (!("receipt" in a)) return { status: a.status }
+                const receipt = a.receipt as { evmTxHash: `0x${string}` }
+                return publicClient.waitForTransactionReceipt({ hash: receipt.evmTxHash, pollingInterval: 100 })
             }),
         )
 
