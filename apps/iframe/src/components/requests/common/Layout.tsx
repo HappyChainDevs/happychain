@@ -124,7 +124,7 @@ interface LinkToAddressProps extends PropsWithChildren {
     address: Address
     short?: boolean
 }
-export const LinkToAddress = ({ address, short }: LinkToAddressProps) => {
+export const LinkToAddress = ({ address, short, children }: PropsWithChildren<LinkToAddressProps>) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     return (
@@ -135,7 +135,7 @@ export const LinkToAddress = ({ address, short }: LinkToAddressProps) => {
             rel="noopener noreferrer"
             className="text-primary border-b border-primary/60 hover:bg-primary/40"
         >
-            {short ? shortenAddress(address) : address}
+            {children ? children : short ? shortenAddress(address) : address}
         </a>
     )
 }
