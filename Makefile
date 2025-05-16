@@ -585,6 +585,10 @@ setup-local-chain: select-chain-local
 	@CONFIG=LOCAL cd contracts && make deploy-random
 .PHONY: setup-local-chain
 
+kill-anvil:
+	@cd contracts && make kill-anvil
+.PHONY: kill-anvil
+
 # ==================================================================================================
 # EXTRAS
 
