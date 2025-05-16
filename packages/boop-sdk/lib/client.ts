@@ -3,7 +3,6 @@ import {
     type BoopReceipt,
     type CreateAccountInput,
     type CreateAccountOutput,
-    type EntryPointOutput,
     type ExecuteInput,
     type ExecuteOutput,
     GetPending,
@@ -15,6 +14,7 @@ import {
     type SimulateInput,
     type SimulateOutput,
     type SubmitInput,
+    type SubmitOutput,
     type WaitForReceiptInput,
     type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
@@ -87,9 +87,9 @@ export class BoopClient {
      * impose additional restrictions, such as requesting a higher submitterFee for the replacement
      * transaction.
      */
-    async submit(data: SubmitInput): Promise<EntryPointOutput> {
+    async submit(data: SubmitInput): Promise<SubmitOutput> {
         const response = await this.#client.post("/api/v1/boop/submit", serializeBigInt(data))
-        return this.#getEntryPointOutput(response)
+        return this.#getSubmitOutput(response)
     }
 
     /**
@@ -173,8 +173,8 @@ export class BoopClient {
 
     // == Formatting Utils =========================================================================
 
-    #getEntryPointOutput(response: unknown): EntryPointOutput {
-        return response as EntryPointOutput
+    #getSubmitOutput(response: unknown): SubmitOutput {
+        return response as SubmitOutput
     }
 
     #getExecuteOutput(response: unknown): ExecuteOutput {
