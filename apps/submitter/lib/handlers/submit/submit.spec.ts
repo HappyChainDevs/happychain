@@ -62,10 +62,18 @@ describe("submitter_submit", () => {
                     query: { timeout: "10000" },
                 })
             }),
-        ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
-        
+        )
+        const receiptBodies = await Promise.all(
+            receipts.map(async (resp) => {
+                // If resp is already an object (not a Response), just return it
+                if (resp && "json" in resp && typeof resp.json === "function") {
+                    return await resp.json()
+                }
+                return resp
+            }),
+        )
         const rs = await Promise.all(
-            receipts.map((a) => {
+            receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 if (!("receipt" in a)) return { status: a.status }
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
