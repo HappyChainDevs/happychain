@@ -3,4 +3,4 @@
 "@happy.tech/iframe": patch
 ---
 
-Fix return type for `happy_requestSessionKey1`.
+Fix return type for `happy_requestSessionKey`.
