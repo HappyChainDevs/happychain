@@ -6,8 +6,8 @@ type DB = Kysely<any>
 export async function up(db: DB) {
     await db.schema
         .createTable("boops")
-        .addColumn("entryPoint", "text", (col) => col.primaryKey().notNull())
-        .addColumn("boopHash", "text", (col) => col.notNull().unique())
+        .addColumn("entryPoint", "text", (col) => col.notNull())
+        .addColumn("boopHash", "text", (col) => col.primaryKey().notNull())
         .addColumn("account", "text", (col) => col.notNull())
         .addColumn("dest", "text", (col) => col.notNull())
         .addColumn("payer", "text", (col) => col.notNull())
