@@ -1,11 +1,10 @@
-import { addressFactory, makePayload } from "@happy.tech/testing"
+import { generateTestUser, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { setAuthState } from "#src/state/authState"
 import { setUser } from "#src/state/user"
 import { getWatchedAssets } from "#src/state/watchedAssets.ts"
-import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { dispatchApprovedRequest } from "../handlers/approved"
 
 const { walletID, appURLMock } = await vi //
@@ -17,7 +16,7 @@ describe("walletClient wallet_watchAsset", () => {
     let user: HappyUser
 
     beforeEach(async () => {
-        user = await createHappyUserFromWallet("io.testing", addressFactory())
+        user = generateTestUser()
         setUser(user)
         setAuthState(AuthState.Connected)
     })

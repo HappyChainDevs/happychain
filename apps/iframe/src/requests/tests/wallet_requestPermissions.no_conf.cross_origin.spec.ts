@@ -1,4 +1,4 @@
-import { addressFactory, makePayload } from "@happy.tech/testing"
+import { generateTestUser, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
@@ -6,7 +6,6 @@ import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissi
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
-import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
 const { appURL, parentID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
@@ -37,7 +36,7 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
 
         beforeEach(async () => {
             clearPermissions()
-            user = await createHappyUserFromWallet("io.testing", addressFactory())
+            user = generateTestUser()
             setUser(user)
             setAuthState(AuthState.Connected)
         })

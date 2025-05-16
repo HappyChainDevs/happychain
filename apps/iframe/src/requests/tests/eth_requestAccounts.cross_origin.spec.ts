@@ -1,4 +1,4 @@
-import { addressFactory, makePayload } from "@happy.tech/testing"
+import { generateTestUser, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
@@ -6,7 +6,6 @@ import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissi
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions.ts"
 import { setUser } from "#src/state/user"
-import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 
 const { appURL, parentID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
@@ -34,7 +33,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
         beforeEach(async () => {
             clearPermissions()
-            user = await createHappyUserFromWallet("io.testing", addressFactory())
+            user = generateTestUser()
             setUser(user)
             setAuthState(AuthState.Connected)
         })
@@ -57,7 +56,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
         })
 
         test("does not add permissions", async () => {
-            const user = await createHappyUserFromWallet("io.testing", addressFactory())
+            const user = generateTestUser()
             setUser(user)
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(parentID, { method: "eth_requestAccounts" })
