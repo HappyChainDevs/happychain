@@ -118,8 +118,8 @@ export async function sendBoop(
         boopCache.putBoop(boopHash, boop)
 
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
-        addPendingBoop({ boopHash, value, nonceTrack: boop.nonceTrack, nonceValue: boop.nonceValue })
-        const output = await boopClient.submit({ entryPoint, boop: signedBoop })
+        addPendingBoop({ boopHash, value })
+        const output = await boopClient.execute({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
         if (output.status !== Onchain.Success) throw translateBoopError(output)
@@ -129,7 +129,7 @@ export async function sendBoop(
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
-        if (boopHash) markBoopAsFailure(boopHash, serializeError(error))
+        if (boopHash) markBoopAsFailure({ boopHash }, serializeError(error))
         throw error
     }
 }
