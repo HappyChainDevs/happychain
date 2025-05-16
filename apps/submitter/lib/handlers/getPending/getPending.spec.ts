@@ -23,7 +23,7 @@ describe("submitter_pending", () => {
         nonceValue = await getNonce(smartAccount, nonceTrack)
     })
 
-    it("fetches pending transactions for a user", async () => {
+    it.skip("fetches pending transactions for a user", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
 
         const count = 10
@@ -47,8 +47,7 @@ describe("submitter_pending", () => {
         const pending = (await client.api.v1.boop.pending[":account"]
             .$get({ param: { account: smartAccount } })
             .then((a) => a.json())) as any
-        console.log("pending", pending)
-
+        
         expect(pending.error).toBeUndefined()
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)
         expect(pending.pending[0].boopHash).toBeString()

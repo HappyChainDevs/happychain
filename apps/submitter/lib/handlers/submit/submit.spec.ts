@@ -73,6 +73,7 @@ describe("submitter_submit", () => {
                 return resp
             }),
         )
+        console.log("receiptBodies", receiptBodies)
         const rs = await Promise.all(
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
