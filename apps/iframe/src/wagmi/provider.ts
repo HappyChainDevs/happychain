@@ -9,6 +9,7 @@ import {
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { addBanner } from "#src/state/banner.ts"
+import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user.ts"
 import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
@@ -30,6 +31,10 @@ export class IframeProvider extends BasePopupProvider {
 
     constructor() {
         super(walletID())
+    }
+
+    protected chainId(): number {
+        return Number(getCurrentChain().chainId)
     }
 
     protected onPopupBlocked() {

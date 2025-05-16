@@ -110,6 +110,11 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     // === ABSTRACT METHODS ========================================================================
 
     /**
+     * Returns the current chain id.
+     */
+    protected abstract chainId(): number
+
+    /**
      * Returns true if a request requires user approval, if unable to determine, and/or if extra
      * permissions (beyond user approval) are required.
      */
@@ -152,6 +157,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             key: key,
             args: btoa(JSON.stringify(args)),
             iframeIndex: iframeIndex.toString(),
+            chainId: this.chainId().toString(),
         }
         const searchParams = new URLSearchParams(opts).toString()
 
