@@ -61,7 +61,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
     return {
         simulateOutput: data?.status === Simulate.Success ? data : undefined,
         simulateError:
-            data && data.status !== Simulate.Success ? new Error(getProp(data, "description", "string")) : undefined,
+            data?.status !== Simulate.Success ? new Error(getProp(data, "description", "string")) : undefined,
         isSimulatePending,
         fetchError,
     }
