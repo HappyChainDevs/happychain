@@ -182,7 +182,7 @@ export async function installNewSessionKey(app: AppURL, account: Address, target
     } else {
         await installSessionKeyExtension(account, target, sessionAccount.address)
     }
-    return authorizeSessionKey(app, account, target, sessionKey)
+    authorizeSessionKey(app, account, target, sessionKey)
 }
 
 /**
