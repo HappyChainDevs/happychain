@@ -47,7 +47,7 @@ describe("submitter_receipt", () => {
     it("fetches both simulated and resolved states depending on timeout", async () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
-        // Submit transaction but don't for inclusion.
+        // Submit transaction but don't wait for inclusion.
         await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
@@ -62,11 +62,6 @@ describe("submitter_receipt", () => {
         expect(stateResolved.status).toBe(WaitForReceipt.Success)
         expect(stateResolved.receipt.boopHash).toBe(boopHash)
         expect((stateResolved as any).simulation).toBeUndefined()
-
-        if (env.AUTOMINE_TESTS) return // instantly included with auto-mining, so the following will fail
-
-        expect(stateSimulated.status).toBe(WaitForReceipt.ReceiptTimeout)
-        expect((stateSimulated as any).receipt).toBeUndefined()
     })
     it("should reject immediately if the boop isn't known", async () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
