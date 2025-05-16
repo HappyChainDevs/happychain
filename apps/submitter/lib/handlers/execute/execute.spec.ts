@@ -247,25 +247,23 @@ describe("submitter_execute", () => {
             // test only works if submitter is configured to allow more than 50
             expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
             expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
-            
+
             const transactions = await Promise.all(
                 Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
                     const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
                     return await sign(dummyBoop)
                 }),
             )
-            
+
             const results = await Promise.all(
                 transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
-            expect(results).toHaveLength(count);
+            expect(results).toHaveLength(count)
             results.forEach((r, i) => {
-              expect(r.status,              `status at index ${i}`).toBe(Onchain.Success);
-              expect(r.receipt.status,      `receipt.status at index ${i}`).toBe(Onchain.Success);
-              expect(
-                r.receipt.evmTxHash,        `evmTxHash at index ${i}`
-              ).toEqual(expect.any(String));
-            });
+                expect(r.status, `status at index ${i}`).toBe(Onchain.Success)
+                expect(r.receipt.status, `receipt.status at index ${i}`).toBe(Onchain.Success)
+                expect(r.receipt.evmTxHash, `evmTxHash at index ${i}`).toEqual(expect.any(String))
+            })
         })
     })
 })
