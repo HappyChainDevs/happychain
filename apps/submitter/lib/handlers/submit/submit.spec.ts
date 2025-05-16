@@ -3,7 +3,7 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
-import { type Boop, type BoopReceipt, Onchain } from "#lib/types"
+import { type Boop, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
@@ -62,19 +62,10 @@ describe("submitter_submit", () => {
                     query: { timeout: "10000" },
                 })
             }),
-        )
-        //  console.log("receipts", receipts)
-        const receiptBodies = await Promise.all(
-            receipts.map(async (resp) => {
-                // If resp is already an object (not a Response), just return it
-                if (resp && "json" in resp && typeof resp.json === "function") {
-                    return await resp.json()
-                }
-                return resp
-            }),
-        )
+        ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
+        
         const rs = await Promise.all(
-            receiptBodies.map((a) => {
+            receipts.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 if (!("receipt" in a)) return { status: a.status }
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
