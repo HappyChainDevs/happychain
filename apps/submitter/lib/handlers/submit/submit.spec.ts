@@ -57,18 +57,22 @@ describe("submitter_submit", () => {
         const receipts = await Promise.all(
             submitResults.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
-                return client.api.v1.boop.receipt[":boopHash"].$get({ param: { boopHash: a.boopHash },query: { timeout: "10000" } })
-            }))
+                return client.api.v1.boop.receipt[":boopHash"].$get({
+                    param: { boopHash: a.boopHash },
+                    query: { timeout: "10000" },
+                })
+            }),
+        )
         //  console.log("receipts", receipts)
-         const receiptBodies = await Promise.all(
+        const receiptBodies = await Promise.all(
             receipts.map(async (resp) => {
                 // If resp is already an object (not a Response), just return it
                 if (resp && "json" in resp && typeof resp.json === "function") {
-                    return await resp.json();
+                    return await resp.json()
                 }
-                return resp;
-            })
-        );
+                return resp
+            }),
+        )
         const rs = await Promise.all(
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
