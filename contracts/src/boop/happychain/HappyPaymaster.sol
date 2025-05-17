@@ -61,7 +61,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     uint256 public immutable SUBMITTER_TIP_PER_BYTE;
 
     /// @dev Mapping of user addresses to their gas budgets and last updated times.
-    mapping(address => UserInfo) public userInfo;
+    mapping(address => UserInfo) private userInfo;
 
     // ====================================================================================================
     // MODIFIERS
@@ -125,13 +125,11 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
             return uint32(MAX_GAS_BUDGET);
         } else {
             uint256 timeElapsed = currentTime - info.lastUpdated;
-            if (timeElapsed > REFILL_PERIOD) {
-                return uint32(MAX_GAS_BUDGET);
-            }
             uint256 gasToRefill = timeElapsed * REFILL_RATE;
             uint256 newGasBudget = info.userGasBudget + gasToRefill;
-
-            return uint32(newGasBudget);
+            return newGasBudget > MAX_GAS_BUDGET
+                ? uint32(MAX_GAS_BUDGET)
+                : uint32(newGasBudget);
         }
     }
 
@@ -189,18 +187,12 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     }
 
     /**
-     * @notice Returns the current UserInfo for a given address.
-     * If both `lastUpdated` and `userGasBudget` are 0, the user is treated as having the max gas budget.
-     * @param user The address of the user to query.
-     * @return info The effective UserInfo.
+     * Returns the current budget (in wei) for a given address.
      */
-    function getUserInfo(address user) external view returns (UserInfo memory info) {
+    function getBudget(address user) external view returns (uint32 budget) {
         UserInfo memory stored = userInfo[user];
-
-        if (stored.lastUpdated == 0) {
-            return UserInfo({lastUpdated: 0, userGasBudget: uint32(MAX_GAS_BUDGET)});
-        }
-
-        return stored;
+        return stored.lastUpdated == 0
+            ? uint32(MAX_GAS_BUDGET)
+            : stored.userGasBudget;
     }
 }
