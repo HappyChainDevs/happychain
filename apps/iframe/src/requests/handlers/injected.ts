@@ -98,7 +98,8 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
                 const sessionKey = getSessionKey(user.address, target)
                 return privateKeyToAccount(sessionKey).address
             }
-            return installNewSessionKey(app, user.address, target)
+            installNewSessionKey(app, user.address, target)
+            return
         }
 
         case "eth_accounts": {

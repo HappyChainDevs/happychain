@@ -96,7 +96,8 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             getCheckedUser()
             const target = checkAndChecksumAddress(request.payload.params[0])
-            return checkSessionKeyAuthorized(app, target)
+            checkSessionKeyAuthorized(app, target)
+            return
         }
 
         /* // FOR TESTING
