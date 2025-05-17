@@ -138,6 +138,6 @@ function Request() {
         case HappyMethodNames.REQUEST_SESSION_KEY:
             return <HappyRequestSessionKey {...props} />
         default:
-            return <UnknownRequest {...(({ accept, ...rest }) => rest)(props)} />
+            return <UnknownRequest {...props} />
     }
 }
