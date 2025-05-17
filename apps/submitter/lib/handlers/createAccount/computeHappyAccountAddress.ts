@@ -10,23 +10,20 @@ import {
 import { encodePacked, parseAbi } from "viem/utils"
 import { abis, deployment } from "#lib/env"
 import { publicClient } from "#lib/utils/clients"
+import { logger } from "#lib/utils/logger"
+
+const initializeAbi = parseAbi(["function initialize(address owner)"])
+const constructorArgsAbi = parseAbiParameters(["address beacon, bytes data"])
 
 /**
- * Computes the predicted address of the account the submitter would deploy
- * for this (salt, owner) pair, fully locally.
+ * Computes the predicted address of the account the submitter would deploy for this (salt, owner) pair.
+ *
+ * This is computed locally, excepted on first call where it will fetch the proxy creation code from the chain.
  */
 export function computeHappyAccountAddress(salt: Hex, owner: Address): Address {
     const combinedSalt = keccak256(encodePacked(["bytes32", "address"], [salt, owner]))
 
-    // _prepareCode in the contract
-    const creationCode =
-        deployment.AccountProxyCreationCode !== "0x"
-            ? deployment.AccountProxyCreationCode
-            : FALLBACK_PROXY_CREATION_CODE
-    if (!creationCode) {
-        throw new Error("Proxy creation code not initialized. The submitter must initialize it first.")
-    }
-
+    // _prepareContractCode in the contract
     const initData = encodeFunctionData({
         abi: initializeAbi,
         functionName: "initialize",
@@ -36,7 +33,7 @@ export function computeHappyAccountAddress(salt: Hex, owner: Address): Address {
         constructorArgsAbi, //
         [deployment.HappyAccountBeacon, initData],
     )
-    const code = concatHex([creationCode, constructorArgs]) // no need for encodePacked, they're both `bytes`
+    const code = concatHex([proxyCreationCode, constructorArgs]) // no need for encodePacked, they're both `bytes`
 
     // _getAddress in the contract
     const hash = keccak256(
@@ -58,8 +55,25 @@ async function _getPredictedAddressOnchain(salt: Hex, owner: Address): Promise<A
     })
 }
 
-const initializeAbi = parseAbi(["function initialize(address owner)"])
-const constructorArgsAbi = parseAbiParameters(["address beacon, bytes data"])
+// This little dance makes sure we don't run into "using before initialization", which would occur
+const proxyCreationCode = await fetchProxyCreationCode()
+
+/**
+ * Fetches the proxy creation code from the factory contract,
+ * falling back to the harcoded proxy code in case of failure.
+ */
+async function fetchProxyCreationCode(): Promise<Hex> {
+    try {
+        return (await publicClient.readContract({
+            address: deployment.HappyAccountBeaconProxyFactory,
+            abi: abis.HappyAccountBeaconProxyFactory,
+            functionName: "getProxyCreationCode",
+        })) as Hex
+    } catch {
+        logger.error("Failed to fetch proxy creation code from factory contract. Falling back to hardcoded code.")
+        return FALLBACK_PROXY_CREATION_CODE
+    }
+}
 
 /**
  * Hardcoded proxy creation code (without metadata) as a fallback in case we can't fetch it on-chain
