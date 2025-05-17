@@ -1932,7 +1932,7 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "getUserInfo",
+      "name": "getBudget",
       "inputs": [
         {
           "name": "user",
@@ -1942,21 +1942,9 @@ const contractToAbi = ({
       ],
       "outputs": [
         {
-          "name": "info",
-          "type": "tuple",
-          "internalType": "struct UserInfo",
-          "components": [
-            {
-              "name": "lastUpdated",
-              "type": "uint64",
-              "internalType": "uint64"
-            },
-            {
-              "name": "userGasBudget",
-              "type": "uint32",
-              "internalType": "uint32"
-            }
-          ]
+          "name": "budget",
+          "type": "uint32",
+          "internalType": "uint32"
         }
       ],
       "stateMutability": "view"
@@ -2019,30 +2007,6 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "userInfo",
-      "inputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "lastUpdated",
-          "type": "uint64",
-          "internalType": "uint64"
-        },
-        {
-          "name": "userGasBudget",
-          "type": "uint32",
-          "internalType": "uint32"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -2516,7 +2480,7 @@ export const deployment = ({
   "HappyAccountBeaconProxyFactory": "0x47F835FBe261f4AE25DB59f6A815C4E2081526A2",
   "HappyAccountImpl": "0x3cB911244135da25c168ac00e62d4bfA5e2baf96",
   "HappyAccountRegistry": "0xD170D0f841D1bb6BE34cb134fC0a35A1df434A5D",
-  "HappyPaymaster": "0x0639443E120cBCD991e1D9A3115dB1f07D7ceF00",
+  "HappyPaymaster": "0x8392A204A25dF204f71B2a43ac3fD99F211722eE",
   "SessionKeyValidator": "0xE573EFd026eB3fFc551326f255a89400b3503672"
 }) as const
 

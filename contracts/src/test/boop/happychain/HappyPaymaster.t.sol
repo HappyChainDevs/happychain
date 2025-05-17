@@ -26,10 +26,11 @@ contract HappyPaymasterTest is BoopTestUtils {
 
     address private _entryPoint;
     address private smartAccount;
-    address private paymaster;
+    address private _paymaster;
     uint256 private privKey;
     address private owner;
     address private dest;
+    HappyPaymaster private paymaster;
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
@@ -44,10 +45,11 @@ contract HappyPaymasterTest is BoopTestUtils {
 
         dest = deployer.happyAccountBeaconProxyFactory().createAccount(SALT2, owner);
 
-        paymaster = address(deployer.happyPaymaster());
+        paymaster = HappyPaymaster(deployer.happyPaymaster());
+        _paymaster = address(paymaster);
 
         // Fund the paymaster
-        vm.deal(paymaster, INITIAL_DEPOSIT);
+        vm.deal(_paymaster, INITIAL_DEPOSIT);
     }
 
     // ====================================================================================================
@@ -55,7 +57,7 @@ contract HappyPaymasterTest is BoopTestUtils {
 
     function testPaymentValidationZeroOwed() public {
         // Create a valid boop with negative submitterFee to force owed to be zero
-        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
+        Boop memory boop = getStubBoop(smartAccount, dest, _paymaster, new bytes(0));
 
         // Set up to make the owed amount negative (which should result in 0 transfer)
         boop.maxFeePerGas = 1; // Minimum gas price
@@ -63,7 +65,7 @@ contract HappyPaymasterTest is BoopTestUtils {
 
         // Call validatePayment from the entrypoint
         vm.prank(_entryPoint);
-        bytes memory validationData = HappyPaymaster(payable(paymaster)).validatePayment(boop);
+        bytes memory validationData = paymaster.validatePayment(boop);
 
         // Verify validation was successful (returns empty selector)
         assertEq(validationData, abi.encodeWithSelector(bytes4(0)));
@@ -71,24 +73,24 @@ contract HappyPaymasterTest is BoopTestUtils {
 
     function testPaymentValidationRevertsWhenNotCalledThroughEntrypoint() public {
         // Create a valid boop
-        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
+        Boop memory boop = getStubBoop(smartAccount, dest, _paymaster, new bytes(0));
 
         // Call validatePayment from an address that is not the entrypoint
         // This should revert with NotFromEntryPoint error
         vm.expectRevert(NotFromEntryPoint.selector);
-        HappyPaymaster(payable(paymaster)).validatePayment(boop);
+        paymaster.validatePayment(boop);
     }
 
     function testPaymentValidationSubmitterFeeTooHigh() public {
         // Create a valid boop with high submitterFee
-        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
+        Boop memory boop = getStubBoop(smartAccount, dest, _paymaster, new bytes(0));
 
         // Set a very high submitter fee
         boop.submitterFee = type(int256).max;
 
         // Call validatePayment from the entrypoint
         vm.prank(_entryPoint);
-        bytes memory validationData = HappyPaymaster(payable(paymaster)).validatePayment(boop);
+        bytes memory validationData = paymaster.validatePayment(boop);
 
         // Verify correct error code is returned
         assertEq(validationData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
@@ -103,15 +105,15 @@ contract HappyPaymasterTest is BoopTestUtils {
         uint256 withdrawAmount = 1 ether;
 
         // Fund the paymaster
-        vm.deal(paymaster, withdrawAmount);
-        uint256 initialPaymasterBalance = address(paymaster).balance;
+        vm.deal(_paymaster, withdrawAmount);
+        uint256 initialPaymasterBalance = address(_paymaster).balance;
 
         // Call withdraw as owner
         vm.prank(owner);
-        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        paymaster.withdraw(RECIPIENT, withdrawAmount);
 
         // Verify balances after withdrawal
-        assertEq(address(paymaster).balance, initialPaymasterBalance - withdrawAmount);
+        assertEq(address(_paymaster).balance, initialPaymasterBalance - withdrawAmount);
         assertEq(RECIPIENT.balance, initialRecipientBalance + withdrawAmount);
     }
 
@@ -121,12 +123,12 @@ contract HappyPaymasterTest is BoopTestUtils {
         uint256 withdrawAmount = 2 ether; // More than available
 
         // Fund the paymaster
-        vm.deal(paymaster, paymasterBalance);
+        vm.deal(_paymaster, paymasterBalance);
 
         // Call withdraw as owner with amount > balance
         vm.prank(owner);
         vm.expectRevert("Insufficient balance");
-        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        paymaster.withdraw(RECIPIENT, withdrawAmount);
     }
 
     function testWithdrawOnlyOwner() public {
@@ -134,37 +136,32 @@ contract HappyPaymasterTest is BoopTestUtils {
         uint256 withdrawAmount = 1 ether;
 
         // Fund the paymaster
-        vm.deal(paymaster, withdrawAmount);
+        vm.deal(_paymaster, withdrawAmount);
 
         // Call withdraw as non-owner
         address nonOwner = address(0x456);
         vm.prank(nonOwner);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
-        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        paymaster.withdraw(RECIPIENT, withdrawAmount);
     }
 
     // ====================================================================================================
-    // USER INFO TESTS
+    // GAS BUDGET TESTS
 
-    function testGetUserInfoDefaultsToMaxBudget() public view {
-        // Make sure the user has no stored info
-        UserInfo memory info = HappyPaymaster(payable(paymaster)).getUserInfo(smartAccount);
-        assertEq(info.lastUpdated, 0);
-        assertEq(info.userGasBudget, uint32(HappyPaymaster(payable(paymaster)).MAX_GAS_BUDGET()));
+    function testFreshUserHasMaxBudget() public view {
+        uint32 budget = paymaster.getBudget(smartAccount);
+        assertEq(budget, uint32(paymaster.MAX_GAS_BUDGET()));
     }
 
-    function testGetUserInfoReturnsStoredValue() public {
+    function testValidatePaymentUpdatesBudget() public {
         // Trigger a valid payment to store budget
-        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
+        Boop memory boop = getStubBoop(smartAccount, dest, _paymaster, new bytes(0));
         boop.maxFeePerGas = 1;
         boop.gasLimit = 100_000;
         boop.submitterFee = 0;
-
         vm.prank(_entryPoint);
-        HappyPaymaster(payable(paymaster)).validatePayment(boop);
-
-        UserInfo memory info = HappyPaymaster(payable(paymaster)).getUserInfo(smartAccount);
-        assertGt(info.lastUpdated, 0);
-        assertLt(info.userGasBudget, uint32(HappyPaymaster(payable(paymaster)).MAX_GAS_BUDGET()));
+        paymaster.validatePayment(boop);
+        uint32 budget = paymaster.getBudget(smartAccount);
+        assertLt(budget, uint32(paymaster.MAX_GAS_BUDGET()));
     }
 }
