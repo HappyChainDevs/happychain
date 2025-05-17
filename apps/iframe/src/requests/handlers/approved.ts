@@ -73,7 +73,8 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // If this lands in the approved handler, we know there are no session keys for the target address.
             const target = checkAndChecksumAddress(request.payload.params[0])
-            return installNewSessionKey(app, user.address, target)
+            installNewSessionKey(app, user.address, target)
+            return
         }
 
         default:
