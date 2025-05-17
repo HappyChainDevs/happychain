@@ -45,10 +45,4 @@ export const deploymentsSchema = z.object({
      * Note that for now, this contract have an ABI compatible to the default contract, or the submitter won't work.
      */
     DEPLOYMENT_ACCOUNT_IMPLEMENTATION: z.string().refine(isHexString).optional(),
-
-    /**
-     * The creation code of the BeaconProxy contract used to deploy Boop accounts.
-     * Defaults to the creation code of the latest stable HappyAccountBeaconProxyFactory release from Happy Devs.
-     */
-    DEPLOYMENT_ACCOUNT_FACTORY_CREATION_CODE: z.string().refine(isHexString).optional(),
 })
