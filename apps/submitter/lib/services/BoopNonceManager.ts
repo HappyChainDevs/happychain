@@ -12,7 +12,7 @@ type NonceTrack = bigint
 type NonceValue = bigint
 type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
-export class BoopNonceManagerService {
+export class BoopNonceManager {
     #usedCapacity: bigint
     readonly #nonceMutexes: Map2<Address, NonceTrack, Mutex>
     readonly #nonces: Map2<Address, NonceTrack, NonceValue>
@@ -62,11 +62,11 @@ export class BoopNonceManagerService {
 
         // Check if we can wait for the nonce.
         const trackSize = this.#pendingBoopsMap.get(boop.account, boop.nonceTrack)?.size ?? 0
-        if (trackSize >= env.LIMITS_EXECUTE_BUFFER_LIMIT)
+        if (trackSize >= env.MAX_PENDING_PER_TRACK)
             return this.#makeSubmitError("Buffer full for this (account, nonceTrack) pair. Try again later.")
-        if (this.#usedCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY)
+        if (this.#usedCapacity >= env.MAX_TOTAL_PENDING)
             return this.#makeSubmitError("The submitter has reached its maximum capacity. Try again later.")
-        if (nonceValue >= localNonce + BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT))
+        if (nonceValue >= localNonce + BigInt(env.MAX_PENDING_PER_TRACK))
             return this.#makeSubmitError("The supplied nonce is too far ahead of the current non value.")
 
         // If an old boop exists for th enonce, signal that it has been replaced.

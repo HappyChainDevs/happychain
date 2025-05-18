@@ -29,8 +29,8 @@ describe("submitter_pending", () => {
         const count = 10
 
         // test only works if submitter is configured to allow more than 50
-        expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
-        expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
+        expect(env.MAX_PENDING_PER_TRACK).toBeGreaterThanOrEqual(count)
+        expect(env.MAX_TOTAL_PENDING).toBeGreaterThanOrEqual(count)
 
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
