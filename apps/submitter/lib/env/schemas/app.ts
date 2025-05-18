@@ -61,16 +61,6 @@ export const appSchema = z.object({
     DATABASE_URL: z.string(),
 
     /**
-     * Default timeout for waiting for receipts in milliseconds. Defaults to 8 seconds.
-     */
-    RECEIPT_TIMEOUT: z.coerce.number().default(8000),
-
-    /**
-     * Max timeout that caller can specify for the `boop/receipt` route.
-     */
-    MAX_RECEIPT_TIMEOUT: z.coerce.number().default(8000),
-
-    /**
      * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time, but skipping some tests
      * that are timing-dependent.
      */

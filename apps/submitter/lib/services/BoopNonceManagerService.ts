@@ -12,8 +12,6 @@ type NonceTrack = bigint
 type NonceValue = bigint
 type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
-// TODO make this an env var
-const MAX_WAIT_TIMEOUT_MS = 30_000
 const NONCE_BUFFER_LIMIT = BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
 
 export class BoopNonceManagerService {
@@ -89,7 +87,7 @@ export class BoopNonceManagerService {
             logger.trace("Timed out while waiting to process pending boop", boopHash)
             this.#removeNonce(account, nonceTrack, nonceValue)
             resolve(this.#makeSubmitError("transaction timeout"))
-        }, MAX_WAIT_TIMEOUT_MS)
+        }, env.MAX_SUBMIT_PENDING_TIME)
 
         this.#pendingBoopsMap
             .getOrSet(account, nonceTrack, () => new Map())
