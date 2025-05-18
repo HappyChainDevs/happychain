@@ -11,7 +11,7 @@ import { computeHash } from "../utils/boop/computeHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
-type BlockedBoop = { boopHash: Hash; resolve: (value: Result<undefined, SubmitError>) => void }
+type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
 const MAX_WAIT_TIMEOUT_MS = 30_000
 const NONCE_BUFFER_LIMIT = BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
@@ -87,33 +87,29 @@ export class BoopNonceManagerService {
         return boop.nonceValue > onchainNonce + NONCE_BUFFER_LIMIT
     }
 
-    pauseUntilUnblocked(_entrypoint: Address, boop: Boop): Promise<Result<undefined, SubmitError>> {
+    async pauseUntilUnblocked(_entrypoint: Address, boop: Boop): Promise<undefined | SubmitError> {
         const { account, nonceTrack, nonceValue } = boop
-
         const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
+        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError("transaction replaced"))
 
-        if (previouslyBlocked) previouslyBlocked.resolve(err(this.#makeSubmitError("transaction replaced")))
-
-        const { promise, resolve } = promiseWithResolvers<Result<undefined, SubmitError>>()
+        const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
 
         const timeout = setTimeout(() => {
-            // remove the tx
             const track = this.#pendingBoopsMap.get(account, nonceTrack)
             track?.delete(nonceValue)
             if (track?.size === 0) {
-                // prune the empty tracks
                 this.#pendingBoopsMap.delete(account, nonceTrack)
                 this.#nonces.delete(account, nonceTrack)
                 this.#nonceMutexes.delete(account, nonceTrack)
             }
-            resolve(err(this.#makeSubmitError("transaction timeout")))
+            resolve(this.#makeSubmitError("transaction timeout"))
         }, MAX_WAIT_TIMEOUT_MS)
 
         this.#pendingBoopsMap
             .getOrSet(boop.account, boop.nonceTrack, () => new Map())
             .set(boop.nonceValue, {
                 boopHash: computeHash(boop),
-                resolve: (response: Result<undefined, SubmitError>) => {
+                resolve: (response: undefined | SubmitError) => {
                     clearTimeout(timeout)
                     resolve(response)
                 },
@@ -149,7 +145,7 @@ export class BoopNonceManagerService {
 
         if (!track || !blockedBoop) return
 
-        blockedBoop.resolve(ok(undefined))
+        blockedBoop.resolve(undefined)
 
         track?.delete(nextNonce)
         if (track?.size === 0) {
