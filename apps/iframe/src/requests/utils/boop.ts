@@ -1,13 +1,21 @@
-import { Onchain, SubmitterError, computeBoopHash } from "@happy.tech/boop-sdk"
-import type { Boop, BoopReceipt, ExecuteOutput, SimulateOutput, SimulateSuccess } from "@happy.tech/boop-sdk"
+import { GetState, Onchain, SubmitterError, computeBoopHash } from "@happy.tech/boop-sdk"
+import type {
+    Boop,
+    BoopReceipt,
+    ExecuteOutput,
+    GetStateOutput,
+    SimulateOutput,
+    SimulateSuccess,
+} from "@happy.tech/boop-sdk"
 import { Map2, Mutex, parseBigInt } from "@happy.tech/common"
 import type { Address, Hash, Hex } from "@happy.tech/common"
-import type { HappyRpcError } from "@happy.tech/wallet-common"
 import {
     EIP1474InternalError,
     EIP1474InvalidInput,
     EIP1474LimitExceeded,
+    EIP1474ResourceNotfound,
     EIP1474TransactionRejected,
+    type HappyRpcError,
     RevertRpcError,
 } from "@happy.tech/wallet-common"
 import { parseSignature, zeroAddress } from "viem"
@@ -269,7 +277,7 @@ export function formatTransaction(
     } satisfies TransactionEIP1559 & { boop?: BoopReceipt }
 }
 
-function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcError {
+function translateBoopError(output: ExecuteOutput | SimulateOutput | GetStateOutput): HappyRpcError {
     switch (output.status) {
         case Onchain.MissingValidationInformation:
         case Onchain.GasPriceTooHigh:
@@ -296,18 +304,24 @@ function translateBoopError(output: ExecuteOutput | SimulateOutput): HappyRpcErr
             return new RevertRpcError(output.description, output)
         case SubmitterError.BufferExceeded:
         case SubmitterError.OverCapacity:
+        case SubmitterError.NonceTooFarAhead:
             return new EIP1474LimitExceeded(output.description, output)
-        case SubmitterError.SimulationTimeout:
         case SubmitterError.SubmitTimeout:
         case SubmitterError.ReceiptTimeout:
         case SubmitterError.RpcError:
         case SubmitterError.ClientError:
+        case SubmitterError.BoopReplaced:
+        case SubmitterError.ExternalSubmit:
             return new EIP1474InternalError(output.description, output)
+        case GetState.UnknownState:
+        case GetState.UnknownBoop:
+            return new EIP1474ResourceNotfound("Requesting state of unknown boop", output)
         case Onchain.Success:
+        case GetState.Receipt:
+        case GetState.Simulated:
             return new EIP1474InternalError("Not an error — implementation bug", output)
         default: {
-            // Type check exhaustiveness.
-            const _: never = output
+            const _: never = output // exhaustiveness check
             return null as unknown as HappyRpcError
         }
     }

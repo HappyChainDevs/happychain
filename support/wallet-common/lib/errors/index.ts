@@ -19,12 +19,13 @@ export {
 } from "./eip1193Errors"
 
 export {
-    EIP1474ErrorCodes,
     EthereumRpcError,
+    EIP1474ErrorCodes,
     EIP1474InvalidInput,
     EIP1474InternalError,
     EIP1474TransactionRejected,
     EIP1474LimitExceeded,
+    EIP1474ResourceNotfound,
 } from "./eip1474Errors"
 
 export { RevertErrorCode, RevertRpcError } from "./revertError"
