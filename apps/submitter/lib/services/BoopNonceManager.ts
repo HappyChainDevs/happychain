@@ -28,8 +28,6 @@ export class BoopNonceManager {
         this.#pendingBoopsMap = new Map2()
     }
 
-    // TODO add nonce-warning method during simulate
-
     /**
      * Returns all blocked (queued) Boops for a given account. These
      */

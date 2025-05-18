@@ -174,8 +174,6 @@
         "hono-openapi": "^0.4.4",
         "kysely": "^0.27.5",
         "kysely-bun-sqlite": "^0.3.2",
-        "kysely-codegen": "^0.17.0",
-        "neverthrow": "^8.2.0",
         "ox": "^0.6.12",
         "viem": "^2.21.53",
         "zod": "^3.23.8",
@@ -186,6 +184,7 @@
         "@happy.tech/configs": "workspace:0.1.0",
         "@happy.tech/happybuild": "workspace:0.1.1",
         "@types/bun": "^1.2.4",
+        "kysely-codegen": "^0.17.0",
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
