@@ -25,7 +25,7 @@ export async function submitInternal(
     let boop = ogBoop
     const boopHash = computeHash(boop)
     try {
-        logger.trace("Submitting boop with hash", boopHash)
+        logger.trace("Submitting boop", boopHash)
         let simulation = await simulate(input, true)
         if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation) {

@@ -27,13 +27,13 @@ const app = new Hono()
             maxAge: 86400, // max allowable age for cached preflight requests (some browsers will downgrade this)
         }),
     )
+    .use(logJSONResponseMiddleware)
     .use(
         except(
             // don't run these during testing
             () => env.NODE_ENV === "test",
             every(
                 timingMiddleware(), // measure response times
-                logJSONResponseMiddleware,
                 loggerMiddleware(), // log all calls to the console
                 prettyJSONMiddleware(), // add '?pretty' to any json endpoint to prettyprint
             ),

@@ -54,7 +54,7 @@ export class ReceiptService {
             })
 
             if (boop && txHash && !sub.evmTxHash) void this.#waitAndCreateReceipt(sub, txHash, boop)
-            logger.trace("Waiting for receipt (subscribed)", boopHash)
+            logger.trace("Subscribed to receipt", boopHash)
             return await result
         } catch (error) {
             return error instanceof ReceiptTimeout

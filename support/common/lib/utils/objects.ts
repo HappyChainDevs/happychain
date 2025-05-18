@@ -103,3 +103,18 @@ export function ifDef<T, R, Rest extends unknown[]>(
 ): R | undefined {
     return value !== undefined && value !== null ? f(value, ...rest) : undefined
 }
+
+/**
+ * Returns true iff the passed object has no enumerable properties and it has the same prototype as `{}`.
+ *
+ * For efficiency, this does not check for non-enumerable properties, unless you pass "strict" as the second argument.
+ */
+export function isEmpty(obj: object, strict?: "strict"): boolean {
+    if (Object.getPrototypeOf(obj) !== Object.getPrototypeOf({})) return false
+    if (strict) {
+        return Object.getOwnPropertyNames(obj).length === 0
+    } else {
+        for (const _ in obj) return false
+        return true
+    }
+}
