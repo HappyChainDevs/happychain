@@ -17,13 +17,13 @@ const MAX_WAIT_TIMEOUT_MS = 30_000
 const NONCE_BUFFER_LIMIT = BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
 
 export class BoopNonceManagerService {
-    #totalCapacity: bigint
+    #usedCapacity: bigint
     readonly #nonceMutexes: Map2<Address, NonceTrack, Mutex>
     readonly #nonces: Map2<Address, NonceTrack, NonceValue>
     readonly #pendingBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, BlockedBoop>>
 
     constructor() {
-        this.#totalCapacity = 0n
+        this.#usedCapacity = 0n
         this.#nonceMutexes = new Map2()
         this.#nonces = new Map2()
         this.#pendingBoopsMap = new Map2()
@@ -74,7 +74,7 @@ export class BoopNonceManagerService {
     }
 
     #reachedMaxCapacity() {
-        return this.#totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY
+        return this.#usedCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY
     }
 
     async #nonceOutOfRange(entrypoint: `0x${string}`, boop: Boop) {
@@ -115,7 +115,7 @@ export class BoopNonceManagerService {
                 },
             })
 
-        this.#totalCapacity++
+        this.#usedCapacity++
 
         return promise
     }
@@ -133,7 +133,7 @@ export class BoopNonceManagerService {
      * @param boop The transaction to be tracked
      */
     public incrementLocalNonce(boop: Boop): void {
-        this.#totalCapacity--
+        this.#usedCapacity--
 
         const { account, nonceTrack } = boop
         const nextNonce = boop.nonceValue + 1n
