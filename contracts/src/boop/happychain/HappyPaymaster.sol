@@ -127,9 +127,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
             uint256 timeElapsed = currentTime - info.lastUpdated;
             uint256 gasToRefill = timeElapsed * REFILL_RATE;
             uint256 newGasBudget = info.userGasBudget + gasToRefill;
-            return newGasBudget > MAX_GAS_BUDGET
-                ? uint32(MAX_GAS_BUDGET)
-                : uint32(newGasBudget);
+            return newGasBudget > MAX_GAS_BUDGET ? uint32(MAX_GAS_BUDGET) : uint32(newGasBudget);
         }
     }
 
@@ -191,8 +189,6 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
      */
     function getBudget(address user) external view returns (uint32 budget) {
         UserInfo memory stored = userInfo[user];
-        return stored.lastUpdated == 0
-            ? uint32(MAX_GAS_BUDGET)
-            : stored.userGasBudget;
+        return stored.lastUpdated == 0 ? uint32(MAX_GAS_BUDGET) : stored.userGasBudget;
     }
 }
