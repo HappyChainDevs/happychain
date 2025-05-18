@@ -44,7 +44,6 @@
         "hono-openapi": "^0.4.4",
         "kysely": "^0.27.5",
         "kysely-bun-sqlite": "^0.3.2",
-        "neverthrow": "^8.2.0",
         "ox": "^0.6.12",
         "viem": "^2.21.53",
         "zod": "^3.23.8",
