@@ -1,5 +1,7 @@
-import { LogLevel, Logger, logLevel } from "@happy.tech/common"
+import { LogLevel, Logger, getProp, ifDef, isEmpty, logLevel } from "@happy.tech/common"
 import { createMiddleware } from "hono/factory"
+import type { Boop } from "#lib/types"
+import { computeHash } from "#lib/utils/boop/computeHash"
 import { env } from "../env"
 
 const defaultLogLevel = logLevel(env.LOG_LEVEL)
@@ -7,16 +9,21 @@ Logger.instance.setLogLevel(defaultLogLevel)
 
 export const logger = Logger.create("Submitter")
 
-const responseLogger = Logger.create("Response", LogLevel.TRACE)
 export const logJSONResponseMiddleware = createMiddleware(async (c, next) => {
     await next()
-
-    if (LogLevel.TRACE > responseLogger.logLevel) return
+    if (LogLevel.TRACE > logger.logLevel) return
     if (!c.req.path.startsWith("/api")) return
     try {
-        responseLogger.trace(c.res.status, await c.res.clone().json())
+        const params = c.req.param()
+        const input = !isEmpty(params) ? params : await c.req.json()
+        const identifier =
+            ifDef(getProp(input, "boop") as Boop, computeHash) ?? // Simulate, Submit, Execute
+            getProp(input, "boopHash") ?? // GetState, WaitForReceipt
+            getProp(input, "owner") ?? // CreateAccount
+            getProp(input, "account") // GetPendingInput
+        logger.trace("Response", c.req.routePath, identifier, c.res.status, await c.res.clone().json())
     } catch (e) {
-        responseLogger.error("failed to parse response:", {
+        logger.error("Failed to parse response:", {
             error: (e as Error)?.message,
             requestId: c.get("requestId"),
             url: c.req.url,
