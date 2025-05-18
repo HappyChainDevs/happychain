@@ -39,7 +39,6 @@ export async function simulate(
                 ? await publicClient.getBalance({ address: boop.account })
                 : Promise.resolve(null)
 
-        // TODO make sure nonce is gucci / prefetched?
         const [{ result: entryPointOutput }, gasPrice, balance] = await Promise.all([
             simulatePromise,
             gasPricePromise,
@@ -77,7 +76,7 @@ export async function simulate(
     } catch (error) {
         const revert = getRevertError(error)
         const output = revert.isContractRevert
-            ? outputForRevertError(boop, boopHash, revert.decoded, true)
+            ? outputForRevertError(entryPoint, boop, boopHash, revert.decoded, true)
             : outputForGenericError(error)
 
         noteSimulationMisbehaviour(boop, output)

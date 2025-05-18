@@ -71,7 +71,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
             // TODO set Retry-After HTTP header
             return [response, 503] // Service Unavailable
         case SubmitterError.ClientError:
-            throw "BUG" // only thrown on client
+            throw "BUG: makeResponse" // only thrown client-side
         default: {
             const _: never = output.status // exhaustive check
             return [response, 500]
