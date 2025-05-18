@@ -23,7 +23,7 @@ describe("submitter_pending", () => {
         nonceValue = await getNonce(smartAccount, nonceTrack)
     })
 
-    it.skip("fetches pending transactions for a user", async () => {
+    it("fetches pending transactions for a user", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
 
         const count = 10
