@@ -4,7 +4,7 @@ import { GetPending, type GetPendingInput, type GetPendingOutput } from "./types
 
 export async function getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {
     try {
-        const pending = boopNonceManager.getBlockedBoops(account)
+        const pending = boopNonceManager.getPendingBoops(account)
         return { status: GetPending.Success, account, pending }
     } catch (error) {
         return outputForGenericError(error)
