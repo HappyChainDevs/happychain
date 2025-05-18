@@ -15,9 +15,6 @@ export const SubmitterError = {
     /** The submitter failed with an unexpected error. */
     UnexpectedError: "submitterUnexpectedError",
 
-    /** The RPC simulation call (or related RPC call) timed out. */
-    SimulationTimeout: "submitterSimulationTimeout",
-
     /** The RPC execution call (or related RPC call) timed out. */
     SubmitTimeout: "submitterSubmitTimeout",
 
@@ -32,6 +29,15 @@ export const SubmitterError = {
      * This could indicate that the submitter tx is stuck in the mempool or an RPC issue.
      */
     ReceiptTimeout: "submitterReceiptTimeout",
+
+    /** The supplied nonce is too far ahead of the current nonce value. */
+    NonceTooFarAhead: "submitterNonceTooFarAhead",
+
+    /** The boop has been replaced by a newer boop. */
+    BoopReplaced: "submitterBoopReplaced",
+
+    /** Boop was submitted onchain by another submitter or entity. */
+    ExternalSubmit: "submitterExternalSubmit",
 } as const
 
 /**

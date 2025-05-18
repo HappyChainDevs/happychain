@@ -87,3 +87,9 @@ export class EIP1474LimitExceeded extends EthereumRpcError {
         super({ code: EIP1474ErrorCodes.LimitExceeded, details, cause })
     }
 }
+
+export class EIP1474ResourceNotfound extends EthereumRpcError {
+    constructor(details?: string, cause?: unknown) {
+        super({ code: EIP1474ErrorCodes.ResourceNotFound, details, cause })
+    }
+}

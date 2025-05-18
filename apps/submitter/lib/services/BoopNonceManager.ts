@@ -3,7 +3,7 @@ import type { Address } from "viem/accounts"
 import { abis, env } from "#lib/env"
 import type { PendingBoopInfo } from "#lib/handlers/getPending"
 import type { SubmitError } from "#lib/handlers/submit"
-import { type Boop, SubmitterError } from "#lib/types"
+import { type Boop, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { computeHash } from "../utils/boop/computeHash"
@@ -55,23 +55,27 @@ export class BoopNonceManager {
 
         // Check if we can wait for the nonce.
         const trackSize = this.#pendingBoopsMap.get(boop.account, boop.nonceTrack)?.size ?? 0
-        if (trackSize >= env.MAX_PENDING_PER_TRACK)
-            return this.#makeSubmitError("Buffer full for this (account, nonceTrack) pair. Try again later.")
-        if (this.#usedCapacity >= env.MAX_TOTAL_PENDING)
-            return this.#makeSubmitError("The submitter has reached its maximum capacity. Try again later.")
-        if (nonceValue >= localNonce + BigInt(env.MAX_PENDING_PER_TRACK))
-            return this.#makeSubmitError("The supplied nonce is too far ahead of the current non value.")
+        if (trackSize >= env.MAX_PENDING_PER_TRACK) {
+            return this.#makeSubmitError(SubmitterError.BufferExceeded)
+        }
+        if (this.#usedCapacity >= env.MAX_TOTAL_PENDING) {
+            return this.#makeSubmitError(SubmitterError.OverCapacity)
+        }
+        if (nonceValue >= localNonce + BigInt(env.MAX_PENDING_PER_TRACK)) {
+            return this.#makeSubmitError(SubmitterError.NonceTooFarAhead)
+        }
 
         // If an old boop exists for th enonce, signal that it has been replaced.
         const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError("transaction replaced"))
+        // TODO think about who can trigger this
+        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
 
         const boopHash = computeHash(boop)
         const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
         const timeout = setTimeout(() => {
             logger.trace("Timed out while waiting to process pending boop", boopHash)
             this.#removeNonce(account, nonceTrack, nonceValue)
-            resolve(this.#makeSubmitError("transaction timeout"))
+            resolve(this.#makeSubmitError(SubmitterError.SubmitTimeout))
         }, env.MAX_SUBMIT_PENDING_TIME)
 
         this.#pendingBoopsMap
@@ -98,14 +102,29 @@ export class BoopNonceManager {
             this.#nonceMutexes.delete(account, nonceTrack)
         }
     }
-
-    // TODO inline this with the proper errors
-    #makeSubmitError(message: string): SubmitError {
-        return {
-            status: SubmitterError.UnexpectedError,
-            description: message,
-            stage: "submit",
+    #makeSubmitError(status: SubmitterErrorStatus): SubmitError {
+        let description = ""
+        switch (status) {
+            case SubmitterError.BufferExceeded:
+                description = "Buffer full for this (account, nonceTrack) pair. Try again later."
+                break
+            case SubmitterError.OverCapacity:
+                description = "The submitter has reached its maximum capacity. Try again later."
+                break
+            case SubmitterError.SubmitTimeout:
+                description = "Boop submission timed out — the boop's nonce is ahead of the latest known nonce."
+                break
+            case SubmitterError.NonceTooFarAhead:
+                description = "The supplied nonce is too far ahead of the current nonce value."
+                break
+            case SubmitterError.BoopReplaced:
+                description = "The boop has been replaced by a newer boop."
+                break
+            case SubmitterError.ExternalSubmit:
+                description = "Boop was submitted onchain by another submitter or entity."
+                break
         }
+        return { status, description, stage: "submit" }
     }
 
     /**
@@ -169,7 +188,7 @@ export class BoopNonceManager {
                 // Only consider pending nonces smaller than the new nonce — the `]localNonce, onchainNonce[` range.
                 if (nonceValue <= localNonce) continue
                 if (nonceValue >= onchainNonce) break
-                pendingBoop.resolve(this.#makeSubmitError("concurrent submit"))
+                pendingBoop.resolve(this.#makeSubmitError(SubmitterError.ExternalSubmit))
                 this.#removeNonce(account, nonceTrack, nonceValue)
             }
         }

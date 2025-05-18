@@ -32,7 +32,6 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.InvalidNonce:
         case Onchain.InvalidExtensionValue:
         case Onchain.ExecuteRejected:
-            return [response, 400] // Bad Request
         case SubmitterError.InvalidValues:
             return [response, 400] // Bad Request
         case Onchain.InsufficientStake:
@@ -45,7 +44,6 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case GetState.UnknownBoop:
         case GetState.UnknownState:
             return [response, 404] // Not Found
-        case SubmitterError.SimulationTimeout:
         case SubmitterError.SubmitTimeout:
         case SubmitterError.ReceiptTimeout:
             return [response, 408] // Request Timeout
@@ -59,8 +57,11 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.CallReverted:
         case Onchain.GasPriceTooHigh:
         case Onchain.UnexpectedReverted:
-        case SubmitterError.RpcError:
         case Onchain.EntryPointOutOfGas:
+        case SubmitterError.RpcError:
+        case SubmitterError.NonceTooFarAhead:
+        case SubmitterError.BoopReplaced:
+        case SubmitterError.ExternalSubmit:
             // signifying a correctly-formatted request, unable to process
             return [response, 422] // Unprocessable Content
         case SubmitterError.BufferExceeded:
@@ -73,7 +74,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case SubmitterError.ClientError:
             throw "BUG: makeResponse" // only thrown client-side
         default: {
-            const _: never = output.status // exhaustive check
+            const _: never = output.status // exhaustiveness check
             return [response, 500]
         }
     }

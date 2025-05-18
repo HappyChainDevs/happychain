@@ -189,8 +189,8 @@ describe("submitter_execute", () => {
             const jsonTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
-            expect(response.status).toBe(SubmitterError.UnexpectedError)
-            expect(result.status).toBe(500)
+            expect(response.status).toBe(SubmitterError.NonceTooFarAhead)
+            expect(result.status).toBe(422)
         })
 
         it("throws error when PaymentReverted with unsupported payer", async () => {
