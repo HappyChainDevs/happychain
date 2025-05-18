@@ -48,9 +48,9 @@ export async function submitInternal(
                 // If future nonce, wait until ready.
                 if (isBlocked.value) {
                     logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
-                    const resp = await boopNonceManager.pauseUntilUnblocked(entryPoint, boop)
+                    const error = await boopNonceManager.pauseUntilUnblocked(entryPoint, boop)
                     logger.trace("boop unblocked", boopHash)
-                    if (resp.isErr()) return resp.error
+                    if (error) return error
                     simulation = await simulate(input) // update simulation
                     if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
                     boop = updateBoopFromSimulation(boop, simulation)
