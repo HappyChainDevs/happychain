@@ -10,13 +10,16 @@ import { computeHash } from "../utils/boop/computeHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
-type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
+type PendingBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
 export class BoopNonceManager {
     #usedCapacity: bigint
     readonly #nonceMutexes: Map2<Address, NonceTrack, Mutex>
     readonly #nonces: Map2<Address, NonceTrack, NonceValue>
-    readonly #pendingBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, BlockedBoop>>
+    readonly #pendingBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, PendingBoop>>
+
+    // Invariant: `#nonces.get(account, nonceTrack)` and `#pendingBoopsMaps.get(account, nonceTrack)`
+    // are both undefined or defined at the same time.
 
     constructor() {
         this.#usedCapacity = 0n
@@ -26,14 +29,6 @@ export class BoopNonceManager {
     }
 
     // TODO add nonce-warning method during simulate
-
-    /**
-     * Resets the local nonce so that the next call to getLocalNonce will fetch the onchain nonce.
-     */
-    resetLocalNonce(boop: Boop): void {
-        const { account, nonceTrack } = boop
-        this.#nonces.delete(account, nonceTrack)
-    }
 
     /**
      * Returns all blocked (queued) Boops for a given account. These
@@ -57,7 +52,7 @@ export class BoopNonceManager {
         const { account, nonceTrack, nonceValue } = boop
         const localNonce = await this.#getLocalNonce(entryPoint, account, nonceTrack)
 
-        // Not actually blocked, proceed immediately.
+        // Not pending anymore, proceed immediately.
         if (nonceValue === localNonce) return
 
         // Check if we can wait for the nonce.
@@ -87,6 +82,7 @@ export class BoopNonceManager {
                 boopHash,
                 resolve: (response: undefined | SubmitError) => {
                     clearTimeout(timeout)
+                    this.#removeNonce(account, nonceTrack, nonceValue)
                     resolve(response)
                 },
             })
@@ -95,7 +91,7 @@ export class BoopNonceManager {
         return await promise
     }
 
-    #removeNonce(account: Address, nonceTrack: bigint, nonceValue: bigint) {
+    #removeNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue) {
         const track = this.#pendingBoopsMap.get(account, nonceTrack)
         track?.delete(nonceValue)
         if (track?.size === 0) {
@@ -121,8 +117,12 @@ export class BoopNonceManager {
         const { account, nonceTrack, nonceValue } = boop
         this.#usedCapacity--
         const nextNonce = nonceValue + 1n
-        this.#nonces.set(account, nonceTrack, nextNonce)
-        const pendingBoop = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nextNonce)
+        this.#setLocalNonce(account, nonceTrack, nextNonce)
+    }
+
+    #setLocalNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
+        this.#nonces.set(account, nonceTrack, nonceValue)
+        const pendingBoop = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
         if (!pendingBoop) return
         pendingBoop.resolve(undefined)
     }
@@ -145,5 +145,35 @@ export class BoopNonceManager {
             functionName: "nonceValues",
             args: [account, nonceTrack],
         })
+    }
+
+    /**
+     * Forces a refetch of the onchain nonce
+     * Resets the local nonce so that the next call to getLocalNonce will fetch the onchain nonce.
+     */
+    async resyncNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<void> {
+        // No boop pending on the track, so no local nonce managed, no point to resync.
+        if (!this.#pendingBoopsMap.get(account, nonceTrack)) return
+
+        const onchainNonce = await this.#getOnchainNonce(entryPoint, account, nonceTrack)
+        // Recheck after await.
+        const pendingMap = this.#pendingBoopsMap.get(account, nonceTrack)
+        if (!pendingMap) return
+
+        const localNonce = this.#nonces.get(account, nonceTrack)
+        if (!localNonce) throw Error("BUG: resyncNonce") // cf. invariant
+        if (onchainNonce > localNonce) {
+            logger.trace("Onchain nonce is ahead of local nonce — resyncing.", account, nonceTrack)
+            this.#setLocalNonce(account, nonceTrack, onchainNonce)
+            // biome-ignore format: keep on one line
+            const pending = pendingMap.entries().toArray().sort(([nonceA], [nonceB]) => Number(nonceA - nonceB)) ?? []
+            for (const [nonceValue, pendingBoop] of pending) {
+                // Only consider pending nonces smaller than the new nonce — the `]localNonce, onchainNonce[` range.
+                if (nonceValue <= localNonce) continue
+                if (nonceValue >= onchainNonce) break
+                pendingBoop.resolve(this.#makeSubmitError("concurrent submit"))
+                this.#removeNonce(account, nonceTrack, nonceValue)
+            }
+        }
     }
 }

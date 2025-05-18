@@ -117,9 +117,9 @@ export class ReceiptService {
 
         // TODO get the revertData from a log and populate here
         const decoded = decodeRawError("0x")
-        const output = outputForRevertError(boop, boopHash, decoded)
-
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
+        const output = outputForRevertError(entryPoint, boop, boopHash, decoded)
+
         const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
 
         if (
@@ -153,7 +153,7 @@ export class ReceiptService {
     }
 
     #buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): BoopReceipt {
-        if (evmTxReceipt.status !== "success") throw "BUG"
+        if (evmTxReceipt.status !== "success") throw "BUG: buildReceipt"
         const boopHash = computeHash(boop)
         const logs = this.#filterLogs(evmTxReceipt.logs, boopHash)
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set

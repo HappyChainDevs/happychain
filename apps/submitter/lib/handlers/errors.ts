@@ -1,4 +1,4 @@
-import type { Hash, Hex } from "@happy.tech/common"
+import type { Address, Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
 import { boopNonceManager } from "#lib/services"
 import { type Boop, Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
@@ -37,6 +37,7 @@ export function outputForGenericError(error: unknown): SubmitterErrorOutput {
  * Return error information for an onchain revert (either during simulation or execution).
  */
 export function outputForRevertError(
+    entryPoint: Address,
     boop: Boop,
     boopHash: Hash,
     decoded: DecodedRevertError | undefined,
@@ -44,8 +45,8 @@ export function outputForRevertError(
 ): OnchainErrorOutput {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
-            // We don't necessarily need to reset the nonce here if we're in simulation, but we do it anyway to be safe.
-            boopNonceManager.resetLocalNonce(boop)
+            // We don't necessarily need to resync if we're in simulation, but we do it anyway to be safe.
+            boopNonceManager.resyncNonce(entryPoint, boop.account, boop.nonceTrack)
             return {
                 status: Onchain.InvalidNonce,
                 description: "The nonce of the boop is too low.",
