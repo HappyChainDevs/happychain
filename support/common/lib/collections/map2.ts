@@ -106,29 +106,27 @@ export class Map2<K1, K2, V> {
             innerMap = new Map<K2, V>()
             this.map.set(key1, innerMap)
         }
-
-        if (innerMap.has(key2)) {
-            return innerMap.get(key2)!
-        }
-
+        if (innerMap.has(key2)) return innerMap.get(key2)!
         const _value = typeof value === "function" ? (value as () => V)() : value
         innerMap.set(key2, _value)
         return _value
     }
 
+    /**
+     * Returns the value for the (key1, key2) pair if it exists. Otherwise awaits the promised value and
+     * sets it for key pair, but **only if** the value wasn't filled in the meantime, then returns it.
+     *
+     * If the key pair has a value upon initial invocation, the promise is not awaited.
+     */
     async getOrSetAsync(key1: K1, key2: K2, value: Promise<V> | (() => Promise<V>)): Promise<V> {
         let innerMap = this.map.get(key1)
         if (!innerMap) {
             innerMap = new Map<K2, V>()
             this.map.set(key1, innerMap)
         }
-
-        if (innerMap.has(key2)) {
-            return innerMap.get(key2)!
-        }
-
+        if (innerMap.has(key2)) return innerMap.get(key2)!
         const _value = typeof value === "function" ? await (value as () => Promise<V>)() : await value
-
+        if (innerMap.has(key2)) return innerMap.get(key2)!
         innerMap.set(key2, _value)
         return _value
     }

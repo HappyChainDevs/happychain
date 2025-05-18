@@ -43,19 +43,16 @@ export async function submitInternal(
 
         const afterSimulationPromise = (async (): ReturnType<typeof submitInternal> => {
             if (simulation.futureNonceDuringSimulation) {
-                const isBlocked = await boopNonceManager.checkIfBlocked(entryPoint, boop)
-                if (isBlocked.isErr()) return { ...isBlocked.error, stage: "submit" }
-                // If future nonce, wait until ready.
-                if (isBlocked.value) {
-                    logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
-                    const error = await boopNonceManager.pauseUntilUnblocked(entryPoint, boop)
-                    logger.trace("boop unblocked", boopHash)
-                    if (error) return error
-                    simulation = await simulate(input) // update simulation
-                    if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
-                    boop = updateBoopFromSimulation(boop, simulation)
-                    await dbService.saveBoop(entryPoint, boop)
-                }
+                logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
+                const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
+                logger.trace("boop unblocked", boopHash)
+                if (error) return error
+                simulation = await simulate(input) // update simulation
+                if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+                boop = updateBoopFromSimulation(boop, simulation)
+                await dbService.saveBoop(entryPoint, boop)
+            } else {
+                // TODO hint/sync that the current nonce is the one from this boop
             }
 
             const account = findExecutionAccount(input.boop)

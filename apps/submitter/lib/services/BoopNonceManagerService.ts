@@ -1,5 +1,4 @@
 import { type Hash, Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
-import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
 import { abis, env } from "#lib/env"
 import type { PendingBoopInfo } from "#lib/handlers/getPending"
@@ -13,6 +12,7 @@ type NonceTrack = bigint
 type NonceValue = bigint
 type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
+// TODO make this an env var
 const MAX_WAIT_TIMEOUT_MS = 30_000
 const NONCE_BUFFER_LIMIT = BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
 
@@ -28,6 +28,8 @@ export class BoopNonceManagerService {
         this.#nonces = new Map2()
         this.#pendingBoopsMap = new Map2()
     }
+
+    // TODO add nonce-warning method during simulate
 
     /**
      * Resets the local nonce so that the next call to getLocalNonce will fetch the onchain nonce.
@@ -55,16 +57,52 @@ export class BoopNonceManagerService {
         })
     }
 
-    async checkIfBlocked(entryPoint: Address, boop: Boop): Promise<Result<boolean, SubmitError>> {
-        if (this.#trackExceedsBuffer(boop))
-            return err(this.#makeSubmitError("Buffer full for this (account, nonceTrack) pair. Try again later."))
-        if (this.#reachedMaxCapacity())
-            return err(this.#makeSubmitError("The submitter has reached its maximum capacity. Try again later."))
-        if (await this.#nonceOutOfRange(entryPoint, boop))
-            return err(this.#makeSubmitError("The supplied nonce is too far ahead of the current non value."))
+    async waitUntilUnblocked(entryPoint: Address, boop: Boop): Promise<undefined | SubmitError> {
+        const { account, nonceTrack, nonceValue } = boop
+        let localNonce = await this.#getLocalNonce(entryPoint, account, nonceTrack)
 
-        const localNonce = await this.#getLocalNonce(entryPoint, boop.account, boop.nonceTrack)
-        return ok(boop.nonceValue > localNonce)
+        // Not actually blocked, proceed immediately.
+        if (nonceValue === localNonce) return
+
+        // Check if we can wait for the nonce.
+        if (this.#trackExceedsBuffer(boop))
+            return this.#makeSubmitError("Buffer full for this (account, nonceTrack) pair. Try again later.")
+        if (this.#usedCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY)
+            return this.#makeSubmitError("The submitter has reached its maximum capacity. Try again later.")
+        if (await this.#nonceOutOfRange(entryPoint, boop))
+            return this.#makeSubmitError("The supplied nonce is too far ahead of the current non value.")
+
+        // Check if it is still blocked — we have to check because of the
+        // previous await, otherwise we might wait and never get unblocked.
+        // TODO make this nicer?
+        // localNonce = await this.#getLocalNonce(entryPoint, account, nonceTrack)
+        localNonce = this.#nonces.get(account, nonceTrack) ?? localNonce
+        if (nonceValue === localNonce) return
+
+        // If an old boop exists for th enonce, signal that it has been replaced.
+        const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
+        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError("transaction replaced"))
+
+        const boopHash = computeHash(boop)
+        const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
+        const timeout = setTimeout(() => {
+            logger.trace("Timed out while waiting to process pending boop", boopHash)
+            this.#removeNonce(account, nonceTrack, nonceValue)
+            resolve(this.#makeSubmitError("transaction timeout"))
+        }, MAX_WAIT_TIMEOUT_MS)
+
+        this.#pendingBoopsMap
+            .getOrSet(account, nonceTrack, () => new Map())
+            .set(nonceValue, {
+                boopHash,
+                resolve: (response: undefined | SubmitError) => {
+                    clearTimeout(timeout)
+                    resolve(response)
+                },
+            })
+
+        this.#usedCapacity++
+        return await promise
     }
 
     #trackExceedsBuffer(boop: Boop) {
@@ -73,53 +111,28 @@ export class BoopNonceManagerService {
         return track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT
     }
 
-    #reachedMaxCapacity() {
-        return this.#usedCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY
-    }
-
     async #nonceOutOfRange(entrypoint: `0x${string}`, boop: Boop) {
         const possiblyCachedNonce = await this.#getLocalNonce(entrypoint, boop.account, boop.nonceTrack)
         if (boop.nonceValue <= possiblyCachedNonce + NONCE_BUFFER_LIMIT) return false
         // reset to force onchain lookup, abort if still out of range
         logger.trace("Nonce out of range, forcing onchain re-lookup", computeHash(boop))
+        // TODO think harder about what the consequences of this are
         this.resetLocalNonce(boop)
         const onchainNonce = await this.#getLocalNonce(entrypoint, boop.account, boop.nonceTrack)
         return boop.nonceValue > onchainNonce + NONCE_BUFFER_LIMIT
     }
 
-    async pauseUntilUnblocked(_entrypoint: Address, boop: Boop): Promise<undefined | SubmitError> {
-        const { account, nonceTrack, nonceValue } = boop
-        const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError("transaction replaced"))
-
-        const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
-
-        const timeout = setTimeout(() => {
-            const track = this.#pendingBoopsMap.get(account, nonceTrack)
-            track?.delete(nonceValue)
-            if (track?.size === 0) {
-                this.#pendingBoopsMap.delete(account, nonceTrack)
-                this.#nonces.delete(account, nonceTrack)
-                this.#nonceMutexes.delete(account, nonceTrack)
-            }
-            resolve(this.#makeSubmitError("transaction timeout"))
-        }, MAX_WAIT_TIMEOUT_MS)
-
-        this.#pendingBoopsMap
-            .getOrSet(boop.account, boop.nonceTrack, () => new Map())
-            .set(boop.nonceValue, {
-                boopHash: computeHash(boop),
-                resolve: (response: undefined | SubmitError) => {
-                    clearTimeout(timeout)
-                    resolve(response)
-                },
-            })
-
-        this.#usedCapacity++
-
-        return promise
+    #removeNonce(account: Address, nonceTrack: bigint, nonceValue: bigint) {
+        const track = this.#pendingBoopsMap.get(account, nonceTrack)
+        track?.delete(nonceValue)
+        if (track?.size === 0) {
+            this.#pendingBoopsMap.delete(account, nonceTrack)
+            this.#nonces.delete(account, nonceTrack)
+            this.#nonceMutexes.delete(account, nonceTrack)
+        }
     }
 
+    // TODO inline this with the proper errors
     #makeSubmitError(message: string): SubmitError {
         return {
             status: SubmitterError.UnexpectedError,
@@ -129,38 +142,25 @@ export class BoopNonceManagerService {
     }
 
     /**
-     * Increments the local nonce determined by the given transaction
-     * @param boop The transaction to be tracked
+     * Increments the local nonce for the account and nonceTrack, unblocking a pending boop if necessary.
      */
     public incrementLocalNonce(boop: Boop): void {
+        const { account, nonceTrack, nonceValue } = boop
         this.#usedCapacity--
-
-        const { account, nonceTrack } = boop
-        const nextNonce = boop.nonceValue + 1n
-
+        const nextNonce = nonceValue + 1n
         this.#nonces.set(account, nonceTrack, nextNonce)
-
-        const track = this.#pendingBoopsMap.get(account, nonceTrack)
-        const blockedBoop = track?.get(nextNonce)
-
-        if (!track || !blockedBoop) return
-
-        blockedBoop.resolve(undefined)
-
-        track?.delete(nextNonce)
-        if (track?.size === 0) {
-            // prune the empty tracks
-            this.#pendingBoopsMap.delete(account, nonceTrack)
-            this.#nonces.delete(account, nonceTrack)
-            this.#nonceMutexes.delete(account, nonceTrack)
-        }
+        const pendingBoop = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nextNonce)
+        if (!pendingBoop) return
+        pendingBoop.resolve(undefined)
     }
 
     async #getLocalNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<NonceValue> {
         const mutex = this.#nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
         return await mutex.locked(async () => {
-            return await this.#nonces.getOrSetAsync(account, nonceTrack, () =>
-                this.#getOnchainNonce(entryPoint, account, nonceTrack),
+            return await this.#nonces.getOrSetAsync(
+                account,
+                nonceTrack,
+                async () => await this.#getOnchainNonce(entryPoint, account, nonceTrack),
             )
         })
     }
