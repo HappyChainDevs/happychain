@@ -2,6 +2,7 @@ import { getProp, hasDefinedKey, hasKey, stringify } from "@happy.tech/common"
 import { HappyRpcError } from "./HappyRpcError"
 import { ProviderRpcError, isEIP1193ErrorCode } from "./eip1193Errors"
 import { EIP1474ErrorCodes, EthereumRpcError, isEIP1474ErrorCode } from "./eip1474Errors"
+import { RevertErrorCode, RevertRpcError } from "./revertError"
 
 /**
  * This is a JSON-serializable encoding of provider RPC errors, suitable to transmit
@@ -96,10 +97,13 @@ function rpcErrorObjectWithCode(code: number, error: object, ctxMessages?: strin
  * Convert a serialized provider RPC error into a suitable {@link Error} instance.
  */
 export function parseRpcError(error: SerializedRpcError): HappyRpcError {
-    if (isEIP1193ErrorCode(error.code)) return new ProviderRpcError(error)
-    if (isEIP1474ErrorCode(error.code)) return new EthereumRpcError(error)
+    // Viem does not take kindly to the cause being a string.
+    const args = { ...error, cause: new Error(error.cause) }
+    if (isEIP1193ErrorCode(error.code)) return new ProviderRpcError(args)
+    if (isEIP1474ErrorCode(error.code)) return new EthereumRpcError(args)
+    if (error.code === RevertErrorCode) return new RevertRpcError(args.details, args.cause)
 
     // This should never happen, so we do a brute log to warn.
     console.log(`WARNING: unknown rpc error code: ${error.code}`)
-    return new EthereumRpcError({ ...error, code: EIP1474ErrorCodes.InternalError })
+    return new EthereumRpcError({ ...args, code: EIP1474ErrorCodes.InternalError })
 }
