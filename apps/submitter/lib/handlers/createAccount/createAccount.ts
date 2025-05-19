@@ -13,7 +13,6 @@ const walletClient = createWalletClient({ ...config, account: accountDeployer })
 
 export async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
-        logger.trace("Creating account", owner, salt)
         const predictedAddress = computeHappyAccountAddress(salt, owner)
         logger.trace("Predicted account address for owner", predictedAddress, owner, salt)
 

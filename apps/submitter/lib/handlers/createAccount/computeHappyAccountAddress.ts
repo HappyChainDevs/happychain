@@ -34,7 +34,7 @@ export function computeHappyAccountAddress(salt: Hex, owner: Address): Address {
         [deployment.HappyAccountBeacon, initData],
     )
     const code = concatHex([proxyCreationCode, constructorArgs]) // no need for encodePacked, they're both `bytes`
-    logger.trace("Proxy creation code", code)
+
     // _getAddress in the contract
     const hash = keccak256(
         encodePacked(
@@ -42,10 +42,7 @@ export function computeHappyAccountAddress(salt: Hex, owner: Address): Address {
             ["0xff", deployment.HappyAccountBeaconProxyFactory, combinedSalt, keccak256(code)],
         ),
     )
-    logger.trace("Hash", hash)
-    const formattedAddress = formatAddress(`0x${hash.slice(26)}`) // keep last 20 bytes, chop off 12 bytes + 0x
-    logger.trace("Formatted address", formattedAddress)
-    return formattedAddress
+    return formatAddress(`0x${hash.slice(26)}`) // keep last 20 bytes, chop off 12 bytes + 0x
 }
 
 // For reference
