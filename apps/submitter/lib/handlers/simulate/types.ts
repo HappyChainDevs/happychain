@@ -48,6 +48,9 @@ export type SimulateSuccess = EntryPointOutput & {
 
     /** Total fee requested by the submitter for submitting this boop (in wei). */
     submitterFee: bigint
+
+    /** If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the current gas price. */
+    feeTooLowDuringSimulation: boolean
 }
 
 // =====================================================================================================================
