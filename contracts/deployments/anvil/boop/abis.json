@@ -342,11 +342,6 @@
               "internalType": "bool"
             },
             {
-              "name": "feeTooLowDuringSimulation",
-              "type": "bool",
-              "internalType": "bool"
-            },
-            {
               "name": "callStatus",
               "type": "uint8",
               "internalType": "enum CallStatus"
