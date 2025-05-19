@@ -1,5 +1,5 @@
 import { type Address, type Hash, type Hex, getOrSet, promiseWithResolvers } from "@happy.tech/common"
-import { type Block, type Log, type TransactionReceipt, WaitForTransactionReceiptTimeoutError } from "viem"
+import type { Block, Log, TransactionReceipt } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
@@ -66,7 +66,7 @@ export class ReceiptService {
         const sub = getOrSet(this.#subscriptions, boopHash, () => ({
             pwr: promiseWithResolvers<WaitForReceiptOutput>(),
             count: 0,
-            lastSubTimestamp: Date.now()
+            lastSubTimestamp: Date.now(),
         }))
         sub.count += 1
 
