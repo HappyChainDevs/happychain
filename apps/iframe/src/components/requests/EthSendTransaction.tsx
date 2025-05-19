@@ -142,7 +142,7 @@ export const EthSendTransaction = ({
                             <SubsectionContent>
                                 <SubsectionTitle>Receiver address</SubsectionTitle>
                                 <FormattedDetailsLine>
-                                    <LinkToAddress address={txTo}>{txTo}</LinkToAddress>
+                                    <LinkToAddress address={txTo} />
                                 </FormattedDetailsLine>
                             </SubsectionContent>
                         )}
@@ -168,7 +168,10 @@ export const EthSendTransaction = ({
                             </FormattedDetailsLine>
                             {!isSelfPaying && (
                                 <span className="text-accent text-xs">
-                                    Sponsored by <LinkToAddress address={getPaymasterName(paymasterInUse)} />
+                                    Sponsored by{" "}
+                                    <LinkToAddress address={paymasterInUse}>
+                                        {getPaymasterName(paymasterInUse)}
+                                    </LinkToAddress>
                                 </span>
                             )}
                         </SubsectionContent>
