@@ -1,8 +1,9 @@
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
-import { getSubmitterFee } from "#lib/custom/feePolicy"
 import { abis, deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
+import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
+import { getSubmitterFee } from "#lib/policies/submitterFee"
 import { computeHash, simulationCache } from "#lib/services"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
@@ -47,7 +48,8 @@ export async function simulate(
         const status = getEntryPointStatusFromCallStatus(entryPointOutput.callStatus)
 
         // EntryPoint.submit succeeded, but the execution failed.
-        if (status !== Onchain.Success) return outputForExecuteError(status, entryPointOutput.revertData)
+        if (status !== Onchain.Success)
+            return outputForExecuteError(boop, status, entryPointOutput.revertData, "simulation")
 
         const output = {
             ...entryPointOutput,
@@ -76,10 +78,10 @@ export async function simulate(
     } catch (error) {
         const revert = getRevertError(error)
         const output = revert.isContractRevert
-            ? outputForRevertError(entryPoint, boop, boopHash, revert.decoded, true)
+            ? outputForRevertError(entryPoint, boop, boopHash, revert.decoded, "simulation")
             : outputForGenericError(error)
 
-        noteSimulationMisbehaviour(boop, output)
+        notePossibleMisbehaviour(boop, output)
         return output
     }
 }
@@ -130,27 +132,5 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
             return Onchain.ExecuteReverted
         default:
             throw new Error(`implementation error: unknown call status: ${callStatus}`)
-    }
-}
-
-// TODO fill in
-export function noteSimulationMisbehaviour(_boop: Boop, output: SimulateOutput): void {
-    switch (output.status) {
-        case Onchain.ValidationReverted:
-        // Note the account as suspicious: validation is never supposed to revert during validation, only return
-        // encoded errors. It's also supposed to not use more gas during validation than it does during execution.
-        case Onchain.PaymentValidationReverted:
-        // Note the paymaster as suspicious: validation is never supposed to revert during validation, only return
-        // encoded errors. It's also supposed to not use more gas during validation than it does during execution.
-        case Onchain.InsufficientStake:
-        // Note the paymaster as insufficiently staked. This is not necessarily a sign of misbehaviour, but can be used
-        // as a policy parameter to deprioritize paymasters that have been known to let their stake slip.
-        case Onchain.UnexpectedReverted:
-        /** cf. docstring of {@link Onchain.UnexpectedReverted}, this is indicative of an implementation or
-         ** configuration problem. We already log this in {@link outputForRevertError}. */
-
-        // default: // commented out to avoid linting issues
-        // Here we can increment some global failure counter, which can help us deprioritize
-        // sessions (if we decided to add them!) that tend to have a high failure ratio.
     }
 }

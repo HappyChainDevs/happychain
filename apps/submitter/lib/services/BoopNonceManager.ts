@@ -12,6 +12,8 @@ type NonceTrack = bigint
 type NonceValue = bigint
 type PendingBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
+// TODO the nonce manager should also key on the entryPoint
+
 export class BoopNonceManager {
     #usedCapacity: bigint
     readonly #nonceMutexes: Map2<Address, NonceTrack, Mutex>
@@ -67,7 +69,6 @@ export class BoopNonceManager {
 
         // If an old boop exists for th enonce, signal that it has been replaced.
         const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        // TODO think about who can trigger this
         if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
 
         const boopHash = computeHash(boop)
