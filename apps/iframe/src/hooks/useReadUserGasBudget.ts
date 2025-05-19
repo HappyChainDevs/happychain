@@ -36,7 +36,8 @@ export const useReadUserGasBudget = (userAddress?: Address): UseReadUserGasBudge
         functionName: "getBudget",
         args: [userAddress],
         query: {
-            enabled: Boolean(userAddress),
+            enabled: Boolean(!!userAddress),
+            refetchInterval: 2000,
             select(userGasBudget) {
                 let batteryHealth: BatteryHealthIndicator = 0
                 for (let i = BUDGET_THRESHOLDS.length - 1; i >= 0; i--) {
