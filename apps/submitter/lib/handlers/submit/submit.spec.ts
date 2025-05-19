@@ -5,7 +5,7 @@ import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
 import { type Boop, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { assertMintLog, client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signTx(testAccount, tx)
@@ -76,6 +76,7 @@ describe("submitter_submit", () => {
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 if (!("receipt" in a)) return { status: a.status }
+                assertMintLog(a.receipt, smartAccount)
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
                 return publicClient.waitForTransactionReceipt({ hash: receipt.evmTxHash, pollingInterval: 100 })
             }),
