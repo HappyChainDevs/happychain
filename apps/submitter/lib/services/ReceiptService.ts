@@ -3,6 +3,7 @@ import { type Log, type TransactionReceipt, WaitForTransactionReceiptTimeoutErro
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
+import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { computeHash, dbService, simulationCache } from "#lib/services"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
@@ -118,7 +119,8 @@ export class ReceiptService {
         // TODO get the revertData from a log and populate here
         const decoded = decodeRawError("0x")
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
-        const output = outputForRevertError(entryPoint, boop, boopHash, decoded)
+        let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
+        notePossibleMisbehaviour(boop, output)
 
         const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
 
@@ -135,7 +137,7 @@ export class ReceiptService {
             } else {
                 logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
             }
-            return {
+            output = {
                 status: Onchain.EntryPointOutOfGas,
                 description:
                     "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
@@ -143,12 +145,7 @@ export class ReceiptService {
             }
         }
 
-        if (output.status === Onchain.UnexpectedReverted) {
-            logger.warn("Execute failed onchain with an unexpected revert", boopHash, output)
-        } else {
-            logger.trace("Execute failed onchain", boopHash)
-        }
-
+        notePossibleMisbehaviour(boop, output)
         return output
     }
 
@@ -161,7 +158,6 @@ export class ReceiptService {
         let status: OnchainStatus = Onchain.Success
         let description = "Boop executed successfully."
         let revertData: Hex = "0x"
-        // TODO note misbehaviour
         for (const log of logs) {
             const decoded = decodeEvent(log)
             if (!decoded) continue
@@ -169,7 +165,7 @@ export class ReceiptService {
             if (!entryPointStatus) continue
             // Don't get pranked by contracts emitting the same event.
             if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
-            const error = outputForExecuteError(entryPointStatus, decoded.args.revertData as Hex)
+            const error = outputForExecuteError(boop, entryPointStatus, decoded.args.revertData as Hex)
             status = error.status
             description = error.description || "unknown error"
             revertData = error.revertData ?? "0x"

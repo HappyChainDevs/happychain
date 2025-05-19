@@ -1,5 +1,6 @@
 import type { Address, Hash, Hex } from "@happy.tech/common"
 import { BaseError, zeroAddress } from "viem"
+import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { boopNonceManager } from "#lib/services"
 import { type Boop, Onchain, type OnchainStatus, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 import { logger } from "#lib/utils/logger"
@@ -41,12 +42,12 @@ export function outputForRevertError(
     boop: Boop,
     boopHash: Hash,
     decoded: DecodedRevertError | undefined,
-    simulation = false,
+    simulation?: "simulation",
 ): OnchainErrorOutput {
     switch (decoded?.errorName) {
         case "InvalidNonce": {
             // We don't necessarily need to resync if we're in simulation, but we do it anyway to be safe.
-            boopNonceManager.resyncNonce(entryPoint, boop.account, boop.nonceTrack)
+            void boopNonceManager.resyncNonce(entryPoint, boop.account, boop.nonceTrack)
             return {
                 status: Onchain.InvalidNonce,
                 description: "The nonce of the boop is too low.",
@@ -199,10 +200,16 @@ export function outputForRevertError(
 }
 
 /**
- * Returns error information for an `execute` error, which do not trigger a revert from the EntryPoint and are thus
- * handled separately.
+ * Returns error information for an `execute` error, which do not trigger a revert
+ * from the EntryPoint and are thus handled separately. These errors can be detected
+ * after simulation or onchain simulation (indicated by {@link simulation} being set).
  */
-export function outputForExecuteError(status: OnchainStatus, revertData: Hex): OnchainErrorOutput {
+export function outputForExecuteError(
+    boop: Boop,
+    status: OnchainStatus,
+    revertData: Hex,
+    simulation?: "simulation",
+): OnchainErrorOutput {
     switch (status) {
         case Onchain.CallReverted:
             return {
@@ -239,33 +246,37 @@ export function outputForExecuteError(status: OnchainStatus, revertData: Hex): O
             }
         }
         case Onchain.ExecuteReverted: {
-            // TODO note account misbehaviour
+            let output: OnchainErrorOutput
             const decodedReason = decodeRawError(revertData)
             switch (decodedReason?.errorName) {
                 case "CannotRegisterSessionKeyForValidator": {
                     const description =
                         "Trying to register a session key to interact with the session key validator itself, which is not allowed."
-                    return { status, revertData, description }
+                    output = { status, revertData, description }
+                    break
                 }
                 case "CannotRegisterSessionKeyForAccount": {
                     const description =
                         "Trying to register a session key to interact with a boop account, which is not allowed."
-                    return { status, revertData, description }
+                    output = { status, revertData, description }
+                    break
                 }
             }
-            if (decodedReason?.errorName)
-                return {
-                    status,
-                    revertData,
-                    description:
-                        `The account's \`execute\` function reverted with reason: ${decodedReason.errorName}.\n` +
-                        `${tryParsing}\n${faultyAccount}\n${unexpectedDecode}`,
-                }
-            return {
-                status,
-                revertData,
-                description: "The account's `execute` function reverted.\n" + faultyAccount,
-            }
+            output = decodedReason?.errorName
+                ? {
+                      status,
+                      revertData,
+                      description:
+                          `The account's \`execute\` function reverted with reason: ${decodedReason.errorName}.\n` +
+                          `${tryParsing}\n${faultyAccount}\n${unexpectedDecode}`,
+                  }
+                : {
+                      status,
+                      revertData,
+                      description: "The account's `execute` function reverted.\n" + faultyAccount,
+                  }
+            notePossibleMisbehaviour(boop, output, simulation)
+            return output
         }
         default:
             throw new Error("Implementation error: invalid status passed to `outputForExecuteError`")
