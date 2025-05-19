@@ -1,11 +1,12 @@
 import { type Address, type Hash, type Hex, getOrSet, promiseWithResolvers } from "@happy.tech/common"
-import { type Log, type TransactionReceipt, WaitForTransactionReceiptTimeoutError } from "viem"
+import { type Block, type Log, type TransactionReceipt, WaitForTransactionReceiptTimeoutError } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { computeHash, dbService, simulationCache } from "#lib/services"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
+import { headerCouldContainBoop } from "#lib/utils/bloom.ts"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger.ts"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
@@ -28,45 +29,94 @@ export type WaitForInclusionArgs = {
     txHash?: Hash
 }
 
-// TODO Setup a websocket newHeads subscription, then attempt to fetch receipts once per block.
-//      See if we can check the logs bloom or tx list for which receipts to request.
-
+type Pending = {
+    boop: Boop
+    subs: Set<Subscription>
+}
 export class ReceiptService {
+    #pendingHashes = new Map<Hash, Pending>()
     #subscriptions = new Map<Hash, Subscription>()
+
+    constructor() {
+        if (publicClient.transport.type === "webSocket") {
+            publicClient.watchBlocks({
+                includeTransactions: false, // dont need the txs unless bloom filter matches
+                onBlock: (blockHeader) => this.#onNewHead(blockHeader),
+            })
+        } else {
+            publicClient.watchBlocks({
+                includeTransactions: false,
+                onBlock: (header) => this.#onNewHead(header),
+                pollingInterval: 500,
+            })
+        }
+    }
 
     async waitForInclusion({
         boopHash,
-        timeout: ogTimeout,
         txHash,
+        timeout = env.RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
-        const timeout = Math.max(ogTimeout ?? 0, env.MAX_RECEIPT_TIMEOUT)
+        // 1. fast‑path → already have receipt in DB?
+        const { boop, receipt } = await dbService.findReceiptOrBoop(boopHash)
+        if (receipt) return { status: WaitForReceipt.Success, receipt }
+        if (!boop) return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
+
+        // 2. book (or re‑use) a shared subscription object
+        const sub = getOrSet(this.#subscriptions, boopHash, () => ({
+            pwr: promiseWithResolvers<WaitForReceiptOutput>(),
+            count: 0,
+        }))
+        sub.count += 1
+
+        // 3. if caller gave a txHash, link it to pending‑hashes map
+        if (txHash) {
+            const pend = getOrSet(this.#pendingHashes, txHash, () => ({ boop, subs: new Set() }))
+            pend.subs.add(sub)
+        }
+
+        // 4. race the real receipt vs timeout
         try {
-            const { boop, receipt } = await dbService.findReceiptOrBoop(boopHash)
-            if (receipt) return { status: WaitForReceipt.Success, receipt }
-            if (!boop) return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
-
-            const sub = this.#registerWait(boopHash)
-            const result = new Promise<WaitForReceiptOutput>((resolve, reject) => {
-                setTimeout(() => {
-                    this.#unregisterWait(boopHash)
-                    reject(new ReceiptTimeout())
-                }, timeout ?? env.RECEIPT_TIMEOUT)
-                sub.pwr.promise.then(resolve)
+            return await Promise.race([
+                sub.pwr.promise,
+                new Promise<WaitForReceiptOutput>((_, reject) =>
+                    setTimeout(() => reject(new ReceiptTimeout()), timeout),
+                ),
+            ])
+        } catch (e) {
+            return e instanceof ReceiptTimeout
+                ? { status: SubmitterError.ReceiptTimeout, description: "Timed out while waiting for receipt." }
+                : { status: SubmitterError.UnexpectedError, description: String(e) }
+        } finally {
+            // 5. clean‑up for this *caller* (might not empty the subscription yet)
+            if (--sub.count === 0) this.#subscriptions.delete(boopHash)
+        }
+    }
+    async #onNewHead(blockHeader: Block) {
+        try {
+            if (!blockHeader.hash) return
+            if (!headerCouldContainBoop(blockHeader)) return
+            const block = await publicClient.getBlock({
+                blockHash: blockHeader.hash,
+                includeTransactions: true,
             })
+            for (const tx of block.transactions) {
+                const hash = typeof tx === "string" ? tx : tx.hash
+                const pending = this.#pendingHashes.get(hash as Hash)
+                if (!pending) continue // not one of ours
 
-            if (boop && txHash && !sub.evmTxHash) void this.#waitAndCreateReceipt(sub, txHash, boop)
-            logger.trace("Subscribed to receipt", boopHash)
-            return await result
-        } catch (error) {
-            return error instanceof ReceiptTimeout
-                ? {
-                      status: SubmitterError.ReceiptTimeout,
-                      description: "Timed out while waiting for receipt.",
-                  }
-                : {
-                      status: SubmitterError.UnexpectedError,
-                      description: `Unexpected submitter error: ${error}`,
-                  }
+                try {
+                    const r = await publicClient.getTransactionReceipt({ hash: hash as Hash })
+                    const out = await this.#getReceiptResult(pending.boop, r)
+
+                    pending.subs.forEach((s) => s.pwr.resolve(out))
+                    this.#pendingHashes.delete(hash as Hash)
+                } catch (_e) {
+                    /* ignore TransactionReceiptNotFound – node still building receipt */
+                }
+            }
+        } catch (e) {
+            logger.warn("block‑watcher error", e)
         }
     }
 
