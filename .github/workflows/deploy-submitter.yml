@@ -55,7 +55,7 @@ jobs:
             EXECUTOR_KEYS=${{ secrets.SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
             APP_PORT=49534
-            LOG_LEVEL=TRACE
+            LOG_LEVEL=INFO
             DATABASE_URL=/home/submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=production

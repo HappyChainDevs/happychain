@@ -304,7 +304,7 @@
         {
           "name": "output",
           "type": "tuple",
-          "internalType": "struct EntryPointOutput",
+          "internalType": "struct SubmitOutput",
           "components": [
             {
               "name": "gas",
@@ -338,6 +338,11 @@
             },
             {
               "name": "futureNonceDuringSimulation",
+              "type": "bool",
+              "internalType": "bool"
+            },
+            {
+              "name": "feeTooLowDuringSimulation",
               "type": "bool",
               "internalType": "bool"
             },
@@ -391,103 +396,6 @@
       "type": "event",
       "name": "BoopExecutionStarted",
       "inputs": [],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "BoopSubmitted",
-      "inputs": [
-        {
-          "name": "account",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "dest",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "payer",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "value",
-          "type": "uint256",
-          "indexed": false,
-          "internalType": "uint256"
-        },
-        {
-          "name": "nonceTrack",
-          "type": "uint192",
-          "indexed": false,
-          "internalType": "uint192"
-        },
-        {
-          "name": "nonceValue",
-          "type": "uint64",
-          "indexed": false,
-          "internalType": "uint64"
-        },
-        {
-          "name": "maxFeePerGas",
-          "type": "uint256",
-          "indexed": false,
-          "internalType": "uint256"
-        },
-        {
-          "name": "submitterFee",
-          "type": "int256",
-          "indexed": false,
-          "internalType": "int256"
-        },
-        {
-          "name": "gasLimit",
-          "type": "uint32",
-          "indexed": false,
-          "internalType": "uint32"
-        },
-        {
-          "name": "validateGasLimit",
-          "type": "uint32",
-          "indexed": false,
-          "internalType": "uint32"
-        },
-        {
-          "name": "validatePaymentGasLimit",
-          "type": "uint32",
-          "indexed": false,
-          "internalType": "uint32"
-        },
-        {
-          "name": "executeGasLimit",
-          "type": "uint32",
-          "indexed": false,
-          "internalType": "uint32"
-        },
-        {
-          "name": "callData",
-          "type": "bytes",
-          "indexed": false,
-          "internalType": "bytes"
-        },
-        {
-          "name": "validatorData",
-          "type": "bytes",
-          "indexed": false,
-          "internalType": "bytes"
-        },
-        {
-          "name": "extraData",
-          "type": "bytes",
-          "indexed": false,
-          "internalType": "bytes"
-        }
-      ],
       "anonymous": false
     },
     {
@@ -1612,19 +1520,6 @@
       "stateMutability": "view"
     },
     {
-      "type": "function",
-      "name": "getProxyCreationCode",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "stateMutability": "pure"
-    },
-    {
       "type": "event",
       "name": "Deployed",
       "inputs": [
@@ -1923,25 +1818,6 @@
     },
     {
       "type": "function",
-      "name": "getBudget",
-      "inputs": [
-        {
-          "name": "user",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "budget",
-          "type": "uint32",
-          "internalType": "uint32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "initiateWithdrawal",
       "inputs": [
         {
@@ -1998,6 +1874,30 @@
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "userInfo",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lastUpdated",
+          "type": "uint64",
+          "internalType": "uint64"
+        },
+        {
+          "name": "userGasBudget",
+          "type": "uint32",
+          "internalType": "uint32"
+        }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",

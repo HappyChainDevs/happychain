@@ -14,7 +14,7 @@ include ../makefiles/help.mk
 
 # Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN".
 # Must be exported as some deploy scripts depend on it.
-export CONFIG ?= LOCAL
+export CONFIG ?= TEST
 
 # Type of proxy contract to use for happy accounts in DeployBoop.s.sol.
 # Valid values: "BEACON" or "UUPS". Defaults to BEACON.

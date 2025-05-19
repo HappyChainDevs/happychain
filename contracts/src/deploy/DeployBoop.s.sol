@@ -44,6 +44,7 @@ contract DeployBoopContracts is BaseDeployScript {
         // The owner is anvil address 0 in local testing and anvil deployments, and the HappyChain deployer otherwise.
         owner = isLocal ? 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 : 0xEe3aE13ed56E877874a6C5FBe7cdA7fc8573a7bE;
 
+
         vm.startBroadcast(owner);
         deploy();
         vm.stopBroadcast();
