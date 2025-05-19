@@ -29,6 +29,7 @@ export type WalletPermissionTable = {
     // Not in the EIP, but Viem wants this.
     id: UUID
     updatedAt: number
+    createdAt: number
     deleted: ColumnType<number, boolean, boolean>
 }
 

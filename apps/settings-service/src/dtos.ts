@@ -24,6 +24,7 @@ export const walletPermission = z.object({
     date: z.number().openapi({ example: 1715702400 }),
     id: z.string().refine(isUUID).openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
     updatedAt: z.number().openapi({ example: 1715702400 }),
+    createdAt: z.number().openapi({ example: 1715702400 }),
     deleted: z.boolean().openapi({ example: false }),
 })
 

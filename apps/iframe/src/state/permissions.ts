@@ -93,16 +93,20 @@ export type PermissionsRequest = string | PermissionRequestObject
 
 const permissionsMapLegend = observable(syncedCrud({
     list: async ({ lastSync }) => {
-        const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266${lastSync ? `&lastUpdated=${lastSync}` : ""}`)
+        const user = getUser()
+        if (!user) return []
+        const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`)
         const data =  await response.json()
-
-
-
+        
         return data.data
     },
     create: async (data: PermissionsMap) => {
+        console.log("create", data)
         const response = await fetch("http://localhost:3000/api/v1/settings/create", {
             method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(data),
         })
         return await response.json()
@@ -111,7 +115,10 @@ const permissionsMapLegend = observable(syncedCrud({
         console.log("update", data)
 
         const response = await fetch("http://localhost:3000/api/v1/settings/update", {
-            method: "POST",
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(data),
         })
         return await response.json()
@@ -122,17 +129,58 @@ const permissionsMapLegend = observable(syncedCrud({
           console.log("Refreshing config (5-second interval)");
           refresh();
         }, 5000);
-        
-        // Return cleanup function to clear the interval when unsubscribing
-        return () => {
-          clearInterval(intervalId);
-        };
+    },
+    delete: async ({id}) => {
+        console.log("delete", id)
+        const response = await fetch(`http://localhost:3000/api/v1/settings/delete/${id}`, {
+            method: "DELETE",
+        })
+        return await response.json()
     },
     persist: {
         plugin: ObservablePersistLocalStorage,
         name: 'config-legend',
         retrySync: true // Retry sync after reload
     },
+    onSaved: ({input}: {input: WalletPermission}) => {
+        console.log("On saved", input)
+        const appPermissions = getAppPermissions(input.invoker)
+        console.log("App permissions", appPermissions)
+        
+        const oldPermission = appPermissions[input.parentCapability];
+
+        console.log("Old permission", oldPermission)
+        if (oldPermission) {
+            const differences = {
+                id: oldPermission.id !== input.id,
+                invoker: oldPermission.invoker !== input.invoker,
+                parentCapability: oldPermission.parentCapability !== input.parentCapability,
+                caveats: JSON.stringify(oldPermission.caveats) !== JSON.stringify(input.caveats),
+                date: oldPermission.date !== input.date,
+            };
+            
+            const changedFields = Object.entries(differences)
+                .filter(([_, changed]) => changed)
+                .map(([field]) => field);
+                
+            console.log("Changed fields", changedFields)
+            if (changedFields.length > 0) {
+                console.log('Permission fields changed:', changedFields);
+                appPermissions[input.parentCapability] = input
+                setAppPermissions(input.invoker, appPermissions)
+            } else {
+                console.log("No changes to permission")
+            }
+        } else {
+            console.log("No old permission found")
+            console.log("Adding new permission")
+            appPermissions[input.parentCapability] = input
+            setAppPermissions(input.invoker, appPermissions)
+        }
+
+       
+    },
+    fieldCreatedAt: 'created_at',
     fieldUpdatedAt: 'updatedAt',
     fieldDeleted: 'deleted',
     changesSince: 'last-sync'
@@ -260,20 +308,23 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
         }
     })
 
-    const id = createUUID()
-
-    permissionsMapLegend[id].set({
-        id,
-        type: "WalletPermissions",
-        user: user.address,
-        invoker: app,
-        parentCapability: appPermissions.eth_accounts.parentCapability,
-        caveats: appPermissions.eth_accounts.caveats,
-        date: appPermissions.eth_accounts.date,
-        deleted: false,
-        updatedAt: Date.now(),
-    })
+    for (const permission of permissionArray ){
+        permissionsMapLegend[permission.id].set({
+            id: permission.id,
+            type: "WalletPermissions",
+            user: user.address,
+            invoker: app,
+            parentCapability: permission.parentCapability,
+            caveats: permission.caveats,
+            date: permission.date,
+            deleted: false,
+            updatedAt: Date.now(),
+            createdAt: Date.now(),
+        })
+     }
 }
+
+
 
 // === CLEAR PERMISSIONS ===========================================================================
 
@@ -283,16 +334,21 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
+    const permissions = store.get(permissionsMapAtom)
     store.set(permissionsMapAtom, (prev) => {
         const { [user.address]: _, ...rest } = prev
         return rest
     })
-
-    Object.values(permissionsMapLegend).forEach((p) => {
-        if (p.user === user.address) {
-            p.deleted = true
-        }
-    })
+    for (const permission of Object.values(permissions)) {
+       const permissionsPerUser = Object.values(permission)
+        
+       for (const p of permissionsPerUser) {
+        const permissionsToDelete = Object.values(p)
+            for (const p of permissionsToDelete) {
+                permissionsMapLegend[p.id].delete()
+            }
+       }
+    }
     
 }
 
@@ -309,6 +365,8 @@ export function clearAppPermissions(app: AppURL): void {
         .flatMap((p) => p.caveats)
         .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
+    const permissions = store.get(permissionsMapAtom)
+
     // Remove app permissions from storage
     store.set(permissionsMapAtom, (prev) => {
         const {
@@ -317,8 +375,18 @@ export function clearAppPermissions(app: AppURL): void {
         } = prev
         return { ...otherUsers, [user.address]: otherApps }
     })
-}
 
+    for (const permission of Object.values(permissions)) {
+        const permissionsPerUser = Object.values(permission)
+        
+        for (const p of permissionsPerUser) {
+            const permissionsToDelete = Object.values(p)
+            for (const p of permissionsToDelete) {
+                permissionsMapLegend[p.id].delete()
+            }
+        }
+    }
+}
 type PermissionRequestEntry = {
     name: string
     caveats: WalletPermissionCaveat[]

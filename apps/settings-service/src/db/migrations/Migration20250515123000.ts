@@ -11,6 +11,7 @@ export async function up(db: Kysely<Database>) {
         .addColumn("date", "integer")
         .addColumn("id", "text", (col) => col.notNull())
         .addColumn("updatedAt", "integer")
+        .addColumn("createdAt", "integer")
         .addColumn("deleted", "boolean")
         .execute()
 }
