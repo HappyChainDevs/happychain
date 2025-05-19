@@ -9,6 +9,7 @@ import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepol
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
+import { stringify } from "../common/lib/utils/string"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
@@ -56,24 +57,26 @@ async function run() {
     const boopClient = new BoopClient()
     const createAccountResult = await boopClient.createAccount({
         owner: testAccount.address,
-        salt: "0x01",
+        salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
+    
     if (!("address" in createAccountResult)) {
-        throw new Error("Account creation failed: " + JSON.stringify(createAccountResult));
+        throw new Error("Account creation failed: " + stringify(createAccountResult));
     }
 
     const tx = await createAndSignMintTx(createAccountResult.address)
     const executeResult = await boopClient.execute({ boop: tx })
     
+    
     if(executeResult.status !== Onchain.Success) {
-        throw new Error(`execute not successful: ${JSON.stringify(executeResult)}`)
+        throw new Error(`execute not successful: ${stringify(executeResult)}`)
     }
 
-    console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(executeResult as ExecuteSuccess).receipt.txReceipt.transactionHash}`)
+    console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(executeResult as ExecuteSuccess).receipt.evmTxHash}`)
 
-    const receiptResult = await boopClient.receipt({ hash: (executeResult as ExecuteSuccess).receipt.boopHash })
+    const receiptResult = await boopClient.waitForReceipt({ boopHash: (executeResult as ExecuteSuccess).receipt.boopHash })
     if(!("receipt" in receiptResult)) {
-        throw new Error("Receipt not found: " + JSON.stringify(receiptResult))
+        throw new Error("Receipt not found: " + stringify(receiptResult))
     }
 }
 
