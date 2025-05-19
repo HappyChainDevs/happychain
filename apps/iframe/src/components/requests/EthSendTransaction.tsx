@@ -57,24 +57,6 @@ export const EthSendTransaction = ({
         enabled: isValidTransaction,
     })
 
-    /**
-     * Computes and formats gas-related costs from the simulation output.
-     *
-     * - Calculates the total estimated cost: `(gas * maxFeePerGas) + submitterFee`
-     * - Rounds the total cost to a minimum display precision
-     * - Formats both total cost and submitter fee as strings in ETH units
-     *
-     * Returns:
-     * {
-     *   cost: `bigint` — raw total cost in wei,
-     *   submitterFee: `bigint` — raw submitter fee in wei,
-     *   f: {
-     *     cost: `string` — formatted total cost in ETH (or a fallback like "0.0001"),
-     *     submitterFee: `string` — formatted submitter fee in ETH
-     *   }
-     * }
-     */
-
     const values = useMemo(() => {
         if (!simulateOutput) return
         const { maxFeePerGas, submitterFee, gas } = simulateOutput
@@ -85,6 +67,7 @@ export const EthSendTransaction = ({
             cost,
             submitterFee: simulateOutput.submitterFee,
             f: {
+                // formatted values
                 cost: cost < MIN_DISPLAY_WEI ? MIN_DISPLAY_STR : formatEther(roundedCost),
                 submitterFee: formatEther(submitterFee),
             },
