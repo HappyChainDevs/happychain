@@ -18,7 +18,6 @@ export type UseSimulateBoopReturn = {
     simulateOutput: SimulateSuccess | undefined
     simulateError: Error | undefined
     isSimulatePending: boolean
-    fetchError: Error | null
 }
 
 /**
@@ -50,7 +49,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
 
     const {
         data,
-        error: fetchError,
+        error,
         isPending: isSimulatePending,
     } = useQuery({
         queryKey: [jsonTx],
@@ -64,8 +63,10 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
     return {
         simulateOutput: data?.status === Simulate.Success ? data : undefined,
         simulateError:
-            data?.status !== Simulate.Success ? new Error(getProp(data, "description", "string")) : undefined,
+            error ??
+            (data && data.status !== Simulate.Success //
+                ? new Error(getProp(data, "description", "string"))
+                : undefined),
         isSimulatePending,
-        fetchError,
     }
 }
