@@ -60,6 +60,7 @@ export async function simulate(
             executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas) * 3,
             maxFeePerGas: boop.maxFeePerGas || (gasPrice * env.FEE_SAFETY_MARGIN) / 100n,
             submitterFee: getSubmitterFee(boop),
+            feeTooLowDuringSimulation: boop.maxFeePerGas === 0n ? false : gasPrice > boop.maxFeePerGas,
         }
 
         if (output.status === Onchain.Success && balance !== null) {
