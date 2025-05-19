@@ -389,7 +389,7 @@ endef
 define run-deploy-script-account
 	@$(eval DEPLOY_SENDER := `cast wallet address \
 		--account $(ACCOUNT_$(CONFIG)) \
-		--password-file $(PASSFILE_$(CONFIG))`)  
+		--password-file $(PASSFILE_$(CONFIG))`)
 	@# Command intentionally output.
 	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
@@ -518,12 +518,16 @@ deploy-boop: ## Deploys the Boop contracts.
 .PHONY: deploy-boop
 
 deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
-	make deploy \
-		DEPLOY_SCRIPT=DeployBoop.s.sol \
-		CONFIG=TEST \
-		METADATA_FLAG="--no-metadata" \
-		DEPLOYMENT_NAME=happy-sepolia/boop-staging
+	DEPLOYMENT_NAME=happy-sepolia/boop-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-boop
 .PHONY: deploy-boop-staging
+
+deploy-mock-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
+	DEPLOYMENT_NAME=happy-sepolia/mock-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-mocks
+.PHONY: deploy-mock-staging
+
+deploy-random-staging: ## Deploys the randomness contracts to testnet as 'staging' (no metadata)
+	DEPLOYMENT_NAME=happy-sepolia/random-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-random
+.PHONY: deploy-random-staging
 
 deploy-mocks: ## Deploys the mock contracts.
 	$(eval $(call set-deployment-name,mocks))
