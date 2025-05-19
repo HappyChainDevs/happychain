@@ -8,11 +8,11 @@ const MAX_GAS_BUDGET: UInt32 = 1_000_000_000
 export type BatteryHealthIndicator = 0 | 1 | 2 | 3 | 4
 
 const BUDGET_THRESHOLDS = [
-    0,
-    MAX_GAS_BUDGET / 4, // 250_000_000
-    (MAX_GAS_BUDGET * 2) / 4, // 500_000_000
-    (MAX_GAS_BUDGET * 3) / 4, // 750_000_000
-    MAX_GAS_BUDGET,
+    0, // Empty (Critical)
+    MAX_GAS_BUDGET / 4, // 1: Low (250_000_000)
+    (MAX_GAS_BUDGET * 2) / 4, // 2: Medium (500_000_000)
+    (MAX_GAS_BUDGET * 3) / 4, // 3: High (750_000_000)
+    MAX_GAS_BUDGET, // 4: Full (1_000_000_000)
 ]
 
 export type UserGasBudgetInfo = {

@@ -35,9 +35,8 @@ export const UserGasBudgetIndicator = () => {
         isLoading,
     } = useReadUserGasBudget(user?.address)
 
-    console.log({ batteryHealth, batteryPct })
-
-    if (isLoading || batteryHealth === undefined) return <Spinner weight="bold" className="text-lg mr-1 dark:opacity-60" />
+    if (isLoading || batteryHealth === undefined)
+        return <Spinner weight="bold" className="text-lg mr-1 dark:opacity-60" />
 
     const BatteryIcon = batteryIconStates[batteryHealth]
     const colorClass = colorMap[batteryHealth]
