@@ -5,6 +5,7 @@ import { Link, useLocation } from "@tanstack/react-router"
 import { useAtom } from "jotai"
 import { appMessageBus } from "#src/services/eventBus"
 import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
+import { UserGasBudgetIndicator } from "./home/UserGasBudgetIndicator"
 
 function signalClosed() {
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
@@ -27,6 +28,7 @@ const GlobalHeader = () => {
             </span>
 
             <div className="flex flex-row gap-1 items-center absolute end-2">
+                <UserGasBudgetIndicator />
                 <button
                     title={optionsLabel}
                     type="button"
