@@ -45,4 +45,14 @@ export const deploymentsSchema = z.object({
      * Note that for now, this contract have an ABI compatible to the default contract, or the submitter won't work.
      */
     DEPLOYMENT_ACCOUNT_IMPLEMENTATION: z.string().refine(isHexString).optional(),
+
+    /**
+     * Whether the proxy code used by the account factory includes metadata.
+     * This affects address calculation for accounts.
+     * Set to true for regular deployments and false for staging deployments.
+     */
+    PROXY_HAS_METADATA: z
+        .string()
+        .default("false")
+        .transform((str) => str !== "false" && str !== "0"),
 })

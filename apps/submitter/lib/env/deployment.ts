@@ -1,6 +1,10 @@
+import {
+    abis as abisHappyChainSepoliaStaging,
+    deployment as deploymentHappyChainSepoliaStaging,
+} from "@happy.tech/contracts/boop-staging/sepolia"
 import { abis as abisAnvil, deployment as deploymentAnvil } from "@happy.tech/contracts/boop/anvil"
 import {
-    // abis as abisHappyChainSepolia,
+    abis as abisHappyChainSepolia,
     deployment as deploymentHappyChainSepolia,
 } from "@happy.tech/contracts/boop/sepolia"
 import { anvil, happychainTestnet } from "viem/chains"
@@ -10,11 +14,12 @@ export function getDeployment(env: Environment) {
     function getBaseDeployment() {
         switch (env.CHAIN_ID) {
             case happychainTestnet.id:
-                return deploymentHappyChainSepolia
+                // Use staging deployment if PROXY_HAS_METADATA is false
+                return env.PROXY_HAS_METADATA ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
             case anvil.id:
                 return deploymentAnvil
             default:
-                return deploymentHappyChainSepolia
+                return env.PROXY_HAS_METADATA ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
         }
     }
     const deployment = getBaseDeployment()
@@ -27,4 +32,13 @@ export function getDeployment(env: Environment) {
     }
 }
 
-export const abis = abisAnvil // abisHappyChainSepolia // TODO temp
+export function getAbis(env: Environment) {
+    switch (env.CHAIN_ID) {
+        case happychainTestnet.id:
+            return env.PROXY_HAS_METADATA ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
+        case anvil.id:
+            return abisAnvil
+        default:
+            return env.PROXY_HAS_METADATA ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
+    }
+}

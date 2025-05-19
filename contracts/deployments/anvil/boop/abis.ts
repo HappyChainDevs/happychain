@@ -2470,12 +2470,12 @@ const aliasToContract = ({
 
 export const deployment = ({
   "BatchCallExecutor": "0x3473ac298B0A1dCa9d6832a35eBdf4CCe1c2e2e5",
-  "EntryPoint": "0xA40aB3C5708EcE6148f25064fde1Ba4a01C2d364",
-  "HappyAccountBeacon": "0xE1500F5C6AE7B032d009A5ddb0838716CaA2F5A6",
-  "HappyAccountBeaconProxyFactory": "0x9904E6D6C651F3A821213b88D1012a4b2cd94074",
-  "HappyAccountImpl": "0xa1cf417F51a4Dbb4540fed77D5175E91B709758F",
+  "EntryPoint": "0x3e037A2A45cd11829Dfe3D225AD90CD48D2aF004",
+  "HappyAccountBeacon": "0x7a9561d90eA80aaf04ABebC9E029455515c75bDF",
+  "HappyAccountBeaconProxyFactory": "0x95D867D5571ad3bD4712F49A2D9C477eBe694d1b",
+  "HappyAccountImpl": "0xd7bdA5E152dC7DC744501CB21fD1dEB31a768385",
   "HappyAccountRegistry": "0x460307fBB79987d94B0B80aF7321A58cA664Fdd8",
-  "HappyPaymaster": "0xe00D4c797389494aD17c224f01D218Be47cF08E3",
+  "HappyPaymaster": "0xD4Dc0828285d37Ed26EDfd9D7b72d39064BC4345",
   "SessionKeyValidator": "0x9b14b539CECee62F36aa80DF1791a049511D5249"
 }) as const
 

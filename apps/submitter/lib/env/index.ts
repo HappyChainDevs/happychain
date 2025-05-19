@@ -1,6 +1,6 @@
 import { z } from "zod"
 import "zod-openapi/extend" // Adds .openapi(...) to zod so that we can document the API as we validate
-import { getDeployment } from "#lib/env/deployment"
+import { getAbis, getDeployment } from "#lib/env/deployment"
 import { appSchema } from "./schemas/app"
 import { deploymentsSchema } from "./schemas/deployments"
 import { gasSchema } from "./schemas/gas"
@@ -20,11 +20,8 @@ export const env: Environment = envSchema.parse(process.env)
 export type Environment = z.infer<typeof envSchema>
 
 /**
- * Provides access to the Boop contract addreses.
+ * Provides access to the Boop contract addresses and their ABIs.
+ * The correct deployment and ABIs are selected based on the environment configuration.
  */
-export const deployment = await getDeployment(env)
-
-export {
-    /** Provides access to the ABIs of the contracts available in {@link deployment}. */
-    abis,
-} from "#lib/env/deployment"
+export const deployment = getDeployment(env)
+export const abis = getAbis(env)
