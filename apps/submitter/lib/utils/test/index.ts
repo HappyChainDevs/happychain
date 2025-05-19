@@ -1,12 +1,13 @@
+import { expect } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
 import type { PrivateKeyAccount } from "viem"
-import { zeroAddress } from "viem"
+import { decodeEventLog, zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
 import { abis, deployment, env } from "#lib/env"
 import { findExecutionAccount } from "#lib/services"
-import type { Boop } from "#lib/types"
+import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { publicClient, walletClient } from "#lib/utils/clients"
 import type { inputSchema as ExecuteInputSchema } from "#lib/utils/validation/boop"
@@ -114,4 +115,26 @@ export async function signTx(account: PrivateKeyAccount, boop: Boop): Promise<Bo
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return { ...boop, validatorData }
+}
+
+export function assertMintLog(receipt: BoopReceipt, smartAccount: Address) {
+    expect(receipt.logs.length).toBe(1)
+    const log = receipt.logs[0]
+    const topics: `0x${string}`[] = log.topics
+    const eventTopics: [] | [signature: `0x${string}`, ...args: `0x${string}`[]] =
+        topics.length === 0
+            ? []
+            : ([topics[0], ...topics.slice(1)] as [signature: `0x${string}`, ...args: `0x${string}`[]])
+
+    const { eventName, args } = decodeEventLog({
+        abi: mockAbis.MockTokenA,
+        eventName: "Transfer",
+        data: log.data,
+        topics: eventTopics,
+    })
+
+    expect(eventName).toBe("Transfer")
+    expect(args.from).toBe(zeroAddress)
+    expect(args.to.toLowerCase()).toBe(smartAccount.toLowerCase())
+    expect(receipt.logs[0].address).toBe(mockDeployments.MockTokenA.toLowerCase() as Address)
 }

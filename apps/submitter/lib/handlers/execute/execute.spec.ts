@@ -9,6 +9,7 @@ import type { SimulateError } from "#lib/handlers/simulate"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 import {
+    assertMintLog,
     createMockTokenAMintBoop,
     fundAccount,
     getMockTokenABalance,
@@ -122,6 +123,7 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
+            assertMintLog(response.receipt, smartAccount)
             expect(response.status).toBe(Onchain.Success)
             expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
@@ -134,6 +136,7 @@ describe("submitter_execute", () => {
             signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
+            assertMintLog(response.receipt, smartAccount)
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
@@ -148,6 +151,7 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
+            assertMintLog(response.receipt, smartAccount)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
@@ -264,6 +268,7 @@ describe("submitter_execute", () => {
                 expect(r.status, `status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.status, `receipt.status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.evmTxHash, `evmTxHash at index ${i}`).toEqual(expect.any(String))
+                assertMintLog(r.receipt, smartAccount)
             })
         })
     })
