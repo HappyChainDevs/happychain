@@ -3,7 +3,7 @@ import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
-import { type Boop, Onchain } from "#lib/types"
+import { type Boop, type BoopReceipt, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { assertMintLog, client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
@@ -76,7 +76,7 @@ describe("submitter_submit", () => {
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 if (!("receipt" in a)) return { status: a.status }
-                assertMintLog(a.receipt, smartAccount)
+                assertMintLog(a.receipt as BoopReceipt, smartAccount)
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
                 return publicClient.waitForTransactionReceipt({ hash: receipt.evmTxHash, pollingInterval: 100 })
             }),
