@@ -66,6 +66,7 @@ export class ReceiptService {
         const sub = getOrSet(this.#subscriptions, boopHash, () => ({
             pwr: promiseWithResolvers<WaitForReceiptOutput>(),
             count: 0,
+            lastSubTimestamp: Date.now()
         }))
         sub.count += 1
 
@@ -90,6 +91,13 @@ export class ReceiptService {
         } finally {
             // 5. clean‑up for this *caller* (might not empty the subscription yet)
             if (--sub.count === 0) this.#subscriptions.delete(boopHash)
+            if (txHash) {
+                const pend = this.#pendingHashes.get(txHash)
+                if (pend) {
+                    pend.subs.delete(sub)
+                    if (pend.subs.size === 0) this.#pendingHashes.delete(txHash)
+                }
+            }
         }
     }
     async #onNewHead(blockHeader: Block) {
@@ -119,45 +127,6 @@ export class ReceiptService {
             logger.warn("block‑watcher error", e)
         }
     }
-
-    #registerWait(boopHash: Hash): Subscription {
-        const sub = getOrSet(this.#subscriptions, boopHash, {
-            count: 0,
-            pwr: promiseWithResolvers<WaitForReceiptOutput>(),
-            lastSubTimestamp: 0,
-        })
-        ++sub.count
-        sub.lastSubTimestamp = Date.now()
-        return sub
-    }
-
-    async #unregisterWait(boopHash: Hash): Promise<void> {
-        const sub = this.#subscriptions.get(boopHash)
-        if (!sub) return
-        if (--sub.count === 0) this.#subscriptions.delete(boopHash)
-    }
-
-    async #waitAndCreateReceipt(sub: Subscription, evmTxHash: Hash, boop: Boop): Promise<void> {
-        const args = { hash: evmTxHash, pollingInterval: 500, timeout: env.RECEIPT_TIMEOUT }
-        const boopHash = computeHash(boop)
-        sub.evmTxHash = evmTxHash
-        while (sub.count > 0 && sub.evmTxHash === evmTxHash) {
-            try {
-                logger.trace("Waiting for receipt", boopHash, evmTxHash)
-                const evmTxReceipt = await publicClient.waitForTransactionReceipt(args)
-                logger.trace("Got receipt", boopHash, evmTxHash)
-                sub.pwr.resolve(await this.#getReceiptResult(boop, evmTxReceipt))
-                break
-            } catch (error) {
-                // Retry, but only if there are still subscribers and we haven't replaced the transaction.
-                if (error instanceof WaitForTransactionReceiptTimeoutError) continue
-                // We could also retry, but we fail fast unless we're already monitoring another tx.
-                if (sub.evmTxHash === evmTxHash) sub.pwr.reject(error)
-                break
-            }
-        }
-    }
-
     async #getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
         const boopHash = computeHash(boop)
         if (evmTxReceipt.status === "success")
