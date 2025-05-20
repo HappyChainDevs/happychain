@@ -21,15 +21,13 @@ jobs:
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
           bun-version: '1.2.4'
-      # - name: Build submitter & boop sdk
-      #   run: |
-      #       make submitter.build
-      # - name: Execute boop
-      #   run: |
-      #     cd support/testing
-      #     bun executeDummyBoop.ts
-      - name: Force a failure
-        run: exit 1
+      - name: Build submitter & boop sdk
+        run: |
+            make submitter.build
+      - name: Execute boop
+        run: |
+          cd support/testing
+          bun executeDummyBoop.ts
       - name: Send failure to Slack
         if: failure() # Only on failure
         uses: slackapi/slack-github-action@v2.1.0
@@ -39,5 +37,5 @@ jobs:
           payload: |
             {
               "channel": "C08JMNRJNR1",
-              "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+              "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Failing Workflow Logs>"
             }
