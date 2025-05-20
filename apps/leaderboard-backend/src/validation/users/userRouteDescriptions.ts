@@ -1,6 +1,10 @@
 import { describeRoute } from "hono-openapi"
 import { ErrorResponseSchemaObj } from "../common/responseSchemas"
-import { UserListResponseSchemaObj, UserResponseSchemaObj, UserWalletListResponseSchemaObj } from "./userSchemas"
+import {
+    UserListResponseSchemaObj,
+    UserResponseSchemaObj,
+    UserWalletListResponseSchemaObj,
+} from "./userRouteValidations"
 
 // ====================================================================================================
 // User Collection

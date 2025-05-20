@@ -1,5 +1,18 @@
-import { validator as zValidator } from "hono-openapi/zod"
-import { LeaderboardGameIdParamSchema, LeaderboardLimitQuerySchema } from "./leaderBoardSchema"
+import { resolver, validator as zValidator } from "hono-openapi/zod"
+import { createSuccessResponseSchema } from "../common"
+import {
+    GameGuildLeaderboardEntrySchema,
+    GameLeaderboardEntrySchema,
+    GlobalLeaderboardEntrySchema,
+    GuildLeaderboardEntrySchema,
+    LeaderboardGameIdParamSchema,
+    LeaderboardLimitQuerySchema,
+} from "./leaderBoardSchema"
+
+export const GlobalLeaderBoardResponseObj = resolver(createSuccessResponseSchema(GlobalLeaderboardEntrySchema))
+export const GuildLeaderBoardResponseObj = resolver(createSuccessResponseSchema(GuildLeaderboardEntrySchema))
+export const GameLeaderBoardResponseObj = resolver(createSuccessResponseSchema(GameLeaderboardEntrySchema))
+export const GameGuildLeaderBoardResponseObj = resolver(createSuccessResponseSchema(GameGuildLeaderboardEntrySchema))
 
 export const GlobalLeaderboardValidation = zValidator("query", LeaderboardLimitQuerySchema)
 export const GuildLeaderboardValidation = zValidator("query", LeaderboardLimitQuerySchema)

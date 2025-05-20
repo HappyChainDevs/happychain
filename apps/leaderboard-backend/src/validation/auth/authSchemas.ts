@@ -1,14 +1,12 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
-import { createSuccessResponseSchema } from "../common"
 import { UserResponseSchema } from "../users"
 
 // ====================================================================================================
 // Response Schemas
 
 // Auth response data schema (without the wrapper)
-const AuthResponseDataSchema = z
+export const AuthResponseDataSchema = z
     .object({
         session_id: z.string().uuid(),
         user: UserResponseSchema,
@@ -29,7 +27,7 @@ const AuthResponseDataSchema = z
     })
 
 // Auth challenge data schema (without the wrapper)
-const AuthChallengeDataSchema = z
+export const AuthChallengeDataSchema = z
     .object({
         message: z.string(),
         primary_wallet: z.string().refine(isHex),
@@ -43,7 +41,7 @@ const AuthChallengeDataSchema = z
     })
 
 // Session list data schema (without the wrapper)
-const SessionListDataSchema = z
+export const SessionListDataSchema = z
     .array(
         z.object({
             id: z.string().uuid(),
@@ -64,16 +62,6 @@ const SessionListDataSchema = z
             },
         ],
     })
-
-// Create the wrapped schemas with the standard format
-const AuthResponseSchema = createSuccessResponseSchema(AuthResponseDataSchema)
-const AuthChallengeResponseSchema = createSuccessResponseSchema(AuthChallengeDataSchema)
-const SessionListResponseSchema = createSuccessResponseSchema(SessionListDataSchema)
-
-// Export the resolved schemas for OpenAPI
-export const AuthResponseSchemaObj = resolver(AuthResponseSchema)
-export const AuthChallengeResponseSchemaObj = resolver(AuthChallengeResponseSchema)
-export const SessionListResponseSchemaObj = resolver(SessionListResponseSchema)
 
 // ====================================================================================================
 // Request Body Schemas

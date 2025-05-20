@@ -1,7 +1,5 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
-import { createSuccessResponseSchema } from "../common/responseSchemas"
 
 // ====================================================================================================
 // Response Schemas
@@ -25,6 +23,8 @@ const UserWalletSchema = z
         },
     })
 
+export const UserWalletListSchema = z.array(UserWalletSchema)
+
 export const UserResponseSchema = z
     .object({
         id: z.number().int(),
@@ -32,7 +32,7 @@ export const UserResponseSchema = z
         username: z.string(),
         created_at: z.string(),
         updated_at: z.string(),
-        wallets: z.array(UserWalletSchema).optional(),
+        wallets: UserWalletListSchema.optional(),
     })
     .strict()
     .openapi({
@@ -54,15 +54,7 @@ export const UserResponseSchema = z
         },
     })
 
-// Create wrapped schemas with standard format
-const WrappedUserResponseSchema = createSuccessResponseSchema(UserResponseSchema)
-const WrappedUserListResponseSchema = createSuccessResponseSchema(z.array(UserResponseSchema))
-const WrappedUserWalletListResponseSchema = createSuccessResponseSchema(z.array(UserWalletSchema))
-
-// Export resolved schemas for OpenAPI
-export const UserResponseSchemaObj = resolver(WrappedUserResponseSchema)
-export const UserListResponseSchemaObj = resolver(WrappedUserListResponseSchema)
-export const UserWalletListResponseSchemaObj = resolver(WrappedUserWalletListResponseSchema)
+export const UserListSchema = z.array(UserResponseSchema)
 
 // ====================================================================================================
 // Request Body Schemas

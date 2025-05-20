@@ -1,12 +1,11 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { type Address, isHex } from "viem"
 import { GuildRole } from "../../auth/roles"
 
 // ====================================================================================================
 // Response Schemas
 
-const GuildResponseSchema = z
+export const GuildResponseSchema = z
     .object({
         id: z.number().int(),
         name: z.string(),
@@ -27,7 +26,7 @@ const GuildResponseSchema = z
         },
     })
 
-const GuildMemberResponseSchema = z
+export const GuildMemberResponseSchema = z
     .object({
         id: z.number().int(),
         guild_id: z.number().int(),
@@ -55,16 +54,9 @@ const GuildMemberResponseSchema = z
         },
     })
 
-export const GuildResponseSchemaObj = resolver(GuildResponseSchema)
+export const GuildResponseSchemaArray = z.array(GuildResponseSchema)
 
-export const GuildListResponseSchemaObj = resolver(z.array(GuildResponseSchema))
-
-export const GuildMemberResponseSchemaObj = resolver(GuildMemberResponseSchema)
-
-export const GuildMemberListResponseSchemaObj = resolver(z.array(GuildMemberResponseSchema))
-
-// Generic error schema
-export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
+export const GuildMemberResponseSchemaArray = z.array(GuildMemberResponseSchema)
 
 // ====================================================================================================
 // Request Body Schemas

@@ -1,6 +1,10 @@
 import { describeRoute } from "hono-openapi"
 import { ErrorResponseSchemaObj } from "../common"
-import { GameListResponseSchemaObj, GameResponseSchemaObj, UserGameScoreResponseSchemaObj } from "./gameSchemas"
+import {
+    GameListResponseSchemaObj,
+    GameResponseSchemaObj,
+    UserGameScoreResponseSchemaObj,
+} from "./gameRouteValidations"
 
 // ====================================================================================================
 // Game Collection

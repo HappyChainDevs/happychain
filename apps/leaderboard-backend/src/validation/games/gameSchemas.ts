@@ -1,5 +1,4 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
 
 // ====================================================================================================
@@ -28,6 +27,8 @@ export const GameResponseSchema = z
         },
     })
 
+export const GameListResponseSchema = z.array(GameResponseSchema)
+
 export const UserGameScoreResponseSchema = z
     .object({
         id: z.number().int(),
@@ -54,12 +55,6 @@ export const UserGameScoreResponseSchema = z
             game_name: "Crypto Racer",
         },
     })
-
-export const GameResponseSchemaObj = resolver(GameResponseSchema)
-
-export const GameListResponseSchemaObj = resolver(z.array(GameResponseSchema))
-
-export const UserGameScoreResponseSchemaObj = resolver(UserGameScoreResponseSchema)
 
 // ====================================================================================================
 // Request Body Schemas

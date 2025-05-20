@@ -1,5 +1,6 @@
 import { describeRoute } from "hono-openapi"
-import { ErrorResponseSchemaObj, GuildListResponseSchemaObj, GuildResponseSchemaObj } from "./guildSchemas"
+import { ErrorResponseSchemaObj } from "../common"
+import { GuildListResponseSchemaObj, GuildResponseSchemaObj } from "./guildRouteValidations"
 
 // ====================================================================================================
 // Guild Collection
