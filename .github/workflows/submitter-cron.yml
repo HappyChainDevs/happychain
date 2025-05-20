@@ -39,5 +39,5 @@ jobs:
           payload: |
             {
               "channel": "C08JMNRJNR1",
-              text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+              "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
             }
