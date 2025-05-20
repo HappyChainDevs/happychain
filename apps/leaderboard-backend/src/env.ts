@@ -5,7 +5,6 @@ const envSchema = z.object({
     PORT: z.string().trim().default("4545"),
     DATABASE_MIGRATE_DIR: z.string().trim().default("migrations"),
     SESSION_EXPIRY: z.string().trim().default("86400"),
-    SIGN_MESSAGE_PREFIX: z.string().trim().default("HappyChain Authentication"),
     RPC_URL: z.string().trim().default("http://localhost:8545"),
 })
 

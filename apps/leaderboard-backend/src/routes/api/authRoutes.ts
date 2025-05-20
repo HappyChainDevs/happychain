@@ -24,8 +24,11 @@ export default new Hono()
         // Use a hardcoded, Ethereum-style message for leaderboard authentication
         const message = `\x19Leaderboard Signed Message:\nHappyChain Leaderboard Authentication Request for ${primary_wallet}`
         return c.json({
-            message,
-            primary_wallet,
+            ok: true,
+            data: {
+                message,
+                primary_wallet,
+            },
         })
     })
 
@@ -41,22 +44,23 @@ export default new Hono()
         const isValid = await verifySignature(primary_wallet as Address, message as Hex, signature as Hex)
 
         if (!isValid) {
-            return c.json({ error: "Invalid signature", ok: false }, 401)
+            return c.json({ ok: false, error: "Invalid signature" }, 401)
         }
 
         const user = await userRepo.findByWalletAddress(primary_wallet, true)
         if (!user) {
-            return c.json({ error: "User not found", ok: false }, 404)
+            return c.json({ ok: false, error: "User not found" }, 404)
         }
 
         const session = await authRepo.createSession(user.id, primary_wallet)
         if (!session) {
-            return c.json({ error: "Failed to create session", ok: false }, 500)
+            return c.json({ ok: false, error: "Failed to create session" }, 500)
         }
 
         setCookie(c, "session_id", session.id, {
             httpOnly: true,
-            secure: false,
+            secure: true,
+            domain: "localhost",
             sameSite: "Lax",
             path: "/",
             maxAge: Number.parseInt(env.SESSION_EXPIRY, 10),
@@ -65,12 +69,14 @@ export default new Hono()
         // Return success with session ID and user info
         return c.json({
             ok: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                primary_wallet: user.primary_wallet,
-                wallets: user.wallets,
-                sessionId: session.id,
+            data: {
+                session_id: session.id,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    primary_wallet: user.primary_wallet,
+                    wallets: user.wallets,
+                },
             },
         })
     })
@@ -87,17 +93,19 @@ export default new Hono()
         const user = await userRepo.findById(userId)
 
         if (!user) {
-            return c.json({ error: "User not found", ok: false }, 404)
+            return c.json({ ok: false, error: "User not found" }, 404)
         }
 
         return c.json({
             ok: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                primary_wallet: user.primary_wallet,
-                wallets: user.wallets,
-                sessionId: c.get("sessionId"),
+            data: {
+                session_id: c.get("sessionId") as string,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    primary_wallet: user.primary_wallet,
+                    wallets: user.wallets,
+                },
             },
         })
     })
@@ -114,16 +122,22 @@ export default new Hono()
         const success = await authRepo.deleteSession(sessionId as AuthSessionTableId)
 
         if (!success) {
-            return c.json({ error: "Failed to delete session", ok: false }, 500)
+            return c.json({ ok: false, error: "Failed to delete session" }, 500)
         }
 
         // Delete the session cookie
         deleteCookie(c, "session_id", {
             path: "/",
-            secure: false,
+            secure: true,
+            domain: "localhost",
         })
 
-        return c.json({ ok: true, message: "Logged out successfully" })
+        return c.json({
+            ok: true,
+            data: {
+                message: "Logged out successfully",
+            },
+        })
     })
 
     /**
@@ -139,9 +153,9 @@ export default new Hono()
 
         return c.json({
             ok: true,
-            sessions: sessions.map((s) => ({
+            data: sessions.map((s) => ({
                 ...s,
-                current: s.id === c.get("sessionId"),
+                is_current: s.id === c.get("sessionId"),
             })),
         })
     })

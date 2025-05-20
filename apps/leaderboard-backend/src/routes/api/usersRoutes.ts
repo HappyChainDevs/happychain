@@ -46,7 +46,7 @@ export default new Hono()
             includeWallets: query.include_wallets,
         })
 
-        return c.json(users, 200)
+        return c.json({ ok: true, data: users }, 200)
     })
 
     /**
@@ -73,7 +73,7 @@ export default new Hono()
             username: userData.username,
         })
 
-        return c.json(newUser, 201)
+        return c.json({ ok: true, data: newUser }, 201)
     })
 
     // ====================================================================================================
@@ -93,7 +93,7 @@ export default new Hono()
             return c.json({ ok: false, error: "User not found" }, 404)
         }
 
-        return c.json(user, 200)
+        return c.json({ ok: true, data: user }, 200)
     })
 
     /**
@@ -130,7 +130,7 @@ export default new Hono()
             }
 
             const updatedUser = await userRepo.update(userId, updateData)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -162,7 +162,7 @@ export default new Hono()
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            return c.json(user, 200)
+            return c.json({ ok: true, data: user }, 200)
         },
     )
 
@@ -182,7 +182,7 @@ export default new Hono()
             return c.json({ ok: false, error: "User not found" }, 404)
         }
 
-        return c.json(user, 200)
+        return c.json({ ok: true, data: user }, 200)
     })
 
     /**
@@ -218,7 +218,7 @@ export default new Hono()
             }
 
             const updatedUser = await userRepo.update(user.id, updateData)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -249,7 +249,7 @@ export default new Hono()
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
 
-            return c.json(user, 200)
+            return c.json({ ok: true, data: user }, 200)
         },
     )
 
@@ -272,7 +272,7 @@ export default new Hono()
         }
 
         const wallets = await userRepo.getUserWallets(userId)
-        return c.json(wallets, 200)
+        return c.json({ ok: true, data: wallets }, 200)
     })
 
     /**
@@ -294,7 +294,7 @@ export default new Hono()
             }
 
             const wallets = await userRepo.getUserWallets(user.id)
-            return c.json(wallets, 200)
+            return c.json({ ok: true, data: wallets }, 200)
         },
     )
 
@@ -336,7 +336,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(userId, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -381,7 +381,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(user.id, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -423,7 +423,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(userId, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -465,7 +465,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(user.id, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -511,7 +511,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(userId, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -560,7 +560,7 @@ export default new Hono()
 
             // Get updated user with wallets
             const updatedUser = await userRepo.findById(user.id, true)
-            return c.json(updatedUser, 200)
+            return c.json({ ok: true, data: updatedUser }, 200)
         },
     )
 
@@ -581,7 +581,7 @@ export default new Hono()
             }
 
             const guilds = await guildRepo.getUserGuilds(userId)
-            return c.json(guilds, 200)
+            return c.json({ ok: true, data: guilds }, 200)
         } catch (err) {
             console.error(`Error fetching guilds for user ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)

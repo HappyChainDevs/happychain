@@ -39,7 +39,7 @@ export default new Hono()
                 includeMembers: include_members ? include_members : false,
             })
 
-            return c.json(guilds, 200)
+            return c.json({ ok: true, data: guilds }, 200)
         } catch (err) {
             console.error("Error listing guilds:", err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -74,7 +74,7 @@ export default new Hono()
                     creator_id: guildData.creator_id as UserTableId,
                 })
 
-                return c.json(newGuild, 201)
+                return c.json({ ok: true, data: newGuild }, 201)
             } catch (err) {
                 console.error("Error creating guild:", err)
                 return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -99,7 +99,7 @@ export default new Hono()
                 return c.json({ ok: false, error: "Guild not found" }, 404)
             }
 
-            return c.json(guild, 200)
+            return c.json({ ok: true, data: guild }, 200)
         } catch (err) {
             console.error(`Error fetching guild ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -142,7 +142,7 @@ export default new Hono()
                 }
 
                 const updatedGuild = await guildRepo.update(guildId, updateData)
-                return c.json(updatedGuild, 200)
+                return c.json({ ok: true, data: updatedGuild }, 200)
             } catch (err) {
                 console.error(`Error updating guild ${c.req.param("id")}:`, err)
                 return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -171,7 +171,7 @@ export default new Hono()
             }
 
             const members = await guildRepo.getGuildMembersWithUserDetails(guildId)
-            return c.json(members, 200)
+            return c.json({ ok: true, data: members }, 200)
         } catch (err) {
             console.error(`Error fetching members for guild ${c.req.param("id")}:`, err)
             return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -233,7 +233,7 @@ export default new Hono()
                     return c.json({ ok: false, error: "User is already a member of this guild" }, 409)
                 }
 
-                return c.json(member, 201)
+                return c.json({ ok: true, data: member }, 201)
             } catch (err) {
                 console.error(`Error adding member to guild ${c.req.param("id")}:`, err)
                 return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -282,7 +282,7 @@ export default new Hono()
                     return c.json({ ok: false, error: "Member not found in guild" }, 404)
                 }
 
-                return c.json(updatedMember, 200)
+                return c.json({ ok: true, data: updatedMember }, 200)
             } catch (err) {
                 console.error(`Error updating member role in guild ${c.req.param("id")}:`, err)
                 return c.json({ ok: false, error: "Internal Server Error" }, 500)
@@ -333,7 +333,7 @@ export default new Hono()
                     )
                 }
 
-                return c.json({ removed: true }, 200)
+                return c.json({ ok: true, data: { removed: true } }, 200)
             } catch (err) {
                 console.error(`Error removing member from guild ${c.req.param("id")}:`, err)
                 return c.json({ ok: false, error: "Internal Server Error" }, 500)

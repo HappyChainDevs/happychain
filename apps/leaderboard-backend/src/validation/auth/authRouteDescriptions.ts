@@ -1,10 +1,6 @@
 import { describeRoute } from "hono-openapi"
-import {
-    AuthChallengeResponseSchemaObj,
-    AuthResponseSchemaObj,
-    ErrorResponseSchemaObj,
-    SessionListResponseSchemaObj,
-} from "./authSchemas"
+import { ErrorResponseSchemaObj } from "../common/responseSchemas"
+import { AuthChallengeResponseSchemaObj, AuthResponseSchemaObj, SessionListResponseSchemaObj } from "./authSchemas"
 
 // ====================================================================================================
 // Authentication Routes

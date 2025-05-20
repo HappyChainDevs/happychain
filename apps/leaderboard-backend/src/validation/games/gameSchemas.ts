@@ -61,9 +61,6 @@ export const GameListResponseSchemaObj = resolver(z.array(GameResponseSchema))
 
 export const UserGameScoreResponseSchemaObj = resolver(UserGameScoreResponseSchema)
 
-// Generic error schema
-export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
-
 // ====================================================================================================
 // Request Body Schemas
 
