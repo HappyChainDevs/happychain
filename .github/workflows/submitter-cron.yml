@@ -21,13 +21,15 @@ jobs:
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
           bun-version: '1.2.4'
-      - name: Build submitter & boop sdk
-        run: |
-            make submitter.build
-      - name: Execute boop
-        run: |
-          cd support/testing
-          bun executeDummyBoop.ts
+      # - name: Build submitter & boop sdk
+      #   run: |
+      #       make submitter.build
+      # - name: Execute boop
+      #   run: |
+      #     cd support/testing
+      #     bun executeDummyBoop.ts
+      - name: Force a failure
+        run: exit 1
       - name: Send failure to Slack
         if: failure() # Only on failure
         uses: slackapi/slack-github-action@v1.26.0
