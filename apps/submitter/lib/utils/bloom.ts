@@ -1,6 +1,6 @@
-import { deployment } from "#lib/env"
 import { hexToBytes, keccak256 } from "viem"
 import type { Block, Hex } from "viem"
+import { deployment } from "#lib/env"
 
 const BLOOM_SIZE_BYTES = 256 // fixed in protocol
 const ZERO_BLOOM = ("0x" + "0".repeat(512)) as Hex
