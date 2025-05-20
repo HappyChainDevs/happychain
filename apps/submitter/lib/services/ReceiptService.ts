@@ -88,13 +88,15 @@ export class ReceiptService {
     }
 
     async #waitAndCreateReceipt(sub: Subscription, evmTxHash: Hash, boop: Boop): Promise<void> {
-        const args = { hash: evmTxHash, pollingInterval: 500, timeout: env.RECEIPT_TIMEOUT }
+        const args = { hash: evmTxHash, pollingInterval: 200, timeout: env.RECEIPT_TIMEOUT }
         const boopHash = computeHash(boop)
         sub.evmTxHash = evmTxHash
         while (sub.count > 0 && sub.evmTxHash === evmTxHash) {
             try {
                 logger.trace("Waiting for receipt", boopHash, evmTxHash)
+                console.time("waitForTransactionReceipt")
                 const evmTxReceipt = await publicClient.waitForTransactionReceipt(args)
+                console.timeEnd("waitForTransactionReceipt")
                 sub.pwr.resolve(await this.#getReceiptResult(boop, evmTxReceipt))
                 break
             } catch (error) {
