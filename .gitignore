@@ -20,6 +20,10 @@ node_modules
 .pnpm-debug.log*
 *.local
 
+# Bun
+# (no longer use binary lockfile)
+bun.lockb
+
 # Build outputs
 .next
 next-env.d.ts
@@ -61,7 +65,7 @@ packages/bundler/alto
 *.sln
 *.sw?
 
-# Vocs bunild artifacts
+# Vocs build artifacts
 *.config.ts.timestamp-*
 
 # SQLite files
