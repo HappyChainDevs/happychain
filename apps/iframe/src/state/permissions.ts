@@ -1,22 +1,17 @@
 import { createUUID } from "@happy.tech/common"
 import type { Address, UUID } from "@happy.tech/common"
-import type { HappyUser } from "@happy.tech/wallet-common"
-import { type Atom, atom, getDefaultStore } from "jotai"
-import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
-import { PermissionName } from "#src/constants/permissions"
 import { permissionsLogger } from "#src/utils/logger"
-import { StorageKey } from "../services/storage"
-import { type AppURL, getAppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
+import { type AppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { revokedSessionKeys } from "./interfaceState"
-import { getUser, userAtom } from "./user"
+import { getUser } from "./user"
 import { syncedCrud } from '@legendapp/state/sync-plugins/crud'
 import { observable } from "@legendapp/state"
 import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage";
+import type { HappyUser } from "@happy.tech/wallet-common"
+import { PermissionName } from "#src/constants/permissions.ts"
 
-// STORE INSTANTIATION
-const store = getDefaultStore()
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.
@@ -52,6 +47,9 @@ export type AppPermissions = Record<string, WalletPermission>
  * This type is copied from Viem (eip1193.ts)
  */
 export type WalletPermission = {
+    type: "WalletPermissions"
+    // The user to which the permission is granted.
+    user: Address
     // The app to which the permission is granted.
     invoker: AppURL
     // This is the EIP-1193 request that this permission is mapped to.
@@ -60,6 +58,9 @@ export type WalletPermission = {
     date: number
     // Not in the EIP, but Viem wants this.
     id: UUID
+    deleted: boolean
+    updatedAt: number
+    createdAt: number
 }
 
 /**
@@ -90,17 +91,23 @@ export type SessionKeyRequest = {
  */
 export type PermissionsRequest = string | PermissionRequestObject
 
+type PermissionCheckParams = {
+    permissionsRequest: PermissionsRequest
+    app: AppURL
+}
 
-const permissionsMapLegend = observable(syncedCrud({
+
+
+export const permissionsMapLegend = observable(syncedCrud({
     list: async ({ lastSync }) => {
         const user = getUser()
         if (!user) return []
         const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`)
         const data =  await response.json()
         
-        return data.data
+        return data.data as WalletPermission[]
     },
-    create: async (data: PermissionsMap) => {
+    create: async (data: WalletPermission) => {
         console.log("create", data)
         const response = await fetch("http://localhost:3000/api/v1/settings/create", {
             method: "POST",
@@ -109,9 +116,9 @@ const permissionsMapLegend = observable(syncedCrud({
             },
             body: JSON.stringify(data),
         })
-        return await response.json()
+        await response.json()
     },
-    update: async (data: PermissionsMap) => {
+    update: async (data: WalletPermission) => {
         console.log("update", data)
 
         const response = await fetch("http://localhost:3000/api/v1/settings/update", {
@@ -121,7 +128,7 @@ const permissionsMapLegend = observable(syncedCrud({
             },
             body: JSON.stringify(data),
         })
-        return await response.json()
+        await response.json()
     },
     subscribe: ({ refresh }) => {
         // Set up an interval to refresh messages every 5 seconds
@@ -135,7 +142,7 @@ const permissionsMapLegend = observable(syncedCrud({
         const response = await fetch(`http://localhost:3000/api/v1/settings/delete/${id}`, {
             method: "DELETE",
         })
-        return await response.json()
+        await response.json()
     },
     persist: {
         plugin: ObservablePersistLocalStorage,
@@ -180,50 +187,13 @@ const permissionsMapLegend = observable(syncedCrud({
 
        
     },
+    initial: {},
     fieldCreatedAt: 'created_at',
     fieldUpdatedAt: 'updatedAt',
     fieldDeleted: 'deleted',
     changesSince: 'last-sync'
 }))
 
-/**
- * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
- * for that user on that app.
- */
-export const permissionsMapAtom = atomWithStorage<PermissionsMap>(StorageKey.UserPermissions, {}, createJSONStorage(), {
-    getOnInit: true,
-})
-
-type PermissionCheckParams = {
-    permissionsRequest: PermissionsRequest
-    app: AppURL
-}
-
-const _atomForPermissionsCheck: (params: PermissionCheckParams) => Atom<boolean> = //
-    atomFamily(({ permissionsRequest, app }) => {
-        return atom((get) => {
-            const user = get(userAtom)
-            if (!user) return false
-            // This call *might* be required to record the dependency, which occurs via
-            // `getDefaultStore().get` during `hasPermissions`.
-            get(permissionsMapAtom)
-            return hasPermissions(app, permissionsRequest)
-        })
-    })
-
-/**
- * A function that returns a new atom that subscribes to a check on the specified permissions.
- *
- * The atom is cached, but not automatically garbage-collected. If this is called with a changing
- * set of permissions, it is necessary to call `atomForPermissionsCheck.remove(oldPermissions)`
- * when changing the permissions!
- */
-export function atomForPermissionsCheck(
-    permissionsRequest: PermissionsRequest, //
-    app: AppURL = getAppURL(),
-): Atom<boolean> {
-    return _atomForPermissionsCheck({ permissionsRequest, app })
-}
 
 // === GET ALL PERMISSIONS =======================================================================================
 
@@ -232,45 +202,52 @@ export function atomForPermissionsCheck(
  */
 export function getAppPermissions(app: AppURL): AppPermissions {
     const user = getUser()
-    const permissionsMap = store.get(permissionsMapAtom)
-    return getAppPermissionsPure(user, app, permissionsMap)
+    const permissionsMap = permissionsMapLegend.get()
+    return getAppPermissionsPure(user, app, Object.values(permissionsMap))
 }
 export function getAppPermissionsPure(
     user: HappyUser | undefined,
     app: AppURL,
-    permissionsMap: PermissionsMap,
+    permissions: WalletPermission[],
 ): AppPermissions {
     if (!user) {
         // This should never happen and requires investigating if it does!
         permissionsLogger.warn("No user found, returning empty permissions.")
         return {}
     }
-    const appPermissions = permissionsMap[user.address]?.[app]
-    if (appPermissions) return appPermissions
 
-    // Permissions don't exist, create them.
+    const appPermissions = permissions.filter((p) => p.invoker === app && p.user === user.address)
 
-    const baseAppPermissions: AppPermissions =
-        app === getWalletURL()
-            ? {
-                  // The iframe is always granted the `eth_accounts` permission.
-                  eth_accounts: {
-                      invoker: app,
-                      parentCapability: "eth_accounts",
-                      caveats: [],
-                      date: Date.now(),
-                      id: createUUID(),
-                  },
-              }
-            : {}
+    if (appPermissions.length > 0) {
+        return appPermissions.reduce((acc, p) => {
+            acc[p.parentCapability] = p
+            return acc
+        }, {} as AppPermissions)
+    }
 
-    // It's not required to set the permissionsAtom here because the permissions don't actually
-    // change (so nothing dependent on the atom needs to update). We just write them to avoid
-    // rerunning the above logic on each lookup.
-    permissionsMap[user.address] ??= {}
-    permissionsMap[user.address][app] = baseAppPermissions
+    if (app === getWalletURL()) {
+        // Permissions don't exist, create them.
+        // The iframe is always granted the `eth_accounts` permission.
+        const permissionId = createUUID()
+        const permission: WalletPermission = {
+            type: "WalletPermissions",
+            user: user.address,
+            invoker: app,
+            parentCapability: "eth_accounts",
+            caveats: [],
+            date: Date.now(),
+            id: permissionId,
+            deleted: false,
+            updatedAt: Date.now(),
+            createdAt: Date.now(),
+        }
+        permissionsMapLegend[permissionId].set(permission)
+        return {
+            eth_accounts: permission,
+        }
+    }
 
-    return baseAppPermissions
+    return {}
 }
 
 // === WRITE ALL PERMISSIONS =======================================================================================
@@ -294,34 +271,16 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
         return
     }
 
-    store.set(permissionsMapAtom, (prev: PermissionsMap) => {
-        if (!permissionArray.every((a) => a.invoker === app)) {
-            // No all permissions supplied are scoped to the app.
-            // This should never happen!
-            console.warn("Invalid permission update requested, not setting permissions.")
-            return prev
-        }
+    if (!permissionArray.every((a) => a.invoker === app)) {
+        // No all permissions supplied are scoped to the app.
+        // This should never happen!
+        console.warn("Invalid permission update requested, not setting permissions.")
+        return
+    }
 
-        return {
-            ...prev,
-            [user.address]: { ...prev[user.address], [app]: appPermissions },
-        }
-    })
-
-    for (const permission of permissionArray ){
-        permissionsMapLegend[permission.id].set({
-            id: permission.id,
-            type: "WalletPermissions",
-            user: user.address,
-            invoker: app,
-            parentCapability: permission.parentCapability,
-            caveats: permission.caveats,
-            date: permission.date,
-            deleted: false,
-            updatedAt: Date.now(),
-            createdAt: Date.now(),
-        })
-     }
+    for (const permission of permissionArray) {
+        permissionsMapLegend[permission.id].set(permission)
+    }
 }
 
 
@@ -334,22 +293,13 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
-    const permissions = store.get(permissionsMapAtom)
-    store.set(permissionsMapAtom, (prev) => {
-        const { [user.address]: _, ...rest } = prev
-        return rest
-    })
-    for (const permission of Object.values(permissions)) {
-       const permissionsPerUser = Object.values(permission)
-        
-       for (const p of permissionsPerUser) {
-        const permissionsToDelete = Object.values(p)
-            for (const p of permissionsToDelete) {
-                permissionsMapLegend[p.id].delete()
-            }
-       }
-    }
     
+    const permissions = permissionsMapLegend.get()
+    for (const permission of Object.values(permissions)) {
+        if (permission.user === user.address) {
+            permissionsMapLegend[permission.id].delete()
+        }
+    }
 }
 
 /**
@@ -365,25 +315,11 @@ export function clearAppPermissions(app: AppURL): void {
         .flatMap((p) => p.caveats)
         .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
-    const permissions = store.get(permissionsMapAtom)
-
-    // Remove app permissions from storage
-    store.set(permissionsMapAtom, (prev) => {
-        const {
-            [user.address]: { [app]: _, ...otherApps },
-            ...otherUsers
-        } = prev
-        return { ...otherUsers, [user.address]: otherApps }
-    })
+    const permissions = permissionsMapLegend.get()
 
     for (const permission of Object.values(permissions)) {
-        const permissionsPerUser = Object.values(permission)
-        
-        for (const p of permissionsPerUser) {
-            const permissionsToDelete = Object.values(p)
-            for (const p of permissionsToDelete) {
-                permissionsMapLegend[p.id].delete()
-            }
+        if (permission.invoker === app && permission.user === user.address) {
+            permissionsMapLegend[permission.id].delete()
         }
     }
 }
@@ -432,8 +368,11 @@ export function permissionRequestEntries(permissions: PermissionsRequest): Permi
  * ```
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
-    const grantedPermissions = []
+    const grantedPermissions: WalletPermission[] = []
     const appPermissions = getAppPermissions(app)
+
+    const user = getUser()
+    if (!user) return []
 
     for (const { name, caveats: newCaveats } of permissionRequestEntries(permissionRequest)) {
         // If permission exists, merge new caveats with existing ones
@@ -451,12 +390,17 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
 
             grantedPermissions.push(appPermissions[name])
         } else {
-            const grantedPermission = {
+            const grantedPermission: WalletPermission = {
                 caveats: newCaveats,
                 invoker: app,
                 parentCapability: name,
                 date: Date.now(),
                 id: createUUID(),
+                deleted: false,
+                updatedAt: Date.now(),
+                createdAt: Date.now(),
+                type: "WalletPermissions",
+                user: user.address,
             }
             grantedPermissions.push(grantedPermission)
 
