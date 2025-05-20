@@ -28,4 +28,13 @@ jobs:
         run: |
           cd support/testing
           bun executeDummyBoop.ts
-
+      - name: Send failure to Slack
+        if: failure() # Only on failure
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/${{ github.run_id }}|View Logs>"
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_WORKFLOW_BOT_TOKEN }}
