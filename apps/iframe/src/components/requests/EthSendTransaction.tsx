@@ -21,7 +21,7 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
-import { RequestDisabled } from "./common/RequestDisabled"
+import { SectionError } from "./common/SectionError"
 import type { RequestConfirmationProps } from "./props"
 
 const MIN_DISPLAY_WEI = 100_000_000_000_000n // 0.0001 HAPPY
@@ -44,7 +44,6 @@ export const EthSendTransaction = ({
     const isValidTransaction = !!user?.address && isSupportedTxType && !!txTo
     const isSelfPaying = false // currently we always sponsor
     const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
-
     const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
 
     const { data: userBalance, isPending: isBalancePending } = useBalance({
@@ -76,41 +75,35 @@ export const EthSendTransaction = ({
     }, [simulateOutput])
 
     const notEnoughFunds = !!userBalance?.value && !!values?.cost && userBalance.value < txValue + values.cost
+    const isConfirmActionDisabled = (txValue && isBalancePending) || isSimulatePending
+    const isRequestDisabled =
+        !isValidTransaction || notEnoughFunds || simulateError || simulateOutput?.feeTooLowDuringSimulation
 
-    const isConfirmActionDisabled =
-        !isValidTransaction || (shouldQueryBalance && isBalancePending) || notEnoughFunds || !simulateOutput
-
-    const isRequestDisabled = !isValidTransaction || simulateError || simulateOutput?.feeTooLowDuringSimulation
-
-    if (isRequestDisabled) {
-        // biome-ignore format: compact
-        const description =
-                // request payload is invalid
-                !user?.address ? "Disconnected from wallet" :
-                !isSupportedTxType ? `Invalid transaction type: ${txType}` :
-                !tx.to ? `Invalid receiver address: ${tx.to}` :
-                // issues with boop simulation
-                simulateError ? `Failed to simulate transaction: ${simulateError.message}` :
-                simulateOutput?.feeTooLowDuringSimulation ? "Provided maxFeePerGas is lower than the current gas price." :
-                "Unknown error"
-
-        return <RequestDisabled headline="Confirm transaction" description={description} reject={reject} />
-    }
-
+    const requestDisabledDescription = //
+        !user?.address
+            ? "Disconnected from wallet"
+            : !isSupportedTxType
+              ? `Invalid transaction type: ${txType}`
+              : !tx.to
+                ? `Invalid receiver address: ${tx.to}`
+                : notEnoughFunds
+                  ? "Not enough funds!"
+                  : // issues with boop simulation
+                    simulateError
+                    ? `Failed to simulate transaction: ${simulateError.message}`
+                    : simulateOutput?.feeTooLowDuringSimulation
+                      ? "Provided maxFeePerGas is lower than the current gas price."
+                      : "Unknown error"
     return (
         <>
             <Layout
                 headline="Confirm transaction"
                 actions={{
                     accept: {
-                        children: notEnoughFunds
-                            ? "Not enough funds!"
-                            : isConfirmActionDisabled
-                              ? "Preparing..."
-                              : "Confirm",
-                        "aria-disabled": isConfirmActionDisabled,
+                        children: isConfirmActionDisabled ? "Preparing..." : "Confirm",
+                        "aria-disabled": !!isConfirmActionDisabled || !!isRequestDisabled,
                         onClick: () => {
-                            if (isConfirmActionDisabled) return
+                            if (!!isConfirmActionDisabled || !!isRequestDisabled) return
                             accept({ method, params: [tx], extraData: simulateOutput })
                         },
                     },
@@ -139,28 +132,40 @@ export const EthSendTransaction = ({
                         )}
                     </SubsectionBlock>
                 </SectionBlock>
-                <SectionBlock>
-                    <SubsectionBlock>
+                {isRequestDisabled ? (
+                    <SectionError>
                         <SubsectionContent>
-                            <SubsectionTitle>Cost</SubsectionTitle>
+                            <SubsectionTitle>Error</SubsectionTitle>
                             <FormattedDetailsLine>
-                                {isSimulatePending ? (
-                                    <FieldLoader />
-                                ) : (
-                                    `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
-                                )}{" "}
+                                <p>{requestDisabledDescription}</p>
                             </FormattedDetailsLine>
-                            {!isSelfPaying && (
-                                <span className="text-accent text-xs">
-                                    Sponsored by{" "}
-                                    <LinkToAddress address={paymasterInUse}>
-                                        {getPaymasterName(paymasterInUse)}
-                                    </LinkToAddress>
-                                </span>
-                            )}
                         </SubsectionContent>
-                    </SubsectionBlock>
-                </SectionBlock>
+                    </SectionError>
+                ) : (
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                <SubsectionTitle>Cost</SubsectionTitle>
+                                <FormattedDetailsLine>
+                                    {isSimulatePending ? (
+                                        <FieldLoader />
+                                    ) : (
+                                        `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
+                                    )}{" "}
+                                </FormattedDetailsLine>
+                                {!isSelfPaying && (
+                                    <span className="text-accent text-xs">
+                                        Sponsored by{" "}
+                                        <LinkToAddress address={paymasterInUse}>
+                                            {getPaymasterName(paymasterInUse)}
+                                        </LinkToAddress>
+                                    </span>
+                                )}
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                )}
+
                 {decodedData && (
                     <DisclosureSection
                         title="Decoded Function Data"
