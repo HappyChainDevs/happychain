@@ -1,9 +1,9 @@
 import {
-    BatteryEmpty,
     BatteryFull,
     BatteryHigh,
     BatteryLow,
     BatteryMedium,
+    BatteryWarning,
     type Icon,
     Spinner,
 } from "@phosphor-icons/react"
@@ -20,8 +20,11 @@ const colorMap: Record<BatteryHealthIndicator, ClassValue> = {
     4: "text-success",
 }
 
+/**
+ * Maps each battery health level to the corresponding Phosphor Icon component.
+ */
 const batteryIconStates: Record<BatteryHealthIndicator, Icon> = {
-    0: BatteryEmpty,
+    0: BatteryWarning,
     1: BatteryLow,
     2: BatteryMedium,
     3: BatteryHigh,
