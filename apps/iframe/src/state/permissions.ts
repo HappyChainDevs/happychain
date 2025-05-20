@@ -108,7 +108,6 @@ export const permissionsMapLegend = observable(syncedCrud({
         return data.data as WalletPermission[]
     },
     create: async (data: WalletPermission) => {
-        console.log("create", data)
         const response = await fetch("http://localhost:3000/api/v1/settings/create", {
             method: "POST",
             headers: {
@@ -119,8 +118,6 @@ export const permissionsMapLegend = observable(syncedCrud({
         await response.json()
     },
     update: async (data: WalletPermission) => {
-        console.log("update", data)
-
         const response = await fetch("http://localhost:3000/api/v1/settings/update", {
             method: "PUT",
             headers: {
@@ -138,7 +135,6 @@ export const permissionsMapLegend = observable(syncedCrud({
         }, 5000);
     },
     delete: async ({id}) => {
-        console.log("delete", id)
         const response = await fetch(`http://localhost:3000/api/v1/settings/delete/${id}`, {
             method: "DELETE",
         })
@@ -148,44 +144,6 @@ export const permissionsMapLegend = observable(syncedCrud({
         plugin: ObservablePersistLocalStorage,
         name: 'config-legend',
         retrySync: true // Retry sync after reload
-    },
-    onSaved: ({input}: {input: WalletPermission}) => {
-        console.log("On saved", input)
-        const appPermissions = getAppPermissions(input.invoker)
-        console.log("App permissions", appPermissions)
-        
-        const oldPermission = appPermissions[input.parentCapability];
-
-        console.log("Old permission", oldPermission)
-        if (oldPermission) {
-            const differences = {
-                id: oldPermission.id !== input.id,
-                invoker: oldPermission.invoker !== input.invoker,
-                parentCapability: oldPermission.parentCapability !== input.parentCapability,
-                caveats: JSON.stringify(oldPermission.caveats) !== JSON.stringify(input.caveats),
-                date: oldPermission.date !== input.date,
-            };
-            
-            const changedFields = Object.entries(differences)
-                .filter(([_, changed]) => changed)
-                .map(([field]) => field);
-                
-            console.log("Changed fields", changedFields)
-            if (changedFields.length > 0) {
-                console.log('Permission fields changed:', changedFields);
-                appPermissions[input.parentCapability] = input
-                setAppPermissions(input.invoker, appPermissions)
-            } else {
-                console.log("No changes to permission")
-            }
-        } else {
-            console.log("No old permission found")
-            console.log("Adding new permission")
-            appPermissions[input.parentCapability] = input
-            setAppPermissions(input.invoker, appPermissions)
-        }
-
-       
     },
     initial: {},
     fieldCreatedAt: 'created_at',
@@ -219,12 +177,12 @@ export function getAppPermissionsPure(
     const appPermissions = permissions.filter((p) => p.invoker === app && p.user === user.address)
 
     if (appPermissions.length > 0) {
-        return appPermissions.reduce((acc, p) => {
+        const appPermissionsObject = appPermissions.reduce((acc, p) => {
             acc[p.parentCapability] = p
             return acc
         }, {} as AppPermissions)
+        return appPermissionsObject
     }
-
     if (app === getWalletURL()) {
         // Permissions don't exist, create them.
         // The iframe is always granted the `eth_accounts` permission.
@@ -265,7 +223,6 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
     }
 
     const permissionArray = Object.values(appPermissions)
-
     if (!permissionArray.length) {
         clearAppPermissions(app)
         return
@@ -276,6 +233,12 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
         // This should never happen!
         console.warn("Invalid permission update requested, not setting permissions.")
         return
+    }
+
+    const currentPermissions = getAppPermissions(app) 
+
+    for (const permission of Object.values(currentPermissions)) {
+        permissionsMapLegend[permission.id].delete()
     }
 
     for (const permission of permissionArray) {
@@ -308,7 +271,6 @@ export function clearPermissions(): void {
 export function clearAppPermissions(app: AppURL): void {
     const user = getUser()
     if (!user) return
-
     // Register session keys for onchain deregistrations.
     Object.values(getAppPermissions(app))
         .filter((p: WalletPermission) => p.parentCapability === PermissionName.SessionKey)
@@ -453,7 +415,6 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  */
 export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRequest): void {
     const appPermissions = getAppPermissions(app)
-
     for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
         // Permission is not granted, nothing to do.
         if (!appPermissions[name]) continue
