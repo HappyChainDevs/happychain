@@ -88,7 +88,7 @@ export function useTurnstile<Lazy extends boolean>({
     }, [])
 
     const { promise, resolve, reject } = promiseWithResolvers<string>()
-    const lastPromise = useRef<Promise<string>>()
+    const lastPromise = useRef<Promise<string>>(null)
     if (!lastPromise.current) lastPromise.current = promise
 
     const render = useCallback(() => {
