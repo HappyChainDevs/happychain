@@ -36,7 +36,7 @@ jobs:
         with:
           payload: |
             {
-              "channel": "#alerts",
+              "channel": "C08JMNRJNR1",
               "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/${{ github.run_id }}|View Logs>"
             }
         env:
