@@ -32,8 +32,10 @@ jobs:
         run: exit 1
       - name: Send failure to Slack
         if: failure() # Only on failure
-        uses: slackapi/slack-github-action@v1.26.0
+        uses: slackapi/slack-github-action@v2.1.0
         with:
-            payload: '{"channel":"C08JMNRJNR1","text":"❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"}'
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_WORKFLOW_BOT_TOKEN }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_WORKFLOW_BOT_TOKEN }}
+          payload: |
+            "channel": "C08JMNRJNR1",
+            "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/${{ github.run_id }}|View Logs>"
