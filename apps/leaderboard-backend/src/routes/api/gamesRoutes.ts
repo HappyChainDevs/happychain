@@ -56,7 +56,7 @@ export default new Hono()
             const { id } = c.req.valid("param")
             const { gameRepo } = c.get("repos")
 
-            const gameId = Number.parseInt(id, 10) as GameTableId
+            const gameId = id as GameTableId
             const game = await gameRepo.findById(gameId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
@@ -153,7 +153,7 @@ export default new Hono()
                 const { gameRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
+                const gameId = id as GameTableId
                 const game = await gameRepo.findById(gameId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
@@ -197,7 +197,7 @@ export default new Hono()
                 const { gameRepo, userRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
+                const gameId = id as GameTableId
                 const game = await gameRepo.findById(gameId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
@@ -233,7 +233,7 @@ export default new Hono()
             const { gameRepo } = c.get("repos")
 
             // Check if game exists
-            const gameId = Number.parseInt(id, 10) as GameTableId
+            const gameId = id as GameTableId
             const game = await gameRepo.findById(gameId)
             if (!game) {
                 return c.json({ ok: false, error: "Game not found" }, 404)
@@ -264,7 +264,7 @@ export default new Hono()
                 const { gameRepo, userRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
+                const gameId = id as GameTableId
                 const game = await gameRepo.findById(gameId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)

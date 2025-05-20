@@ -117,7 +117,7 @@ export const UserWalletRequestSchema = z
 
 export const UserIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        id: z.string().transform((val) => Number.parseInt(val)),
     })
     .strict()
     .openapi({

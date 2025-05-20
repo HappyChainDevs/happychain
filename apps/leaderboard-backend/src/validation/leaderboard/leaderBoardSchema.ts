@@ -96,9 +96,8 @@ export const LeaderboardLimitQuerySchema = z.object({
         .string()
         .transform((val) => Number.parseInt(val))
         .default("50"),
-    // regex(/^\d+$/, { message: "Must be a positive integer string" }).default("50"),
 })
 
 export const LeaderboardGameIdParamSchema = z.object({
-    id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+    id: z.string().transform((val) => Number.parseInt(val)),
 })

@@ -141,7 +141,7 @@ export const GameScoresQuerySchema = z
 
 export const GameIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        id: z.string().transform((val) => Number.parseInt(val)),
     })
     .strict()
     .openapi({
@@ -150,7 +150,7 @@ export const GameIdParamSchema = z
 
 export const AdminIdParamSchema = z
     .object({
-        admin_id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        admin_id: z.string().transform((val) => Number.parseInt(val)),
     })
     .strict()
     .openapi({

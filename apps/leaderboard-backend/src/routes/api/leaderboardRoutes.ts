@@ -24,7 +24,7 @@ export default new Hono()
             const { limit } = c.req.valid("query")
             const { leaderboardRepo } = c.get("repos")
 
-            const leaderboard = await leaderboardRepo.getGlobalLeaderboard(Number.parseInt(limit, 10))
+            const leaderboard = await leaderboardRepo.getGlobalLeaderboard(limit)
             return c.json({
                 ok: true,
                 data: leaderboard,
@@ -44,7 +44,7 @@ export default new Hono()
             const { limit } = c.req.valid("query")
             const { leaderboardRepo } = c.get("repos")
 
-            const leaderboard = await leaderboardRepo.getGuildLeaderboard(Number.parseInt(limit, 10))
+            const leaderboard = await leaderboardRepo.getGuildLeaderboard(limit)
             return c.json({
                 ok: true,
                 data: leaderboard,
@@ -71,13 +71,13 @@ export default new Hono()
                 const { leaderboardRepo, gameRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
+                const gameId = id as GameTableId
                 const game = await gameRepo.findById(gameId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
                 }
 
-                const leaderboard = await leaderboardRepo.getGameLeaderboard(gameId, Number.parseInt(limit, 10))
+                const leaderboard = await leaderboardRepo.getGameLeaderboard(gameId, limit)
                 return c.json({
                     ok: true,
                     data: leaderboard,
@@ -105,13 +105,13 @@ export default new Hono()
                 const { leaderboardRepo, gameRepo } = c.get("repos")
 
                 // Check if game exists
-                const gameId = Number.parseInt(id, 10) as GameTableId
+                const gameId = id as GameTableId
                 const game = await gameRepo.findById(gameId)
                 if (!game) {
                     return c.json({ ok: false, error: "Game not found" }, 404)
                 }
 
-                const leaderboard = await leaderboardRepo.getGameGuildLeaderboard(gameId, Number.parseInt(limit, 10))
+                const leaderboard = await leaderboardRepo.getGameGuildLeaderboard(gameId, limit)
                 return c.json({
                     ok: true,
                     data: leaderboard,

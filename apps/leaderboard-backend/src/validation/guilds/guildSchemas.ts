@@ -141,7 +141,7 @@ export const GuildMemberUpdateRequestSchema = z
 
 export const GuildIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        id: z.string().transform((val) => Number.parseInt(val)),
     })
     .strict()
     .openapi({
@@ -152,7 +152,7 @@ export const GuildIdParamSchema = z
 
 export const GuildMemberIdParamSchema = z
     .object({
-        member_id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        member_id: z.string().transform((val) => Number.parseInt(val)),
     })
     .strict()
     .openapi({
