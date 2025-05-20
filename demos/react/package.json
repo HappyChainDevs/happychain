@@ -6,15 +6,15 @@
     "dependencies": {
         "@happy.tech/react": "workspace:0.2.1",
         "@phosphor-icons/react": "^2.1.7",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
         "sonner": "^1.7.2",
         "viem": "^2.21.53"
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
-        "@types/react": "^18.3.4",
-        "@types/react-dom": "^18.3.0",
+        "@types/react": "^19.1.4",
+        "@types/react-dom": "^19.1.5",
         "@vitejs/plugin-react-swc": "^3.7.0",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",

@@ -1,6 +1,6 @@
 import type { BadgeProps } from "@happy.tech/core"
 export type { BadgeProps }
-declare global {
+declare module "react" {
     // biome-ignore lint/style/noNamespace:
     namespace JSX {
         interface IntrinsicElements {
