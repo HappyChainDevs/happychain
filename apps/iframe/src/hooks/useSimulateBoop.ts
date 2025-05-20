@@ -44,19 +44,24 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
           } satisfies ValidRpcTransactionRequest)
         : undefined
 
-    const jsonTx = useMemo(() => JSON.stringify(tx), [tx])
+    const jsonTxQueryKey = useMemo(() => ["simulate-boop", JSON.stringify(tx)], [tx])
 
     const {
         data,
         error,
         isPending: isSimulatePending,
     } = useQuery({
-        queryKey: [jsonTx],
+        queryKey: jsonTxQueryKey,
         enabled: !!userAddress && enabled,
         queryFn: async () => {
             const boop = await boopFromTransaction(userAddress!, filledTx!)
             return await boopClient.simulate({ entryPoint, boop })
         },
+        // the refetches are only performed if the window is in focus, 
+        // else it's a constant stream of requests
+        refetchInterval: 2000,
+        refetchIntervalInBackground: false,
+        refetchOnWindowFocus: true,
     })
 
     return {
