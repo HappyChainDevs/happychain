@@ -57,7 +57,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
             const boop = await boopFromTransaction(userAddress!, filledTx!)
             return await boopClient.simulate({ entryPoint, boop })
         },
-        // the refetches are only performed if the window is in focus, 
+        // the refetches are only performed if the window is in focus,
         // else it's a constant stream of requests
         refetchInterval: 2000,
         refetchIntervalInBackground: false,
