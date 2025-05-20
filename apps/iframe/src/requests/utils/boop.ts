@@ -190,7 +190,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
     // TODO bigint casts need validation
 
     return {
-        account: tx.from,
+        account: tx.from ?? account, // Use provided account if tx.from is not available
         dest: tx.to,
         payer: zeroAddress, // happyPaymaster, // TODO need to fund paymaster
         value: tx.value ? BigInt(tx.value) : 0n,
