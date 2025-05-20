@@ -34,8 +34,8 @@ export function headerCouldContainBoop(block: Block): boolean {
     if (!bloom || bloom === ZERO_BLOOM) return false
 
     // all three conditions must be *possible* in the bloom
-      console.log("isInBloom--entrypoint", isInBloom(bloom, ENTRY_POINT))
-      console.log("isInBloom--startedSig", isInBloom(bloom, STARTED_SIG))
-      console.log("isInBloom--submittedSig", isInBloom(bloom, SUBMITTED_SIG))
+    //   console.log("isInBloom--entrypoint", isInBloom(bloom, ENTRY_POINT))
+    //   console.log("isInBloom--startedSig", isInBloom(bloom, STARTED_SIG))
+    //   console.log("isInBloom--submittedSig", isInBloom(bloom, SUBMITTED_SIG))
     return isInBloom(bloom, ENTRY_POINT) && isInBloom(bloom, STARTED_SIG) && isInBloom(bloom, SUBMITTED_SIG)
 }
