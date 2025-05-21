@@ -7,7 +7,6 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
     const salt = "0x1"
     try {
         const boopClient = getBoopClient()
-        if (!boopClient) throw new Error("Boop client not initialized")
         const result = await boopClient.createAccount({
             // already verifies if the account is created under the hood
             owner,

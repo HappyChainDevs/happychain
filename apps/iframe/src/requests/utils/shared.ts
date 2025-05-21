@@ -37,7 +37,6 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
 
     try {
         const boopClient = getBoopClient()
-        if (!boopClient) throw new Error("Boop client not initialized")
         const output = await boopClient.getState({ boopHash: hash })
         if (output.status === GetState.Receipt) {
             const receipt = output.receipt
@@ -78,7 +77,6 @@ export async function getTransactionReceipt(hash: Hash): Promise<TransactionRece
 
     try {
         const boopClient = getBoopClient()
-        if (!boopClient) throw new Error("Boop client not initialized")
         const state = await boopClient.getState({ boopHash: hash })
         if (state.status !== GetState.Receipt) {
             // If the boop is unknown: this might be a tx hash instead, signal caller to forward to the public client.
@@ -128,7 +126,6 @@ export async function eth_estimateGas(
 
     try {
         const boopClient = getBoopClient()
-        if (!boopClient) throw new Error("Boop client not initialized")
 
         // boopFromTransaction already handles both legacy and EIP-1559 transactions
         // by converting gasPrice to maxFeePerGas when needed
