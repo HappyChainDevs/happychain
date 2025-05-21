@@ -29,7 +29,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
             return await sendBoop({
                 account: user.address,
                 tx,
-                simulatedBoopData: request.payload.extraData,
+                simulation: request.payload.extraData,
                 signer: eoaSigner,
             })
         }

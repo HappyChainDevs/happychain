@@ -91,13 +91,13 @@ export type SendBoopArgs = {
     account: Address
     tx: ValidRpcTransactionRequest
     signer: (data: Hex) => Promise<Hex>
-    simulatedBoopData?: SimulateOutput
+    simulation?: SimulateSuccess
     isSponsored?: boolean
     nonceTrack?: bigint
 }
 
 export async function sendBoop(
-    { account, tx, simulatedBoopData, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
+    { account, tx, simulation: sim, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
     retry = 0, // TODO: set to 1?
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
@@ -108,10 +108,12 @@ export async function sendBoop(
         if (!boopClient) throw new Error("Boop client not initialized")
         const boop = await boopFromTransaction(account, tx)
 
+        let simulation = sim
         if (!isSponsored) {
-            const output = simulatedBoopData ?? (await boopClient.simulate({ entryPoint, boop }))
+            const output = simulation ?? (await boopClient.simulate({ entryPoint, boop }))
             reqLogger.trace("boop/simulate output", output)
             if (output.status !== Onchain.Success) throw translateBoopError(output)
+            simulation = output
 
             boop.gasLimit = output.gas
             boop.validateGasLimit = output.validateGas
@@ -120,6 +122,11 @@ export async function sendBoop(
             boop.maxFeePerGas = output.maxFeePerGas
             boop.submitterFee = output.submitterFee
         }
+
+        if (simulation?.feeTooLowDuringSimulation && boop.maxFeePerGas)
+            throw new EIP1474InvalidInput(
+                `Specified gas price (${boop.maxFeePerGas} wei/gas) was too low at simulation time.`,
+            )
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         boopCache.putBoop(boopHash, boop)
