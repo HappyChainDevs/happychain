@@ -9,7 +9,7 @@ import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepol
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
-import { stringify } from "../../../support/common/lib/utils/string"
+import { stringify } from "@happy.tech/common"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
