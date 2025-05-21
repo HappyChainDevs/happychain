@@ -43,14 +43,14 @@ export class ReceiptService {
     #currentBlockWatcherRetryAttempt = 0
 
     // getTransactionReceipt retry configuration
-    #receiptRetryAttempts = 5; // Max number of retries for getTransactionReceipt
-    #receiptInitialRetryDelayMs = 500; // Initial delay for receipt fetch in ms (0.5 seconds)
-    #receiptMaxRetryDelayMs = 10000; // Max delay for receipt fetch in ms (10 seconds)
+    #receiptRetryAttempts = 5 // Max number of retries for getTransactionReceipt
+    #receiptInitialRetryDelayMs = 500 // Initial delay for receipt fetch in ms (0.5 seconds)
+    #receiptMaxRetryDelayMs = 10000 // Max delay for receipt fetch in ms (10 seconds)
 
     constructor() {
         this.#startBlockWatcher()
     }
-    
+
     #startBlockWatcher() {
         if (this.#unwatch) {
             // If already watching, stop it first to prevent multiple watchers
@@ -62,7 +62,7 @@ export class ReceiptService {
             this.#unwatch = publicClient.watchBlocks({
                 includeTransactions: false,
                 onBlock: (blockHeader) => {
-                    this.#currentBlockWatcherRetryAttempt = 0; // Reset retry counter on successful block processing
+                    this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful block processing
                     void this.#onNewHead(blockHeader)
                 },
                 pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
@@ -73,7 +73,7 @@ export class ReceiptService {
                 emitMissed: true,
             })
             logger.info("Block watcher started successfully.")
-            this.#currentBlockWatcherRetryAttempt = 0; // Reset retry counter on successful start
+            this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful start
         } catch (e) {
             logger.error("Error starting block watcher initially", e)
             this.#handleBlockWatcherError(e)
@@ -85,17 +85,14 @@ export class ReceiptService {
             this.#currentBlockWatcherRetryAttempt++
             const delay = Math.min(
                 this.#blockWatcherInitialRetryDelayMs * (2 ** this.#currentBlockWatcherRetryAttempt - 1),
-                this.#blockWatcherMaxRetryDelayMs
+                this.#blockWatcherMaxRetryDelayMs,
             )
             logger.warn(
-                `Retrying block watcher in ${delay / 1000} seconds (Attempt ${this.#currentBlockWatcherRetryAttempt}/${this.#blockWatcherRetryAttempts})`
+                `Retrying block watcher in ${delay / 1000} seconds (Attempt ${this.#currentBlockWatcherRetryAttempt}/${this.#blockWatcherRetryAttempts})`,
             )
             setTimeout(() => this.#startBlockWatcher(), delay)
         } else {
-            logger.error(
-                "Max retry attempts reached for block watcher. Unable to restart block watcher.",
-                error
-            )
+            logger.error("Max retry attempts reached for block watcher. Unable to restart block watcher.", error)
             throw new Error("Max retry attempts reached for block watcher")
         }
     }
@@ -106,30 +103,32 @@ export class ReceiptService {
         timeout = env.RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
         let boop: Boop | undefined
-        
+
         // 1. fast‑path → already have receipt in DB?
         try {
             const result = await dbService.findReceiptOrBoop(boopHash)
             if (result.receipt) {
-                return { status: WaitForReceipt.Success, receipt: result.receipt };
+                return { status: WaitForReceipt.Success, receipt: result.receipt }
             }
             if (!result.boop) {
-                return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." };
+                return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
             }
-            boop = result.boop;
+            boop = result.boop
         } catch (dbError) {
             logger.error("Error while looking up boop receipt", boopHash, dbError)
-            return { status: SubmitterError.UnexpectedError, description: `Failed to query database for boop status: ${String(dbError)}`}
+            return {
+                status: SubmitterError.UnexpectedError,
+                description: `Failed to query database for boop status: ${String(dbError)}`,
+            }
         }
-
 
         // 2. book (or re‑use) a shared subscription object
         const sub = getOrSet(this.#pendingBoops, boopHash, () => ({
             pwr: promiseWithResolvers<WaitForReceiptOutput>(),
-            count: 0
+            count: 0,
         }))
         // Increment count regardless of whether it's a new or existing subscription
-        sub.count += 1;
+        sub.count += 1
 
         // 3. if caller gave a txHash, link it to pending‑hashes map
         if (txHash) {
@@ -157,8 +156,9 @@ export class ReceiptService {
                 if (pend && pend.sub === sub) {
                     // biome-ignore lint/performance/noDelete: <explanation>
                     delete pend.sub
-                    if (!Object.keys(pend).length || !pend.sub) { // If no other properties or sub is gone
-                        this.#pendingEvmTxs.delete(txHash);
+                    if (!Object.keys(pend).length || !pend.sub) {
+                        // If no other properties or sub is gone
+                        this.#pendingEvmTxs.delete(txHash)
                     }
                 }
             }
@@ -179,44 +179,44 @@ export class ReceiptService {
             logger.warn("block‑watcher error", e)
         }
     }
-    
-    async #handleTransactionInBlock(
-        txHash: Hash,
-        boop: Boop,
-        sub: PendingBoopInfo
-    ): Promise<void> {
-        let currentAttempt = 0;
-        let delay = this.#receiptInitialRetryDelayMs;
+
+    async #handleTransactionInBlock(txHash: Hash, boop: Boop, sub: PendingBoopInfo): Promise<void> {
+        let currentAttempt = 0
+        let delay = this.#receiptInitialRetryDelayMs
 
         while (currentAttempt < this.#receiptRetryAttempts) {
             try {
-                const r = await publicClient.getTransactionReceipt({ hash: txHash });
-                const out = await this.#getReceiptResult(boop, r);
+                const r = await publicClient.getTransactionReceipt({ hash: txHash })
+                const out = await this.#getReceiptResult(boop, r)
 
                 // Success: Resolve the single subscription and clean up
-                sub.pwr.resolve(out);
-                this.#pendingEvmTxs.delete(txHash);
-                return; // Exit on success
+                sub.pwr.resolve(out)
+                this.#pendingEvmTxs.delete(txHash)
+                return // Exit on success
             } catch (e) {
                 // Determine if the error is retryable
-                const isRetryableError = e && typeof e === 'object' && 'name' in e && e.name === 'TransactionReceiptNotFoundError';
+                const isRetryableError =
+                    e && typeof e === "object" && "name" in e && e.name === "TransactionReceiptNotFoundError"
 
-                currentAttempt++;
+                currentAttempt++
                 if (currentAttempt < this.#receiptRetryAttempts) {
                     logger.warn(
                         `Failed to fetch receipt for ${txHash} (attempt ${currentAttempt}/${this.#receiptRetryAttempts}). ` +
-                        `Error: ${isRetryableError ? 'TransactionReceiptNotFoundError' : String(e)}. Retrying in ${delay / 1000}s...`
-                    );
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay = Math.min(delay * 2, this.#receiptMaxRetryDelayMs); // Exponential backoff
+                            `Error: ${isRetryableError ? "TransactionReceiptNotFoundError" : String(e)}. Retrying in ${delay / 1000}s...`,
+                    )
+                    await new Promise((resolve) => setTimeout(resolve, delay))
+                    delay = Math.min(delay * 2, this.#receiptMaxRetryDelayMs) // Exponential backoff
                 } else {
                     // Max attempts reached, resolve with error and clean up
                     logger.error(
-                        `Max retry attempts reached for receipt ${txHash}. Could not get receipt. Final error: ${String(e)}`
-                    );
-                    sub.pwr.resolve({ status: SubmitterError.ReceiptTimeout, description: "Transaction receipt could not be fetched after multiple retries." });
-                    this.#pendingEvmTxs.delete(txHash);
-                    return; // Exit the function after max retries
+                        `Max retry attempts reached for receipt ${txHash}. Could not get receipt. Final error: ${String(e)}`,
+                    )
+                    sub.pwr.resolve({
+                        status: SubmitterError.ReceiptTimeout,
+                        description: "Transaction receipt could not be fetched after multiple retries.",
+                    })
+                    this.#pendingEvmTxs.delete(txHash)
+                    return // Exit the function after max retries
                 }
             }
         }
