@@ -73,7 +73,7 @@ export async function submitInternal(
                 boop = updateBoopFromSimulation(boop, simulation)
                 await dbService.saveBoop(entryPoint, boop)
             } else {
-                // TODO hint/sync that the current nonce is the one from this boop
+                boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue)
             }
 
             const account = findExecutionAccount(input.boop)

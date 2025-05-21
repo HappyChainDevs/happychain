@@ -48,6 +48,35 @@ export class BoopNonceManager {
         })
     }
 
+    /**
+     * Used to set the nonce after a simulation succeds without indicating a future nonce.
+     * This will only increase the nonce, never decrease it as we might already have submitted
+     * (in case of a replacement boop).
+     *
+     * TODO think more about user-initiated replacement and their consequences
+     */
+    hintNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
+        const currentNonce = this.#nonces.get(account, nonceTrack)
+        if (currentNonce && nonceValue > currentNonce) {
+            this.#nonces.set(account, nonceTrack, nonceValue)
+            setTimeout(() => this.#pruneNonce(account, nonceTrack), env.MAX_SUBMIT_PENDING_TIME)
+        }
+    }
+
+    /**
+     * Removes a nonce binding for an (account, nonceTrack) pair if it is safe to do so (no more blocked
+     * boops for the pair). If a nonceValue is provided, unconditionally removes the boop blocked on it.
+     */
+    #pruneNonce(account: Address, nonceTrack: NonceTrack, nonceValue?: NonceValue) {
+        const track = this.#pendingBoopsMap.get(account, nonceTrack)
+        if (track && nonceValue) track.delete(nonceValue)
+        if (track?.size === 0) {
+            this.#pendingBoopsMap.delete(account, nonceTrack)
+            this.#nonces.delete(account, nonceTrack)
+            this.#nonceMutexes.delete(account, nonceTrack)
+        }
+    }
+
     async waitUntilUnblocked(entryPoint: Address, boop: Boop): Promise<undefined | SubmitError> {
         const { account, nonceTrack, nonceValue } = boop
         const localNonce = await this.#getLocalNonce(entryPoint, account, nonceTrack)
@@ -76,7 +105,7 @@ export class BoopNonceManager {
         const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
         const timeout = setTimeout(() => {
             logger.trace("Timed out while waiting to process pending boop", boopHash)
-            this.#removeNonce(account, nonceTrack, nonceValue)
+            this.#pruneNonce(account, nonceTrack, nonceValue)
             resolve(this.#makeSubmitError(SubmitterError.SubmitTimeout))
         }, env.MAX_SUBMIT_PENDING_TIME)
 
@@ -86,7 +115,7 @@ export class BoopNonceManager {
                 boopHash,
                 resolve: (response: undefined | SubmitError) => {
                     clearTimeout(timeout)
-                    this.#removeNonce(account, nonceTrack, nonceValue)
+                    this.#pruneNonce(account, nonceTrack, nonceValue)
                     resolve(response)
                 },
             })
@@ -95,15 +124,6 @@ export class BoopNonceManager {
         return await promise
     }
 
-    #removeNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue) {
-        const track = this.#pendingBoopsMap.get(account, nonceTrack)
-        track?.delete(nonceValue)
-        if (track?.size === 0) {
-            this.#pendingBoopsMap.delete(account, nonceTrack)
-            this.#nonces.delete(account, nonceTrack)
-            this.#nonceMutexes.delete(account, nonceTrack)
-        }
-    }
     #makeSubmitError(status: SubmitterErrorStatus): SubmitError {
         let description = ""
         switch (status) {
@@ -167,8 +187,8 @@ export class BoopNonceManager {
     }
 
     /**
-     * Forces a refetch of the onchain nonce
-     * Resets the local nonce so that the next call to getLocalNonce will fetch the onchain nonce.
+     * Refetches the onchain nonce, and if it has run ahead of the local nonce, updates to that value (making sure
+     * to invalidate all blocked boops in the process). Called whenever we detect a nonce too low during simulation.
      */
     async resyncNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<void> {
         // No boop pending on the track, so no local nonce managed, no point to resync.
@@ -191,7 +211,7 @@ export class BoopNonceManager {
                 if (nonceValue <= localNonce) continue
                 if (nonceValue >= onchainNonce) break
                 pendingBoop.resolve(this.#makeSubmitError(SubmitterError.ExternalSubmit))
-                this.#removeNonce(account, nonceTrack, nonceValue)
+                this.#pruneNonce(account, nonceTrack, nonceValue)
             }
         }
     }
