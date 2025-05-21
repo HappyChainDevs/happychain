@@ -123,48 +123,11 @@ export async function eth_estimateGas(
 ): Promise<Hex | Forward> {
     const account = user?.address ?? tx.from
     if (!account || account !== tx.from) return FORWARD
-
-    try {
-        const boopClient = getBoopClient()
-
-        // boopFromTransaction already handles both legacy and EIP-1559 transactions
-        // by converting gasPrice to maxFeePerGas when needed
-        const boop = await boopFromTransaction(account, tx)
-        const output = await boopClient.simulate({ entryPoint, boop })
-
-        if (output.status !== Onchain.Success) {
-            // Provide more detailed error information based on simulation output
-            const errorMsg =
-                "description" in output && output.description
-                    ? output.description
-                    : "Simulation failed with unknown reason"
-            reqLogger.warn("Gas estimation simulation failed", { tx, error: errorMsg, status: output.status })
-            throw new EIP1474InternalError(`Gas estimation failed: ${errorMsg}`)
-        }
-
-        // Return the gas estimate, which already accounts for the appropriate transaction type
-        return toHex(output.executeGas)
-    } catch (error) {
-        // Catch and log any errors during the estimation process
-        reqLogger.error("Gas estimation error", error)
-
-        if (error instanceof Error) {
-            // If it's a Viem error with a code property, rethrow it
-            if ("code" in error && typeof error.code !== "undefined") {
-                throw error
-            }
-
-            // Otherwise, wrap in EIP1474InternalError with the original error message
-            throw new EIP1474InternalError(
-                `Failed to estimate gas: ${error.message}`,
-                { cause: error }, // Unimplemented
-            )
-        }
-
-        // For non-Error objects, create a new error
-        throw new EIP1474InternalError(
-            "Failed to estimate gas: unknown error",
-            { cause: error }, // Unimplemented
-        )
-    }
+    const boopClient = getBoopClient()
+    // This handles both legacy and EIP-1559 transactions.
+    const boop = await boopFromTransaction(account, tx)
+    const output = await boopClient.simulate({ entryPoint, boop })
+    if (output.status !== Onchain.Success)
+        throw new EIP1474InternalError(`Gas estimation failed: ${output.description}`)
+    return toHex(output.executeGas)
 }
