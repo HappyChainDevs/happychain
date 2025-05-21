@@ -1,4 +1,4 @@
-import type { AbiParameter } from "viem"
+import type { AbiParameter } from "abitype"
 
 interface ArgsListProps {
     args: readonly unknown[] | undefined
