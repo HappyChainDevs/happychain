@@ -14,7 +14,7 @@ export const Onchain = {
     MissingValidationInformation: "onchainMissingValidationInformation",
 
     /**
-     * The boop got rejected because the gas price was above the maxFeePerGas.
+     * The boop got rejected because the onchain gas price was above the maxFeePerGas.
      */
     GasPriceTooHigh: "onchainGasPriceTooHigh",
 

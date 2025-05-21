@@ -35,6 +35,13 @@ export async function submitInternal(
                 stage: "submit",
             }
         }
+        if (simulation.feeTooLowDuringSimulation) {
+            return {
+                status: Onchain.GasPriceTooHigh,
+                description: `The onchain gas price is higher than the specified maxFeePerGas (${boop.maxFeePerGas} wei/gas).`,
+                stage: "submit",
+            }
+        }
 
         boop = updateBoopFromSimulation(boop, simulation)
         // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path
