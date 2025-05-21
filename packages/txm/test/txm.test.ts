@@ -109,8 +109,8 @@ async function getCurrentBlock(): Promise<Block> {
     })
 }
 
-async function createCounterTransaction(deadline?: number): Promise<Transaction> {
-    return await txm.createTransaction({
+function createCounterTransaction(deadline?: number): Transaction {
+    return txm.createTransaction({
         address: deployment.HappyCounter,
         functionName: "increment",
         contractName: "HappyCounter",
@@ -195,7 +195,7 @@ test("NewBlock hook works correctly", async () => {
 test("onTransactionStatusChanged hook works correctly", async () => {
     let hookTriggered = false
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -225,7 +225,7 @@ test("TransactionSubmissionFailed hook works correctly", async () => {
 
     proxyServer.addBehavior(ProxyBehavior.Fail)
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -269,7 +269,7 @@ test("TransactionSaveFailed hook works correctly", async () => {
 
     methodSpy.mockResolvedValue(err(new Error("Test error")))
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -288,7 +288,7 @@ test("TransactionSaveFailed hook works correctly", async () => {
 test("Simple transaction executed", async () => {
     const previousCount = await getCurrentCounterValue()
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -329,7 +329,7 @@ test("A transaction created using calldata is executed correctly", async () => {
         args: [],
     })
 
-    const transaction = await txm.createTransaction({
+    const transaction = txm.createTransaction({
         address: deployment.HappyCounter,
         calldata,
     })
@@ -364,7 +364,7 @@ test("A transaction created using calldata is executed correctly", async () => {
 test("Transaction retried", async () => {
     const previousCount = await getCurrentCounterValue()
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
@@ -424,7 +424,7 @@ test("Transaction retried", async () => {
 test("Transaction failed", async () => {
     const previousCount = await getCurrentCounterValue()
 
-    const transaction = await txm.createTransaction({
+    const transaction = txm.createTransaction({
         address: deployment.MockRevert,
         functionName: "intentionalRevert",
         contractName: "MockRevert",
@@ -477,7 +477,7 @@ test("Transaction failed", async () => {
 test("Transaction failed for out of gas", async () => {
     const previousCount = await getCurrentCounterValue()
 
-    const transaction = await txm.createTransaction({
+    const transaction = txm.createTransaction({
         address: deployment.MockRevert,
         functionName: "intentionalRevertDueToGasLimit",
         contractName: "MockRevert",
@@ -523,7 +523,7 @@ test("Transaction failed for out of gas", async () => {
 
 test("Use transaction.waitForFinalization() to wait for a transaction to be finalized", async () => {
     let promiseResolved = false
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transaction.waitForFinalization().then((result) => {
         if (result.isErr()) {
@@ -540,10 +540,22 @@ test("Use transaction.waitForFinalization() to wait for a transaction to be fina
     expect(promiseResolved).toBe(true)
 })
 
+test("Use transaction.waitForFinalization() to wait for a transaction to be finalized with a timeout", async () => {
+    const transaction = createCounterTransaction()
+
+    const timeStart = Date.now()
+    const timeout = 1000
+    const result = await transaction.waitForFinalization(timeout)
+    const timeEnd = Date.now()
+
+    expect(result.isErr()).toBe(true)
+    expect(timeEnd - timeStart).toBeLessThan(timeout + 250)
+})
+
 test("Use transaction.on() to register a callback which is triggered when the transaction changes to a specific status", async () => {
     let promiseResolved = false
 
-    const transaction = await txm.createTransaction({
+    const transaction = txm.createTransaction({
         address: deployment.MockRevert,
         functionName: "intentionalRevert",
         contractName: "MockRevert",
@@ -573,7 +585,7 @@ test("Transaction cancelled due to deadline passing", async () => {
 
     const deadline = Math.round(Date.now() / 1000 + 2)
 
-    const transaction = await createCounterTransaction(deadline)
+    const transaction = createCounterTransaction(deadline)
 
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
@@ -652,7 +664,7 @@ test("Transaction cancelled due to deadline passing", async () => {
 
 test("Execute a transaction with value", async () => {
     const value = BigInt(1000)
-    const transactionToSend = await txm.createTransaction({
+    const transactionToSend = txm.createTransaction({
         address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         calldata: "0x",
         value,
@@ -712,7 +724,7 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
         hash: transactionBurnerExecuted.attempts[0].hash,
     })
 
-    const incrementerTransaction = await createCounterTransaction()
+    const incrementerTransaction = createCounterTransaction()
 
     transactionQueue.push(incrementerTransaction)
 
@@ -866,7 +878,7 @@ test("Transaction manager successfully processes transactions despite random RPC
     const emittedTransactions: Transaction[] = []
     const numTransactions = 5
     for (let i = 0; i < numTransactions; i++) {
-        const transaction = await createCounterTransaction()
+        const transaction = createCounterTransaction()
         transactionQueue.push(transaction)
         emittedTransactions.push(transaction)
 
@@ -911,7 +923,7 @@ test("Transaction succeeds in congested blocks", async () => {
 
     await sendBurnGasTransactionWithSecondWallet(2)
 
-    const incrementerTransaction = await createCounterTransaction()
+    const incrementerTransaction = createCounterTransaction()
 
     transactionQueue.push(incrementerTransaction)
 
@@ -966,7 +978,7 @@ test("Finalized transactions are automatically purged from db after finalizedTra
         configurable: true,
     })
 
-    const transaction = await createCounterTransaction()
+    const transaction = createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -1006,7 +1018,7 @@ test("RPC liveness monitor works correctly", async () => {
     proxyServer.setMode(ProxyMode.Deterministic)
 
     while (!txm.rpcLivenessMonitor.isAlive) {
-        const transaction = await createCounterTransaction()
+        const transaction = createCounterTransaction()
 
         transactionQueue.push(transaction)
 
@@ -1033,7 +1045,7 @@ test("RPC liveness monitor works correctly", async () => {
     expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
 
     while (txm.rpcLivenessMonitor.isAlive) {
-        const transaction = await createCounterTransaction()
+        const transaction = createCounterTransaction()
 
         transactionQueue.push(transaction)
 
@@ -1046,7 +1058,7 @@ test("RPC liveness monitor works correctly", async () => {
     proxyServer.setMode(ProxyMode.Deterministic)
 
     while (!txm.rpcLivenessMonitor.isAlive) {
-        const transaction = await createCounterTransaction()
+        const transaction = createCounterTransaction()
 
         transactionQueue.push(transaction)
 
