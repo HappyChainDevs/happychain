@@ -191,8 +191,6 @@ export function outputForRevertError(
         default: {
             // In theory, OOG is the only way the entrypoint can revert that we haven't parsed yet.
             // But we check for this explicitly in the ReceiptService, replacing this error.
-            // TODO move this log to misbehaviour.ts
-            logger.error("Got unexpected revert error", boopHash, decoded)
             return {
                 status: Onchain.UnexpectedReverted,
                 description: "The boop caused an unexpected revert.",

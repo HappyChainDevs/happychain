@@ -110,43 +110,29 @@ export class ReceiptService {
 
     async #getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
         const boopHash = computeHash(boop)
-
         if (evmTxReceipt.status === "success")
             return {
                 status: WaitForReceipt.Success,
                 receipt: this.#buildReceipt(boop, evmTxReceipt),
             }
-
         // TODO get the revertData from a log and populate here
         const decoded = decodeRawError("0x")
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
         let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
-        notePossibleMisbehaviour(boop, output)
-
         const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
-
         if (
             // detect out-of-gas
             output.status === Onchain.UnexpectedReverted &&
             simulation &&
             simulation.status === Onchain.Success &&
             evmTxReceipt.gasUsed === BigInt(simulation.gas)
-        ) {
+        )
             output = {
                 status: Onchain.EntryPointOutOfGas,
                 description:
                     "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
                     "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
             }
-
-            if (boop.payer === boop.account) {
-                logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
-                notePossibleMisbehaviour(boop, output)
-            } else {
-                logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
-            }
-        }
-
         notePossibleMisbehaviour(boop, output)
         return output
     }
