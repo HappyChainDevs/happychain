@@ -96,8 +96,8 @@ export function createMockTokenAMintBoop(
         gasLimit: 0,
         validateGasLimit: 0,
         validatePaymentGasLimit: 0,
-        executeGasLimit: 0, // 25_000_000,
-        maxFeePerGas: 1_500_000_000n,
+        executeGasLimit: 0,
+        maxFeePerGas: 0n,
         submitterFee: 0n,
 
         callData: encodeFunctionData({

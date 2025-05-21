@@ -289,6 +289,7 @@ export function formatTransaction(
 function translateBoopError(output: ExecuteOutput | SimulateOutput | GetStateOutput): HappyRpcError {
     switch (output.status) {
         case Onchain.MissingValidationInformation:
+        case Onchain.MissingGasValues:
         case Onchain.GasPriceTooHigh:
         case Onchain.InvalidNonce:
         case Onchain.ExecuteRejected:
