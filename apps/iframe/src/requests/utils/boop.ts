@@ -192,17 +192,18 @@ function safeParseSignature(validatorData?: Hex) {
     }
 }
 
+/**
+ * Translates an Ethereum transaction that has been checked with {@link
+ * checkedTx} into a boop. Supports both EIP1559 and legacy transactions.
+ */
 export async function boopFromTransaction(account: Address, tx: ValidRpcTransactionRequest): Promise<Boop> {
     return {
         account: tx.from ?? account,
         dest: tx.to,
         payer: zeroAddress, // happyPaymaster, // TODO need to fund paymaster
-        value: tx.value !== undefined ? (parseBigInt(tx.value) ?? 0n) : 0n,
+        value: parseBigInt(tx.value) ?? 0n,
         nonceTrack: 0n,
-        nonceValue:
-            tx.nonce !== undefined
-                ? (parseBigInt(tx.nonce) ?? (await getNextNonce(account)))
-                : await getNextNonce(account),
+        nonceValue: parseBigInt(tx.nonce) ?? (await getNextNonce(account)),
         callData: tx.data ?? "0x",
         validatorData: "0x", // we will fill after signing
         extraData: createValidatorExtraData(account, tx.to),
