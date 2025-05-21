@@ -1,13 +1,10 @@
 import { hexToBytes, keccak256 } from "viem"
 import type { Block, Hex } from "viem"
 import { deployment } from "#lib/env"
+import { BOOP_STARTED_SELECTOR, BOOP_SUBMITTED_SELECTOR } from "../services/ReceiptService"
 
 const BLOOM_SIZE_BYTES = 256 // fixed in protocol
 const ZERO_BLOOM = ("0x" + "0".repeat(512)) as Hex
-
-//todo: calc these
-const STARTED_SIG = "0x7919742665278276d4d5e9b0b8d8ed9eb969973cffb8bf4700ff39df91ac1ab1"
-const SUBMITTED_SIG = "0x2679a4611431daccdaea2c844ea9ba2f7427ac1ecb51d07d7ecd746a9e7a8050"
 
 const ENTRY_POINT = deployment.EntryPoint.toLowerCase() as Hex
 
@@ -34,8 +31,5 @@ export function headerCouldContainBoop(block: Block): boolean {
     if (!bloom || bloom === ZERO_BLOOM) return false
 
     // all three conditions must be *possible* in the bloom
-    //   console.log("isInBloom--entrypoint", isInBloom(bloom, ENTRY_POINT))
-    //   console.log("isInBloom--startedSig", isInBloom(bloom, STARTED_SIG))
-    //   console.log("isInBloom--submittedSig", isInBloom(bloom, SUBMITTED_SIG))
-    return isInBloom(bloom, ENTRY_POINT) && isInBloom(bloom, STARTED_SIG) && isInBloom(bloom, SUBMITTED_SIG)
+    return isInBloom(bloom, ENTRY_POINT) && isInBloom(bloom, BOOP_STARTED_SELECTOR) && isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
 }

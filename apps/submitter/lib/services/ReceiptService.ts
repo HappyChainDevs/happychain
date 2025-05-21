@@ -11,44 +11,92 @@ import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger.ts"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 
-const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
-const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
+export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
+export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
 export class ReceiptTimeout extends Error {}
 
-type Subscription = {
+type PendingBoopInfo = {
     count: number
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
-    lastSubTimestamp: number
-    evmTxHash?: Hash
 }
-
+type PendingEvmTxInfo = {
+    boop: Boop
+    sub?: PendingBoopInfo
+}
 export type WaitForInclusionArgs = {
     boopHash: Hash
     timeout?: number
     txHash?: Hash
 }
 
-type Pending = {
-    boop: Boop
-    subs: Set<Subscription>
-}
 export class ReceiptService {
-    #pendingHashes = new Map<Hash, Pending>()
-    #subscriptions = new Map<Hash, Subscription>()
+    #pendingEvmTxs = new Map</* evmTxHash: */ Hash, PendingEvmTxInfo>()
+    #pendingBoops = new Map</* boopHash: */ Hash, PendingBoopInfo>()
+
+    #unwatch: (() => void) | undefined
+
+    // Block watcher retry configuration
+    #blockWatcherRetryAttempts = 5 // Max number of retry attempts for the block watcher
+    #blockWatcherInitialRetryDelayMs = 1000 // Initial delay in ms (1 second)
+    #blockWatcherMaxRetryDelayMs = 30000 // Max delay in ms (30 seconds)
+    #currentBlockWatcherRetryAttempt = 0
+
+    // getTransactionReceipt retry configuration
+    #receiptRetryAttempts = 5; // Max number of retries for getTransactionReceipt
+    #receiptInitialRetryDelayMs = 500; // Initial delay for receipt fetch in ms (0.5 seconds)
+    #receiptMaxRetryDelayMs = 10000; // Max delay for receipt fetch in ms (10 seconds)
 
     constructor() {
-        if (publicClient.transport.type === "webSocket") {
-            publicClient.watchBlocks({
-                includeTransactions: false, // dont need the txs unless bloom filter matches
-                onBlock: (blockHeader) => this.#onNewHead(blockHeader),
-            })
-        } else {
-            publicClient.watchBlocks({
+        this.#startBlockWatcher()
+    }
+    
+    #startBlockWatcher() {
+        if (this.#unwatch) {
+            // If already watching, stop it first to prevent multiple watchers
+            this.#unwatch()
+            this.#unwatch = undefined
+        }
+
+        try {
+            this.#unwatch = publicClient.watchBlocks({
                 includeTransactions: false,
-                onBlock: (header) => this.#onNewHead(header),
-                pollingInterval: 500,
+                onBlock: (blockHeader) => {
+                    this.#currentBlockWatcherRetryAttempt = 0; // Reset retry counter on successful block processing
+                    void this.#onNewHead(blockHeader)
+                },
+                pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
+                onError: (e) => {
+                    logger.error("Error in block watcher", e)
+                    this.#handleBlockWatcherError(e)
+                },
+                emitMissed: true,
             })
+            logger.info("Block watcher started successfully.")
+            this.#currentBlockWatcherRetryAttempt = 0; // Reset retry counter on successful start
+        } catch (e) {
+            logger.error("Error starting block watcher initially", e)
+            this.#handleBlockWatcherError(e)
+        }
+    }
+
+    #handleBlockWatcherError(error: unknown) {
+        if (this.#currentBlockWatcherRetryAttempt < this.#blockWatcherRetryAttempts) {
+            this.#currentBlockWatcherRetryAttempt++
+            const delay = Math.min(
+                this.#blockWatcherInitialRetryDelayMs * (2 ** this.#currentBlockWatcherRetryAttempt - 1),
+                this.#blockWatcherMaxRetryDelayMs
+            )
+            logger.warn(
+                `Retrying block watcher in ${delay / 1000} seconds (Attempt ${this.#currentBlockWatcherRetryAttempt}/${this.#blockWatcherRetryAttempts})`
+            )
+            setTimeout(() => this.#startBlockWatcher(), delay)
+        } else {
+            logger.error(
+                "Max retry attempts reached for block watcher. Unable to restart block watcher.",
+                error
+            )
+            throw new Error("Max retry attempts reached for block watcher")
         }
     }
 
@@ -57,23 +105,36 @@ export class ReceiptService {
         txHash,
         timeout = env.RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
+        let boop: Boop | undefined
+        
         // 1. fast‑path → already have receipt in DB?
-        const { boop, receipt } = await dbService.findReceiptOrBoop(boopHash)
-        if (receipt) return { status: WaitForReceipt.Success, receipt }
-        if (!boop) return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
+        try {
+            const result = await dbService.findReceiptOrBoop(boopHash)
+            if (result.receipt) {
+                return { status: WaitForReceipt.Success, receipt: result.receipt };
+            }
+            if (!result.boop) {
+                return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." };
+            }
+            boop = result.boop;
+        } catch (dbError) {
+            logger.error("Error while looking up boop receipt", boopHash, dbError)
+            return { status: SubmitterError.UnexpectedError, description: `Failed to query database for boop status: ${String(dbError)}`}
+        }
+
 
         // 2. book (or re‑use) a shared subscription object
-        const sub = getOrSet(this.#subscriptions, boopHash, () => ({
+        const sub = getOrSet(this.#pendingBoops, boopHash, () => ({
             pwr: promiseWithResolvers<WaitForReceiptOutput>(),
-            count: 0,
-            lastSubTimestamp: Date.now(),
+            count: 0
         }))
-        sub.count += 1
+        // Increment count regardless of whether it's a new or existing subscription
+        sub.count += 1;
 
         // 3. if caller gave a txHash, link it to pending‑hashes map
         if (txHash) {
-            const pend = getOrSet(this.#pendingHashes, txHash, () => ({ boop, subs: new Set() }))
-            pend.subs.add(sub)
+            const pend = getOrSet(this.#pendingEvmTxs, txHash, () => ({ boop, sub: sub }))
+            pend.sub = sub
         }
 
         // 4. race the real receipt vs timeout
@@ -90,12 +151,15 @@ export class ReceiptService {
                 : { status: SubmitterError.UnexpectedError, description: String(e) }
         } finally {
             // 5. clean‑up for this *caller* (might not empty the subscription yet)
-            if (--sub.count === 0) this.#subscriptions.delete(boopHash)
+            if (--sub.count === 0) this.#pendingBoops.delete(boopHash)
             if (txHash) {
-                const pend = this.#pendingHashes.get(txHash)
-                if (pend) {
-                    pend.subs.delete(sub)
-                    if (pend.subs.size === 0) this.#pendingHashes.delete(txHash)
+                const pend = this.#pendingEvmTxs.get(txHash)
+                if (pend && pend.sub === sub) {
+                    // biome-ignore lint/performance/noDelete: <explanation>
+                    delete pend.sub
+                    if (!Object.keys(pend).length || !pend.sub) { // If no other properties or sub is gone
+                        this.#pendingEvmTxs.delete(txHash);
+                    }
                 }
             }
         }
@@ -104,29 +168,60 @@ export class ReceiptService {
         try {
             if (!blockHeader.hash) return
             if (!headerCouldContainBoop(blockHeader)) return
-            const block = await publicClient.getBlock({
-                blockHash: blockHeader.hash,
-                includeTransactions: true,
-            })
-            for (const tx of block.transactions) {
+
+            for (const tx of blockHeader.transactions) {
                 const hash = typeof tx === "string" ? tx : tx.hash
-                const pending = this.#pendingHashes.get(hash as Hash)
+                const pending = this.#pendingEvmTxs.get(hash as Hash)
                 if (!pending) continue // not one of ours
-
-                try {
-                    const r = await publicClient.getTransactionReceipt({ hash: hash as Hash })
-                    const out = await this.#getReceiptResult(pending.boop, r)
-
-                    pending.subs.forEach((s) => s.pwr.resolve(out))
-                    this.#pendingHashes.delete(hash as Hash)
-                } catch (_e) {
-                    /* ignore TransactionReceiptNotFound – node still building receipt */
-                }
+                void this.#handleTransactionInBlock(hash as Hash, pending.boop, pending.sub!)
             }
         } catch (e) {
             logger.warn("block‑watcher error", e)
         }
     }
+    
+    async #handleTransactionInBlock(
+        txHash: Hash,
+        boop: Boop,
+        sub: PendingBoopInfo
+    ): Promise<void> {
+        let currentAttempt = 0;
+        let delay = this.#receiptInitialRetryDelayMs;
+
+        while (currentAttempt < this.#receiptRetryAttempts) {
+            try {
+                const r = await publicClient.getTransactionReceipt({ hash: txHash });
+                const out = await this.#getReceiptResult(boop, r);
+
+                // Success: Resolve the single subscription and clean up
+                sub.pwr.resolve(out);
+                this.#pendingEvmTxs.delete(txHash);
+                return; // Exit on success
+            } catch (e) {
+                // Determine if the error is retryable
+                const isRetryableError = e && typeof e === 'object' && 'name' in e && e.name === 'TransactionReceiptNotFoundError';
+
+                currentAttempt++;
+                if (currentAttempt < this.#receiptRetryAttempts) {
+                    logger.warn(
+                        `Failed to fetch receipt for ${txHash} (attempt ${currentAttempt}/${this.#receiptRetryAttempts}). ` +
+                        `Error: ${isRetryableError ? 'TransactionReceiptNotFoundError' : String(e)}. Retrying in ${delay / 1000}s...`
+                    );
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay = Math.min(delay * 2, this.#receiptMaxRetryDelayMs); // Exponential backoff
+                } else {
+                    // Max attempts reached, resolve with error and clean up
+                    logger.error(
+                        `Max retry attempts reached for receipt ${txHash}. Could not get receipt. Final error: ${String(e)}`
+                    );
+                    sub.pwr.resolve({ status: SubmitterError.ReceiptTimeout, description: "Transaction receipt could not be fetched after multiple retries." });
+                    this.#pendingEvmTxs.delete(txHash);
+                    return; // Exit the function after max retries
+                }
+            }
+        }
+    }
+
     async #getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
         const boopHash = computeHash(boop)
 
