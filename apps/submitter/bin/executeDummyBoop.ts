@@ -3,13 +3,13 @@
  * It creates a new account, prepares a boop that mints a token, and calls execute on the Entrypoint.
  */
 
+import { BoopClient, type ExecuteSuccess, Onchain, computeBoopHash } from "@happy.tech/boop-sdk"
 import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
-import { type ExecuteSuccess, BoopClient, computeBoopHash, Onchain } from "@happy.tech/boop-sdk"
 import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
 import { http, createPublicClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
-import { stringify } from "../common/lib/utils/string"
+import { stringify } from "../../../support/common/lib/utils/string"
 
 const pk = generatePrivateKey()
 const testAccount = privateKeyToAccount(pk as `0x${string}`)
@@ -59,23 +59,24 @@ async function run() {
         owner: testAccount.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
-    
+
     if (!("address" in createAccountResult)) {
-        throw new Error("Account creation failed: " + stringify(createAccountResult));
+        throw new Error("Account creation failed: " + stringify(createAccountResult))
     }
 
     const tx = await createAndSignMintTx(createAccountResult.address)
     const executeResult = await boopClient.execute({ boop: tx })
-    
-    
-    if(executeResult.status !== Onchain.Success) {
+
+    if (executeResult.status !== Onchain.Success) {
         throw new Error(`execute not successful: ${stringify(executeResult)}`)
     }
 
     console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(executeResult as ExecuteSuccess).receipt.evmTxHash}`)
 
-    const receiptResult = await boopClient.waitForReceipt({ boopHash: (executeResult as ExecuteSuccess).receipt.boopHash })
-    if(!("receipt" in receiptResult)) {
+    const receiptResult = await boopClient.waitForReceipt({
+        boopHash: (executeResult as ExecuteSuccess).receipt.boopHash,
+    })
+    if (!("receipt" in receiptResult)) {
         throw new Error("Receipt not found: " + stringify(receiptResult))
     }
 }
