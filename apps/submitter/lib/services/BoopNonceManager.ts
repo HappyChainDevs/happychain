@@ -67,8 +67,9 @@ export class BoopNonceManager {
             return this.#makeSubmitError(SubmitterError.NonceTooFarAhead)
         }
 
-        // If an old boop exists for th enonce, signal that it has been replaced.
+        // If an old boop exists for the nonce, signal that it has been replaced.
         const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
+        console.log("previouslyBlocked", previouslyBlocked)
         if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
 
         const boopHash = computeHash(boop)
