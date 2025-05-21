@@ -33,7 +33,10 @@ export class FaucetService {
             const lastRequest = faucetUsageResult.value[0]
             const timeToWait =
                 lastRequest.occurredAt.getTime() + env.FAUCET_RATE_LIMIT_WINDOW_SECONDS * 1000 - Date.now()
-            return err(new FaucetRateLimitError(timeToWait))
+            
+            if (timeToWait > 0) {
+                return err(new FaucetRateLimitError(timeToWait))
+            }
         }
 
         const faucetUsage = FaucetUsage.create(address)
