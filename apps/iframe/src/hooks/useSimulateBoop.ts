@@ -35,7 +35,6 @@ export type UseSimulateBoopReturn = {
  */
 export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArgs): UseSimulateBoopReturn {
     const boopClient = getBoopClient()
-    if (!boopClient) throw new Error("Boop client not initialized")
 
     const filledTx = tx.to
         ? ({

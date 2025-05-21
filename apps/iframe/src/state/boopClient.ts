@@ -15,4 +15,10 @@ export const boopClientAtom: Atom<BoopClient | undefined> = atom<BoopClient | un
     })
 })
 
-export const { getValue: getBoopClient } = accessorsFromAtom(boopClientAtom)
+const { getValue } = accessorsFromAtom(boopClientAtom)
+
+export function getBoopClient(): BoopClient {
+    const boopClient = getValue()
+    if (!boopClient) throw new Error("Boop client not initialized")
+    return boopClient
+}

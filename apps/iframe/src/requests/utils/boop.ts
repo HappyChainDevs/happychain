@@ -105,7 +105,6 @@ export async function sendBoop(
 
     try {
         const boopClient = getBoopClient()
-        if (!boopClient) throw new Error("Boop client not initialized")
         const boop = await boopFromTransaction(account, tx)
 
         let simulation = sim
