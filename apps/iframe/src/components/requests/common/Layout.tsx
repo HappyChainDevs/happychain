@@ -1,4 +1,5 @@
 import { shortenAddress } from "@happy.tech/wallet-common"
+import { cva } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import type React from "react"
 import type { PropsWithChildren } from "react"
@@ -84,12 +85,34 @@ export const SectionTitle = ({ children }: PropsWithChildren) => {
     return <h1 className="text-xs font-semibold">{children}</h1>
 }
 
-export const SubsectionBlock = ({ children }: PropsWithChildren) => {
-    return (
-        <section className="bg-base-100/40 dark:bg-neutral/25 py-2 px-2.5 grid gap-4 [&_ol:not(:last-of-type)]:pb-8 rounded-md">
-            {children}
-        </section>
+export type SubsectionVariant = "default" | "error" | "warning"
+interface SubsectionBlockProps extends PropsWithChildren {
+    variant?: SubsectionVariant
+}
+
+export const SubsectionBlock = ({ children, variant = "default" }: SubsectionBlockProps) => {
+    const recipeSubsectionBlock = cva(
+        ["bg-base-100/40 dark:bg-neutral/25 py-2 px-2.5 grid gap-4 [&_ol:not(:last-of-type)]:pb-8 rounded-md"],
+        {
+            variants: {
+                intent: {
+                    default: "",
+                    error: [
+                        "border bg-error/40 border-error dark:bg-error/5 dark:border-error/20",
+                        "text-error-content/90 dark:text-error text-sm rounded-lg",
+                    ],
+                    warning: [
+                        "border bg-warning/40 border-warning dark:bg-warning/5 dark:border-warning/20",
+                        "text-warning-content/90 dark:text-warning text-sm rounded-lg",
+                    ],
+                },
+            },
+            defaultVariants: {
+                intent: "default",
+            },
+        },
     )
+    return <section className={recipeSubsectionBlock({ intent: variant })}>{children}</section>
 }
 
 export const SubsectionTitle = ({ children }: PropsWithChildren) => {

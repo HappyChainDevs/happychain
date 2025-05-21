@@ -21,7 +21,6 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
-import { SectionError } from "./common/SectionError"
 import type { RequestConfirmationProps } from "./props"
 
 const MIN_DISPLAY_WEI = 100_000_000_000_000n // 0.0001 HAPPY
@@ -130,17 +129,17 @@ export const EthSendTransaction = ({
                         )}
                     </SubsectionBlock>
                 </SectionBlock>
-                {isRequestDisabled ? (
-                    <SectionError>
-                        <SubsectionContent>
-                            <SubsectionTitle>Error</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                <p>{requestDisabledDescription}</p>
-                            </FormattedDetailsLine>
-                        </SubsectionContent>
-                    </SectionError>
-                ) : (
-                    <SectionBlock>
+                <SectionBlock>
+                    {isRequestDisabled ? (
+                        <SubsectionBlock variant="error">
+                            <SubsectionContent>
+                                <SubsectionTitle>Error</SubsectionTitle>
+                                <FormattedDetailsLine>
+                                    <p>{requestDisabledDescription}</p>
+                                </FormattedDetailsLine>
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    ) : (
                         <SubsectionBlock>
                             <SubsectionContent>
                                 <SubsectionTitle>Cost</SubsectionTitle>
@@ -161,8 +160,8 @@ export const EthSendTransaction = ({
                                 )}
                             </SubsectionContent>
                         </SubsectionBlock>
-                    </SectionBlock>
-                )}
+                    )}
+                </SectionBlock>
 
                 {decodedData && (
                     <DisclosureSection
