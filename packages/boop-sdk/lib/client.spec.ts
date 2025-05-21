@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test"
 import { deployment } from "@happy.tech/contracts/boop/anvil"
 import { anvil } from "viem/chains"
 import { BoopClient } from "./client"
-import { GetNonce } from "./utils/getNonce"
+import { GetNonce } from "./types/GetNonce"
 
 const setupOptions = {
     baseUrl: "http://localhost:3001",

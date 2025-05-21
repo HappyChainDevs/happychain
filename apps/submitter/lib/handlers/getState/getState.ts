@@ -14,7 +14,7 @@ export async function getState(input: GetStateInput): Promise<GetStateOutput> {
         if (!boop) return { status: GetState.UnknownBoop, description: "Unknown boop." }
         return {
             status: GetState.UnknownState,
-            description: "The boop is known, but there is no receipt or sinmulation data to serve.",
+            description: "The boop is known, but there is no receipt or simulation data to serve.",
         }
     } catch (error) {
         return outputForGenericError(error)

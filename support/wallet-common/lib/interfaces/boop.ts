@@ -1,7 +1,7 @@
 import type { Bytes, UInt32 } from "@happy.tech/common"
 
 /**
- * Copied from `apps/submitter/lib/types/EntryPointOutput.ts` to avoid depenency madness.
+ * Copied from `apps/submitter/lib/types/EntryPointOutput.ts` to avoid dependency madness.
  */
 enum CallStatus {
     SUCCEEDED = 0,
@@ -11,7 +11,7 @@ enum CallStatus {
 }
 
 /**
- * Copied from `apps/submitter/lib/types/EntryPointOutput.ts` to avoid depenency madness.
+ * Copied from `apps/submitter/lib/types/EntryPointOutput.ts` to avoid dependency madness.
  */
 type EntryPointOutput = {
     /**
@@ -69,7 +69,7 @@ type EntryPointOutput = {
 }
 
 /**
- * Copied from `apps/submitter/lib/handlers/simulate/types.ts` to avoid depenency madness.
+ * Copied from `apps/submitter/lib/handlers/simulate/types.ts` to avoid dependency madness.
  */
 export type SimulateSuccess = EntryPointOutput & {
     status: "onchainSuccess"

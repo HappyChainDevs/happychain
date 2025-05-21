@@ -117,9 +117,9 @@ export {
 
 export {
     GetNonce,
-    type GetNonceStatus,
+    type GetNonceError,
     type GetNonceInput,
     type GetNonceOutput,
+    type GetNonceStatus,
     type GetNonceSuccess,
-    type GetNonceError,
-} from "./utils/getNonce"
+} from "./types/GetNonce"

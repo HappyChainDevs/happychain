@@ -1,5 +1,6 @@
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import {
+    type Boop,
     type BoopReceipt,
     type CreateAccountInput,
     type CreateAccountOutput,
@@ -13,14 +14,17 @@ import {
     Onchain,
     type SimulateInput,
     type SimulateOutput,
+    type SimulateSuccess,
     type SubmitInput,
     type SubmitOutput,
+    type SimulateOutput as SubmitterSimulateOutput,
     type WaitForReceiptInput,
     type WaitForReceiptOutput,
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
+import type { GetNonceInput, GetNonceOutput } from "./types/GetNonce"
 import { ApiClient } from "./utils/apiClient"
-import { type GetNonceInput, type GetNonceOutput, getNonce } from "./utils/getNonce"
+import { getNonce } from "./utils/getNonce"
 
 export type BoopClientConfig = {
     baseUrl: string
@@ -31,6 +35,7 @@ export type BoopClientConfig = {
 export class BoopClient {
     #client: ApiClient
     #config: BoopClientConfig
+
     constructor(config?: Partial<BoopClientConfig>) {
         this.#config = this.#applyDefaults(config)
         this.#client = new ApiClient({ baseUrl: this.#config.baseUrl })
@@ -45,6 +50,7 @@ export class BoopClient {
     }
 
     // == Account API Routes ===========================================================================
+
     /**
      * Create a new HappyAccount. If the account already exists, it will be returned.
      */
@@ -123,6 +129,21 @@ export class BoopClient {
     }
 
     /**
+     * Utility function to accept a successful simulation and return the boop with updated gas values.
+     */
+    updateBoopFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop {
+        return {
+            ...boop,
+            gasLimit: simulation.gas,
+            validateGasLimit: simulation.validateGas,
+            validatePaymentGasLimit: simulation.validatePaymentGas,
+            executeGasLimit: simulation.executeGas,
+            maxFeePerGas: simulation.maxFeePerGas,
+            submitterFee: simulation.submitterFee,
+        }
+    }
+
+    /**
      * Returns the state of the Boop as known by the submitter.
      *
      * Depending on the submitter's state retention policies, he might not be able to answer this query,
@@ -173,8 +194,8 @@ export class BoopClient {
         }
     }
 
-    #getSimulateOutput(response: unknown): SimulateOutput {
-        const output = response as SimulateOutput
+    #getSimulateOutput(response: unknown): SubmitterSimulateOutput {
+        const output = response as SubmitterSimulateOutput
         if (output?.status !== Onchain.Success) return output
         return {
             ...output,
