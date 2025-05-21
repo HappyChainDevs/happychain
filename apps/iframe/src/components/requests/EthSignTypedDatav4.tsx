@@ -1,5 +1,6 @@
-import type { Address } from "@happy.tech/common"
-import { isAddress } from "viem"
+import { isAddress, stringify } from "@happy.tech/common"
+import type { TypedData, TypedDataDomain } from "viem"
+import { getAppURL } from "#src/utils/appURL.ts"
 import DisclosureSection from "./common/DisclosureSection"
 import {
     FormattedDetailsLine,
@@ -11,13 +12,6 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
-
-type TypedData = {
-    domain: Record<string, unknown>
-    types: Record<string, { name: string; type: string }[]>
-    primaryType: string
-    message: Record<string, unknown>
-}
 
 /**
  * Utility guard to determine if a given value is a non-null object (excluding arrays).
@@ -42,11 +36,11 @@ function renderField(label: string, value: unknown) {
                 <SubsectionTitle>{label}</SubsectionTitle>
                 <FormattedDetailsLine>
                     {value.map((item) => (
-                        <div key={String(item)} className="py-1">
+                        <div key={stringify(item)} className="py-1">
                             {typeof item === "string" && isAddress(item) ? (
                                 <LinkToAddress address={item}>{item}</LinkToAddress>
                             ) : (
-                                String(item)
+                                stringify(item)
                             )}
                         </div>
                     ))}
@@ -60,7 +54,7 @@ function renderField(label: string, value: unknown) {
             <>
                 <SubsectionTitle>{label}</SubsectionTitle>
                 <FormattedDetailsLine>
-                    <span className={value ? "text-green-500" : "text-red-500"}>{String(value)}</span>
+                    <span className={value ? "text-success" : "text-error"}>{stringify(value)}</span>
                 </FormattedDetailsLine>
             </>
         )
@@ -80,7 +74,7 @@ function renderField(label: string, value: unknown) {
     return (
         <>
             <SubsectionTitle>{label}</SubsectionTitle>
-            <FormattedDetailsLine>{String(value)}</FormattedDetailsLine>
+            <FormattedDetailsLine>{stringify(value)}</FormattedDetailsLine>
         </>
     )
 }
@@ -88,7 +82,7 @@ function renderField(label: string, value: unknown) {
 /**
  * Format and display important domain information from the EIP-712 data.
  */
-function renderDomainInfo(domain: Record<string, unknown>) {
+function renderDomainInfo(domain: TypedDataDomain) {
     return (
         <SubsectionBlock>
             <SubsectionTitle>Domain Information</SubsectionTitle>
@@ -105,20 +99,24 @@ function renderDomainInfo(domain: Record<string, unknown>) {
                         <FormattedDetailsLine>{domain.version}</FormattedDetailsLine>
                     </div>
                 )}
-                {(typeof domain.chainId === "number" || typeof domain.chainId === "string") && (
+                {(typeof domain.chainId === "number" || typeof domain.chainId === "bigint") && (
                     <div>
                         <SubsectionTitle>Chain ID</SubsectionTitle>
-                        <FormattedDetailsLine>{String(domain.chainId)}</FormattedDetailsLine>
+                        <FormattedDetailsLine>{stringify(domain.chainId)}</FormattedDetailsLine>
                     </div>
                 )}
                 {typeof domain.verifyingContract === "string" && isAddress(domain.verifyingContract) && (
                     <div>
                         <SubsectionTitle>Contract</SubsectionTitle>
                         <FormattedDetailsLine>
-                            <LinkToAddress address={domain.verifyingContract as Address}>
-                                {domain.verifyingContract}
-                            </LinkToAddress>
+                            <LinkToAddress address={domain.verifyingContract}>{domain.verifyingContract}</LinkToAddress>
                         </FormattedDetailsLine>
+                    </div>
+                )}
+                {domain.salt && (
+                    <div>
+                        <SubsectionTitle>Salt</SubsectionTitle>
+                        <FormattedDetailsLine>{domain.salt}</FormattedDetailsLine>
                     </div>
                 )}
             </SubsectionContent>
@@ -127,44 +125,13 @@ function renderDomainInfo(domain: Record<string, unknown>) {
 }
 
 /**
- * Identify and display the potential purpose of this signature request
- * based on common EIP-712 patterns.
- */
-function identifySignaturePurpose(typedData: TypedData): React.ReactNode {
-    const { primaryType, types, message } = typedData
-
-    if (primaryType === "Permit" && types.Permit) {
-        const permitFields = types.Permit.map((f) => f.name)
-        if (permitFields.includes("owner") && permitFields.includes("spender") && permitFields.includes("value")) {
-            return (
-                <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-md text-xs">
-                    <p className="font-medium">You're approving an ERC-20 token allowance</p>
-                    <p className="opacity-75">This signature allows the spender to use your tokens.</p>
-                </div>
-            )
-        }
-    }
-
-    if (primaryType.includes("Order") && typeof message.maker === "object" && message.maker !== null) {
-        return (
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md text-xs">
-                <p className="font-medium">You're signing a marketplace order</p>
-                <p className="opacity-75">This creates an off-chain listing or offer for assets.</p>
-            </div>
-        )
-    }
-
-    return null
-}
-
-/**
  * Recursively renders an EIP-712 structured data message.
  *
  * This function walks the `types` definition provided in the typed data schema and
  * matches it against the corresponding values in the `message` field.
  */
-function renderTypedMessage(typeDef: TypedData["types"], typeName: string, message: Record<string, unknown>) {
-    const fields = typeDef[typeName]
+function renderTypedMessage(types: TypedData, typeName: string, message: Record<string, unknown>) {
+    const fields = types[typeName]
     if (!fields) return null
 
     return fields.map(({ name, type }) => {
@@ -172,7 +139,7 @@ function renderTypedMessage(typeDef: TypedData["types"], typeName: string, messa
 
         if (type.endsWith("[]") && Array.isArray(value)) {
             const baseType = type.slice(0, -2)
-            if (typeDef[baseType]) {
+            if (types[baseType as keyof typeof types]) {
                 return (
                     <SubsectionBlock key={name}>
                         <SubsectionTitle>{name}</SubsectionTitle>
@@ -180,7 +147,7 @@ function renderTypedMessage(typeDef: TypedData["types"], typeName: string, messa
                             isObject(item) ? (
                                 <div key={String(item)} className="pl-2 border-l-2 border-neutral/20 mt-2">
                                     <div className="text-xs opacity-50 mb-1">Item {index + 1}</div>
-                                    {renderTypedMessage(typeDef, baseType, item)}
+                                    {renderTypedMessage(types, baseType, item)}
                                 </div>
                             ) : null,
                         )}
@@ -189,11 +156,13 @@ function renderTypedMessage(typeDef: TypedData["types"], typeName: string, messa
             }
         }
 
-        if (typeDef[type] && isObject(value)) {
+        // Check if this is a custom type defined in the types object
+        const customType = type.split("[")[0] // Remove array notation if present
+        if (types[customType as keyof typeof types] && isObject(value)) {
             return (
                 <SubsectionBlock key={name}>
                     <SubsectionTitle>{name}</SubsectionTitle>
-                    {renderTypedMessage(typeDef, type, value)}
+                    {renderTypedMessage(types, customType, value)}
                 </SubsectionBlock>
             )
         }
@@ -218,13 +187,10 @@ export const EthSignTypedDataV4 = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_signTypedData_v4">) => {
-    const [_signerAddress, rawMessage] = params
-    const parsed: TypedData = typeof rawMessage === "string" ? JSON.parse(rawMessage) : rawMessage
+    const [, rawMessage] = params
+    const parsed = typeof rawMessage === "string" ? JSON.parse(rawMessage) : rawMessage
 
-    const origin = window.location.hostname === "localhost" ? "http://localhost:6002" : window.location.origin
-
-    const signatureHint = identifySignaturePurpose(parsed)
-    const isHighRiskSignature = false // Placeholder for heuristics
+    const origin = getAppURL()
 
     return (
         <Layout
@@ -247,19 +213,10 @@ export const EthSignTypedDataV4 = ({
                     <FormattedDetailsLine>{origin}</FormattedDetailsLine>
                 </SubsectionBlock>
 
-                {signatureHint && <div className="mb-2">{signatureHint}</div>}
-
-                {isHighRiskSignature && (
-                    <div className="mb-2 bg-red-100 dark:bg-red-900/30 p-2 rounded-md text-xs">
-                        <p className="font-medium text-red-700 dark:text-red-400">⚠️ High-risk signature detected</p>
-                        <p>This signature could potentially allow access to your assets. Verify carefully.</p>
-                    </div>
-                )}
-
                 <SubsectionBlock>
                     <SubsectionTitle>Interacting with</SubsectionTitle>
                     <FormattedDetailsLine>
-                        <LinkToAddress address={parsed.domain.verifyingContract as Address} />
+                        <LinkToAddress address={parsed.domain.verifyingContract} />
                     </FormattedDetailsLine>
                 </SubsectionBlock>
 
