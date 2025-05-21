@@ -105,7 +105,7 @@ export async function sendBoop(
 
     try {
         const boopClient = getBoopClient()
-        const boop = await boopFromTransaction(account, tx)
+        let boop = await boopFromTransaction(account, tx)
 
         let simulation = sim
         if (!isSponsored) {
@@ -114,12 +114,7 @@ export async function sendBoop(
             if (output.status !== Onchain.Success) throw translateBoopError(output)
             simulation = output
 
-            boop.gasLimit = output.gas
-            boop.validateGasLimit = output.validateGas
-            boop.validatePaymentGasLimit = output.validatePaymentGas
-            boop.executeGasLimit = output.executeGas
-            boop.maxFeePerGas = output.maxFeePerGas
-            boop.submitterFee = output.submitterFee
+            boop = boopClient.updateBoopFromSimulation(boop, output)
         }
 
         if (simulation?.feeTooLowDuringSimulation && boop.maxFeePerGas)

@@ -65,7 +65,7 @@ export const EthSendTransaction = ({
         roundedCost += cost % MIN_DISPLAY_WEI > MIN_DISPLAY_WEI / 2n ? MIN_DISPLAY_WEI : 0n
         return {
             cost,
-            submitterFee: simulateOutput.submitterFee,
+            submitterFee,
             f: {
                 // formatted values
                 cost: cost < MIN_DISPLAY_WEI ? MIN_DISPLAY_STR : formatEther(roundedCost),
