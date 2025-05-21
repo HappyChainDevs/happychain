@@ -1,5 +1,5 @@
-import { TransactionManager, TransactionStatus } from "@happy.tech/txm"
 import type { Address } from "@happy.tech/common"
+import { TransactionManager, TransactionStatus } from "@happy.tech/txm"
 import { type Result, err, ok } from "neverthrow"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
@@ -33,7 +33,7 @@ export class FaucetService {
             const lastRequest = faucetUsageResult.value[0]
             const timeToWait =
                 lastRequest.occurredAt.getTime() + env.FAUCET_RATE_LIMIT_WINDOW_SECONDS * 1000 - Date.now()
-            
+
             if (timeToWait > 0) {
                 return err(new FaucetRateLimitError(timeToWait))
             }
