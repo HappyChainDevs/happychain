@@ -31,5 +31,9 @@ export function headerCouldContainBoop(block: Block): boolean {
     if (!bloom || bloom === ZERO_BLOOM) return false
 
     // all three conditions must be *possible* in the bloom
-    return isInBloom(bloom, ENTRY_POINT) && isInBloom(bloom, BOOP_STARTED_SELECTOR) && isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
+    return (
+        isInBloom(bloom, ENTRY_POINT) &&
+        isInBloom(bloom, BOOP_STARTED_SELECTOR) &&
+        isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
+    )
 }
