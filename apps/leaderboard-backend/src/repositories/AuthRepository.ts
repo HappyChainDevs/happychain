@@ -18,7 +18,7 @@ export class AuthRepository {
                 last_used_at: now.toISOString(),
             }
 
-            this.db.insertInto("auth_sessions").values(newSession).executeTakeFirst()
+            await this.db.insertInto("auth_sessions").values(newSession).executeTakeFirstOrThrow()
 
             return {
                 ...newSession,
@@ -43,8 +43,11 @@ export class AuthRepository {
                 return undefined
             }
 
-            const now = new Date().toISOString()
-            await this.db.updateTable("auth_sessions").set({ last_used_at: now }).where("id", "=", sessionId).execute()
+            await this.db
+                .updateTable("auth_sessions")
+                .set({ last_used_at: new Date().toISOString() })
+                .where("id", "=", sessionId)
+                .executeTakeFirstOrThrow()
 
             return session
         } catch (error) {
@@ -54,14 +57,19 @@ export class AuthRepository {
     }
 
     async getUserSessions(userId: UserTableId): Promise<AuthSession[]> {
-        return this.db.selectFrom("auth_sessions").where("user_id", "=", userId).selectAll().execute()
+        try {
+            return await this.db.selectFrom("auth_sessions").where("user_id", "=", userId).selectAll().execute()
+        } catch (error) {
+            console.error("Error getting user sessions:", error)
+            return []
+        }
     }
 
     async deleteSession(sessionId: AuthSessionTableId): Promise<boolean> {
         try {
-            const res = await this.db.deleteFrom("auth_sessions").where("id", "=", sessionId).executeTakeFirstOrThrow()
+            await this.db.deleteFrom("auth_sessions").where("id", "=", sessionId).executeTakeFirstOrThrow()
 
-            return res.numDeletedRows > 0n
+            return true
         } catch (error) {
             console.error("Error deleting session:", error)
             return false

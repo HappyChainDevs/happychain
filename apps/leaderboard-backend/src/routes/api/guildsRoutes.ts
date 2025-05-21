@@ -275,9 +275,7 @@ export default new Hono()
                 }
 
                 // Update member role
-                // Convert role enum to boolean for backward compatibility with repository
-                const isAdmin = role === GuildRole.ADMIN
-                const updatedMember = await guildRepo.updateMemberRole(guildId, userId, isAdmin)
+                const updatedMember = await guildRepo.updateMemberRole(guildId, userId, role)
                 if (!updatedMember) {
                     return c.json({ ok: false, error: "Member not found in guild" }, 404)
                 }

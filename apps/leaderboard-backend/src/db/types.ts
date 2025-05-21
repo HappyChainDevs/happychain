@@ -153,27 +153,3 @@ export interface GameGuildLeaderboardEntry {
 export type AuthSession = Selectable<AuthSessionTable>
 export type NewAuthSession = Insertable<AuthSessionTable>
 export type UpdateAuthSession = Updateable<AuthSessionTable>
-
-// Auth types for API
-export interface AuthChallengeRequest {
-    primary_wallet: Address
-}
-
-export interface AuthChallengeResponse {
-    message: string
-    primary_wallet: Address
-}
-
-export interface SignInRequest {
-    primary_wallet: Address
-    signature: string
-}
-
-export interface AuthResponse {
-    session_id: AuthSessionTableId
-    user: {
-        id: UserTableId
-        username: string
-        primary_wallet: Address
-    }
-}
