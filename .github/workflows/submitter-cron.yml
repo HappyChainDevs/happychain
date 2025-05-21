@@ -26,6 +26,6 @@ jobs:
             make submitter.build
       - name: Execute boop
         run: |
-          cd support/testing
+          cd apps/submitter/bin
           bun executeDummyBoop.ts
 
