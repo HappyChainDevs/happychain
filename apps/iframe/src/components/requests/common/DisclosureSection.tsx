@@ -1,4 +1,4 @@
-import { CaretDown, WarningCircle } from "@phosphor-icons/react"
+import { CaretDownIcon, WarningCircleIcon } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import type { PropsWithChildren } from "react"
 import {
@@ -32,12 +32,12 @@ const DisclosureSection = ({
             <details className={recipeDisclosureDetails({ intent: "neutral" })} open={isOpen}>
                 <summary className={recipeDisclosureSummary()}>
                     <SubsectionTitle>{title}</SubsectionTitle>
-                    <CaretDown size="1.25em" />
+                    <CaretDownIcon size="1.25em" />
                 </summary>
 
                 {showWarning && (
                     <div className="flex items-center gap-2 p-2 border-t border-b border-neutral/10">
-                        <WarningCircle size="1.25em" />
+                        <WarningCircleIcon size="1.25em" />
                         <SubsectionTitle>{warningText}</SubsectionTitle>
                     </div>
                 )}
