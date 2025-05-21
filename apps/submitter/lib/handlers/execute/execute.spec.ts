@@ -44,12 +44,13 @@ describe("submitter_execute", () => {
             await fundAccount(smartAccount)
         })
 
-        it("mints tokens", async () => {
+        it("mints tokens - self-paying", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             // be your own payer! define your own gas!
             unsignedTx.gasLimit = 4_000_000
             unsignedTx.executeGasLimit = 1_000_000
             unsignedTx.validateGasLimit = 1_000_000
+            unsignedTx.maxFeePerGas = 2_000_000_000n
             unsignedTx.payer = smartAccount
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
@@ -115,7 +116,7 @@ describe("submitter_execute", () => {
             expect(response.receipt.boop.extraData).toBeString()
         })
 
-        it("mints tokens", async () => {
+        it("mints tokens (payer)", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
 
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })

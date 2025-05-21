@@ -95,6 +95,7 @@ export class ReceiptService {
             try {
                 logger.trace("Waiting for receipt", boopHash, evmTxHash)
                 const evmTxReceipt = await publicClient.waitForTransactionReceipt(args)
+                logger.trace("Got receipt", boopHash, evmTxHash)
                 sub.pwr.resolve(await this.#getReceiptResult(boop, evmTxReceipt))
                 break
             } catch (error) {

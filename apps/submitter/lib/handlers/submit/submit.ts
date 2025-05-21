@@ -42,6 +42,20 @@ export async function submitInternal(
                 stage: "submit",
             }
         }
+        if (boop.account === boop.payer) {
+            // Self-paying boop must specifies its maxFeePerGas and gas limits to be
+            // submitted (but not to be simulated). This will usually be caught above by the
+            // lack of valid signature, but we must guard against signatures over zero values.
+            if (!boop.maxFeePerGas || !boop.gasLimit || !boop.validateGasLimit || !boop.validateGasLimit) {
+                // validatePaymentGasLimit can be 0 — it is not called for self-paying boops.
+                return {
+                    status: Onchain.MissingGasValues,
+                    description:
+                        "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
+                    stage: "submit",
+                }
+            }
+        }
 
         boop = updateBoopFromSimulation(boop, simulation)
         // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path

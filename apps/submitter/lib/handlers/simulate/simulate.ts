@@ -35,10 +35,9 @@ export async function simulate(
         })
         const gasPricePromise = publicClient.getGasPrice()
 
-        const balancePromise =
-            boop.account === boop.payer
-                ? await publicClient.getBalance({ address: boop.account })
-                : Promise.resolve(null)
+        const balancePromise = selfPaying
+            ? await publicClient.getBalance({ address: boop.account })
+            : Promise.resolve(null)
 
         const [{ result: entryPointOutput }, gasPrice, balance] = await Promise.all([
             simulatePromise,
@@ -57,13 +56,14 @@ export async function simulate(
             gas: boop.gasLimit || applyGasMargin(entryPointOutput.gas),
             validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
             validatePaymentGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validatePaymentGas),
-            executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas) * 3,
+            executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas),
             maxFeePerGas: boop.maxFeePerGas || (gasPrice * env.FEE_SAFETY_MARGIN) / 100n,
             submitterFee: getSubmitterFee(boop),
             feeTooLowDuringSimulation: boop.maxFeePerGas === 0n ? false : gasPrice > boop.maxFeePerGas,
         }
 
         if (output.status === Onchain.Success && balance !== null) {
+            // `balance !== null` implies `selfPaying`
             // During simulation the gas price is usually 0, so we check here instead.
             const cost = BigInt(output.gas) * output.maxFeePerGas + output.submitterFee
             if (balance < cost)

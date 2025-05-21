@@ -14,6 +14,14 @@ export const Onchain = {
     MissingValidationInformation: "onchainMissingValidationInformation",
 
     /**
+     * A self-paying boop passes simulation but can't be submitted onchain because either its
+     * maxFeePerGas or gas limits are set to zero — this means either this would fail onchain because
+     * of zero values, or if we attach updated values, the signature would fail to verify. The Boop
+     * system imposes that a self-paying transaction must sign over its actual gas values for security.
+     */
+    MissingGasValues: "onchainMissingGasValues",
+
+    /**
      * The boop got rejected because the onchain gas price was above the maxFeePerGas.
      */
     GasPriceTooHigh: "onchainGasPriceTooHigh",

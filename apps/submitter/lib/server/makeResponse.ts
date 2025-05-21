@@ -47,8 +47,9 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case SubmitterError.SubmitTimeout:
         case SubmitterError.ReceiptTimeout:
             return [response, 408] // Request Timeout
-        case Onchain.MissingValidationInformation:
         case CreateAccount.Failed:
+        case Onchain.MissingValidationInformation:
+        case Onchain.MissingGasValues:
         case Onchain.ValidationReverted:
         case Onchain.PaymentValidationReverted:
         case Onchain.ExtensionNotRegistered:
