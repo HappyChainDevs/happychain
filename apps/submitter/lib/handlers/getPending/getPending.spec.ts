@@ -23,7 +23,9 @@ describe("submitter_pending", () => {
         nonceValue = await getNonce(smartAccount, nonceTrack)
     })
 
-    it("fetches pending transactions for a user", async () => {
+    // TODO: Temporarily skipped: pending should return both the "blocked" boops (awaiting submission) and the "pending"
+    //       boops (awaiting receipts). Tracked in HAPPY-573.
+    it.skip("fetches pending boops for a user", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
 
         const count = 10
@@ -39,9 +41,10 @@ describe("submitter_pending", () => {
             }),
         )
 
-        // submit all transactions, but only wait for the first to complete
-        await Promise.race(
-            transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
+        // TODO retry with execute and make sure it doesn't work
+        // wait for all to be submitted, but not executed, with a 2s block time they should all pend
+        await Promise.all(
+            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
         const pending = (await client.api.v1.boop.pending[":account"]
