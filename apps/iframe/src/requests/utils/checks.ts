@@ -28,20 +28,21 @@ export function checkAuthenticated() {
 /**
  * Type of valid tx requests, use {@link checkedTx} to verify.
  */
-export type ValidRpcTransactionRequest = RpcTransactionRequest & { from: Address; to: Address }
+export type ValidRpcTransactionRequest = RpcTransactionRequest & { to: Address }
 
 /**
  * Asserts that the transaction has its destination defined, throws a {@link EIP1474InvalidInput}.
  * @throws EIP1474InvalidInput if the transaction is malformatted
  */
 export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest {
+    // Check required fields
     if (!tx.to) /****/ throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
-    if (!tx.from) /**/ throw new EIP1474InvalidInput("missing 'from' field in transaction parameters")
 
+    // Validate addresses
     if (!isAddress(tx.to)) /****/ throw new EIP1474InvalidInput(`not an address: ${tx.to}`)
-    if (!isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
+    if (tx.from !== undefined && !isAddress(tx.from)) /**/ throw new EIP1474InvalidInput(`not an address: ${tx.from}`)
 
-    // Check if value exists and can be parsed as BigInt (allows zero values)
+    // Check if the value and nonce exist, and can be parsed as BigInt (allows zero values)
     if (tx.value !== undefined && parseBigInt(tx.value) === undefined)
         throw new EIP1474InvalidInput(`value is not a number: ${tx.value}`)
     if (tx.nonce !== undefined && parseBigInt(tx.nonce) === undefined)

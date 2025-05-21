@@ -187,15 +187,16 @@ function safeParseSignature(validatorData?: Hex) {
 }
 
 export async function boopFromTransaction(account: Address, tx: ValidRpcTransactionRequest): Promise<Boop> {
-    // TODO bigint casts need validation
-
     return {
-        account: tx.from ?? account, // Use provided account if tx.from is not available
+        account: tx.from ?? account,
         dest: tx.to,
         payer: zeroAddress, // happyPaymaster, // TODO need to fund paymaster
-        value: tx.value ? BigInt(tx.value) : 0n,
+        value: tx.value !== undefined ? (parseBigInt(tx.value) ?? 0n) : 0n,
         nonceTrack: 0n,
-        nonceValue: tx.nonce ? BigInt(tx.nonce) : await getNextNonce(account),
+        nonceValue:
+            tx.nonce !== undefined
+                ? (parseBigInt(tx.nonce) ?? (await getNextNonce(account)))
+                : await getNextNonce(account),
         callData: tx.data ?? "0x",
         validatorData: "0x", // we will fill after signing
         extraData: createValidatorExtraData(account, tx.to),
