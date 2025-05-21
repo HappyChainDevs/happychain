@@ -15,7 +15,6 @@ function fromDtoToDb(permission: WalletPermission): Insertable<WalletPermissionT
         id: permission.id,
         updatedAt: permission.updatedAt,
         createdAt: permission.createdAt,
-        deleted: permission.deleted,
     }
 }
 
@@ -30,7 +29,6 @@ function fromDbToDto(permission: Selectable<WalletPermissionTable>): WalletPermi
         id: permission.id,
         updatedAt: permission.updatedAt,
         createdAt: permission.createdAt,
-        deleted: permission.deleted === 1,
     }
 }
 
@@ -38,7 +36,7 @@ export function savePermission(permission: WalletPermission) {
     return db.insertInto("walletPermissions").values(fromDtoToDb(permission)).execute()
 }
 
-export function getPermission(id: UUID) {
+export function getPermission(id: string) {
     return db.selectFrom("walletPermissions").where("id", "=", id).selectAll().executeTakeFirst()
 }
 
@@ -61,6 +59,6 @@ export async function updatePermission(permission: WalletPermission) {
         .execute()
 }
 
-export async function deletePermission(id: UUID) {
-    return await db.updateTable("walletPermissions").set({ deleted: true, updatedAt: Date.now() }).where("id", "=", id).execute()
+export async function deletePermission(id: string) {
+    return await db.deleteFrom("walletPermissions").where("id", "=", id).execute()
 }

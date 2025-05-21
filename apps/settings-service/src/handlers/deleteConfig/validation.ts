@@ -7,7 +7,7 @@ import { isUUID } from "../../utils/isUUID"
 
 export const deleteConfigSchema = z
     .object({
-        id: z.string().refine(isUUID).openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+        id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
     })
     .strict()
 
@@ -33,4 +33,4 @@ export const deleteConfigDescription = describeRoute({
     },
 })
 
-export const deleteConfigValidation = zv("param", inputSchema)
+export const deleteConfigValidation = zv("json", inputSchema)

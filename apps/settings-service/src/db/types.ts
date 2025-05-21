@@ -27,10 +27,9 @@ export type WalletPermissionTable = {
     caveats: ColumnType<WalletPermissionCaveat[], string, string>
     date: number
     // Not in the EIP, but Viem wants this.
-    id: UUID
+    id: string
     updatedAt: number
     createdAt: number
-    deleted: ColumnType<number, boolean, boolean>
 }
 
 export interface Database {

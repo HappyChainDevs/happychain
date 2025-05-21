@@ -15,3 +15,9 @@ export class PermissionNotFoundError extends HappySettingsError {
         super(404, message || "Permission not found", options)
     }
 }
+
+export class PermissionAlreadyExistsError extends HappySettingsError {
+    constructor(message?: string, options?: ErrorOptions) {
+        super(409, message || "Permission already exists", options)
+    }
+}

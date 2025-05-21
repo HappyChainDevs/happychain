@@ -30,8 +30,8 @@ export default new Hono()
         const [response, code] = makeResponse(result)
         return c.json(response, code)
     })
-    .delete("/delete/:id", deleteConfigDescription, deleteConfigValidation, async (c) => {
-        const input = c.req.valid("param")
+    .delete("/delete", deleteConfigDescription, deleteConfigValidation, async (c) => {
+        const input = c.req.valid("json")
         const result = await deleteConfig(input)
 
         const [response, code] = makeResponse(result)

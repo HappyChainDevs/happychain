@@ -1,17 +1,15 @@
-import { createUUID } from "@happy.tech/common"
-import type { Address, UUID } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import { permissionsLogger } from "#src/utils/logger"
+import { observable } from "@legendapp/state"
+import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage"
+import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
+import { PermissionName } from "#src/constants/permissions"
 import { type AppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { revokedSessionKeys } from "./interfaceState"
 import { getUser } from "./user"
-import { syncedCrud } from '@legendapp/state/sync-plugins/crud'
-import { observable } from "@legendapp/state"
-import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage";
 import type { HappyUser } from "@happy.tech/wallet-common"
-import { PermissionName } from "#src/constants/permissions.ts"
-
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.
@@ -57,10 +55,10 @@ export type WalletPermission = {
     caveats: WalletPermissionCaveat[]
     date: number
     // Not in the EIP, but Viem wants this.
-    id: UUID
-    deleted: boolean
+    id: string
     updatedAt: number
     createdAt: number
+    deleted: boolean
 }
 
 /**
@@ -96,62 +94,65 @@ type PermissionCheckParams = {
     app: AppURL
 }
 
+export const permissionsMapLegend = observable(
+    syncedCrud({
+        list: async ({ lastSync }) => {
+            const user = getUser()
+            if (!user) return []
+            const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}`)
+            const data = await response.json()
 
-
-export const permissionsMapLegend = observable(syncedCrud({
-    list: async ({ lastSync }) => {
-        const user = getUser()
-        if (!user) return []
-        const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`)
-        const data =  await response.json()
-        
-        return data.data as WalletPermission[]
-    },
-    create: async (data: WalletPermission) => {
-        const response = await fetch("http://localhost:3000/api/v1/settings/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
-        await response.json()
-    },
-    update: async (data: WalletPermission) => {
-        const response = await fetch("http://localhost:3000/api/v1/settings/update", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
-        await response.json()
-    },
-    subscribe: ({ refresh }) => {
-        // Set up an interval to refresh messages every 5 seconds
-        const intervalId = setInterval(() => {
-          console.log("Refreshing config (5-second interval)");
-          refresh();
-        }, 5000);
-    },
-    delete: async ({id}) => {
-        const response = await fetch(`http://localhost:3000/api/v1/settings/delete/${id}`, {
-            method: "DELETE",
-        })
-        await response.json()
-    },
-    persist: {
-        plugin: ObservablePersistLocalStorage,
-        name: 'config-legend',
-        retrySync: true // Retry sync after reload
-    },
-    initial: {},
-    fieldCreatedAt: 'created_at',
-    fieldUpdatedAt: 'updatedAt',
-    fieldDeleted: 'deleted',
-    changesSince: 'last-sync'
-}))
-
+            return data.data as WalletPermission[]
+        },
+        create: async (data: WalletPermission) => {
+            const response = await fetch("http://localhost:3000/api/v1/settings/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
+            await response.json()
+        },
+        update: async (data: WalletPermission) => {
+            const response = await fetch("http://localhost:3000/api/v1/settings/update", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
+            await response.json()
+        },
+        subscribe: ({ refresh }) => {
+            // Set up an interval to refresh messages every 5 seconds
+            const intervalId = setInterval(() => {
+                console.log("Refreshing config (5-second interval)")
+                refresh()
+            }, 5000)
+        },
+        delete: async ({ id }) => {
+            const response = await fetch("http://localhost:3000/api/v1/settings/delete", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id }),
+            })
+            await response.json()
+        },
+        persist: {
+            plugin: ObservablePersistLocalStorage,
+            name: "config-legend",
+            retrySync: true, // Retry sync after reload
+        },
+        initial: {},
+        fieldCreatedAt: "created_at",
+        fieldUpdatedAt: "updatedAt",
+        fieldDeleted: "deleted",
+        changesSince: "all",
+    }),
+)
 
 // === GET ALL PERMISSIONS =======================================================================================
 
@@ -186,7 +187,7 @@ export function getAppPermissionsPure(
     if (app === getWalletURL()) {
         // Permissions don't exist, create them.
         // The iframe is always granted the `eth_accounts` permission.
-        const permissionId = createUUID()
+        const permissionId = `${user.address}-${app}-eth_accounts`
         const permission: WalletPermission = {
             type: "WalletPermissions",
             user: user.address,
@@ -195,9 +196,9 @@ export function getAppPermissionsPure(
             caveats: [],
             date: Date.now(),
             id: permissionId,
-            deleted: false,
             updatedAt: Date.now(),
             createdAt: Date.now(),
+            deleted: false,
         }
         permissionsMapLegend[permissionId].set(permission)
         return {
@@ -235,18 +236,18 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
         return
     }
 
-    const currentPermissions = getAppPermissions(app) 
+    const currentPermissions = getAppPermissions(app)
 
     for (const permission of Object.values(currentPermissions)) {
-        permissionsMapLegend[permission.id].delete()
+        if (!permissionArray.some((p) => p.id === permission.id)) {
+            permissionsMapLegend[permission.id].delete()
+        }
     }
 
     for (const permission of permissionArray) {
         permissionsMapLegend[permission.id].set(permission)
     }
 }
-
-
 
 // === CLEAR PERMISSIONS ===========================================================================
 
@@ -256,7 +257,7 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
-    
+
     const permissions = permissionsMapLegend.get()
     for (const permission of Object.values(permissions)) {
         if (permission.user === user.address) {
@@ -352,12 +353,13 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
 
             grantedPermissions.push(appPermissions[name])
         } else {
+            const id = `${user.address}-${app}-${name}`
             const grantedPermission: WalletPermission = {
                 caveats: newCaveats,
                 invoker: app,
                 parentCapability: name,
                 date: Date.now(),
-                id: createUUID(),
+                id,
                 deleted: false,
                 updatedAt: Date.now(),
                 createdAt: Date.now(),
