@@ -131,17 +131,18 @@ export class ReceiptService {
             simulation.status === Onchain.Success &&
             evmTxReceipt.gasUsed === BigInt(simulation.gas)
         ) {
-            if (boop.payer === boop.account) {
-                logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
-                // TODO note account as problematic
-            } else {
-                logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
-            }
             output = {
                 status: Onchain.EntryPointOutOfGas,
                 description:
                     "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
                     "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
+            }
+
+            if (boop.payer === boop.account) {
+                logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
+                notePossibleMisbehaviour(boop, output)
+            } else {
+                logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
             }
         }
 
