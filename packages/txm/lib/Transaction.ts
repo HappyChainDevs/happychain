@@ -2,8 +2,8 @@ import { bigIntReplacer, bigIntReviver, bigIntToZeroPadded, createUUID } from "@
 import type { Address, Hex, UUID } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
-import { type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
 import { type Result, err, ok } from "neverthrow"
+import { type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
 import type { ABIManager } from "./AbiManager"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
@@ -158,7 +158,7 @@ export class Transaction {
      * Stores promises that wait for the transaction to be finalized.
      * These promises are resolved when the transaction status changes to a finalized state.
      */
-    private waitingPromises: ((transaction: Result<Transaction, Error>) => void)[]
+    private finalizedPromiseResolvers: ((transaction: Result<Transaction, Error>) => void)[]
 
     constructor(
         config: TransactionConstructorConfig & {
@@ -206,15 +206,12 @@ export class Transaction {
             this.args = config.args
         }
 
-        this.callbacks = Object.values(TransactionStatus).reduce(
-            (acc, status) => {
-                acc[status] = []
-                return acc
-            },
-            {} as Record<TransactionStatus, ((transaction: Transaction) => void)[]>,
-        )
+        this.callbacks = {} as Record<TransactionStatus, ((transaction: Transaction) => void)[]>
+        Object.values(TransactionStatus).forEach((status) => {
+            this.callbacks[status] = []
+        })
 
-        this.waitingPromises = []
+        this.finalizedPromiseResolvers = []
     }
 
     addAttempt(attempt: Attempt): void {
@@ -264,14 +261,23 @@ export class Transaction {
         if (!NotFinalizedStatuses.includes(status)) {
             TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
 
-            this.waitingPromises.forEach((resolve) => {
+            this.finalizedPromiseResolvers.forEach((resolve) => {
                 resolve(ok(this))
             })
 
-            this.waitingPromises = []
+            this.finalizedPromiseResolvers = []
         }
 
-        this.callbacks[status].forEach((callback) => callback(this))
+        this.callbacks[status].forEach((callback) => {
+            try {
+                callback(this)
+            } catch (error) {
+                console.error(
+                    `Error in callback for transaction ${this.intentId} when status changed to ${status}:`,
+                    error,
+                )
+            }
+        })
 
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
@@ -282,16 +288,16 @@ export class Transaction {
         this.callbacks[status].push(callback)
     }
 
-    waitForFinalization(timeout?: number): Promise<Result<Transaction, Error>> {
+    waitForFinalization(timeoutMs?: number): Promise<Result<Transaction, Error>> {
         return new Promise((resolve) => {
-            this.waitingPromises.push(resolve)
+            this.finalizedPromiseResolvers.push(resolve)
 
-            if (timeout) {
+            if (timeoutMs) {
                 setTimeout(() => {
-                    this.waitingPromises = this.waitingPromises.filter((p) => p !== resolve)
+                    this.finalizedPromiseResolvers = this.finalizedPromiseResolvers.filter((p) => p !== resolve)
 
-                    resolve(err(new Error(`Transaction finalization timed out after ${timeout}ms`)))
-                }, timeout)
+                    resolve(err(new Error(`Transaction finalization timed out after ${timeoutMs}ms`)))
+                }, timeoutMs)
             }
         })
     }
