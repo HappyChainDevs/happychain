@@ -49,7 +49,6 @@ export default new Hono()
     /**
      * Create a new guild (creator becomes admin).
      * POST /guilds
-     * @security BearerAuth
      */
     .post(
         "/",
@@ -110,7 +109,6 @@ export default new Hono()
      * Update guild details (admin only).
      * PATCH /guilds/:id
      * Requires ADMIN role in the guild
-     * @security BearerAuth
      */
     .patch(
         "/:id",
@@ -182,7 +180,6 @@ export default new Hono()
      * Add a member to a guild (admin only).
      * POST /guilds/:id/members
      * Requires ADMIN role in the guild
-     * @security BearerAuth
      */
     .post(
         "/:id/members",
@@ -245,7 +242,6 @@ export default new Hono()
      * Update a guild member's role (admin only).
      * PATCH /guilds/:id/members/:member_id
      * Requires ADMIN role in the guild
-     * @security BearerAuth
      */
     .patch(
         "/:id/members/:member_id",
@@ -292,7 +288,6 @@ export default new Hono()
      * Remove a member from a guild (admin only).
      * DELETE /guilds/:id/members/:member_id
      * Requires ADMIN role in the guild
-     * @security BearerAuth
      */
     .delete(
         "/:id/members/:member_id",

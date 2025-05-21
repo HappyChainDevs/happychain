@@ -94,7 +94,6 @@ export default new Hono()
     /**
      * Get user info from session
      * GET /auth/me
-     * @security BearerAuth
      */
     .get("/me", AuthMeDescription, requireAuth, async (c) => {
         try {
@@ -128,7 +127,6 @@ export default new Hono()
     /**
      * Logout (delete session)
      * POST /auth/logout
-     * @security BearerAuth
      */
     .post("/logout", AuthLogoutDescription, requireAuth, async (c) => {
         try {
@@ -163,7 +161,6 @@ export default new Hono()
     /**
      * List all active sessions for a user
      * GET /auth/sessions
-     * @security BearerAuth
      */
     .get("/sessions", AuthSessionsDescription, requireAuth, async (c) => {
         try {

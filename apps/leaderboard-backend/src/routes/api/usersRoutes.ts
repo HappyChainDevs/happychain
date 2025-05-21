@@ -115,7 +115,6 @@ export default new Hono()
      * Update user details by user ID.
      * PATCH /users/:id
      * Requires ownership - only the user can update their own profile
-     * @security BearerAuth
      */
     .patch(
         "/:id",
@@ -158,7 +157,6 @@ export default new Hono()
      * Delete a user by user ID and all associated data.
      * DELETE /users/:id
      * Requires ownership - only the user can delete their own profile
-     * @security BearerAuth
      */
     .delete(
         "/:id",
@@ -219,7 +217,6 @@ export default new Hono()
      * Update user details by primary wallet address.
      * PATCH /users/pw/:primary_wallet
      * Requires ownership - only the user can update their own profile
-     * @security BearerAuth
      */
     .patch(
         "/pw/:primary_wallet",
@@ -261,7 +258,6 @@ export default new Hono()
      * Delete a user by primary wallet address and all associated wallets, guild memberships, and scores.
      * DELETE /users/pw/:primary_wallet
      * Requires ownership - only the user can delete their own profile
-     * @security BearerAuth
      */
     .delete(
         "/pw/:primary_wallet",
@@ -352,7 +348,6 @@ export default new Hono()
      * Add a wallet to a user by user ID.
      * POST /users/:id/wallets
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .post(
         "/:id/wallets",
@@ -399,7 +394,6 @@ export default new Hono()
      * Add a wallet to a user by primary wallet address.
      * POST /users/pw/:primary_wallet/wallets
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .post(
         "/pw/:primary_wallet/wallets",
@@ -452,7 +446,6 @@ export default new Hono()
      * Set a wallet as primary for a user by user ID.
      * PATCH /users/:id/wallets/primary
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .patch(
         "/:id/wallets/primary",
@@ -496,7 +489,6 @@ export default new Hono()
      * Set a wallet as primary for a user by primary wallet address.
      * PATCH /users/pw/:primary_wallet/wallets/primary
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .patch(
         "/pw/:primary_wallet/wallets/primary",
@@ -546,7 +538,6 @@ export default new Hono()
      * Remove a wallet from a user by user ID.
      * DELETE /users/:id/wallets
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .delete(
         "/:id/wallets",
@@ -597,7 +588,6 @@ export default new Hono()
      * Remove a wallet from a user by primary wallet address.
      * DELETE /users/pw/:primary_wallet/wallets
      * Requires ownership - only the user can manage their own wallets
-     * @security BearerAuth
      */
     .delete(
         "/pw/:primary_wallet/wallets",

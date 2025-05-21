@@ -97,7 +97,6 @@ export default new Hono()
     /**
      * Create a new game (admin required)
      * POST /games
-     * @security BearerAuth
      */
     .post("/", requireAuth, GameCreateDescription, GameCreateValidation, async (c) => {
         try {
@@ -137,7 +136,6 @@ export default new Hono()
      * Update game details (admin only)
      * PATCH /games/:id
      * Requires game ownership - only the game creator can update it
-     * @security BearerAuth
      */
     .patch(
         "/:id",
@@ -182,7 +180,6 @@ export default new Hono()
     /**
      * Submit a new score for a game
      * POST /games/:id/scores
-     * @security BearerAuth
      */
     .post(
         "/:id/scores",
