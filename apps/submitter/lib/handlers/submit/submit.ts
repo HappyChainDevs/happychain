@@ -1,25 +1,41 @@
 import type { Hash } from "@happy.tech/common"
+import type { Transaction } from "viem"
 import { abis, deployment } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
-import { simulate } from "#lib/handlers/simulate"
+import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { boopNonceManager, computeHash, dbService, receiptService } from "#lib/services"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
-import { Onchain } from "#lib/types"
+import { type Boop, Onchain } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
 import { walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
-import type { SubmitInput, SubmitOutput } from "./types"
+import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
-    const { txHash, receiptPromise, ...output } = await submitInternal(input, true)
-    return output
+    return await submitInternal(input, true)
 }
 
+type SubmitInputInternal = SubmitInput & { timeout?: number }
+type SubmitOutputInternal =
+    | (SubmitSuccess & { txHash: Hash; receiptPromise: Promise<WaitForReceiptOutput> })
+    | (SubmitError & { txHash?: never; receiptPromise?: never })
+
 export async function submitInternal(
-    input: SubmitInput & { timeout?: number },
+    input: SubmitInputInternal,
+    earlyExit: true,
+    replacedTx?: Transaction,
+): Promise<SubmitOutput>
+export async function submitInternal(
+    input: SubmitInputInternal,
+    earlyExit: false,
+    replacedTx?: Transaction,
+): Promise<SubmitOutputInternal>
+export async function submitInternal(
+    input: SubmitInputInternal,
     earlyExit: boolean,
+    replacedTx?: Transaction,
 ): Promise<SubmitOutput & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> }> {
     const { entryPoint = deployment.EntryPoint, boop: ogBoop, timeout } = input
     let boop = ogBoop
@@ -58,12 +74,13 @@ export async function submitInternal(
         }
 
         boop = updateBoopFromSimulation(boop, simulation)
+
         // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path
         // so that we can service incoming waitForReceipt requests.
         await dbService.saveBoop(entryPoint, boop)
 
         const afterSimulationPromise = (async (): ReturnType<typeof submitInternal> => {
-            if (simulation.futureNonceDuringSimulation) {
+            if (simulation.futureNonceDuringSimulation && !replacedTx) {
                 logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
                 const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
                 logger.trace("boop unblocked", boopHash)
@@ -85,9 +102,10 @@ export async function submitInternal(
                 args: [encodeBoop(boop)],
                 abi: abis.EntryPoint,
                 functionName: "submit",
+                nonce: replacedTx?.nonce,
                 gas: BigInt(simulation.gas),
-                maxFeePerGas: simulation.maxFeePerGas,
-                maxPriorityFeePerGas: 1n,
+                maxFeePerGas: getMaxFeePerGas(simulation, replacedTx),
+                maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
                 account,
             })
 
@@ -104,4 +122,21 @@ export async function submitInternal(
     } catch (error) {
         return { ...outputForGenericError(error), stage: "submit" }
     }
+}
+
+function getMaxPriorityFeePerGas(replacedTx?: Transaction): bigint {
+    if (!replacedTx) return 10n
+    return reprice(replacedTx.maxPriorityFeePerGas!)
+}
+
+function getMaxFeePerGas(simulation: SimulateSuccess, replacedTx?: Transaction): bigint {
+    if (!replacedTx) return simulation.maxFeePerGas
+    const repriced = reprice(replacedTx.maxFeePerGas!)
+    // if the new simulation value is already higher, just use this
+    if (simulation.maxFeePerGas > repriced) return simulation.maxFeePerGas
+    return repriced
+}
+
+function reprice(gas: bigint) {
+    return (gas * 110n) / 100n
 }

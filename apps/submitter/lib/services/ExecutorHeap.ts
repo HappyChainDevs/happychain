@@ -5,6 +5,74 @@ interface Executor {
     jobCount: number
 }
 
+export class BaseHeap<T> {
+    protected heap: T[] = []
+    private compare: (a: T, b: T) => boolean
+
+    constructor(compare: (a: T, b: T) => boolean) {
+        this.compare = compare
+    }
+
+    protected getParentIndex(index: number): number {
+        return Math.floor((index - 1) / 2)
+    }
+
+    protected getLeftChildIndex(index: number): number {
+        return 2 * index + 1
+    }
+
+    protected getRightChildIndex(index: number): number {
+        return 2 * index + 2
+    }
+
+    protected swap(index1: number, index2: number): void {
+        ;[this.heap[index1], this.heap[index2]] = [this.heap[index2], this.heap[index1]]
+    }
+
+    protected bubbleUp(index: number): void {
+        let currentIndex = index
+        while (currentIndex > 0) {
+            const parentIndex = this.getParentIndex(currentIndex)
+            if (this.compare(this.heap[currentIndex], this.heap[parentIndex])) {
+                this.swap(currentIndex, parentIndex)
+                currentIndex = parentIndex
+            } else {
+                break
+            }
+        }
+    }
+
+    protected bubbleDown(index: number): void {
+        let currentIndex = index
+        let nextIndex = currentIndex
+
+        while (true) {
+            const left = this.getLeftChildIndex(currentIndex)
+            const right = this.getRightChildIndex(currentIndex)
+
+            if (left < this.heap.length && this.compare(this.heap[left], this.heap[nextIndex])) {
+                nextIndex = left
+            }
+            if (right < this.heap.length && this.compare(this.heap[right], this.heap[nextIndex])) {
+                nextIndex = right
+            }
+
+            if (nextIndex === currentIndex) break
+
+            this.swap(currentIndex, nextIndex)
+            currentIndex = nextIndex
+        }
+    }
+
+    public peek(): T | undefined {
+        return this.heap[0]
+    }
+
+    public get values(): T[] {
+        return [...this.heap]
+    }
+}
+
 /**
  * MinHeap to track Executors by job count.
  * The executor with the least job count is at the top of the heap and can be accessed with .peek()

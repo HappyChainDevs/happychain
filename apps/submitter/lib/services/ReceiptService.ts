@@ -1,12 +1,22 @@
 import { type Address, type Hash, type Hex, getOrSet, promiseWithResolvers } from "@happy.tech/common"
-import { type Log, type TransactionReceipt, WaitForTransactionReceiptTimeoutError } from "viem"
+import {
+    type Chain,
+    type Log,
+    type ReplacementReturnType,
+    type Transaction,
+    type TransactionReceipt,
+    WaitForTransactionReceiptTimeoutError,
+} from "viem"
+import { updateBoopFromSimulation } from "#lib/client.ts"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
+import { simulate } from "#lib/handlers/simulate/simulate.ts"
+import { submitInternal } from "#lib/handlers/submit/submit.ts"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
-import { computeHash, dbService, simulationCache } from "#lib/services"
+import { computeHash, dbService, findExecutionAccount, simulationCache } from "#lib/services"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
-import { publicClient } from "#lib/utils/clients"
+import { publicClient, walletClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 
@@ -87,18 +97,89 @@ export class ReceiptService {
         if (--sub.count === 0) this.#subscriptions.delete(boopHash)
     }
 
+    #timeouts = new Map<Hash, { timeout: NodeJS.Timeout }>()
+    #stopReplacementTimeout(boopHash: Hash) {
+        const timeout = this.#timeouts.get(boopHash)
+        if (!timeout) return
+        clearTimeout(timeout.timeout)
+        this.#timeouts.delete(boopHash)
+    }
+    #startReplacementTimeout(sub: Subscription, txHash: Hex, boopHash: Hex, boop: Boop) {
+        this.#stopReplacementTimeout(boopHash)
+        const timeout = setTimeout(async () => {
+            logger.warn("Transaction timed out. Cancelling transaction.", { txHash, boopHash })
+            const hash = await this.#replaceOrCancelTransaction({ txHash, boop })
+            void this.#waitAndCreateReceipt(sub, hash, boop)
+        }, 4200) // wait for a little over 2 blocks before replacing
+        this.#timeouts.set(boopHash, { timeout })
+    }
+
+    async #replaceOrCancelTransaction({ txHash, boop }: { txHash: Hash; boop: Boop }) {
+        const tx = await publicClient.getTransaction({ hash: txHash })
+
+        const simulation = await simulate({ entryPoint: tx.to!, boop })
+        // Simply cancel if re-simulation failed
+        if (simulation.status !== Onchain.Success) return await this.#boopToNoop(boop, tx)
+
+        // submit internal, or just have similar helper to #cancelBoop
+        const results = await submitInternal({ boop, entryPoint: tx.to! }, false, tx)
+
+        if (results.status !== Onchain.Success) {
+            logger.warn("Failed to replace transaction", { txHash, boopHash: computeHash(boop) })
+            return await this.#boopToNoop(boop, tx)
+        }
+
+        return results.txHash
+    }
+
+    /**
+     * Cancels the current transaction by sending a noop transaction with higher gas.
+     */
+    async #boopToNoop(boop: Boop, tx: Transaction) {
+        const account = findExecutionAccount(boop)
+
+        const feeData = await publicClient.getFeeHistory({ blockCount: 1, rewardPercentiles: [50], blockTag: "latest" })
+        const latestBaseFee = feeData.baseFeePerGas[0]!
+        const estimatedNextBaseFee = (latestBaseFee * 1125n) / 1000n // +12.5% worst case
+        const maxPriorityFeePerGas = (tx.maxPriorityFeePerGas! * 130n) / 100n
+        const maxFeePerGas = estimatedNextBaseFee + maxPriorityFeePerGas
+
+        return await walletClient.sendTransaction({
+            to: account.address,
+            value: 0n,
+            nonce: tx.nonce,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            account,
+        })
+    }
+
     async #waitAndCreateReceipt(sub: Subscription, evmTxHash: Hash, boop: Boop): Promise<void> {
-        const args = { hash: evmTxHash, pollingInterval: 500, timeout: env.RECEIPT_TIMEOUT }
         const boopHash = computeHash(boop)
         sub.evmTxHash = evmTxHash
+
+        const args = {
+            hash: evmTxHash,
+            pollingInterval: 250,
+            timeout: env.RECEIPT_TIMEOUT,
+            onReplaced: (replacement) => {
+                logger.info(`Transaction ${replacement.reason}`, { evmTxHash })
+                sub.evmTxHash = replacement.transaction.hash
+                this.#startReplacementTimeout(sub, evmTxHash, boopHash, boop)
+            },
+        } satisfies Parameters<typeof publicClient.waitForTransactionReceipt>[0]
+
         while (sub.count > 0 && sub.evmTxHash === evmTxHash) {
             try {
+                this.#startReplacementTimeout(sub, evmTxHash, boopHash, boop)
                 logger.trace("Waiting for receipt", boopHash, evmTxHash)
                 const evmTxReceipt = await publicClient.waitForTransactionReceipt(args)
                 logger.trace("Got receipt", boopHash, evmTxHash)
+                this.#stopReplacementTimeout(boopHash)
                 sub.pwr.resolve(await this.#getReceiptResult(boop, evmTxReceipt))
                 break
             } catch (error) {
+                this.#stopReplacementTimeout(boopHash)
                 // Retry, but only if there are still subscribers and we haven't replaced the transaction.
                 if (error instanceof WaitForTransactionReceiptTimeoutError) continue
                 // We could also retry, but we fail fast unless we're already monitoring another tx.
