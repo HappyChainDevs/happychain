@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { deleteCookie, setCookie } from "hono/cookie"
 import { requireAuth, verifySignature } from "../../auth"
 import type { AuthSessionTableId } from "../../db/types"
-import { env } from "../../env"
+import { sessionCookieConfig } from "../../env"
 import {
     AuthChallengeDescription,
     AuthChallengeValidation,
@@ -63,14 +63,7 @@ export default new Hono()
                 return c.json({ ok: false, error: "Failed to create session" }, 500)
             }
 
-            setCookie(c, "session_id", session.id, {
-                httpOnly: true,
-                secure: true,
-                domain: "localhost",
-                sameSite: "Lax",
-                path: "/",
-                maxAge: Number.parseInt(env.SESSION_EXPIRY, 10),
-            })
+            setCookie(c, sessionCookieConfig.name, session.id, sessionCookieConfig)
 
             // Return success with session ID and user info
             return c.json({
@@ -101,7 +94,6 @@ export default new Hono()
             const userId = c.get("userId")
 
             const user = await userRepo.findById(userId)
-
             if (!user) {
                 return c.json({ ok: false, error: "User not found" }, 404)
             }
@@ -140,10 +132,11 @@ export default new Hono()
             }
 
             // Delete the session cookie
-            deleteCookie(c, "session_id", {
-                path: "/",
-                secure: true,
-                domain: "localhost",
+            deleteCookie(c, sessionCookieConfig.name, {
+                path: sessionCookieConfig.path,
+                secure: sessionCookieConfig.secure,
+                domain: sessionCookieConfig.domain,
+                sameSite: sessionCookieConfig.sameSite,
             })
 
             return c.json({
