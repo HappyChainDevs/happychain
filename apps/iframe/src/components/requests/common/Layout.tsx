@@ -75,6 +75,8 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
     )
 }
 
+// =============================== Sections ===============================
+
 export const SectionBlock = ({ children }: PropsWithChildren) => {
     return <section className="max-w-prose py-2 px-2.5 grid gap-2 w-full mx-auto">{children}</section>
 }
@@ -83,33 +85,36 @@ export const SectionTitle = ({ children }: PropsWithChildren) => {
     return <h1 className="text-xs font-semibold">{children}</h1>
 }
 
+// =============================== Subsections ===============================
+
 export type SubsectionVariant = "default" | "error" | "warning"
 interface SubsectionBlockProps extends PropsWithChildren {
     variant?: SubsectionVariant
 }
 
-export const SubsectionBlock = ({ children, variant = "default" }: SubsectionBlockProps) => {
-    const recipeSubsectionBlock = cva(
-        ["bg-base-100/40 dark:bg-neutral/25 py-2 px-2.5 grid gap-4 [&_ol:not(:last-of-type)]:pb-8 rounded-md"],
-        {
-            variants: {
-                intent: {
-                    default: "",
-                    error: [
-                        "border bg-error/40 border-error dark:bg-error/5 dark:border-error/20",
-                        "text-error-content/90 dark:text-error text-sm rounded-lg",
-                    ],
-                    warning: [
-                        "border bg-warning/40 border-warning dark:bg-warning/5 dark:border-warning/20",
-                        "text-warning-content/90 dark:text-warning text-sm rounded-lg",
-                    ],
-                },
-            },
-            defaultVariants: {
-                intent: "default",
+const recipeSubsectionBlock = cva(
+    ["bg-base-100/40 dark:bg-neutral/25 py-2 px-2.5 grid gap-4 [&_ol:not(:last-of-type)]:pb-8 rounded-md grid gap-1"],
+    {
+        variants: {
+            intent: {
+                default: "",
+                error: [
+                    "border bg-error/40 border-error dark:bg-error/5 dark:border-error/20",
+                    "text-error-content/90 dark:text-error text-sm rounded-lg",
+                ],
+                warning: [
+                    "border bg-warning/40 border-warning dark:bg-warning/5 dark:border-warning/20",
+                    "text-warning-content/90 dark:text-warning text-sm rounded-lg",
+                ],
             },
         },
-    )
+        defaultVariants: {
+            intent: "default",
+        },
+    },
+)
+
+export const SubsectionBlock = ({ children, variant = "default" }: SubsectionBlockProps) => {
     return <section className={recipeSubsectionBlock({ intent: variant })}>{children}</section>
 }
 
@@ -120,6 +125,8 @@ export const SubsectionTitle = ({ children }: PropsWithChildren) => {
 export const SubsectionContent = ({ children }: PropsWithChildren) => {
     return <div className="grid gap-1">{children}</div>
 }
+
+// =============================== Details ===============================
 
 interface FormattedDetailsLineProps extends PropsWithChildren {
     isCode?: boolean
