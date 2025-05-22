@@ -1,8 +1,7 @@
 import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
 import { AuthState, BasePopupProvider, LoginRequiredError, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
-import { config } from "../config"
-import { chain } from "../loadHappyWallet"
+import { chain, config } from "../config"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
 

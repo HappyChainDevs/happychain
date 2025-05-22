@@ -4,3 +4,8 @@
 export const config = {
     iframePath: import.meta.env.IFRAME_URL || "http://localhost:5160",
 }
+
+/** Box to hold the chainId loaded with {@link loadHappyWallet}. */
+export const chain = {
+    id: 0xdeadbeef,
+}

@@ -1,15 +1,11 @@
 import { defaultChain } from "@happy.tech/wallet-common"
 import define from "preact-custom-element"
 import { defineBadgeComponent } from "./badge/define"
+import { chain } from "./config"
 import { windowId } from "./happyProvider"
 import { HappyOverlay } from "./overlay/HappyOverlay"
 import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
-
-/** Box to hold the chainId loaded with {@link loadHappyWallet}. */
-export const chain = {
-    id: 0xdeadbeef,
-}
 
 /**
  * Options for the {@link loadHappyWallet} function.
