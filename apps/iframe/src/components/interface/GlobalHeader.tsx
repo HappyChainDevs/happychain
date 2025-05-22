@@ -4,7 +4,7 @@ import { GearSix } from "@phosphor-icons/react/dist/ssr"
 import { Link, useLocation } from "@tanstack/react-router"
 import { useAtom } from "jotai"
 import { appMessageBus } from "#src/services/eventBus"
-import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState.ts"
+import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 
 function signalClosed() {
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })

@@ -4,7 +4,7 @@ import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { dispatchApprovedRequest } from "#src/requests/handlers/approved"
 import { setAuthState } from "#src/state/authState"
-import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
+import { clearPermissions, getAllPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
 
 const { appURL, walletURL, parentID, appURLMock } = await vi //

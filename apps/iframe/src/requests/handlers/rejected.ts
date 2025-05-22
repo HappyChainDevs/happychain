@@ -5,9 +5,9 @@ import {
     WalletType,
     serializeRpcError,
 } from "@happy.tech/wallet-common"
-import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
+import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy"
 import { happyProviderBus } from "#src/services/eventBus"
-import { getUser } from "#src/state/user.ts"
+import { getUser } from "#src/state/user"
 import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { iframeProvider } from "#src/wagmi/provider"
 

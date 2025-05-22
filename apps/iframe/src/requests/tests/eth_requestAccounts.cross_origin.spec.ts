@@ -4,7 +4,7 @@ import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissionless"
 import { setAuthState } from "#src/state/authState"
-import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions.ts"
+import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
 
 const { appURL, parentID, appURLMock } = await vi //

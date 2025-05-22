@@ -1,5 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
-import { appMessageBus } from "#src/services/eventBus.ts"
+import { appMessageBus } from "#src/services/eventBus"
 
 /**
  * Forward error display requests to the front

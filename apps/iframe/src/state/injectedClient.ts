@@ -1,7 +1,7 @@
 import { accessorsFromAtom } from "@happy.tech/common"
 import { type Atom, atom } from "jotai"
 import { createWalletClient, custom } from "viem"
-import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
+import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy"
 import { userAtom } from "./user"
 import type { AccountWalletClient } from "./walletClient"
 

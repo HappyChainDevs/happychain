@@ -1,9 +1,9 @@
 import { Outlet, type RouterEvents, createRootRoute, useRouter } from "@tanstack/react-router"
 import { revokedSessionKeys } from "#src/state/interfaceState"
 import type { AppURL } from "#src/utils/appURL"
-import "#src/connections/initialize.ts"
+import "#src/connections/initialize"
 import { useEffect } from "react"
-import { revokeSessionKeys } from "#src/requests/utils/sessionKeys.ts"
+import { revokeSessionKeys } from "#src/requests/utils/sessionKeys"
 import { DevTools } from "../components/DevTools"
 
 export const Route = createRootRoute({

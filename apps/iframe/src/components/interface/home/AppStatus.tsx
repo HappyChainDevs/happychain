@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import { currentChainAtom } from "#src/state/chains.ts"
+import { currentChainAtom } from "#src/state/chains"
 import { getAppURL } from "#src/utils/appURL"
 
 export const AppStatus = () => {
