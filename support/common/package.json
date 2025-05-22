@@ -13,7 +13,7 @@
     },
     "peerDependencies": {
         "jotai": "^2.9.3",
-        "viem": "^2.21.53"
+        "viem": "^2.30.0"
     },
     "peerDependenciesMeta": {
         "jotai": {

@@ -34,7 +34,7 @@
         "vitest": "^3.0.5"
     },
     "peerDependencies": {
-        "viem": "^2.21.53"
+        "viem": "^2.30.0"
     },
     "devDependencies": {
         "@happy.tech/happybuild": "workspace:0.1.1",

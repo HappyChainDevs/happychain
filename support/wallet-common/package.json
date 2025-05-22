@@ -16,7 +16,7 @@
     "dependencies": {},
     "peerDependencies": {
         "@metamask/safe-event-emitter": "^3.1.1",
-        "viem": "^2.21.53"
+        "viem": "^2.30.0"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
