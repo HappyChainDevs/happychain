@@ -1,6 +1,13 @@
 import { HappyMethodNames } from "@happy.tech/common"
-import { EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
-import { isAddress } from "viem"
+import { isAddress } from "@happy.tech/common"
+import {
+    EIP1193UserRejectedRequestError,
+    EIP1474InvalidInput,
+    type Msgs,
+    type ProviderMsgsFromApp,
+} from "@happy.tech/wallet-common"
+import { HappyWalletCapability } from "@happy.tech/wallet-common"
+import type { Capabilities } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
@@ -95,11 +102,14 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
 
         case "wallet_getCapabilities": {
             checkAuthenticated()
-            checkedAddress(request.payload.params?.[0])
+            if (!request.payload?.params?.[0]) {
+                throw new EIP1474InvalidInput("Missing payload")
+            }
+
+            checkAndChecksumAddress(request.payload.params[0])
 
             const currentChainId = getCurrentChain().chainId
-
-            const capabilities: WalletCapabilities = {
+            const capabilities: Capabilities = {
                 [currentChainId]: Object.fromEntries(
                     Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
                 ),
