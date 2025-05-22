@@ -46,8 +46,8 @@ contract UpgradeHappyAccountUUPSProxyTest is Test, BoopTestUtils {
         owner = vm.addr(privKey);
 
         // Deploy the boop contracts as foundry-account-0
-        vm.startPrank(owner);
-        happyAccountRegistry = new HappyAccountRegistry(owner);
+        vm.startPrank(owner, owner);
+        happyAccountRegistry = new HappyAccountRegistry();
         entryPoint = new EntryPoint();
         address happyAccountImplementation = address(new HappyAccountUUPSProxy(address(entryPoint)));
         happyAccountFactory =

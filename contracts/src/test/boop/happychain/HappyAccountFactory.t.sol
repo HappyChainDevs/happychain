@@ -21,10 +21,11 @@ contract HappyAccountFactoryTest is Test {
     HappyAccountRegistry private happyAccountRegistry;
 
     function setUp() public {
-        happyAccountRegistry = new HappyAccountRegistry(address(this));
+        happyAccountRegistry = new HappyAccountRegistry();
         implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
         accountBeacon = new HappyAccountBeacon(address(implementation), address(this));
         factory = new HappyAccountBeaconProxyFactory(address(accountBeacon), address(happyAccountRegistry));
+        vm.prank(tx.origin);
         happyAccountRegistry.setAuthorizedFactory(address(factory), true);
     }
 
