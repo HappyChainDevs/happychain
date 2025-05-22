@@ -7,7 +7,7 @@ contract HappyAccountRegistry is Ownable {
     mapping(address => bool) public isAuthorizedFactory;
     mapping(address account => address factory) public registeredAccounts;
 
-    constructor(address owner) Ownable(owner) {}
+    constructor() Ownable(tx.origin) {}
 
     modifier onlyAuthorizedFactory() {
         require(isAuthorizedFactory[msg.sender], "Not an authorized factory");

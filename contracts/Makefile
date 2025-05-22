@@ -518,15 +518,15 @@ deploy-boop: ## Deploys the Boop contracts.
 .PHONY: deploy-boop
 
 deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/boop-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-boop
+	DEPLOYMENT_NAME=happy-sepolia/boop-staging CONFIG=TEST make deploy-boop
 .PHONY: deploy-boop-staging
 
-deploy-mock-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/mock-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-mocks
+deploy-mocks-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
+	DEPLOYMENT_NAME=happy-sepolia/mock-staging CONFIG=TEST make deploy-mocks
 .PHONY: deploy-mock-staging
 
 deploy-random-staging: ## Deploys the randomness contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/random-staging METADATA_FLAG="--no-metadata" CONFIG=TEST make deploy-random
+	DEPLOYMENT_NAME=happy-sepolia/random-staging CONFIG=TEST make deploy-random
 .PHONY: deploy-random-staging
 
 deploy-mocks: ## Deploys the mock contracts.
