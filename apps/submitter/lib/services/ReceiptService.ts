@@ -22,7 +22,7 @@ type PendingBoopInfo = {
 }
 type PendingEvmTxInfo = {
     boop: Boop
-    sub?: PendingBoopInfo
+    sub?: PendingBoopInfo // `sub` can legitimately be undefined here
 }
 export type WaitForInclusionArgs = {
     boopHash: Hash
@@ -48,8 +48,8 @@ export class ReceiptService {
     #receiptMaxRetryDelayMs = 10000 // Max delay for receipt fetch in ms (10 seconds)
 
     // NEW: Fast Lane Configuration
-    #fastLaneInitialPollingIntervalMs = 100 // Poll every 100ms
-    #fastLaneMaxAttempts = 10 // Try 10 times, so max ~1 second for fast lane
+    #fastLaneInitialPollingIntervalMs = 100; // Poll every 100ms
+    #fastLaneMaxAttempts = 10; // Try 10 times, so max ~1 second for fast lane
 
     constructor() {
         this.#startBlockWatcher()
@@ -135,73 +135,71 @@ export class ReceiptService {
 
         // 3. if caller gave a txHash, link it to pending-hashes map
         if (txHash) {
-            const pend = getOrSet(this.#pendingEvmTxs, txHash, () => ({ boop: boop!, sub: sub })) // boop is guaranteed at this point
-            pend.sub = sub
+            const pend = getOrSet(this.#pendingEvmTxs, txHash, () => ({ boop: boop!, sub: sub })); // boop is guaranteed at this point
+            pend.sub = sub;
         }
 
         // --- NEW: Fast Lane Promise ---
-        let fastLanePromise: Promise<WaitForReceiptOutput | null> = Promise.resolve(null) // Resolves to null if fast lane doesn't find
-        if (txHash) {
-            // Only attempt fast lane if we have a txHash
+        let fastLanePromise: Promise<WaitForReceiptOutput | null> = Promise.resolve(null); // Resolves to null if fast lane doesn't find
+        if (txHash) { // Only attempt fast lane if we have a txHash
             fastLanePromise = (async () => {
-                let currentAttempt = 0
+                let currentAttempt = 0;
                 while (currentAttempt < this.#fastLaneMaxAttempts) {
                     try {
-                        const r = await publicClient.getTransactionReceipt({ hash: txHash })
-                        const out = await this.#getReceiptResult(boop!, r) // Process and save the receipt
-                        logger.trace(`Fast lane for ${txHash} found receipt: ${out.status}`)
+                        const r = await publicClient.getTransactionReceipt({ hash: txHash });
+                        const out = await this.#getReceiptResult(boop!, r); // Process and save the receipt
                         // Crucially, resolve the main promise for ALL waiters
                         // This call is idempotent, so it's safe even if already resolved by another path.
-                        sub.pwr.resolve(out)
-                        return out // Resolve fastLanePromise with the result
+                        if (sub.pwr) { // Defensive check
+                            sub.pwr.resolve(out);
+                        }
+                        return out; // Resolve fastLanePromise with the result
                     } catch (e) {
                         // Only retry if it's "receipt not found"
-                        const isRetryableError =
-                            e && typeof e === "object" && "name" in e && e.name === "TransactionReceiptNotFoundError"
+                        const isRetryableError = e && typeof e === "object" && "name" in e && e.name === "TransactionReceiptNotFoundError";
                         if (isRetryableError) {
-                            currentAttempt++
-                            await new Promise((resolve) => setTimeout(resolve, this.#fastLaneInitialPollingIntervalMs))
+                            currentAttempt++;
+                            await new Promise(resolve => setTimeout(resolve, this.#fastLaneInitialPollingIntervalMs));
                         } else {
                             // Some other error, log it but don't resolve main promise via fast lane
-                            logger.warn(`Fast lane for ${txHash} encountered non-retryable error: ${String(e)}`)
-                            return null // Fast lane failed, let the other path win
+                            logger.warn(`Fast lane for ${txHash} encountered non-retryable error: ${String(e)}`);
+                            return null; // Fast lane failed, let the other path win
                         }
                     }
                 }
-                logger.trace(`Fast lane for ${txHash} timed out after ${this.#fastLaneMaxAttempts} attempts.`)
-                return null // Fast lane didn't find it within its attempts/time
-            })()
+                logger.trace(`Fast lane for ${txHash} timed out after ${this.#fastLaneMaxAttempts} attempts.`);
+                return null; // Fast lane didn't find it within its attempts/time
+            })();
         }
 
         // 4. Race all promises: fastLane (if active), block watcher, and global timeout
         try {
-            const result = (await Promise.race([
-                fastLanePromise.then((res) => {
-                    if (res) return res
-                    return new Promise<WaitForReceiptOutput>(() => {}) // Indefinitely pending if fast lane fails/times out
+            const result = await Promise.race([
+                fastLanePromise.then(res => {
+                    if (res) return res;
+                    return new Promise<WaitForReceiptOutput>(() => {}); // Indefinitely pending if fast lane fails/times out
                 }),
                 sub.pwr.promise, // The promise resolved by #handleTransactionInBlock
                 new Promise<WaitForReceiptOutput>((_, reject) =>
                     setTimeout(() => reject(new ReceiptTimeout()), timeout),
                 ),
-            ])) as WaitForReceiptOutput
+            ]) as WaitForReceiptOutput;
 
-            return result
+            return result;
+
         } catch (e) {
             return e instanceof ReceiptTimeout
                 ? { status: SubmitterError.ReceiptTimeout, description: "Timed out while waiting for receipt." }
-                : { status: SubmitterError.UnexpectedError, description: String(e) }
+                : { status: SubmitterError.UnexpectedError, description: String(e) };
         } finally {
             // 5. clean-up for this *caller* (might not empty the subscription yet)
-            if (--sub.count === 0) this.#pendingBoops.delete(boopHash)
+            if (--sub.count === 0) this.#pendingBoops.delete(boopHash);
             if (txHash) {
-                const pend = this.#pendingEvmTxs.get(txHash)
-                if (pend && pend.sub === sub) {
-                    // biome-ignore lint/performance/noDelete: <explanation>
-                    delete pend.sub // Remove the link
-                    if (!Object.keys(pend).length) {
-                        // If there are no other properties left on pend
-                        this.#pendingEvmTxs.delete(txHash)
+                const pend = this.#pendingEvmTxs.get(txHash);
+                if (pend && pend.sub === sub) { // Check if the *same* sub is linked
+                    delete pend.sub; // Remove the link
+                    if (!Object.keys(pend).length) { // If there are no other properties left on pend
+                        this.#pendingEvmTxs.delete(txHash);
                     }
                 }
             }
@@ -217,19 +215,23 @@ export class ReceiptService {
                 const hash = typeof tx === "string" ? tx : tx.hash
                 const pending = this.#pendingEvmTxs.get(hash as Hash)
                 if (!pending) continue // not one of ours
-                // The crucial part: #handleTransactionInBlock will now resolve the sub.pwr.promise
-                // which means any `waitForInclusion` call waiting on it will get its result.
-                void this.#handleTransactionInBlock(hash as Hash, pending.boop, pending.sub!)
+                // Pass pending.sub directly. handleTransactionInBlock will check for undefined.
+                void this.#handleTransactionInBlock(hash as Hash, pending.boop, pending.sub)
             }
         } catch (e) {
             logger.warn("block-watcher error", e)
         }
     }
 
-    async #handleTransactionInBlock(txHash: Hash, boop: Boop, sub: PendingBoopInfo): Promise<void> {
-        // Removed the check for `isResolved` / `isRejected`
-        // Promise.resolve() is idempotent, so calling it multiple times is safe.
-        // The first call to resolve `sub.pwr.promise` (from either fast lane or this path) will be the one that takes effect.
+    // Change sub to be optional
+    async #handleTransactionInBlock(txHash: Hash, boop: Boop, sub: PendingBoopInfo | undefined): Promise<void> {
+        // Defensive check: If sub is undefined, the original waitForInclusion call
+        // has likely already cleaned up its subscription (e.g., timed out or fast lane resolved).
+        // Nothing more to do here.
+        if (!sub) {
+            logger.trace(`No active subscriber (sub) found for tx ${txHash}. Skipping receipt handling.`);
+            return;
+        }
 
         let currentAttempt = 0
         let delay = this.#receiptInitialRetryDelayMs
@@ -239,8 +241,13 @@ export class ReceiptService {
                 const r = await publicClient.getTransactionReceipt({ hash: txHash })
                 const out = await this.#getReceiptResult(boop, r)
 
-                // Success: Resolve the single subscription and clean up
-                sub.pwr.resolve(out)
+                // Success: Resolve the single subscription
+                // Add a defensive check here too, though if `sub` is defined, `sub.pwr` should be.
+                if (sub.pwr) {
+                    sub.pwr.resolve(out)
+                } else {
+                    logger.trace(`Promise for tx ${txHash} already resolved/cleaned up. Skipping final resolution.`);
+                }
                 return // Exit on success
             } catch (e) {
                 const isRetryableError =
@@ -259,12 +266,15 @@ export class ReceiptService {
                         `Max retry attempts reached for receipt ${txHash}. Could not get receipt. Final error: ${String(e)}`,
                     )
                     // If max attempts reached, resolve with error and clean up
-                    // This call is also idempotent, won't error if already resolved by fast lane or other means.
-                    sub.pwr.resolve({
-                        status: SubmitterError.ReceiptTimeout,
-                        description:
-                            "Transaction receipt could not be fetched after multiple retries via block watcher.",
-                    })
+                    // Crucially, check if sub.pwr is still valid BEFORE attempting to resolve it.
+                    if (sub.pwr) {
+                        sub.pwr.resolve({
+                            status: SubmitterError.ReceiptTimeout,
+                            description: "Transaction receipt could not be fetched after multiple retries via block watcher.",
+                        })
+                    } else {
+                        logger.trace(`Promise for tx ${txHash} already resolved/cleaned up. Skipping final error resolution.`);
+                    }
                     return
                 }
             }
