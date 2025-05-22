@@ -123,7 +123,8 @@ export async function eth_estimateGas(
     user: HappyUser | undefined,
     tx: ValidRpcTransactionRequest,
 ): Promise<Hex | Forward> {
-    if (user?.address !== tx.from) return FORWARD
+    const account = user?.address ?? tx.from
+    if (!account || account !== tx.from) return FORWARD
 
     try {
         const boopClient = getBoopClient()
@@ -131,7 +132,7 @@ export async function eth_estimateGas(
 
         // boopFromTransaction already handles both legacy and EIP-1559 transactions
         // by converting gasPrice to maxFeePerGas when needed
-        const boop = await boopFromTransaction(user?.address, tx)
+        const boop = await boopFromTransaction(account, tx)
         const output = await boopClient.simulate({ entryPoint, boop })
 
         if (output.status !== Onchain.Success) {
