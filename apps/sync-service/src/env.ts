@@ -10,11 +10,4 @@ const envSchema = z.object({
     ),
 })
 
-const parsedEnv = envSchema.safeParse(process.env)
-
-if (!parsedEnv.success) {
-    console.log(parsedEnv.error.issues)
-    throw new Error("There is an error with the server environment variables")
-}
-
-export const env = parsedEnv.data
+export const env = envSchema.parse(process.env)

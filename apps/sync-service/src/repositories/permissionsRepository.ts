@@ -1,34 +1,20 @@
 import type { Hex } from "@happy.tech/common"
-import type { UUID } from "@happy.tech/common"
 import type { Insertable, Selectable } from "kysely"
 import { db } from "../db/driver"
-import type { WalletPermissionTable } from "../db/types"
+import type { WalletPermisisonRow } from "../db/types"
 import type { WalletPermission } from "../dtos"
 
-function fromDtoToDb(permission: WalletPermission): Insertable<WalletPermissionTable> {
+function fromDtoToDb(permission: WalletPermission): Insertable<WalletPermisisonRow> {
     return {
-        user: permission.user,
-        invoker: permission.invoker,
-        parentCapability: permission.parentCapability,
+        ...permission,
         caveats: JSON.stringify(permission.caveats),
-        date: permission.date,
-        id: permission.id,
-        updatedAt: permission.updatedAt,
-        createdAt: permission.createdAt,
     }
 }
 
-function fromDbToDto(permission: Selectable<WalletPermissionTable>): WalletPermission {
+function fromDbToDto(permission: Selectable<WalletPermisisonRow>): WalletPermission {
     return {
         type: "WalletPermissions",
-        user: permission.user,
-        invoker: permission.invoker,
-        parentCapability: permission.parentCapability,
-        caveats: permission.caveats,
-        date: permission.date,
-        id: permission.id,
-        updatedAt: permission.updatedAt,
-        createdAt: permission.createdAt,
+        ...permission,
     }
 }
 

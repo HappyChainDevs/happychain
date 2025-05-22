@@ -89,14 +89,9 @@ export type SessionKeyRequest = {
  */
 export type PermissionsRequest = string | PermissionRequestObject
 
-type PermissionCheckParams = {
-    permissionsRequest: PermissionsRequest
-    app: AppURL
-}
-
 export const permissionsMapLegend = observable(
     syncedCrud({
-        list: async ({ lastSync }) => {
+        list: async () => {
             const user = getUser()
             if (!user) return []
             const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}`)
@@ -126,7 +121,7 @@ export const permissionsMapLegend = observable(
         },
         subscribe: ({ refresh }) => {
             // Set up an interval to refresh messages every 5 seconds
-            const intervalId = setInterval(() => {
+            setInterval(() => {
                 console.log("Refreshing config (5-second interval)")
                 refresh()
             }, 5000)
@@ -360,7 +355,6 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
                 parentCapability: name,
                 date: Date.now(),
                 id,
-                deleted: false,
                 updatedAt: Date.now(),
                 createdAt: Date.now(),
                 type: "WalletPermissions",

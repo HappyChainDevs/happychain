@@ -1,5 +1,5 @@
 import type { Hex } from "@happy.tech/common"
-import type { HTTPString, UUID } from "@happy.tech/common"
+import type { HTTPString } from "@happy.tech/common"
 import type { ColumnType } from "kysely"
 
 export type AppURL = HTTPString & { _brand: "AppHTTPString" }
@@ -17,13 +17,13 @@ type WalletPermissionCaveat = {
  *
  * This type is copied from Viem (eip1193.ts)  but we add a user field.
  */
-export type WalletPermissionTable = {
+export type WalletPermisisonRow = {
     // The user to which the permission is granted.
     user: Hex
     // The app to which the permission is granted.
     invoker: AppURL
     // This is the EIP-1193 request that this permission is mapped to.
-    parentCapability: "eth_accounts" | string // TODO only string or make specific
+    parentCapability: string
     caveats: ColumnType<WalletPermissionCaveat[], string, string>
     date: number
     // Not in the EIP, but Viem wants this.
@@ -33,5 +33,5 @@ export type WalletPermissionTable = {
 }
 
 export interface Database {
-    walletPermissions: WalletPermissionTable
+    walletPermissions: WalletPermisisonRow
 }

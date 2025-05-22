@@ -5,9 +5,9 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
-start: ## Starts the settings service
+dev: ## Starts the settings service
 	bun run --hot src/index.ts
-.PHONY: start
+.PHONY: dev
 
 migrate: ## Runs pending migrations
 	bun run src/migrate.ts
