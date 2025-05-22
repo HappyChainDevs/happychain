@@ -36,6 +36,6 @@
         "node-jq": "^6.0.1",
         "permissionless": "^0.2.0",
         "solhint": "^5.0.5",
-        "viem": "^2.21.53"
+        "viem": "^2.30.0"
     }
 }
