@@ -8,28 +8,12 @@ import { happyPaymaster, happyPaymasterAbi } from "#src/constants/contracts"
 const MAX_GAS_BUDGET: UInt32 = 1_000_000_000
 
 /**
- * Battery health level index (0–4) representing gas budget tiers.
- */
-export type BatteryHealthIndicator = 0 | 1 | 2 | 3 | 4
-
-/**
- * Thresholds dividing the `MAX_GAS_BUDGET` into five discrete battery levels.
- */
-const BUDGET_THRESHOLDS = [
-    0, // Empty (Critical)
-    MAX_GAS_BUDGET / 4, // 1: Low (250_000_000)
-    (MAX_GAS_BUDGET * 2) / 4, // 2: Medium (500_000_000)
-    (MAX_GAS_BUDGET * 3) / 4, // 3: High (750_000_000)
-    MAX_GAS_BUDGET, // 4: Full (1_000_000_000)
-]
-
-/**
  * Structured gas budget info for UI display:
  * - `batteryHealth`: discrete level 0–4
  * - `batteryPct`: percentage of MAX_GAS_BUDGET (0–100).
  */
 export type UserGasBudgetInfo = {
-    batteryHealth: BatteryHealthIndicator
+    batteryHealth: number
     batteryPct: number
 }
 
@@ -68,17 +52,10 @@ export const useReadUserGasBudget = (userAddress?: Address): UseReadUserGasBudge
              * @param userGasBudget - raw uint32 gas budget from contract
              */
             select(userGasBudget) {
-                let batteryHealth: BatteryHealthIndicator = 0
-                for (let i = BUDGET_THRESHOLDS.length - 1; i >= 0; i--) {
-                    if (0 >= BUDGET_THRESHOLDS[i]) {
-                        batteryHealth = i as BatteryHealthIndicator
-                        break
-                    }
-                }
-
+                const pct = userGasBudget / MAX_GAS_BUDGET
                 return {
-                    batteryHealth,
-                    batteryPct: Number(((userGasBudget / MAX_GAS_BUDGET) * 100).toFixed(2)),
+                    batteryHealth: Math.round(pct * 4),
+                    batteryPct: Number((pct * 100).toFixed(2)),
                 }
             },
         },

@@ -1,18 +1,18 @@
 import {
-    BatteryFull,
-    BatteryHigh,
-    BatteryLow,
-    BatteryMedium,
-    BatteryWarning,
+    BatteryFullIcon,
+    BatteryHighIcon,
+    BatteryLowIcon,
+    BatteryMediumIcon,
+    BatteryWarningIcon,
     type Icon,
-    Spinner,
+    SpinnerIcon,
 } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import type { ClassValue } from "class-variance-authority/types"
-import { type BatteryHealthIndicator, useReadUserGasBudget } from "#src/hooks/useReadUserGasBudget.ts"
+import { useReadUserGasBudget } from "#src/hooks/useReadUserGasBudget.ts"
 import { getUser } from "#src/state/user.ts"
 
-const colorMap: Record<BatteryHealthIndicator, ClassValue> = {
+const colorMap: Record<number, ClassValue> = {
     0: "text-error animate-pulse",
     1: "text-warning/60",
     2: "text-warning",
@@ -23,12 +23,12 @@ const colorMap: Record<BatteryHealthIndicator, ClassValue> = {
 /**
  * Maps each battery health level to the corresponding Phosphor Icon component.
  */
-const batteryIconStates: Record<BatteryHealthIndicator, Icon> = {
-    0: BatteryWarning,
-    1: BatteryLow,
-    2: BatteryMedium,
-    3: BatteryHigh,
-    4: BatteryFull,
+const batteryIconStates: Record<number, Icon> = {
+    0: BatteryWarningIcon,
+    1: BatteryLowIcon,
+    2: BatteryMediumIcon,
+    3: BatteryHighIcon,
+    4: BatteryFullIcon,
 }
 
 export const UserGasBudgetIndicator = () => {
@@ -39,7 +39,7 @@ export const UserGasBudgetIndicator = () => {
     } = useReadUserGasBudget(user?.address)
 
     if (isLoading || batteryHealth === undefined)
-        return <Spinner weight="bold" className="text-lg mr-1 dark:opacity-60" />
+        return <SpinnerIcon weight="bold" className="text-lg mr-1 dark:opacity-60" />
 
     const BatteryIcon = batteryIconStates[batteryHealth]
     const colorClass = colorMap[batteryHealth]
