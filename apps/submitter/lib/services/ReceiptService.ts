@@ -42,86 +42,21 @@ export class ReceiptService {
     #blockWatcherMaxRetryDelayMs = 30000 // Max delay in ms (30 seconds)
     #currentBlockWatcherRetryAttempt = 0
 
-    // getTransactionReceipt retry configuration
+    // getTransactionReceipt retry configuration (for both fast lane and block watcher path)
     #receiptRetryAttempts = 5 // Max number of retries for getTransactionReceipt
     #receiptInitialRetryDelayMs = 500 // Initial delay for receipt fetch in ms (0.5 seconds)
     #receiptMaxRetryDelayMs = 10000 // Max delay for receipt fetch in ms (10 seconds)
+
+    // NEW: Fast Lane Configuration
+    #fastLaneInitialPollingIntervalMs = 100; // Poll every 100ms
+    #fastLaneMaxAttempts = 10; // Try 10 times, so max ~1 second for fast lane
 
     constructor() {
         this.#startBlockWatcher()
     }
 
-    async waitForInclusion({
-        boopHash,
-        txHash,
-        timeout = env.RECEIPT_TIMEOUT,
-    }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
-        let boop: Boop | undefined
-
-        // 1. fast‑path → already have receipt in DB?
-        try {
-            const result = await dbService.findReceiptOrBoop(boopHash)
-            if (result.receipt) {
-                return { status: WaitForReceipt.Success, receipt: result.receipt }
-            }
-            if (!result.boop) {
-                return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
-            }
-            boop = result.boop
-        } catch (dbError) {
-            logger.error("Error while looking up boop receipt", boopHash, dbError)
-            return {
-                status: SubmitterError.UnexpectedError,
-                description: `Failed to query database for boop status: ${String(dbError)}`,
-            }
-        }
-
-        // 2. book (or re‑use) a shared subscription object
-        const sub = getOrSet(this.#pendingBoops, boopHash, () => ({
-            pwr: promiseWithResolvers<WaitForReceiptOutput>(),
-            count: 0,
-        }))
-        // Increment count regardless of whether it's a new or existing subscription
-        sub.count += 1
-
-        // 3. if caller gave a txHash, link it to pending‑hashes map
-        if (txHash) {
-            const pend = getOrSet(this.#pendingEvmTxs, txHash, () => ({ boop, sub: sub }))
-            pend.sub = sub
-        }
-
-        // 4. race the real receipt vs timeout
-        try {
-            return await Promise.race([
-                sub.pwr.promise,
-                new Promise<WaitForReceiptOutput>((_, reject) =>
-                    setTimeout(() => reject(new ReceiptTimeout()), timeout),
-                ),
-            ])
-        } catch (e) {
-            return e instanceof ReceiptTimeout
-                ? { status: SubmitterError.ReceiptTimeout, description: "Timed out while waiting for receipt." }
-                : { status: SubmitterError.UnexpectedError, description: String(e) }
-        } finally {
-            // 5. clean‑up for this *caller* (might not empty the subscription yet)
-            if (--sub.count === 0) this.#pendingBoops.delete(boopHash)
-            if (txHash) {
-                const pend = this.#pendingEvmTxs.get(txHash)
-                if (pend && pend.sub === sub) {
-                    // biome-ignore lint/performance/noDelete: <explanation>
-                    delete pend.sub
-                    if (!Object.keys(pend).length || !pend.sub) {
-                        // If no other properties or sub is gone
-                        this.#pendingEvmTxs.delete(txHash)
-                    }
-                }
-            }
-        }
-    }
-
     #startBlockWatcher() {
         if (this.#unwatch) {
-            // If already watching, stop it first to prevent multiple watchers
             this.#unwatch()
             this.#unwatch = undefined
         }
@@ -130,7 +65,7 @@ export class ReceiptService {
             this.#unwatch = publicClient.watchBlocks({
                 includeTransactions: false,
                 onBlock: (blockHeader) => {
-                    this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful block processing
+                    this.#currentBlockWatcherRetryAttempt = 0
                     void this.#onNewHead(blockHeader)
                 },
                 pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
@@ -141,7 +76,7 @@ export class ReceiptService {
                 emitMissed: true,
             })
             logger.info("Block watcher started successfully.")
-            this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful start
+            this.#currentBlockWatcherRetryAttempt = 0
         } catch (e) {
             logger.error("Error starting block watcher initially", e)
             this.#handleBlockWatcherError(e)
@@ -161,7 +96,113 @@ export class ReceiptService {
             setTimeout(() => this.#startBlockWatcher(), delay)
         } else {
             logger.error("Max retry attempts reached for block watcher. Unable to restart block watcher.", error)
+            // Decide if you want to re-throw or handle gracefully. For a service, throwing can propagate critical failure.
             throw new Error("Max retry attempts reached for block watcher")
+        }
+    }
+
+    async waitForInclusion({
+        boopHash,
+        txHash,
+        timeout = env.RECEIPT_TIMEOUT,
+    }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
+        let boop: Boop | undefined
+
+        // 1. fast-path → already have receipt in DB?
+        try {
+            const result = await dbService.findReceiptOrBoop(boopHash)
+            if (result.receipt) {
+                return { status: WaitForReceipt.Success, receipt: result.receipt }
+            }
+            if (!result.boop) {
+                return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
+            }
+            boop = result.boop
+        } catch (dbError) {
+            logger.error("Error while looking up boop receipt", boopHash, dbError)
+            return {
+                status: SubmitterError.UnexpectedError,
+                description: `Failed to query database for boop status: ${String(dbError)}`,
+            }
+        }
+
+        // 2. book (or re-use) a shared subscription object
+        const sub = getOrSet(this.#pendingBoops, boopHash, () => ({
+            pwr: promiseWithResolvers<WaitForReceiptOutput>(),
+            count: 0,
+        }))
+        sub.count += 1
+
+        // 3. if caller gave a txHash, link it to pending-hashes map
+        if (txHash) {
+            const pend = getOrSet(this.#pendingEvmTxs, txHash, () => ({ boop: boop!, sub: sub })); // boop is guaranteed at this point
+            pend.sub = sub;
+        }
+
+        // --- NEW: Fast Lane Promise ---
+        let fastLanePromise: Promise<WaitForReceiptOutput | null> = Promise.resolve(null); // Resolves to null if fast lane doesn't find
+        if (txHash) { // Only attempt fast lane if we have a txHash
+            fastLanePromise = (async () => {
+                let currentAttempt = 0;
+                while (currentAttempt < this.#fastLaneMaxAttempts) {
+                    try {
+                        const r = await publicClient.getTransactionReceipt({ hash: txHash });
+                        const out = await this.#getReceiptResult(boop!, r); // Process and save the receipt
+                        logger.trace(`Fast lane for ${txHash} found receipt: ${out.status}`);
+                        // Crucially, resolve the main promise for ALL waiters
+                        // This call is idempotent, so it's safe even if already resolved by another path.
+                        sub.pwr.resolve(out);
+                        return out; // Resolve fastLanePromise with the result
+                    } catch (e) {
+                        // Only retry if it's "receipt not found"
+                        const isRetryableError = e && typeof e === "object" && "name" in e && e.name === "TransactionReceiptNotFoundError";
+                        if (isRetryableError) {
+                            currentAttempt++;
+                            await new Promise(resolve => setTimeout(resolve, this.#fastLaneInitialPollingIntervalMs));
+                        } else {
+                            // Some other error, log it but don't resolve main promise via fast lane
+                            logger.warn(`Fast lane for ${txHash} encountered non-retryable error: ${String(e)}`);
+                            return null; // Fast lane failed, let the other path win
+                        }
+                    }
+                }
+                logger.trace(`Fast lane for ${txHash} timed out after ${this.#fastLaneMaxAttempts} attempts.`);
+                return null; // Fast lane didn't find it within its attempts/time
+            })();
+        }
+
+        // 4. Race all promises: fastLane (if active), block watcher, and global timeout
+        try {
+            const result = await Promise.race([
+                fastLanePromise.then(res => {
+                    if (res) return res;
+                    return new Promise<WaitForReceiptOutput>(() => {}); // Indefinitely pending if fast lane fails/times out
+                }),
+                sub.pwr.promise, // The promise resolved by #handleTransactionInBlock
+                new Promise<WaitForReceiptOutput>((_, reject) =>
+                    setTimeout(() => reject(new ReceiptTimeout()), timeout),
+                ),
+            ]) as WaitForReceiptOutput;
+
+            return result;
+
+        } catch (e) {
+            return e instanceof ReceiptTimeout
+                ? { status: SubmitterError.ReceiptTimeout, description: "Timed out while waiting for receipt." }
+                : { status: SubmitterError.UnexpectedError, description: String(e) };
+        } finally {
+            // 5. clean-up for this *caller* (might not empty the subscription yet)
+            if (--sub.count === 0) this.#pendingBoops.delete(boopHash);
+            if (txHash) {
+                const pend = this.#pendingEvmTxs.get(txHash);
+                if (pend && pend.sub === sub) {
+                    // biome-ignore lint/performance/noDelete: <explanation>
+                    delete pend.sub; // Remove the link
+                    if (!Object.keys(pend).length) { // If there are no other properties left on pend
+                        this.#pendingEvmTxs.delete(txHash);
+                    }
+                }
+            }
         }
     }
 
@@ -174,14 +215,20 @@ export class ReceiptService {
                 const hash = typeof tx === "string" ? tx : tx.hash
                 const pending = this.#pendingEvmTxs.get(hash as Hash)
                 if (!pending) continue // not one of ours
+                // The crucial part: #handleTransactionInBlock will now resolve the sub.pwr.promise
+                // which means any `waitForInclusion` call waiting on it will get its result.
                 void this.#handleTransactionInBlock(hash as Hash, pending.boop, pending.sub!)
             }
         } catch (e) {
-            logger.warn("block‑watcher error", e)
+            logger.warn("block-watcher error", e)
         }
     }
 
     async #handleTransactionInBlock(txHash: Hash, boop: Boop, sub: PendingBoopInfo): Promise<void> {
+        // Removed the check for `isResolved` / `isRejected`
+        // Promise.resolve() is idempotent, so calling it multiple times is safe.
+        // The first call to resolve `sub.pwr.promise` (from either fast lane or this path) will be the one that takes effect.
+
         let currentAttempt = 0
         let delay = this.#receiptInitialRetryDelayMs
 
@@ -192,10 +239,8 @@ export class ReceiptService {
 
                 // Success: Resolve the single subscription and clean up
                 sub.pwr.resolve(out)
-                this.#pendingEvmTxs.delete(txHash)
                 return // Exit on success
             } catch (e) {
-                // Determine if the error is retryable
                 const isRetryableError =
                     e && typeof e === "object" && "name" in e && e.name === "TransactionReceiptNotFoundError"
 
@@ -206,18 +251,18 @@ export class ReceiptService {
                             `Error: ${isRetryableError ? "TransactionReceiptNotFoundError" : String(e)}. Retrying in ${delay / 1000}s...`,
                     )
                     await new Promise((resolve) => setTimeout(resolve, delay))
-                    delay = Math.min(delay * 2, this.#receiptMaxRetryDelayMs) // Exponential backoff
+                    delay = Math.min(delay * 2, this.#receiptMaxRetryDelayMs)
                 } else {
-                    // Max attempts reached, resolve with error and clean up
                     logger.error(
                         `Max retry attempts reached for receipt ${txHash}. Could not get receipt. Final error: ${String(e)}`,
                     )
+                    // If max attempts reached, resolve with error and clean up
+                    // This call is also idempotent, won't error if already resolved by fast lane or other means.
                     sub.pwr.resolve({
                         status: SubmitterError.ReceiptTimeout,
-                        description: "Transaction receipt could not be fetched after multiple retries.",
+                        description: "Transaction receipt could not be fetched after multiple retries via block watcher.",
                     })
-                    this.#pendingEvmTxs.delete(txHash)
-                    return // Exit the function after max retries
+                    return
                 }
             }
         }
@@ -232,16 +277,14 @@ export class ReceiptService {
                 receipt: this.#buildReceipt(boop, evmTxReceipt),
             }
 
-        // TODO get the revertData from a log and populate here
         const decoded = decodeRawError("0x")
-        const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
+        const entryPoint = evmTxReceipt.to!
         let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
         notePossibleMisbehaviour(boop, output)
 
         const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
 
         if (
-            // detect out-of-gas
             output.status === Onchain.UnexpectedReverted &&
             simulation &&
             simulation.status === Onchain.Success &&
@@ -249,7 +292,6 @@ export class ReceiptService {
         ) {
             if (boop.payer === boop.account) {
                 logger.trace("Reverted onchain with out-of-gas for self-paying boop", boopHash)
-                // TODO note account as problematic
             } else {
                 logger.warn("Reverted onchain with out-of-gas for sponsored boop", boopHash)
             }
@@ -266,10 +308,10 @@ export class ReceiptService {
     }
 
     #buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): BoopReceipt {
-        if (evmTxReceipt.status !== "success") throw "BUG: buildReceipt"
+        if (evmTxReceipt.status !== "success") throw "BUG: buildReceipt" // Should only be called for success
         const boopHash = computeHash(boop)
         const logs = this.#filterLogs(evmTxReceipt.logs, boopHash)
-        const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
+        const entryPoint = evmTxReceipt.to!
 
         let status: OnchainStatus = Onchain.Success
         let description = "Boop executed successfully."
@@ -279,7 +321,6 @@ export class ReceiptService {
             if (!decoded) continue
             const entryPointStatus = getEntryPointStatusFromEventName(decoded.eventName)
             if (!entryPointStatus) continue
-            // Don't get pranked by contracts emitting the same event.
             if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
             const error = outputForExecuteError(boop, entryPointStatus, decoded.args.revertData as Hex)
             status = error.status
@@ -289,7 +330,7 @@ export class ReceiptService {
 
         const receipt = {
             boopHash,
-            entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployemnts
+            entryPoint: evmTxReceipt.to as Address,
             status,
             logs,
             description,
