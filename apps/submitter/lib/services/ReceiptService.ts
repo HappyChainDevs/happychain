@@ -51,52 +51,6 @@ export class ReceiptService {
         this.#startBlockWatcher()
     }
 
-    #startBlockWatcher() {
-        if (this.#unwatch) {
-            // If already watching, stop it first to prevent multiple watchers
-            this.#unwatch()
-            this.#unwatch = undefined
-        }
-
-        try {
-            this.#unwatch = publicClient.watchBlocks({
-                includeTransactions: false,
-                onBlock: (blockHeader) => {
-                    this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful block processing
-                    void this.#onNewHead(blockHeader)
-                },
-                pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
-                onError: (e) => {
-                    logger.error("Error in block watcher", e)
-                    this.#handleBlockWatcherError(e)
-                },
-                emitMissed: true,
-            })
-            logger.info("Block watcher started successfully.")
-            this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful start
-        } catch (e) {
-            logger.error("Error starting block watcher initially", e)
-            this.#handleBlockWatcherError(e)
-        }
-    }
-
-    #handleBlockWatcherError(error: unknown) {
-        if (this.#currentBlockWatcherRetryAttempt < this.#blockWatcherRetryAttempts) {
-            this.#currentBlockWatcherRetryAttempt++
-            const delay = Math.min(
-                this.#blockWatcherInitialRetryDelayMs * (2 ** this.#currentBlockWatcherRetryAttempt - 1),
-                this.#blockWatcherMaxRetryDelayMs,
-            )
-            logger.warn(
-                `Retrying block watcher in ${delay / 1000} seconds (Attempt ${this.#currentBlockWatcherRetryAttempt}/${this.#blockWatcherRetryAttempts})`,
-            )
-            setTimeout(() => this.#startBlockWatcher(), delay)
-        } else {
-            logger.error("Max retry attempts reached for block watcher. Unable to restart block watcher.", error)
-            throw new Error("Max retry attempts reached for block watcher")
-        }
-    }
-
     async waitForInclusion({
         boopHash,
         txHash,
@@ -164,6 +118,53 @@ export class ReceiptService {
             }
         }
     }
+    
+    #startBlockWatcher() {
+        if (this.#unwatch) {
+            // If already watching, stop it first to prevent multiple watchers
+            this.#unwatch()
+            this.#unwatch = undefined
+        }
+
+        try {
+            this.#unwatch = publicClient.watchBlocks({
+                includeTransactions: false,
+                onBlock: (blockHeader) => {
+                    this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful block processing
+                    void this.#onNewHead(blockHeader)
+                },
+                pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
+                onError: (e) => {
+                    logger.error("Error in block watcher", e)
+                    this.#handleBlockWatcherError(e)
+                },
+                emitMissed: true,
+            })
+            logger.info("Block watcher started successfully.")
+            this.#currentBlockWatcherRetryAttempt = 0 // Reset retry counter on successful start
+        } catch (e) {
+            logger.error("Error starting block watcher initially", e)
+            this.#handleBlockWatcherError(e)
+        }
+    }
+
+    #handleBlockWatcherError(error: unknown) {
+        if (this.#currentBlockWatcherRetryAttempt < this.#blockWatcherRetryAttempts) {
+            this.#currentBlockWatcherRetryAttempt++
+            const delay = Math.min(
+                this.#blockWatcherInitialRetryDelayMs * (2 ** this.#currentBlockWatcherRetryAttempt - 1),
+                this.#blockWatcherMaxRetryDelayMs,
+            )
+            logger.warn(
+                `Retrying block watcher in ${delay / 1000} seconds (Attempt ${this.#currentBlockWatcherRetryAttempt}/${this.#blockWatcherRetryAttempts})`,
+            )
+            setTimeout(() => this.#startBlockWatcher(), delay)
+        } else {
+            logger.error("Max retry attempts reached for block watcher. Unable to restart block watcher.", error)
+            throw new Error("Max retry attempts reached for block watcher")
+        }
+    }
+
     async #onNewHead(blockHeader: Block) {
         try {
             if (!blockHeader.hash) return
