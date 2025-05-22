@@ -76,10 +76,7 @@ export function outputForRevertError(
                 }
             return {
                 status: Onchain.ValidationReverted,
-                description:
-                    "Account reverted in `validate`. " + faultyAccount + simulation
-                        ? "\nAre you sure you specified the correct account address?"
-                        : "",
+                description: "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -119,9 +116,8 @@ export function outputForRevertError(
             return {
                 status: Onchain.PaymentValidationReverted,
                 description:
-                    "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour." + simulation
-                        ? "\nAre you sure you specified the correct paymaster address?"
-                        : "",
+                    "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour." +
+                    (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -290,3 +286,5 @@ const unexpectedDecode =
     "This may be an account implementation issue, or reverting with an error with identical signature to a known error."
 
 const faultyAccount = "This is indicative of a faulty account implementation, which the submitter may penalize."
+
+const correctAddress = "\nAre you sure you specified the correct account address?"
