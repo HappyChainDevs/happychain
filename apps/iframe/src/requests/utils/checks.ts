@@ -13,7 +13,19 @@ import {
     permissionsLists,
 } from "@happy.tech/wallet-common"
 import { checksum } from "ox/Address"
-import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex } from "viem"
+import {
+    AtomicityNotSupportedError,
+    BundleTooLargeError,
+    type Hex,
+    type RpcTransactionRequest,
+    UnsupportedChainIdError,
+    UnsupportedNonOptionalCapabilityError,
+    type WalletSendCallsParameters,
+    type WatchAssetParameters,
+    isAddress,
+    isHex,
+    toHex,
+} from "viem"
 import { getAuthState } from "#src/state/authState"
 import { getUser } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
@@ -173,6 +185,7 @@ type BoopPaymasterCapability = {
 
 type WalletSendCallsParams = WalletSendCallsParameters<BoopPaymasterCapability, Hex, Hex | bigint>
 
+// cf.
 export function checkedWalletSendCallsParams(params: WalletSendCallsParams | undefined): ValidWalletSendCallsRequest {
     // 1474 - invalid params
     const parsed = parseSendCallParams(params)
@@ -193,7 +206,6 @@ export function checkedWalletSendCallsParams(params: WalletSendCallsParams | und
     validateCapabilities(reqBody.capabilities ?? {}, SUPPORTED_CAPABILITIES)
     validateCapabilities(reqBody.calls[0].capabilities ?? {}, SUPPORTED_CAPABILITIES)
 
-    // return validated thingamajig
     return reqBody as ValidWalletSendCallsRequest
 }
 

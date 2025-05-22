@@ -2,7 +2,13 @@ import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
 import type { WalletSendCallsReturnType } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
-import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
+import {
+    checkAndChecksumAddress,
+    checkedTx,
+    checkedWalletSendCallsParams,
+    checkedWatchedAsset,
+    extractValidTxFromCall,
+} from "#src/requests/utils/checks"
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
 import { installNewSessionKey } from "#src/requests/utils/sessionKeys"
 import { eoaSigner } from "#src/requests/utils/signers"

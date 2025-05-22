@@ -12,7 +12,7 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-export function getFirstParam<T>(params: [T] | undefined): T | undefined {
+export function getFirstParam<T>(params: [T, ...unknown[]] | undefined): T | undefined {
     return Array.isArray(params) ? params[0] : undefined
 }
 
