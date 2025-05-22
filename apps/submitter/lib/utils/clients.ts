@@ -38,7 +38,13 @@ function getChain(): Chain {
 
 export const chain: Chain = getChain()
 
-export const config = { chain, transport: http() } as const
+export const config = {
+    chain,
+    transport: http(),
+    batch: {
+        multicall: true,
+    },
+} as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
 export const publicClient: PublicClient = createPublicClient(config)
