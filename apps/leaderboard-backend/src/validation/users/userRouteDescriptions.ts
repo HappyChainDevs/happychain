@@ -1,5 +1,6 @@
 import { describeRoute } from "hono-openapi"
 import { ErrorResponseSchemaObj } from "../common/responseSchemas"
+import { GuildListResponseSchemaObj } from "../guilds"
 import {
     UserListResponseSchemaObj,
     UserResponseSchemaObj,
@@ -542,7 +543,7 @@ export const UserGuildsListDescription = describeRoute({
             description: "Successfully retrieved user guilds.",
             content: {
                 "application/json": {
-                    schema: {},
+                    schema: GuildListResponseSchemaObj,
                 },
             },
         },
