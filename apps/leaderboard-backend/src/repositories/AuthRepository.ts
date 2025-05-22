@@ -33,23 +33,43 @@ export class AuthRepository {
 
     async verifySession(sessionId: AuthSessionTableId): Promise<AuthSession | undefined> {
         try {
+            // First check if the session exists and belongs to an existing user
             const session = await this.db
                 .selectFrom("auth_sessions")
-                .where("id", "=", sessionId)
-                .selectAll()
+                .innerJoin("users", "users.id", "auth_sessions.user_id")
+                .where("auth_sessions.id", "=", sessionId)
+                .select([
+                    "auth_sessions.id",
+                    "auth_sessions.user_id",
+                    "auth_sessions.primary_wallet",
+                    "auth_sessions.created_at",
+                    "auth_sessions.last_used_at",
+                ])
                 .executeTakeFirst()
 
             if (!session) {
                 return undefined
             }
 
+            // Update the last_used_at timestamp
+            const currentTime = new Date().toISOString()
+
+            // We don't need the result of this update since we already have the session data
+            // and the only thing that changed is the last_used_at timestamp, which isn't usually
+            // needed by the application logic
             await this.db
                 .updateTable("auth_sessions")
-                .set({ last_used_at: new Date().toISOString() })
+                .set({ last_used_at: currentTime })
                 .where("id", "=", sessionId)
                 .executeTakeFirstOrThrow()
 
-            return session
+            // Return the session with the updated timestamp
+            // The session object already has the correct types from the database schema
+            // so we need to preserve those types
+            return {
+                ...session,
+                last_used_at: new Date(currentTime), // Convert string to Date to match expected type
+            }
         } catch (error) {
             console.error("Error verifying session:", error)
             return undefined
@@ -67,9 +87,11 @@ export class AuthRepository {
 
     async deleteSession(sessionId: AuthSessionTableId): Promise<boolean> {
         try {
-            await this.db.deleteFrom("auth_sessions").where("id", "=", sessionId).executeTakeFirstOrThrow()
+            // Use execute() which returns the number of affected rows
+            const result = await this.db.deleteFrom("auth_sessions").where("id", "=", sessionId).execute()
 
-            return true
+            // If at least one row was affected, the deletion was successful
+            return result.length > 0
         } catch (error) {
             console.error("Error deleting session:", error)
             return false

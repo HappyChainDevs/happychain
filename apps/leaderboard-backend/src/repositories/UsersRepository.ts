@@ -26,18 +26,58 @@ export class UserRepository {
         includeWallets = false,
     ): Promise<(User & { wallets: UserWallet[] }) | undefined> {
         try {
-            const user = await this.db
-                .selectFrom("users")
-                .where("primary_wallet", "=", walletAddress)
-                .selectAll()
-                .executeTakeFirstOrThrow()
+            if (!includeWallets) {
+                // Simple query without wallets
+                const user = await this.db
+                    .selectFrom("users")
+                    .where("primary_wallet", "=", walletAddress)
+                    .selectAll()
+                    .executeTakeFirst()
 
-            if (includeWallets) {
-                const wallets = await this.getUserWallets(user.id)
-                return { ...user, wallets }
+                return user ? { ...user, wallets: [] } : undefined
             }
 
-            return user as User & { wallets: UserWallet[] }
+            // Query with wallets using a join
+            const results = await this.db
+                .selectFrom("users")
+                .leftJoin("user_wallets", "users.id", "user_wallets.user_id")
+                .where("users.primary_wallet", "=", walletAddress)
+                .select([
+                    "users.id",
+                    "users.primary_wallet",
+                    "users.username",
+                    "users.created_at",
+                    "users.updated_at",
+                    "user_wallets.id as wallet_id",
+                    "user_wallets.wallet_address",
+                    "user_wallets.is_primary",
+                    "user_wallets.created_at as wallet_created_at",
+                ])
+                .execute()
+
+            if (results.length === 0) {
+                return undefined
+            }
+
+            // Process the joined results to form the user with wallets
+            const userData = {
+                id: results[0].id,
+                primary_wallet: results[0].primary_wallet,
+                username: results[0].username,
+                created_at: results[0].created_at,
+                updated_at: results[0].updated_at,
+                wallets: results
+                    .filter((row) => row.wallet_id !== null)
+                    .map((row) => ({
+                        id: row.wallet_id,
+                        user_id: results[0].id,
+                        wallet_address: row.wallet_address,
+                        is_primary: row.is_primary,
+                        created_at: row.wallet_created_at,
+                    })),
+            }
+
+            return userData as User & { wallets: UserWallet[] }
         } catch (error) {
             console.error("Error finding user by wallet address:", error)
             return undefined
