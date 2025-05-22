@@ -118,7 +118,7 @@ export class ReceiptService {
             }
         }
     }
-    
+
     #startBlockWatcher() {
         if (this.#unwatch) {
             // If already watching, stop it first to prevent multiple watchers
