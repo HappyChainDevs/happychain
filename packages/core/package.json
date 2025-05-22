@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "@wagmi/core": "^2.16.3",
-        "viem": "^2.21.53"
+        "viem": "^2.30.0"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
