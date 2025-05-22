@@ -10,14 +10,14 @@ import {
     standardizeRpcError,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
-import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
-import { happyProviderBus } from "#src/services/eventBus.ts"
-import { getInjectedProvider } from "#src/state/injectedProvider.ts"
-import { grantPermissions } from "#src/state/permissions.ts"
-import { getUser } from "#src/state/user.ts"
-import { getAppURL, isStandaloneWallet, walletID } from "#src/utils/appURL.ts"
-import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet.ts"
-import { iframeProvider } from "#src/wagmi/provider.ts"
+import { setUserWithProvider } from "#src/actions/setUserWithProvider"
+import { happyProviderBus } from "#src/services/eventBus"
+import { getInjectedProvider } from "#src/state/injectedProvider"
+import { grantPermissions } from "#src/state/permissions"
+import { getUser } from "#src/state/user"
+import { getAppURL, isStandaloneWallet, walletID } from "#src/utils/appURL"
+import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
+import { iframeProvider } from "#src/wagmi/provider"
 
 /**
  * A proxy implementation of the EIP-1193 provider interface

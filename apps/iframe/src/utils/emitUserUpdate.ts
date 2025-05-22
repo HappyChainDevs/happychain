@@ -1,6 +1,6 @@
 import { debounce } from "@happy.tech/common"
 import { type HappyUser, Msgs } from "@happy.tech/wallet-common"
-import { hasPermissions } from "#src/state/permissions.ts"
+import { hasPermissions } from "#src/state/permissions"
 import { appMessageBus, happyProviderBus } from "../services/eventBus"
 import { getAppURL, isStandaloneWallet } from "./appURL"
 

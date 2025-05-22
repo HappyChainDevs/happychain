@@ -13,7 +13,7 @@ export {
     requestSessionKey,
     showSendScreen,
     onUserUpdate,
-} from "./functions.ts"
+} from "./functions"
 
 export { anvil, happyChainSepolia } from "@happy.tech/wallet-common"
 

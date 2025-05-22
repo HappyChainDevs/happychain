@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { dispatchApprovedRequest } from "#src/requests/handlers/approved"
 import { setAuthState } from "#src/state/authState"
-import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
+import { clearPermissions, getAllPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
 
 const { appURL, walletID, appURLMock } = await vi //

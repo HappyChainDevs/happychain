@@ -1,5 +1,5 @@
 import { useAtom } from "jotai"
-import { bannersAtom } from "#src/state/banner.ts"
+import { bannersAtom } from "#src/state/banner"
 import { PopupBlockedAlert } from "./alerts/PopupBlockedAlert"
 
 function useBanners() {

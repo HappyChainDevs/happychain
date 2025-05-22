@@ -1,5 +1,5 @@
 import { EthRequestAccounts } from "#src/components/requests/EthRequestAccounts"
-import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels.ts"
+import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,

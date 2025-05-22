@@ -8,9 +8,9 @@ import {
     waitForCondition,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
-import { addBanner } from "#src/state/banner.ts"
+import { addBanner } from "#src/state/banner"
 import { getCurrentChain } from "#src/state/chains"
-import { getUser } from "#src/state/user.ts"
+import { getUser } from "#src/state/user"
 import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
 import { getWalletURL, walletID } from "../utils/appURL"

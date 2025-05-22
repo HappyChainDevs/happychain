@@ -4,7 +4,7 @@ import type { HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { setAuthState } from "#src/state/authState"
-import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
+import { clearPermissions, getAllPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
 import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 

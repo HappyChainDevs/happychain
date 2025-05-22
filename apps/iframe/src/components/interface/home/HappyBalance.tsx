@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { useBalance } from "wagmi"
-import { walletOpenSignalAtom } from "#src/state/interfaceState.ts"
+import { walletOpenSignalAtom } from "#src/state/interfaceState"
 import { userAtom } from "#src/state/user"
 import { formatUserBalance } from "#src/utils/formatUserBalance"
 

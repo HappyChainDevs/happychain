@@ -3,7 +3,7 @@ import { Check } from "@phosphor-icons/react"
 import { useState } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
-import { type SessionKeyRequest, hasPermissions } from "#src/state/permissions.ts"
+import { type SessionKeyRequest, hasPermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {

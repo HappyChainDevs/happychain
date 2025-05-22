@@ -8,7 +8,7 @@ import {
     grantPermissions,
     hasPermissions,
     revokePermissions,
-} from "#src/state/permissions.ts"
+} from "#src/state/permissions"
 import { setUser } from "../state/user"
 
 const { appURL, walletURL, appURLMock } = await vi //

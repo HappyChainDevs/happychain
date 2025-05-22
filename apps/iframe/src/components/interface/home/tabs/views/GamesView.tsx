@@ -1,4 +1,4 @@
-import { appList } from "#src/utils/lists.ts"
+import { appList } from "#src/utils/lists"
 
 /** Displays recently played games that the user logged into. */
 const GamesView = () => {

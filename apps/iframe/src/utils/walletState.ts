@@ -1,7 +1,7 @@
 import { AuthState, Msgs } from "@happy.tech/wallet-common"
-import { appMessageBus } from "#src/services/eventBus.ts"
-import { getAuthState } from "#src/state/authState.ts"
-import { setWalletOpenSignal } from "#src/state/interfaceState.ts"
+import { appMessageBus } from "#src/services/eventBus"
+import { getAuthState } from "#src/state/authState"
+import { setWalletOpenSignal } from "#src/state/interfaceState"
 
 /**
  * Wallet State (open vs closed) is managed entirely through the WalletVisibility event here. This
