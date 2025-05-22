@@ -1657,13 +1657,7 @@
   "HappyAccountRegistry": [
     {
       "type": "constructor",
-      "inputs": [
-        {
-          "name": "owner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
+      "inputs": [],
       "stateMutability": "nonpayable"
     },
     {
