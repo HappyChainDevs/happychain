@@ -1,6 +1,6 @@
 import type { UUID } from "@happy.tech/common"
 import { BasePopupProvider, type EIP1193RequestParameters, Msgs } from "@happy.tech/wallet-common"
-import { chain } from "../loadHappyWallet"
+import { chain } from "../config"
 import { InjectedWalletWrapper } from "./InjectedWalletWrapper"
 import type { HappyProviderConfig } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
