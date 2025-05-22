@@ -15,3 +15,4 @@ export const opStackDefaultEIP1559Parameters: EIP1559Parameters = {
     baseFeeChangeDenominator: 250n,
     minBaseFee: 0n,
 }
+console.log("EIP1559 parameters for Ethereum:", ethereumDefaultEIP1559Parameters)
