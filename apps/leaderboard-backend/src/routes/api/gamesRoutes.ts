@@ -1,6 +1,6 @@
 import type { Address } from "@happy.tech/common"
 import { Hono } from "hono"
-import { requireAuth, requireGameOwnership } from "../../auth"
+import { ActionType, gameAction, requireAuth } from "../../auth"
 import type { GameTableId, UserTableId } from "../../db/types"
 import {
     AdminWalletParamValidation,
@@ -140,7 +140,7 @@ export default new Hono()
     .patch(
         "/:id",
         requireAuth,
-        requireGameOwnership,
+        gameAction(ActionType.UPDATE),
         GameUpdateDescription,
         GameIdParamValidation,
         GameUpdateValidation,
@@ -184,6 +184,7 @@ export default new Hono()
     .post(
         "/:id/scores",
         requireAuth,
+        gameAction(ActionType.SUBMIT_SCORE),
         ScoreSubmitDescription,
         GameIdParamValidation,
         ScoreSubmitValidation,

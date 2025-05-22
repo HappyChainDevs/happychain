@@ -191,7 +191,7 @@ export const GameListByAdminDescription = describeRoute({
 
 export const ScoreSubmitDescription = describeRoute({
     validateResponse: false,
-    description: "Submit a new score for a game.",
+    description: "Submit a new score for a game (creator only).",
     requestBody: {
         required: true,
         content: {

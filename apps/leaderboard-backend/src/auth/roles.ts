@@ -58,7 +58,7 @@ export const Permissions: Record<ResourceType, Partial<Record<ActionType, RoleTy
         [ActionType.CREATE]: [UserRole.AUTHENTICATED],
         [ActionType.UPDATE]: [GameRole.CREATOR],
         [ActionType.DELETE]: [GameRole.CREATOR],
-        [ActionType.SUBMIT_SCORE]: [UserRole.AUTHENTICATED],
+        [ActionType.SUBMIT_SCORE]: [GameRole.CREATOR],
         [ActionType.MANAGE_SCORES]: [GameRole.CREATOR],
     },
     [ResourceType.SCORE]: {},

@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi"
-import { type Address, isHex } from "viem"
+import { isHex } from "viem"
 import { GuildRole } from "../../auth/roles"
 
 // ====================================================================================================
