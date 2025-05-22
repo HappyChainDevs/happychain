@@ -134,9 +134,7 @@ export const EthSendTransaction = ({
                         <SubsectionBlock variant="error">
                             <SubsectionContent>
                                 <SubsectionTitle>Error</SubsectionTitle>
-                                <FormattedDetailsLine>
-                                    <p>{requestDisabledDescription}</p>
-                                </FormattedDetailsLine>
+                                <p>{requestDisabledDescription}</p>
                             </SubsectionContent>
                         </SubsectionBlock>
                     ) : (
