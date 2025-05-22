@@ -28,6 +28,7 @@ declare module "hono" {
         userId: UserTableId // Authenticated user's ID, set by requireAuth
         primaryWallet: Address // Authenticated user's wallet address, set by requireAuth
         sessionId: AuthSessionTableId // Current session ID, set by requireAuth
+        guildRole: string // User's role in a guild, set by guild middleware
     }
 }
 

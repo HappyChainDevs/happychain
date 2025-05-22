@@ -35,11 +35,9 @@ export const GuildMemberResponseSchema = z
         joined_at: z.string(),
         // Extended properties when including user details
         username: z.string().optional(),
-        primary_wallet: z
-            .string()
-            .refine(isHex)
-            .transform((val) => val as Address)
-            .optional(),
+        primary_wallet: z.string().refine(isHex).optional().openapi({
+            type: "string",
+        }),
     })
     .strict()
     .openapi({
@@ -143,7 +141,6 @@ export const GuildIdParamSchema = z
     .object({
         id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: {
             id: "1",
@@ -154,7 +151,6 @@ export const GuildMemberIdParamSchema = z
     .object({
         member_id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: {
             member_id: "1",

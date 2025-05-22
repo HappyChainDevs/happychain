@@ -119,7 +119,6 @@ export const UserIdParamSchema = z
     .object({
         id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         param: {
             name: "id",
@@ -134,7 +133,6 @@ export const PrimaryWalletParamSchema = z
     .object({
         primary_wallet: z.string().refine(isHex, { message: "Primary wallet address must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         param: {
             name: "primary_wallet",

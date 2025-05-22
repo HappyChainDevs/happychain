@@ -143,7 +143,6 @@ export const GameIdParamSchema = z
     .object({
         id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: { id: "1" },
     })
@@ -152,7 +151,6 @@ export const AdminIdParamSchema = z
     .object({
         admin_id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: { admin_id: "1" },
     })
@@ -161,7 +159,6 @@ export const AdminWalletParamSchema = z
     .object({
         admin_wallet: z.string().refine(isHex, { message: "Admin wallet must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         example: { admin_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
     })
@@ -170,7 +167,6 @@ export const UserWalletParamSchema = z
     .object({
         user_wallet: z.string().refine(isHex, { message: "User wallet must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         example: { user_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
     })

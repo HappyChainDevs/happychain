@@ -30,6 +30,7 @@ export enum ActionType {
     ADD_MEMBER = "add_member",
     REMOVE_MEMBER = "remove_member",
     PROMOTE_MEMBER = "promote_member",
+    LEAVE = "leave",
     SUBMIT_SCORE = "submit_score",
     MANAGE_SCORES = "manage_scores",
 }
@@ -50,6 +51,7 @@ export const Permissions: Record<ResourceType, Partial<Record<ActionType, RoleTy
         [ActionType.ADD_MEMBER]: [GuildRole.ADMIN, GuildRole.CREATOR],
         [ActionType.REMOVE_MEMBER]: [GuildRole.ADMIN, GuildRole.CREATOR],
         [ActionType.PROMOTE_MEMBER]: [GuildRole.CREATOR],
+        [ActionType.LEAVE]: [GuildRole.MEMBER, GuildRole.ADMIN],
     },
     [ResourceType.GAME]: {
         [ActionType.READ]: [UserRole.AUTHENTICATED],

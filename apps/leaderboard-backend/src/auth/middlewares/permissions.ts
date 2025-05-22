@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from "hono"
 import { createMiddleware } from "hono/factory"
-import { type ActionType, Permissions, type ResourceType, type RoleType, UserRole } from "../roles"
+import { type ActionType, Permissions, type ResourceType, type RoleType } from "../roles"
 
 /**
  * Generic permissions middleware for resource-based RBAC.
@@ -12,7 +12,7 @@ import { type ActionType, Permissions, type ResourceType, type RoleType, UserRol
  *
  * @param opts.resource: ResourceType - The resource type (e.g., "guild")
  * @param opts.action - The action type (e.g., "add_member")
- * @param opts.getUserRole - Optional: custom function to get the user's role for the resource
+ * @param opts.getUserRole - Custom function to get the user's role for the resource
  */
 export function requirePermission({
     resource,
@@ -21,19 +21,11 @@ export function requirePermission({
 }: {
     resource: ResourceType
     action: ActionType
-    getUserRole?: (c: Context) => Promise<RoleType | undefined>
+    getUserRole: (c: Context) => Promise<RoleType | undefined>
 }): MiddlewareHandler {
     return createMiddleware(async (c, next) => {
         // Determine the user's role for this resource
-        let role: RoleType | undefined
-        if (getUserRole) {
-            role = await getUserRole(c)
-        } else {
-            // Default: look for c.get("guildRole"), c.get("gameRole"), etc.
-            role = c.get("role") || c.get("guildRole") || c.get("gameRole") || c.get("userRole")
-            // If nothing found, fallback to UserRole.AUTHENTICATED
-            if (!role) role = UserRole.AUTHENTICATED
-        }
+        const role = await getUserRole(c)
 
         // Find allowed roles from the Permissions object
         const allowed = Permissions?.[resource]?.[action]
