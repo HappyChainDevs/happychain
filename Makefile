@@ -529,19 +529,19 @@ endef
 select-submitter-local:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,http://localhost:3001)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,http://localhost:3001)
-	$(call update_env,apps/submitter/.env,PROXY_HAS_METADATA,true)
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-local
 
 select-submitter-staging:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter-staging.happy.tech)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter-staging.happy.tech)
-	$(call update_env,apps/submitter/.env,PROXY_HAS_METADATA,false)
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter.happy.tech)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter.happy.tech)
-	$(call update_env,apps/submitter/.env,PROXY_HAS_METADATA,true)
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-prod
 
 select-iframe-local:
