@@ -39,8 +39,8 @@ export class ExecutorCacheService {
     /**
      * Registers a new Executor wallet onto the heap
      */
-    registerExecutor(executor: Account): void {
-        this.heap.add(executor)
+    registerExecutor(executorAccount: Account): void {
+        this.heap.addAccount(executorAccount)
     }
 
     /**
