@@ -12,6 +12,14 @@ export const deploymentsSchema = z.object({
     CHAIN_ID: z.coerce.number(),
 
     /**
+     * When {@link CHAIN_ID}=216 (HappyChain Sepolia), whether to use the staging contracts or the prod prod contracts.
+     */
+    USE_STAGING_CONTRACTS: z
+        .string()
+        .default("false")
+        .transform((str) => str !== "false" && str !== "0"),
+
+    /**
      * The (HTTP) RPC url to use for the chain. Defaults to a well-known RPC if {@link
      * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
      *
@@ -45,14 +53,4 @@ export const deploymentsSchema = z.object({
      * Note that for now, this contract have an ABI compatible to the default contract, or the submitter won't work.
      */
     DEPLOYMENT_ACCOUNT_IMPLEMENTATION: z.string().refine(isHexString).optional(),
-
-    /**
-     * Whether the proxy code used by the account factory includes metadata.
-     * This affects address calculation for accounts.
-     * Set to true for regular deployments and false for staging deployments.
-     */
-    PROXY_HAS_METADATA: z
-        .string()
-        .default("false")
-        .transform((str) => str !== "false" && str !== "0"),
 })

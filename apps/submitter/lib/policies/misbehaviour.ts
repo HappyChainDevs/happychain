@@ -51,8 +51,9 @@ export function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, sim
             // also choose to penalize/deprioritize accounts for which this happens at simulation time.
 
             logger.info("Encountered account or paymaster misbehavour", computeHash(boop), output)
+            break
 
-        // default:
+        default:
             // Here we can increment some global failure counter, which can help us deprioritize
             // sessions (if we decided to add them!) that tend to have a high failure ratio.
     }

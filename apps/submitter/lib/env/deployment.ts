@@ -13,13 +13,11 @@ import type { Environment } from "#lib/env/index"
 export function getDeployment(env: Environment) {
     function getBaseDeployment() {
         switch (env.CHAIN_ID) {
-            case happychainTestnet.id:
-                // Use staging deployment if PROXY_HAS_METADATA is false
-                return env.PROXY_HAS_METADATA ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
             case anvil.id:
                 return deploymentAnvil
+            case happychainTestnet.id:
             default:
-                return env.PROXY_HAS_METADATA ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
+                return env.USE_STAGING_CONTRACTS ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
         }
     }
     const deployment = getBaseDeployment()
@@ -34,11 +32,10 @@ export function getDeployment(env: Environment) {
 
 export function getAbis(env: Environment) {
     switch (env.CHAIN_ID) {
-        case happychainTestnet.id:
-            return env.PROXY_HAS_METADATA ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
         case anvil.id:
             return abisAnvil
+        case happychainTestnet.id:
         default:
-            return env.PROXY_HAS_METADATA ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
+            return env.USE_STAGING_CONTRACTS ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
     }
 }

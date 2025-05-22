@@ -57,7 +57,8 @@
                 "noParameterAssign": "off"
             },
             "complexity": {
-                "noForEach": "off"
+                "noForEach": "off",
+                "noUselessSwitchCase": "off"
             }
         }
     },
