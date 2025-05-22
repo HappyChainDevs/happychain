@@ -1,5 +1,5 @@
 import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
-import { type Address, getProp } from "@happy.tech/common"
+import { type Address, getProp, stringify } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import type { RpcTransactionRequest } from "viem"
@@ -44,7 +44,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
           } satisfies ValidRpcTransactionRequest)
         : undefined
 
-    const jsonTxQueryKey = useMemo(() => ["simulate-boop", JSON.stringify(tx)], [tx])
+    const jsonTxQueryKey = useMemo(() => ["simulate-boop", stringify(tx)], [tx])
 
     const {
         data,
