@@ -75,24 +75,23 @@ export const EthSendTransaction = ({
 
     const notEnoughFunds = !!userBalance?.value && !!values?.cost && userBalance.value < txValue + values.cost
     const isConfirmActionDisabled = (txValue && isBalancePending) || isSimulatePending
-    const isRequestDisabled =
-        !isValidTransaction || notEnoughFunds || simulateError || simulateOutput?.feeTooLowDuringSimulation
+    const isRequestDisabled = Boolean(
+        !isValidTransaction || notEnoughFunds || simulateError || simulateOutput?.feeTooLowDuringSimulation,
+    )
 
-    const requestDisabledDescription = //
-        !user?.address
-            ? "Disconnected from wallet"
-            : !isSupportedTxType
-              ? `Invalid transaction type: ${txType}`
-              : !tx.to
-                ? `Invalid receiver address: ${tx.to}`
-                : notEnoughFunds
-                  ? "Not enough funds!"
-                  : // issues with boop simulation
-                    simulateError
-                    ? `Failed to simulate transaction: ${simulateError.message}`
-                    : simulateOutput?.feeTooLowDuringSimulation
-                      ? "Provided maxFeePerGas is lower than the current gas price."
-                      : "Unknown error"
+    function getDescription() {
+        if (!user?.address) return "Disconnected from wallet"
+        if (!isSupportedTxType) return `Invalid transaction type: ${txType}`
+        if (!tx.to) return `Invalid receiver address: ${tx.to}`
+        if (notEnoughFunds) return "Not enough funds!"
+        if (simulateError) return `Failed to simulate transaction: ${simulateError.message}`
+        if (simulateOutput?.feeTooLowDuringSimulation)
+            return "Provided maxFeePerGas is lower than the current gas price."
+
+        return "Unknown error"
+    }
+
+    const requestDisabledDescription = getDescription()
     return (
         <>
             <Layout
@@ -100,9 +99,9 @@ export const EthSendTransaction = ({
                 actions={{
                     accept: {
                         children: isConfirmActionDisabled ? "Preparing..." : "Confirm",
-                        "aria-disabled": !!isConfirmActionDisabled || !!isRequestDisabled,
+                        "aria-disabled": isConfirmActionDisabled || isRequestDisabled,
                         onClick: () => {
-                            if (!!isConfirmActionDisabled || !!isRequestDisabled) return
+                            if (isConfirmActionDisabled || isRequestDisabled) return
                             accept({ method, params: [tx], extraData: simulateOutput })
                         },
                     },
