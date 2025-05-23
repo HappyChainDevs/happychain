@@ -1,3 +1,17 @@
+/**
+ * Authentication Challenge Generator
+ *
+ * This module handles the creation of EIP-4361 (Sign-In with Ethereum) compliant
+ * authentication challenges using Viem's SIWE utilities.
+ *
+ * The flow is as follows:
+ * 1. Client requests a challenge with their wallet address
+ * 2. Server generates a challenge message using createSiweMessage
+ * 3. Server stores the challenge in the database
+ * 4. Client signs the message with their wallet
+ * 5. Client sends the signature back for verification
+ */
+
 import type { Address, Hex } from "@happy.tech/common"
 import { hashMessage } from "viem"
 import { createSiweMessage, generateSiweNonce } from "viem/siwe"
@@ -36,9 +50,21 @@ export interface ChallengeMessage {
 }
 
 /**
- * Generates a secure challenge message for authentication
- * Following EIP-4361 (Sign-In with Ethereum) standard
- * Includes nonce and timestamps to prevent replay attacks
+ * Generates a secure challenge message for authentication following EIP-4361 (SIWE) standard
+ *
+ * This function creates a standardized message for wallet-based authentication that includes:
+ * - Domain and URI information to identify the application
+ * - Wallet address of the user attempting to authenticate
+ * - A cryptographically secure nonce to prevent replay attacks
+ * - Timestamps for issuance and expiration to limit the validity period
+ * - Optional resources that the user will be able to access
+ * - Optional request ID for tracking purposes
+ *
+ * The message is formatted according to the EIP-4361 standard using Viem's SIWE utilities.
+ * A hash of the message is also generated for database storage and verification.
+ *
+ * @param options Configuration options including wallet address and optional parameters
+ * @returns A challenge message object with all data needed for storage and verification
  */
 export function generateChallengeMessage(options: ChallengeMessageOptions): ChallengeMessage {
     const { walletAddress, requestId, resources } = options

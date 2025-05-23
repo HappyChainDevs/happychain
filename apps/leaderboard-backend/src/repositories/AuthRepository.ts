@@ -175,8 +175,8 @@ export class AuthRepository {
     /**
      * Mark a challenge as used to prevent replay attacks
      * @param walletAddress The wallet address that requested the challenge
-     * @param message The message that was signed
-     * @returns True if the challenge was found and marked as used
+     * @param message The EIP-4361 compliant message that was signed
+     * @returns True if the challenge was found and marked as used, false otherwise
      */
     async markChallengeAsUsed(walletAddress: Address, message: string): Promise<boolean> {
         try {

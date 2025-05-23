@@ -14,13 +14,31 @@ import {
     AuthVerifyValidation,
 } from "../../validation/auth"
 
+/**
+ * The authentication flow consists of these main steps:
+ *
+ * 1. Challenge Generation (/auth/challenge):
+ *    - Client sends their wallet address
+ *    - Server creates a unique challenge message
+ *    - Server returns the message to be signed
+ *
+ * 2. Signature Verification (/auth/verify):
+ *    - Client signs the message and sends back signature
+ *    - Server validates message format using SIWE utilities
+ *    - Server checks database for valid challenge
+ *    - Server verifies signature on-chain
+ *    - Server creates session and returns token
+ *
+ * 3. Session Management:
+ *    - /auth/me - Get current user info
+ *    - /auth/sessions - List all active sessions
+ *    - /auth/logout - End the current session
+ */
+
 export default new Hono()
     /**
      * Request a challenge to sign
      * POST /auth/challenge
-     *
-     * Generates an EIP-4361 (Sign-In with Ethereum) compliant challenge message
-     * for the user to sign with their wallet.
      */
     .post("/challenge", AuthChallengeDescription, AuthChallengeValidation, async (c) => {
         try {
