@@ -33,43 +33,35 @@ export class AuthRepository {
 
     async verifySession(sessionId: AuthSessionTableId): Promise<AuthSession | undefined> {
         try {
-            // First check if the session exists and belongs to an existing user
+            // Single-query approach: update timestamp, check user exists, return updated session
             const session = await this.db
-                .selectFrom("auth_sessions")
-                .innerJoin("users", "users.id", "auth_sessions.user_id")
-                .where("auth_sessions.id", "=", sessionId)
-                .select([
-                    "auth_sessions.id",
-                    "auth_sessions.user_id",
-                    "auth_sessions.primary_wallet",
+                .updateTable("auth_sessions")
+                .set({ last_used_at: new Date().toISOString() })
+                .where("id", "=", sessionId)
+                .where(({ exists, selectFrom }) => 
+                    exists(
+                        selectFrom("users")
+                            .select("users.id")
+                            .whereRef("users.id", "=", "auth_sessions.user_id")
+                    )
+                )
+                .returning([
+                    "auth_sessions.id", 
+                    "auth_sessions.user_id", 
+                    "auth_sessions.primary_wallet", 
                     "auth_sessions.created_at",
-                    "auth_sessions.last_used_at",
+                    "auth_sessions.last_used_at"
                 ])
                 .executeTakeFirst()
-
+                
+            // If no rows matched our criteria (session not found or user doesn't exist)
             if (!session) {
                 return undefined
             }
-
-            // Update the last_used_at timestamp
-            const currentTime = new Date().toISOString()
-
-            // We don't need the result of this update since we already have the session data
-            // and the only thing that changed is the last_used_at timestamp, which isn't usually
-            // needed by the application logic
-            await this.db
-                .updateTable("auth_sessions")
-                .set({ last_used_at: currentTime })
-                .where("id", "=", sessionId)
-                .executeTakeFirstOrThrow()
-
-            // Return the session with the updated timestamp
-            // The session object already has the correct types from the database schema
-            // so we need to preserve those types
-            return {
-                ...session,
-                last_used_at: new Date(currentTime), // Convert string to Date to match expected type
-            }
+            
+            // The session object already has the correct types, and last_used_at is
+            // already up-to-date with the new timestamp
+            return session
         } catch (error) {
             console.error("Error verifying session:", error)
             return undefined
