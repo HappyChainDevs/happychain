@@ -1,18 +1,26 @@
+import {
+    abis as boopStagingAbis,
+    deployment as boopStagingDeployment,
+} from "@happy.tech/contracts/boop-staging/sepolia"
 import { abis as boopAnvilAbis, deployment as boopAnvilDeployment } from "@happy.tech/contracts/boop/anvil"
 import { abis as boopSepoliaAbis, deployment as boopSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
 import { anvil, happyChainSepolia, shortenAddress } from "@happy.tech/wallet-common"
 import { type Address, isAddressEqual } from "viem"
 
-// Default chain ID, used for deployment addresses and ABIs — however the iframe is still able to work with
-// other chains as long as they feature the same addresses and ABIs.
+// Default chain ID, used for deployment addresses and ABIs. The iframe might (or might not — unsupported)
+// works with other chains, but they will need to have the exact same contract deployment (addresses & ABIs).
 const chainId = Number(import.meta.env.VITE_CHAIN_ID)
+
+// Only used for chainId === 217 (HappyChain Sepolia).
+const useStagingContracts =
+    import.meta.env.VITE_USE_STAGING_CONTRACTS === "true" || import.meta.env.VITE_USE_STAGING_CONTRACTS === "1"
 
 //== Utils==========================================================================================
 
 function getBoopDeployment(chainId: number) {
     switch (chainId) {
         case happyChainSepolia.id:
-            return boopSepoliaDeployment
+            return useStagingContracts ? boopStagingDeployment : boopSepoliaDeployment
         case anvil.id:
             return boopAnvilDeployment
         default:
@@ -23,7 +31,7 @@ function getBoopDeployment(chainId: number) {
 function getBoopAbis(chainId: number) {
     switch (chainId) {
         case happyChainSepolia.id:
-            return boopSepoliaAbis
+            return useStagingContracts ? boopStagingAbis : boopSepoliaAbis
         case anvil.id:
             return boopAnvilAbis
         default:
