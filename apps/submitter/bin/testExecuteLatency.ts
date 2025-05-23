@@ -1,10 +1,6 @@
 import { BoopClient, type ExecuteOutput, type ExecuteSuccess, Onchain, computeBoopHash } from "@happy.tech/boop-sdk"
 import { stringify } from "@happy.tech/common"
-import { abis, deployment } from "@happy.tech/contracts/boop/sepolia"
-import { deployment as mockDeployments } from "@happy.tech/contracts/mocks/sepolia"
-import { http, createPublicClient, zeroAddress } from "viem"
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { happychainTestnet } from "viem/chains"
+import { createAndSignMintTx, getNonce, testAccount } from "./utils"
 // import { appendFileSync, existsSync, writeFileSync } from "node:fs";
 
 // const CSV_FILE = "./submitter_fastlane.csv";
@@ -12,60 +8,6 @@ import { happychainTestnet } from "viem/chains"
 // if (!existsSync(CSV_FILE)) {
 //     writeFileSync(CSV_FILE, "Latency (ms),Status,TxHash\n");
 // }
-
-const pk = generatePrivateKey()
-const testAccount = privateKeyToAccount(pk as `0x${string}`)
-
-const publicClient = createPublicClient({
-    chain: happychainTestnet,
-    transport: http(),
-})
-
-/**
- * Fetches the current nonce for a given account.
- * @param account The account address.
- * @param nonceTrack The nonce track (defaults to 0n).
- * @returns The current nonce value.
- */
-async function getNonce(account: `0x${string}`, nonceTrack = 0n): Promise<bigint> {
-    return await publicClient.readContract({
-        address: deployment.EntryPoint,
-        abi: abis.EntryPoint,
-        functionName: "nonceValues",
-        args: [account, nonceTrack],
-    })
-}
-
-/**
- * Creates and signs a mint transaction for the test account.
- * @param account The account address to mint for.
- * @param nonce The nonce for the transaction.
- * @returns The signed transaction object.
- */
-async function createAndSignMintTx(account: `0x${string}`, nonce: bigint) {
-    const unsignedTx = {
-        account,
-        dest: mockDeployments.MockTokenA,
-        nonceTrack: 0n,
-        nonceValue: nonce,
-        value: 0n,
-        payer: zeroAddress,
-        executeGasLimit: 0n,
-        gasLimit: 0n,
-        validatePaymentGasLimit: 4000000000n,
-        validateGasLimit: 4000000000n,
-        maxFeePerGas: 1200000000n,
-        submitterFee: 100n,
-        callData:
-            "0x40c10f19000000000000000000000000d224f746ed779fd492ccadae5cd377e58ee811810000000000000000000000000000000000000000000000000de0b6b3a7640000" as `0x${string}`, // mint 1 token to 0xd224f746ed779fd492ccadae5cd377e58ee81181
-        validatorData: "0x" as `0x${string}`,
-        extraData: "0x" as `0x${string}`,
-    }
-
-    const boopHash = computeBoopHash(216n, unsignedTx)
-    const validatorData = await testAccount.signMessage({ message: { raw: boopHash } })
-    return { ...unsignedTx, validatorData }
-}
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
