@@ -54,25 +54,25 @@ typedoc.clean:
 
 # generate JS markdown API reference
 typedoc-js:
-	typedoc --options ./typedoc.core.js;
+	typedoc --options ./configs/typedoc.core.js;
 .PHONY: typedoc-js
 
 # generate React markdown API reference
 typedoc-react:
-	typedoc --options ./typedoc.react.js;
+	typedoc --options ./configs/typedoc.react.js;
 .PHONY: typedoc-react
 
 # generate Vue markdown API reference
 typedoc-vue:
-	typedoc --options ./typedoc.vue.js;
+	typedoc --options ./configs/typedoc.vue.js;
 .PHONY: typedoc-vue
 
 # generate Boop SDK markdown API reference
 typedoc-boop-sdk:
-	typedoc --options ./typedoc.boop-sdk.js;
+	typedoc --options ./configs/typedoc.boop-sdk.js;
 .PHONY: typedoc-boop-sdk
 
 # generate Transaction Manager markdown API reference
 typedoc-txm:
-	typedoc --options ./typedoc.txm.js;
+	typedoc --options ./configs/typedoc.txm.js;
 .PHONY: typedoc-txm

@@ -1,5 +1,20 @@
 TSC_BIN ?= tsc
 
+
+# Define env file based on mode
+ifeq ($(NODE_ENV),development)
+  ENV_FILE := .env.development
+else ifeq ($(NODE_ENV),production)
+  ENV_FILE := .env.production
+else
+  ENV_FILE := .env
+endif
+
+# Fallback to .env if specific file doesn't exist
+ifeq ($(wildcard $(ENV_FILE)),)
+  ENV_FILE := .env
+endif
+
 ##@ Vite
 
 setup: node_modules reset-dev
@@ -8,7 +23,7 @@ setup: node_modules reset-dev
 # Like build.watch but also serves the page on localhost if applicable
 dev: node_modules reset-dev ## Serves or bundles the package in watch mode
 	@if [[ -r index.html ]]; then \
-	  concurrently --prefix=none "make build.watch" "bunx --bun vite"; \
+	  concurrently --prefix=none "make build.watch" "bun --bun --env-file=../../$(ENV_FILE) vite"; \
 	else \
 		make build.watch; \
 	fi
@@ -37,7 +52,7 @@ build.watch: node_modules
 .PHONY: build.watch
 
 preview: node_modules dist ## Serves the production mode package
-	@bunx --bun vite preview;
+	@bun --bun --env-file=../../$(ENV_FILE) vite preview;
 .PHONY: preview
 
 DIST_DEPS := $(shell find . \

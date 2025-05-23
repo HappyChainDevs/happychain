@@ -7,7 +7,7 @@ export default {
     tsconfig: "./tsconfig.typedoc.vue.json",
     // https://typedoc.org/options/input/
     name: "@happy.tech/vue",
-    entryPoints: ["../../packages/vue/lib/index.ts"],
+    entryPoints: ["../../../packages/vue/lib/index.ts"],
 
     // https://typedoc.org/options/output
     out: "src/pages/sdk/vue/api",

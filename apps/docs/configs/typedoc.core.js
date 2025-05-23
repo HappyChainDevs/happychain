@@ -4,14 +4,14 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "../../packages/txm/tsconfig.build.json",
+    tsconfig: "../../../packages/core/tsconfig.build.json",
     // https://typedoc.org/options/input/
-    name: "@happy.tech/txm",
-    entryPoints: ["../../packages/txm/lib/index.ts"],
+    name: "@happy.tech/core",
+    entryPoints: ["../../../packages/core/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "src/pages/txm/api",
+    out: "src/pages/sdk/js/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/txm/api/",
+    publicPath: "/sdk/js/api/",
 }

@@ -2,8 +2,9 @@ import { defineConfig } from "vite"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    server: { port: 6001, strictPort: true },
-    preview: { port: 6001, strictPort: true },
+    envPrefix: ["HAPPY_"],
+    server: { port: Number(process.env.DEMO_JS_PORT) || 6001, strictPort: true },
+    preview: { port: Number(process.env.DEMO_JS_PORT) || 6001, strictPort: true },
     build: {
         rollupOptions: {
             onwarn(warning, defaultHandler) {

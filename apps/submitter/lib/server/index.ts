@@ -104,7 +104,7 @@ app.get(
             },
             servers: [
                 env.NODE_ENV === "development" && {
-                    url: `http://localhost:${env.APP_PORT}`,
+                    url: `http://localhost:${env.SUBMITTER_PORT}`,
                     description: "Local server",
                 },
                 env.NODE_ENV === "staging" && {

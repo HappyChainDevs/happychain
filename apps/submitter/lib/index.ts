@@ -5,6 +5,6 @@ import type { AppType } from "./server"
 export type { AppType }
 
 export default {
-    port: env.APP_PORT,
+    port: env.SUBMITTER_PORT,
     fetch: app.fetch,
 }

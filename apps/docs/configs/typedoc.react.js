@@ -7,7 +7,7 @@ export default {
     tsconfig: "./tsconfig.typedoc.react.json",
     // https://typedoc.org/options/input/
     name: "@happy.tech/react",
-    entryPoints: ["../../packages/react/lib/index.ts"],
+    entryPoints: ["../../../packages/react/lib/index.ts"],
 
     // https://typedoc.org/options/output
     out: "src/pages/sdk/react/api",

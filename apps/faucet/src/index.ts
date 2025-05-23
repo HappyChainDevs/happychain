@@ -44,7 +44,7 @@ app.get(
                 ...(env.NODE_ENV === "development"
                     ? [
                           {
-                              url: `http://localhost:${env.APP_PORT}`,
+                              url: `http://localhost:${env.FAUCET_PORT}`,
                               description: "Local",
                           },
                       ]
@@ -69,7 +69,7 @@ app.get(
 
 export async function startServer() {
     await faucetService.start()
-    serve({ fetch: app.fetch, port: env.APP_PORT })
+    serve({ fetch: app.fetch, port: env.FAUCET_PORT })
 }
 
 startServer()

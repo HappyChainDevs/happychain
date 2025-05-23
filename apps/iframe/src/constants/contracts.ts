@@ -5,7 +5,7 @@ import { type Address, isAddressEqual } from "viem"
 
 // Default chain ID, used for deployment addresses and ABIs — however the iframe is still able to work with
 // other chains as long as they feature the same addresses and ABIs.
-const chainId = Number(import.meta.env.VITE_CHAIN_ID)
+const chainId = Number(import.meta.env.HAPPY_CHAIN_ID)
 
 //== Utils==========================================================================================
 

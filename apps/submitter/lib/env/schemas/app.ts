@@ -39,7 +39,7 @@ export const appSchema = z.object({
     /**
      * Port the submitter will run on. Defaults to 3001.
      */
-    APP_PORT: z.coerce.number().default(3001),
+    SUBMITTER_PORT: z.coerce.number().default(3001),
 
     /**
      * The node environment to run in. One of "production", "staging",
@@ -50,7 +50,7 @@ export const appSchema = z.object({
     /**
      * The log level to use. One of "OFF", "TRACE", "INFO", "WARN", or "ERROR". Defaults to "INFO".
      */
-    LOG_LEVEL: z.preprocess(
+    HAPPY_LOG_LEVEL: z.preprocess(
         (level) => level && String(level).toUpperCase(),
         z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default("INFO"),
     ),
@@ -58,7 +58,7 @@ export const appSchema = z.object({
     /**
      * URL for the SQLite database file this submitter is to use.
      */
-    DATABASE_URL: z.string(),
+    SUBMITTER_DB_PATH: z.string().default(":memory:"),
 
     /**
      * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time, but skipping some tests

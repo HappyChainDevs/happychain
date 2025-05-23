@@ -9,19 +9,19 @@ export async function migrateCommand({ positionals }: ReturnType<typeof getComma
 
     switch (command.data) {
         case "latest": {
-            console.log(`\nMigrating Latest: ${env.DATABASE_URL}\n`)
+            console.log(`\nMigrating Latest: ${env.SUBMITTER_DB_PATH}\n`)
             const results = await migrator.migrateToLatest()
             await printMigrationResults(results)
             break
         }
         case "up": {
-            console.log(`\nMigrating Up: ${env.DATABASE_URL}\n`)
+            console.log(`\nMigrating Up: ${env.SUBMITTER_DB_PATH}\n`)
             const results = await migrator.migrateUp()
             await printMigrationResults(results)
             break
         }
         case "down": {
-            console.log(`\nMigrating Down: ${env.DATABASE_URL}\n`)
+            console.log(`\nMigrating Down: ${env.SUBMITTER_DB_PATH}\n`)
             const results = await migrator.migrateDown()
             await printMigrationResults(results)
             break

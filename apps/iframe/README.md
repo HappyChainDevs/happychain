@@ -50,12 +50,12 @@ You will obtain the necessary credentials for the environment variables.
 Assign the values obtained when creating the Firebase web application:
 
 ```env
-VITE_FIREBASE_API_KEY=<your_api_key>
-VITE_FIREBASE_AUTH_DOMAIN=<your_auth_domain>
-VITE_FIREBASE_PROJECT_ID=<your_project_id>
-VITE_FIREBASE_STORAGE_BUCKET=<your_storage_bucket>
-VITE_FIREBASE_MESSAGE_SENDER_ID=<your_sender_id>
-VITE_FIREBASE_APP_ID=<your_app_id>
+HAPPY_FIREBASE_API_KEY=<your_api_key>
+HAPPY_FIREBASE_AUTH_DOMAIN=<your_auth_domain>
+HAPPY_FIREBASE_PROJECT_ID=<your_project_id>
+HAPPY_FIREBASE_STORAGE_BUCKET=<your_storage_bucket>
+HAPPY_FIREBASE_MESSAGE_SENDER_ID=<your_sender_id>
+HAPPY_FIREBASE_APP_ID=<your_app_id>
 ```
 
 # 🔗 Web3Auth Configuration
@@ -107,11 +107,11 @@ After setting up your Web3Auth project and custom verifier, you need to configur
 
 ```env
 # Web3Auth Client ID obtained from your Web3Auth project dashboard
-VITE_WEB3AUTH_CLIENT_ID=<your_client_id>
+HAPPY_WEB3AUTH_CLIENT_ID=<your_client_id>
 
 # Network environment (sapphire_devnet for development, sapphire_mainnet for production)
-VITE_WEB3AUTH_NETWORK=<sapphire_devnet|sapphire_mainnet>
+HAPPY_WEB3AUTH_NETWORK=<sapphire_devnet|sapphire_mainnet>
 
 # Verifier ID from your custom verifier configuration
-VITE_WEB3AUTH_VERIFIER=<your_verifier_name>
+HAPPY_WEB3AUTH_VERIFIER=<your_verifier_name>
 ```

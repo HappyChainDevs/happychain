@@ -28,7 +28,7 @@ const envSchema = z.object({
     CHAIN_ID: z.string().transform((s) => Number(s)),
     RANDOMNESS_DB_PATH: z.string().trim(),
     TXM_DB_PATH: z.string().trim(),
-    HAPPY_GENESIS_TIMESTAMP_SECONDS: z.string().transform((s) => BigInt(s)),
+    HAPPYCHAIN_GENESIS_TIMESTAMP_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_URL: z.string().trim(),
     EVM_DRAND_GENESIS_TIMESTAMP_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_PERIOD_SECONDS: z.string().transform((s) => BigInt(s)),

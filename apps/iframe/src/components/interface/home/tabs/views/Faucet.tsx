@@ -7,8 +7,8 @@ import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
 import UserNotFoundWarning from "./UserNotFoundWarning"
 
-const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
-const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!
+const TURNSTILE_SITEKEY = import.meta.env.HAPPY_TURNSTILE_SITEKEY!
+const FAUCET_ENDPOINT = import.meta.env.HAPPY_FAUCET_ENDPOINT!
 
 const FaucetView = () => {
     const user = useAtomValue(userAtom)

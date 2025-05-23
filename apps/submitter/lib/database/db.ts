@@ -7,6 +7,6 @@ import { SerializePlugin } from "./plugins/SerializerPlugin"
 import { transformerRules } from "./transformerRules"
 
 export const db = new Kysely<DB>({
-    dialect: new BunSqliteDialect({ database: new BunDatabase(env.DATABASE_URL) }),
+    dialect: new BunSqliteDialect({ database: new BunDatabase(env.SUBMITTER_DB_PATH) }),
     plugins: [new SerializePlugin(transformerRules)],
 })

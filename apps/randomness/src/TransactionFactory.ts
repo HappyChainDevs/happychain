@@ -19,7 +19,7 @@ export class TransactionFactory {
         // delay from the block number, multiplying by the block time, and adding
         // the genesis timestamp.
         const deadline = Number(
-            (randomness.blockNumber - this.precommitDelay) * env.BLOCK_TIME + env.HAPPY_GENESIS_TIMESTAMP_SECONDS,
+            (randomness.blockNumber - this.precommitDelay) * env.BLOCK_TIME + env.HAPPYCHAIN_GENESIS_TIMESTAMP_SECONDS,
         )
         return this.transactionManager.createTransaction({
             address: this.randomContractAddress,
@@ -34,7 +34,7 @@ export class TransactionFactory {
         // The reveal transaction must execute in its target block.
         // We calculate its deadline by multiplying the block number by the block time
         // and adding the genesis timestamp.
-        const deadline = Number(randomness.blockNumber * env.BLOCK_TIME + env.HAPPY_GENESIS_TIMESTAMP_SECONDS)
+        const deadline = Number(randomness.blockNumber * env.BLOCK_TIME + env.HAPPYCHAIN_GENESIS_TIMESTAMP_SECONDS)
 
         return this.transactionManager.createTransaction({
             address: this.randomContractAddress,

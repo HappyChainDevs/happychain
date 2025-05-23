@@ -19,7 +19,7 @@ const envSchema = z.object({
     CHAIN_ID: z.string().transform((s) => Number(s)),
     TXM_DB_PATH: z.string().trim(),
     NODE_ENV: z.enum(["development", "production"]),
-    APP_PORT: z.string().transform((s) => Number(s)),
+    FAUCET_PORT: z.string().transform((s) => Number(s)),
     TURNSTILE_SECRET: z.string().trim(),
     TOKEN_AMOUNT: z.string().transform((s) => BigInt(s)),
     FAUCET_DB_PATH: z.string().trim(),

@@ -100,7 +100,6 @@ setup: install-frozen enable-hooks ## To be run when first setting up the reposi
 	@cd contracts && make setup
 .PHONY: setup
 
-# Internal, to avoid cloning / rebuilding alto.
 setup.ts:
 	$(call forall_make , $(TS_PKGS) , setup)
 .PHONY: setup.ts
@@ -117,11 +116,10 @@ reset-dev: node_modules ## Resets to dev (no-build) mode
 
 nuke: clean ## Removes build artifacts and dependencies 
 	cd contracts && make nuke
-	cd packages/bundler && make nuke
 	$(MAKE) remove-modules
 .PHONY: nuke
 
-# Only cleans & removes node_modules (doesn't touch the bundler or contracts)
+# Only cleans & removes node_modules (doesn't touch the contracts)
 nuke.ts: clean
 	$(MAKE) remove-modules
 .PHONY: nuke
@@ -527,29 +525,29 @@ define update_env
 endef
 
 select-submitter-local:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,http://localhost:3001)
+	$(call update_env,apps/iframe/.env,HAPPY_SUBMITTER_URL,http://localhost:3001)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,http://localhost:3001)
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-local
 
 select-submitter-staging:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter-staging.happy.tech)
+	$(call update_env,apps/iframe/.env,HAPPY_SUBMITTER_URL,https://submitter-staging.happy.tech)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter-staging.happy.tech)
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
-	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,https://submitter.happy.tech)
+	$(call update_env,apps/iframe/.env,HAPPY_SUBMITTER_URL,https://submitter.happy.tech)
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,https://submitter.happy.tech)
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-submitter-prod
 
 select-iframe-local:
-	$(call update_env,packages/core/.env,IFRAME_URL,http://localhost:5160)
+	$(call update_env,packages/core/.env,HAPPY_IFRAME_URL,http://localhost:5160)
 .PHONY: select-iframe-local
 
 select-iframe-testnet:
-	$(call update_env,packages/core/.env,IFRAME_URL,https://iframe.happy.tech)
+	$(call update_env,packages/core/.env,HAPPY_IFRAME_URL,https://iframe.happy.tech)
 .PHONY: select-iframe-local
 
 select-chain-local:
@@ -560,10 +558,10 @@ select-chain-local:
 	$(call update_env,apps/randomness/.env,CHAIN_ID,31337)
 	$(call update_env,apps/randomness/.env,RPC_URL,http://127.0.0.1:8545)
 
-	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/js/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/react/.env,VITE_CHAIN_ID,31337)
-	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,31337)
+	$(call update_env,apps/iframe/.env,HAPPY_CHAIN_ID,31337)
+	$(call update_env,demos/js/.env,HAPPY_CHAIN_ID,31337)
+	$(call update_env,demos/react/.env,HAPPY_CHAIN_ID,31337)
+	$(call update_env,demos/vue/.env,HAPPY_CHAIN_ID,31337)
 .PHONY: select-chain-local
 
 select-chain-testnet:
@@ -574,10 +572,10 @@ select-chain-testnet:
 	$(call update_env,apps/randomness/.env,CHAIN_ID,216)
 	$(call update_env,apps/randomness/.env,RPC_URL,https://rpc.testnet.happy.tech)
 
-	$(call update_env,apps/iframe/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/js/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/react/.env,VITE_CHAIN_ID,216)
-	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,216)
+	$(call update_env,apps/iframe/.env,HAPPY_CHAIN_ID,216)
+	$(call update_env,demos/js/.env,HAPPY_CHAIN_ID,216)
+	$(call update_env,demos/react/.env,HAPPY_CHAIN_ID,216)
+	$(call update_env,demos/vue/.env,HAPPY_CHAIN_ID,216)
 .PHONY: select-chain-testnet
 
 setup-local-chain: select-chain-local

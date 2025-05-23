@@ -5,7 +5,7 @@ import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { makeEthereumSigner } from "@web3auth/mpc-core-kit"
 import { web3Auth } from "../web3auth/mpc-core-kit"
 
-const chainId = Number(import.meta.env.VITE_CHAIN_ID)
+const chainId = Number(import.meta.env.HAPPY_CHAIN_ID)
 const chain = Object.values(chainDefinitions).find((a) => Number(a.chainId) === chainId) as ChainParameters
 
 export const ethereumSigningProvider = new EthereumSigningProvider({

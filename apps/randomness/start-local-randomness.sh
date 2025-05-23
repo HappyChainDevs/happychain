@@ -22,10 +22,10 @@ else
     exit 1
 fi
 
-ANVIL_RPC_PORT=8545
-ANVIL_RPC_URL="http://127.0.0.1:$ANVIL_RPC_PORT"
+ANVIL_PORT=8545
+ANVIL_RPC_URL="http://127.0.0.1:$ANVIL_PORT"
 BLOCK_TIME=2
-HAPPY_GENESIS_ENV_VAR="HAPPY_GENESIS_TIMESTAMP_SECONDS"
+HAPPYCHAIN_GENESIS_TIMESTAMP_SECONDS="HAPPYCHAIN_GENESIS_TIMESTAMP_SECONDS"
 DRAND_ROUND_ENV_VAR="EVM_DRAND_START_ROUND"
 DRAND_URL="https://api.drand.sh/v2/beacons/evmnet/rounds/latest"
 RANDOMNESS_DB_PATH="$SCRIPT_DIR/randomness.sqlite"
@@ -171,14 +171,14 @@ else
 fi
 
 echo "Starting Anvil..."
-anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT --chain-id $CHAIN_ID > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
+anvil --block-time $BLOCK_TIME --port $ANVIL_PORT --chain-id $CHAIN_ID > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
 ANVIL_PID=$!
 
 # Limit the number of connection attempts to 5
 attempts=0
 max_attempts=5
 
-while ! nc -z localhost $ANVIL_RPC_PORT; do
+while ! nc -z localhost $ANVIL_PORT; do
     if [[ $attempts -ge $max_attempts ]]; then
         echo "Failed to connect to Anvil after $max_attempts attempts. Exiting."
         exit 1

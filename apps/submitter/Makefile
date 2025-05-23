@@ -17,10 +17,10 @@ define setup-test-env
 	$(eval export CHAIN_ID=31337) \
 	$(eval export RPC_URL=http://localhost:8545) \
   	$(eval export NODE_ENV=test) \
-  	$(eval export DATABASE_URL=tests.sqlite) \
+  	$(eval export SUBMITTER_DB_PATH=tests.sqlite) \
   	$(eval export EXECUTOR_KEYS=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
   	$(eval export PRIVATE_KEY_ACCOUNT_DEPLOYER=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
-  	if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi; \
+  	if [ -f ${SUBMITTER_DB_PATH} ]; then rm ${SUBMITTER_DB_PATH}; fi; \
 	./dist/cli migrate latest;
 endef
 
@@ -41,7 +41,7 @@ db-types: ## Generate TS types for DB
 .PHONY: db-types
 
 migrate-fresh: ## Deletes database and starts fresh
-	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
+	@if [ -f ${SUBMITTER_DB_PATH} ]; then rm ${SUBMITTER_DB_PATH}; fi;
 	@./dist/cli migrate latest
 .PHONY: migrate-fresh
 

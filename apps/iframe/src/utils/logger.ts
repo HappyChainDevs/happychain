@@ -2,9 +2,9 @@ import { Logger, logLevel } from "@happy.tech/common"
 
 /**
  * Default at which all logger's log level are set by default if not changed programmatically.
- * Initialized to the env var VITE_LOG_LEVEL if set, otherwise {@link LogLevel.WARN}.
+ * Initialized to the env var HAPPY_LOG_LEVEL if set, otherwise {@link LogLevel.WARN}.
  */
-const defaultLogLevel = logLevel(import.meta.env.VITE_LOG_LEVEL)
+const defaultLogLevel = logLevel(import.meta.env.HAPPY_LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
 
 /**

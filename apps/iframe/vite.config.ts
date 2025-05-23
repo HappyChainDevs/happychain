@@ -6,18 +6,18 @@ import { defineConfig, loadEnv } from "vite"
 import z from "zod"
 
 const envConfigSchema = z.object({
-    VITE_SUBMITTER_URL: z.string(),
-    VITE_FIREBASE_API_KEY: z.string(),
-    VITE_FIREBASE_AUTH_DOMAIN: z.string(),
-    VITE_FIREBASE_PROJECT_ID: z.string(),
-    VITE_FIREBASE_STORAGE_BUCKET: z.string(),
-    VITE_FIREBASE_MESSAGE_SENDER_ID: z.string(),
-    VITE_FIREBASE_APP_ID: z.string(),
-    VITE_WEB3AUTH_CLIENT_ID: z.string(),
-    VITE_WEB3AUTH_NETWORK: z.string(),
-    VITE_WEB3AUTH_VERIFIER: z.string(),
-    VITE_TURNSTILE_SITEKEY: z.string(),
-    VITE_FAUCET_ENDPOINT: z.string(),
+    HAPPY_SUBMITTER_URL: z.string(),
+    HAPPY_FIREBASE_API_KEY: z.string(),
+    HAPPY_FIREBASE_AUTH_DOMAIN: z.string(),
+    HAPPY_FIREBASE_PROJECT_ID: z.string(),
+    HAPPY_FIREBASE_STORAGE_BUCKET: z.string(),
+    HAPPY_FIREBASE_MESSAGE_SENDER_ID: z.string(),
+    HAPPY_FIREBASE_APP_ID: z.string(),
+    HAPPY_WEB3AUTH_CLIENT_ID: z.string(),
+    HAPPY_WEB3AUTH_NETWORK: z.string(),
+    HAPPY_WEB3AUTH_VERIFIER: z.string(),
+    HAPPY_TURNSTILE_SITEKEY: z.string(),
+    HAPPY_FAUCET_ENDPOINT: z.string(),
 })
 
 // https://vitejs.dev/config/
@@ -29,13 +29,14 @@ export default defineConfig(({ command, mode }) => {
         process.exit(1)
     }
     return {
+        envPrefix: ["HAPPY_"],
         optimizeDeps: {
             // Vite seems unable to properly optimize shared-workers with code-gen when switching
             // between branches.
             exclude: command === "serve" ? ["@happy.tech/worker"] : [],
         },
-        server: { port: 5160, strictPort: true },
-        preview: { port: 5160, strictPort: true },
+        server: { port: Number(process.env.IFRAME_PORT) || 5160, strictPort: true },
+        preview: { port: Number(process.env.IFRAME_PORT) || 5160, strictPort: true },
         plugins: [
             TanStackRouterVite(),
             react({ babel: { presets: ["jotai/babel/preset"] } }),

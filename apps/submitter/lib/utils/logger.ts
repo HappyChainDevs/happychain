@@ -4,7 +4,7 @@ import type { Boop } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { env } from "../env"
 
-const defaultLogLevel = logLevel(env.LOG_LEVEL)
+const defaultLogLevel = logLevel(env.HAPPY_LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
 
 export const logger = Logger.create("Submitter")

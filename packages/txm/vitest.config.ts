@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
+    envPrefix: ["HAPPY_"],
     test: {
         globals: true,
         environment: "node",
