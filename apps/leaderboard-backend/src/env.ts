@@ -27,6 +27,18 @@ const envSchema = z.object({
     SESSION_COOKIE_SAME_SITE: z.enum(["Strict", "Lax", "None"]).default("Lax"),
     SESSION_COOKIE_PATH: z.string().trim().default("/"),
 
+    // Authentication Challenge Settings (SIWE - Sign In With Ethereum)
+    AUTH_DOMAIN: z.string().trim().default("happychain.app"),
+    AUTH_CHAIN_ID: z.string().trim().default("216"), // Default to Happy Chain mainnet
+    AUTH_STATEMENT: z
+        .string()
+        .trim()
+        .default(
+            "Sign this message to authenticate with HappyChain Leaderboard. This will not trigger a blockchain transaction or cost any gas fees.",
+        ),
+    AUTH_URI: z.string().trim().default("https://happychain.app/login"),
+    AUTH_CHALLENGE_EXPIRY: z.string().trim().default("300"), // Default to 5 minutes in seconds
+
     // External services
     RPC_URL: z.string().trim().default("http://localhost:8545"),
 })
@@ -53,4 +65,16 @@ export const sessionCookieConfig = {
     sameSite: env.SESSION_COOKIE_SAME_SITE,
     path: env.SESSION_COOKIE_PATH,
     maxAge: Number.parseInt(env.SESSION_EXPIRY, 10),
+}
+
+/**
+ * SIWE (Sign-In with Ethereum) configuration
+ * Follows EIP-4361 standard for Ethereum-based authentication
+ */
+export const authConfig = {
+    domain: env.AUTH_DOMAIN,
+    chainId: Number.parseInt(env.AUTH_CHAIN_ID, 10),
+    statement: env.AUTH_STATEMENT,
+    uri: env.AUTH_URI,
+    challengeExpirySeconds: Number.parseInt(env.AUTH_CHALLENGE_EXPIRY, 10),
 }
