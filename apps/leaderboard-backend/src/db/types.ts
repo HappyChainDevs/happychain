@@ -19,6 +19,7 @@ export interface Database {
     games: GameTable
     user_game_scores: UserGameScoreTable
     auth_sessions: AuthSessionTable
+    auth_challenges: AuthChallengeTable
 }
 
 // Registered users
@@ -89,6 +90,17 @@ interface AuthSessionTable {
     last_used_at: ColumnType<Date, string | undefined, string>
 }
 
+// Auth challenges
+interface AuthChallengeTable {
+    id: Generated<number>
+    primary_wallet: Address
+    nonce: string
+    message_hash: string  // Hash of the challenge message for verification
+    expires_at: ColumnType<Date, string, string>
+    created_at: ColumnType<Date, string | undefined, never>
+    used: boolean
+}
+
 // Kysely helper types
 export type User = Selectable<UserTable>
 export type NewUser = Insertable<UserTable>
@@ -118,6 +130,15 @@ export type UserGameScore = Selectable<UserGameScoreTable>
 export type NewUserGameScore = Insertable<UserGameScoreTable>
 export type UpdateUserGameScore = Updateable<UserGameScoreTable>
 
+export type AuthChallenge = Selectable<AuthChallengeTable>
+export type NewAuthChallenge = Insertable<AuthChallengeTable>
+export type UpdateAuthChallenge = Updateable<AuthChallengeTable>
+
+export type AuthSession = Selectable<AuthSessionTable>
+export type NewAuthSession = Insertable<AuthSessionTable>
+export type UpdateAuthSession = Updateable<AuthSessionTable>
+
+// Leaderboard entries
 export interface GlobalLeaderboardEntry {
     user_id: UserTableId
     username: string
@@ -149,7 +170,3 @@ export interface GameGuildLeaderboardEntry {
     total_score: number
     member_count: number
 }
-
-export type AuthSession = Selectable<AuthSessionTable>
-export type NewAuthSession = Insertable<AuthSessionTable>
-export type UpdateAuthSession = Updateable<AuthSessionTable>
