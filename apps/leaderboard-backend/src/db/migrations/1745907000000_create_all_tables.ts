@@ -88,15 +88,59 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("last_used_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
         .addForeignKeyConstraint("auth_sessions_user_id_fk", ["user_id"], "users", ["id"])
         .execute()
+
+    // Auth challenges table for secure authentication
+    await db.schema
+        .createTable("auth_challenges")
+        .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+        .addColumn("primary_wallet", "text", (col) => col.notNull())
+        .addColumn("nonce", "text", (col) => col.notNull())
+        .addColumn("message_hash", "text", (col) => col.notNull())
+        .addColumn("expires_at", "text", (col) => col.notNull())
+        .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
+        .addColumn("used", "boolean", (col) => col.defaultTo(false).notNull())
+        .execute()
+
+    // Create indexes for better query performance
+
+    // Auth challenges indexes
+    await db.schema.createIndex("auth_challenges_wallet_idx").on("auth_challenges").column("primary_wallet").execute()
+
+    await db.schema.createIndex("auth_challenges_nonce_idx").on("auth_challenges").column("nonce").execute()
+
+    // User wallets index for faster wallet lookup by user
+    await db.schema.createIndex("user_wallets_user_id_idx").on("user_wallets").column("user_id").execute()
+
+    // Guild members indexes for faster lookup by guild or user
+    await db.schema.createIndex("guild_members_guild_id_idx").on("guild_members").column("guild_id").execute()
+
+    await db.schema.createIndex("guild_members_user_id_idx").on("guild_members").column("user_id").execute()
+
+    // User game scores index for efficient leaderboard queries
+    await db.schema
+        .createIndex("user_game_scores_game_id_score_idx")
+        .on("user_game_scores")
+        .columns(["game_id", "score"])
+        .execute()
+
+    // Auth sessions index for faster session lookup by user
+    await db.schema.createIndex("auth_sessions_user_id_idx").on("auth_sessions").column("user_id").execute()
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: `any` is required here since migrations should be frozen in time. alternatively, keep a "snapshot" db interface.
 export async function down(db: Kysely<any>): Promise<void> {
+    // Drop tables in reverse order to avoid foreign key constraint issues
+    // First drop tables that depend on other tables
     await db.schema.dropTable("user_game_scores").execute()
-    await db.schema.dropTable("games").execute()
     await db.schema.dropTable("guild_members").execute()
-    await db.schema.dropTable("guilds").execute()
     await db.schema.dropTable("user_wallets").execute()
-    await db.schema.dropTable("users").execute()
     await db.schema.dropTable("auth_sessions").execute()
+    await db.schema.dropTable("auth_challenges").execute()
+
+    // Then drop tables that are referenced by the above tables
+    await db.schema.dropTable("games").execute()
+    await db.schema.dropTable("guilds").execute()
+
+    // Finally drop the core users table
+    await db.schema.dropTable("users").execute()
 }

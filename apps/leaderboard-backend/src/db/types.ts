@@ -95,7 +95,7 @@ interface AuthChallengeTable {
     id: Generated<number>
     primary_wallet: Address
     nonce: string
-    message_hash: string  // Hash of the challenge message for verification
+    message_hash: string // Hash of the challenge message for verification
     expires_at: ColumnType<Date, string, string>
     created_at: ColumnType<Date, string | undefined, never>
     used: boolean

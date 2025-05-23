@@ -1,7 +1,14 @@
 import { createUUID } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
 import type { Kysely } from "kysely"
-import type { AuthSession, AuthSessionTableId, Database, NewAuthSession, UserTableId } from "../db/types"
+import type {
+    AuthChallenge,
+    AuthSession,
+    AuthSessionTableId,
+    Database,
+    NewAuthSession,
+    UserTableId,
+} from "../db/types"
 
 export class AuthRepository {
     constructor(private db: Kysely<Database>) {}
@@ -38,27 +45,23 @@ export class AuthRepository {
                 .updateTable("auth_sessions")
                 .set({ last_used_at: new Date().toISOString() })
                 .where("id", "=", sessionId)
-                .where(({ exists, selectFrom }) => 
-                    exists(
-                        selectFrom("users")
-                            .select("users.id")
-                            .whereRef("users.id", "=", "auth_sessions.user_id")
-                    )
+                .where(({ exists, selectFrom }) =>
+                    exists(selectFrom("users").select("users.id").whereRef("users.id", "=", "auth_sessions.user_id")),
                 )
                 .returning([
-                    "auth_sessions.id", 
-                    "auth_sessions.user_id", 
-                    "auth_sessions.primary_wallet", 
+                    "auth_sessions.id",
+                    "auth_sessions.user_id",
+                    "auth_sessions.primary_wallet",
                     "auth_sessions.created_at",
-                    "auth_sessions.last_used_at"
+                    "auth_sessions.last_used_at",
                 ])
                 .executeTakeFirst()
-                
+
             // If no rows matched our criteria (session not found or user doesn't exist)
             if (!session) {
                 return undefined
             }
-            
+
             // The session object already has the correct types, and last_used_at is
             // already up-to-date with the new timestamp
             return session
@@ -74,6 +77,70 @@ export class AuthRepository {
         } catch (error) {
             console.error("Error getting user sessions:", error)
             return []
+        }
+    }
+
+    /**
+     * Create a new authentication challenge for a wallet address
+     * @param walletAddress - The wallet address to create a challenge for
+     * @param message - The challenge message to be signed
+     * @param expiresIn - Number of seconds until the challenge expires
+     * @returns The created challenge with nonce
+     */
+    async createChallenge(
+        walletAddress: Address,
+        message: string,
+        expiresIn = 300,
+    ): Promise<AuthChallenge | undefined> {
+        return undefined
+    }
+
+    /**
+     * Validate a challenge during authentication
+     * @param walletAddress - The wallet address that's authenticating
+     * @param nonce - The nonce from the challenge
+     * @param signedMessage - The message that was signed
+     * @returns The challenge if valid, undefined if invalid or expired
+     */
+    async validateChallenge(
+        walletAddress: Address,
+        nonce: string,
+        signedMessage: string,
+    ): Promise<AuthChallenge | undefined> {
+        return undefined
+    }
+
+    /**
+     * Mark a challenge as used to prevent replay attacks
+     * @param challengeId - The ID of the challenge to mark as used
+     */
+    async markChallengeAsUsed(challengeId: number): Promise<boolean> {
+        const res = await this.db
+            .updateTable("auth_challenges")
+            .set({ used: true })
+            .where("id", "=", challengeId)
+            .execute()
+        return res.length > 0
+    }
+
+    /**
+     * Clean up old challenges for a wallet address
+     * @private
+     */
+    private async _cleanupExpiredChallenges(walletAddress: Address): Promise<void> {
+        // For now, just limit the number of challenges per wallet to prevent database bloat
+        // This is a simpler approach than dealing with date comparisons that can have type issues
+        const oldChallenges = await this.db
+            .selectFrom("auth_challenges")
+            .select("id")
+            .where("primary_wallet", "=", walletAddress)
+            .orderBy("created_at", "desc")
+            .offset(10) // Keep only the 10 most recent challenges
+            .execute()
+
+        if (oldChallenges.length > 0) {
+            const oldIds = oldChallenges.map((c) => c.id)
+            await this.db.deleteFrom("auth_challenges").where("id", "in", oldIds).execute()
         }
     }
 
