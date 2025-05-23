@@ -2,7 +2,7 @@ import { createUUID } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
 import type { Kysely } from "kysely"
 import { hashMessage } from "viem"
-import { assertNonce, generateChallengeMessage } from "../auth/challengeGenerator"
+import { generateChallengeMessage } from "../auth/challengeGenerator"
 import type {
     AuthChallenge,
     AuthSession,
@@ -16,6 +16,12 @@ import type {
 export class AuthRepository {
     constructor(private db: Kysely<Database>) {}
 
+    /**
+     * Creates a new authentication session for a user
+     * @param userId The ID of the user to create a session for
+     * @param walletAddress The primary wallet address for the session
+     * @returns The created session, or undefined if an error occurred
+     */
     async createSession(userId: UserTableId, walletAddress: Address): Promise<AuthSession | undefined> {
         try {
             const now = new Date()
@@ -41,6 +47,11 @@ export class AuthRepository {
         }
     }
 
+    /**
+     * Verifies an authentication session
+     * @param sessionId The ID of the session to verify
+     * @returns The updated session, or undefined if the session doesn't exist
+     */
     async verifySession(sessionId: AuthSessionTableId): Promise<AuthSession | undefined> {
         try {
             // Single-query approach: update timestamp, check user exists, return updated session
@@ -74,6 +85,11 @@ export class AuthRepository {
         }
     }
 
+    /**
+     * Gets all active sessions for a user
+     * @param userId The ID of the user to get sessions for
+     * @returns An array of sessions, or an empty array if none exist
+     */
     async getUserSessions(userId: UserTableId): Promise<AuthSession[]> {
         try {
             return await this.db.selectFrom("auth_sessions").where("user_id", "=", userId).selectAll().execute()
@@ -131,15 +147,11 @@ export class AuthRepository {
     /**
      * Validate an authentication challenge using the original signed message
      * @param walletAddress The wallet address that requested the challenge
-     * @param nonce The nonce from the challenge (must be a valid 32-char hex string)
      * @param signedMessage The message that was signed by the wallet
      * @returns True if the challenge is valid, false otherwise
      */
-    async validateChallenge(walletAddress: Address, nonce: string, signedMessage: string): Promise<boolean> {
+    async validateChallenge(walletAddress: Address, signedMessage: string): Promise<boolean> {
         try {
-            // Validate nonce format first
-            const validNonce = assertNonce(nonce)
-
             // Calculate hash of the signed message for verification
             const messageHash = hashMessage(signedMessage)
 
@@ -147,7 +159,6 @@ export class AuthRepository {
             const challenge = await this.db
                 .selectFrom("auth_challenges")
                 .where("primary_wallet", "=", walletAddress)
-                .where("nonce", "=", validNonce)
                 .where("message_hash", "=", messageHash)
                 .where("used", "=", false)
                 .where("expires_at", ">", new Date())
@@ -156,70 +167,34 @@ export class AuthRepository {
 
             return !!challenge
         } catch (error) {
-            // If the nonce format is invalid, the challenge cannot be valid
-            if (error instanceof Error && error.message.includes("Invalid nonce format")) {
-                return false
-            }
-            throw error
-        }
-    }
-
-    /**
-     * Find a specific authentication challenge by wallet and nonce
-     * @param walletAddress The wallet address that requested the challenge
-     * @param nonce The nonce from the challenge (must be a valid 32-char hex string)
-     * @returns The challenge if found, undefined otherwise
-     */
-    async findChallenge(walletAddress: Address, nonce: string): Promise<AuthChallenge | undefined> {
-        try {
-            // Validate nonce format first
-            const validNonce = assertNonce(nonce)
-
-            const challenge = await this.db
-                .selectFrom("auth_challenges")
-                .where("primary_wallet", "=", walletAddress)
-                .where("nonce", "=", validNonce)
-                .select(["id", "primary_wallet", "nonce", "message_hash", "expires_at", "created_at", "used"])
-                .executeTakeFirst()
-
-            if (!challenge) return undefined
-
-            return challenge
-        } catch (error) {
-            // If the nonce format is invalid, no challenge can be found
-            if (error instanceof Error && error.message.includes("Invalid nonce format")) {
-                return undefined
-            }
-            throw error
+            console.error("Error validating challenge:", error)
+            return false
         }
     }
 
     /**
      * Mark a challenge as used to prevent replay attacks
      * @param walletAddress The wallet address that requested the challenge
-     * @param nonce The nonce from the challenge (must be a valid 32-char hex string)
+     * @param message The message that was signed
      * @returns True if the challenge was found and marked as used
      */
-    async markChallengeAsUsed(walletAddress: Address, nonce: string): Promise<boolean> {
+    async markChallengeAsUsed(walletAddress: Address, message: string): Promise<boolean> {
         try {
-            // Validate nonce format first
-            const validNonce = assertNonce(nonce)
+            // Calculate hash of the message for identification
+            const messageHash = hashMessage(message)
 
             const result = await this.db
                 .updateTable("auth_challenges")
                 .set({ used: true })
                 .where("primary_wallet", "=", walletAddress)
-                .where("nonce", "=", validNonce)
+                .where("message_hash", "=", messageHash)
                 .where("used", "=", false)
                 .executeTakeFirst()
 
             return result.numUpdatedRows > 0
         } catch (error) {
-            // If the nonce format is invalid, no challenge can be marked as used
-            if (error instanceof Error && error.message.includes("Invalid nonce format")) {
-                return false
-            }
-            throw error
+            console.error("Error marking challenge as used:", error)
+            return false
         }
     }
 
@@ -252,6 +227,11 @@ export class AuthRepository {
         await this.db.deleteFrom("auth_challenges").where("expires_at", "<", new Date()).execute()
     }
 
+    /**
+     * Deletes a specific session by ID
+     * @param sessionId The ID of the session to delete
+     * @returns True if the session was deleted, false otherwise
+     */
     async deleteSession(sessionId: AuthSessionTableId): Promise<boolean> {
         try {
             // Use execute() which returns the number of affected rows
@@ -265,6 +245,11 @@ export class AuthRepository {
         }
     }
 
+    /**
+     * Deletes all sessions for a specific user
+     * @param userId The ID of the user to delete sessions for
+     * @returns True if the sessions were deleted, false otherwise
+     */
     async deleteAllUserSessions(userId: UserTableId): Promise<boolean> {
         try {
             const result = await this.db.deleteFrom("auth_sessions").where("user_id", "=", userId).execute()

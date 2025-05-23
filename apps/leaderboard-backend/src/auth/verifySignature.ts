@@ -22,9 +22,9 @@ export const publicClient = createPublicClient({
  * @param signature - The signature to verify
  * @returns Promise<boolean> - Whether the signature is valid
  */
-export async function verifySignature(walletAddress: Address, message: Hex, signature: Hex): Promise<boolean> {
+export async function verifySignature(walletAddress: Address, message: string, signature: Hex): Promise<boolean> {
     try {
-        const messageHash = hashMessage({ raw: message })
+        const messageHash = hashMessage(message)
         const result = await publicClient.readContract({
             address: walletAddress,
             abi: abis.HappyAccountImpl,

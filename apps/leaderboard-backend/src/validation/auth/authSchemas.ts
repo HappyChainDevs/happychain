@@ -30,13 +30,12 @@ export const AuthResponseDataSchema = z
 export const AuthChallengeDataSchema = z
     .object({
         message: z.string(),
-        primary_wallet: z.string().refine(isHex),
     })
     .strict()
     .openapi({
         example: {
-            message: "HappyChain Authentication: 1a2b3c4d5e6f7890 (1620000000000)",
-            primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
+            message:
+                "happychain.app wants you to sign in with your Ethereum account:\n0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa\n\nSign this message to authenticate with HappyChain Leaderboard. This will not trigger a blockchain transaction or cost any gas fees.\n\nURI: https://happychain.app/login\nVersion: 1\nChain ID: 216\nNonce: 7f8e9d1c6b3a2e5f4d7c8b9a1e3f5d7c\nIssued At: 2025-05-23T09:30:00.000Z\nExpiration Time: 2025-05-23T09:35:00.000Z",
         },
     })
 
@@ -87,7 +86,8 @@ export const AuthVerifyRequestSchema = z
     .openapi({
         example: {
             primary_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa",
-            message: "HappyChain Authentication: 1a2b3c4d5e6f7890 (1620000000000)",
+            message:
+                "happychain.app wants you to sign in with your Ethereum account:\n0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa\n\nSign this message to authenticate with HappyChain Leaderboard. This will not trigger a blockchain transaction or cost any gas fees.\n\nURI: https://happychain.app/login\nVersion: 1\nChain ID: 216\nNonce: 7f8e9d1c6b3a2e5f4d7c8b9a1e3f5d7c\nIssued At: 2025-05-23T09:30:00.000Z\nExpiration Time: 2025-05-23T09:35:00.000Z",
             signature:
                 "0x1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
         },

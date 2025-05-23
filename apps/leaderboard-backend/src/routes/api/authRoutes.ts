@@ -1,6 +1,6 @@
-import type { Address, Hex } from "@happy.tech/common"
 import { Hono } from "hono"
 import { deleteCookie, setCookie } from "hono/cookie"
+import { parseSiweMessage, validateSiweMessage } from "viem/siwe"
 import { requireAuth, verifySignature } from "../../auth"
 import type { AuthSessionTableId } from "../../db/types"
 import { sessionCookieConfig } from "../../env"
@@ -18,17 +18,35 @@ export default new Hono()
     /**
      * Request a challenge to sign
      * POST /auth/challenge
+     *
+     * Generates an EIP-4361 (Sign-In with Ethereum) compliant challenge message
+     * for the user to sign with their wallet.
      */
     .post("/challenge", AuthChallengeDescription, AuthChallengeValidation, async (c) => {
         try {
             const { primary_wallet } = c.req.valid("json")
-            // Use a hardcoded, Ethereum-style message for leaderboard authentication
-            const message = `\x19Leaderboard Signed Message:\nHappyChain Leaderboard Authentication Request for ${primary_wallet}`
+            const { authRepo } = c.get("repos")
+
+            // Generate resources list for this authentication
+            // These are URIs the user will be able to access after authentication (template)
+            const resources = [
+                "https://happychain.app/profile",
+                "https://happychain.app/leaderboard",
+                "https://happychain.app/games",
+            ]
+
+            // Create a challenge with the wallet address and resources
+            const challenge = await authRepo.createChallenge(primary_wallet, resources)
+
+            if (!challenge) {
+                return c.json({ ok: false, error: "Failed to generate challenge" }, 500)
+            }
+
+            // Return just the message to the client - everything they need is contained within it
             return c.json({
                 ok: true,
                 data: {
-                    message,
-                    primary_wallet,
+                    message: challenge.message,
                 },
             })
         } catch (err) {
@@ -46,11 +64,41 @@ export default new Hono()
             const { primary_wallet, message, signature } = c.req.valid("json")
             const { authRepo, userRepo } = c.get("repos")
 
-            // Verify signature directly using the utility function
-            const isValid = await verifySignature(primary_wallet as Address, message as Hex, signature as Hex)
+            try {
+                const parsedMessage = parseSiweMessage(message)
 
-            if (!isValid) {
+                const isValidFormat = validateSiweMessage({
+                    message: parsedMessage,
+                    address: primary_wallet,
+                })
+
+                if (!isValidFormat) {
+                    return c.json({ ok: false, error: "Invalid message format" }, 400)
+                }
+
+                if (parsedMessage.address && parsedMessage.address.toLowerCase() !== primary_wallet.toLowerCase()) {
+                    return c.json({ ok: false, error: "Address mismatch in message" }, 400)
+                }
+            } catch (error) {
+                console.error("Error parsing SIWE message:", error)
+                return c.json({ ok: false, error: "Invalid message format" }, 400)
+            }
+
+            // Step 1: Validate the challenge from db
+            const isChallengeValid = await authRepo.validateChallenge(primary_wallet, message)
+            if (!isChallengeValid) {
+                return c.json({ ok: false, error: "Invalid or expired challenge" }, 401)
+            }
+
+            // Step 2: Verify the signature on-chain with the SCA
+            const isSignatureValid = await verifySignature(primary_wallet, message, signature)
+            if (!isSignatureValid) {
                 return c.json({ ok: false, error: "Invalid signature" }, 401)
+            }
+
+            const markChallengeAsUsed = await authRepo.markChallengeAsUsed(primary_wallet, message)
+            if (!markChallengeAsUsed) {
+                return c.json({ ok: false, error: "Failed to mark challenge as used" }, 500)
             }
 
             const user = await userRepo.findByWalletAddress(primary_wallet, true)
@@ -60,22 +108,16 @@ export default new Hono()
 
             const session = await authRepo.createSession(user.id, primary_wallet)
             if (!session) {
-                return c.json({ ok: false, error: "Failed to create session" }, 500)
+                return c.json({ ok: false, error: "Error creating session" }, 500)
             }
 
             setCookie(c, sessionCookieConfig.name, session.id, sessionCookieConfig)
 
-            // Return success with session ID and user info
             return c.json({
                 ok: true,
                 data: {
                     session_id: session.id,
-                    user: {
-                        id: user.id,
-                        username: user.username,
-                        primary_wallet: user.primary_wallet,
-                        wallets: user.wallets,
-                    },
+                    user,
                 },
             })
         } catch (err) {
