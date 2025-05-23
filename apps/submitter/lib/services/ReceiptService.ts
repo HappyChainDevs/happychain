@@ -48,7 +48,7 @@ export class ReceiptService {
     readonly #receiptMaxRetryDelayMs = 10000 // Max delay for receipt fetch in ms (10 seconds)
     readonly #blockWatcherHealthyResetTimer = 60 * 1000 // 1 minute
     #blockWatcherErrorResetTimer: NodeJS.Timeout | undefined // Timer to reset retry attempts
-    
+
     constructor() {
         this.#startBlockWatcher()
     }
