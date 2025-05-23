@@ -1,7 +1,8 @@
 import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
-import { createPublicClient, createWalletClient, webSocket } from "viem"
+import { http, createPublicClient, createWalletClient, fallback } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
+import { logger } from "#lib/utils/logger"
 
 function getChain(): Chain {
     const chain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
@@ -40,10 +41,18 @@ export const chain: Chain = getChain()
 
 export const config = {
     chain,
-    transport: webSocket(),
     batch: {
         multicall: true,
     },
+    transport: fallback(
+        chain.rpcUrls.default.http.map((url) => http(url)),
+        {
+            shouldThrow: (err: Error) => {
+                logger.warn("fallback: RPC error: ", err)
+                return false // dont throw but proceed to the next RPC
+            },
+        },
+    ),
 } as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
