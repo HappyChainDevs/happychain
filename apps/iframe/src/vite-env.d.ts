@@ -5,6 +5,8 @@ interface ImportMetaEnv {
      * App Config
      */
     readonly VITE_LOG_LEVEL: string
+    readonly VITE_CHAIN_ID: string
+    readonly VITE_USE_STAGING_CONTRACTS: string
 
     /**
      * Firebase Setup
@@ -22,8 +24,6 @@ interface ImportMetaEnv {
     readonly VITE_WEB3AUTH_CLIENT_ID: string
     readonly VITE_WEB3AUTH_NETWORK: "sapphire_mainnet" | "sapphire_devnet"
     readonly VITE_WEB3AUTH_VERIFIER: string
-
-    readonly VITE_CHAIN_ID: string
 
     /**
      * Faucet Setup
