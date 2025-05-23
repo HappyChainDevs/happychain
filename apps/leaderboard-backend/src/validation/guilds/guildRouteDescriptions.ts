@@ -1,5 +1,11 @@
 import { describeRoute } from "hono-openapi"
-import { ErrorResponseSchemaObj, GuildListResponseSchemaObj, GuildResponseSchemaObj } from "./guildSchemas"
+import { ErrorResponseSchemaObj } from "../common"
+import {
+    GuildListResponseSchemaObj,
+    GuildMemberListResponseSchemaObj,
+    GuildMemberResponseSchemaObj,
+    GuildResponseSchemaObj,
+} from "./guildRouteValidations"
 
 // ====================================================================================================
 // Guild Collection
@@ -136,7 +142,7 @@ export const GuildListMembersDescription = describeRoute({
             description: "Successfully retrieved guild members.",
             content: {
                 "application/json": {
-                    schema: {},
+                    schema: GuildMemberListResponseSchemaObj,
                 },
             },
         },
@@ -161,7 +167,7 @@ export const GuildListMembersDescription = describeRoute({
 
 export const GuildMemberAddDescription = describeRoute({
     validateResponse: false,
-    description: "Add a member to a guild (admin only).",
+    description: "Add a member to a guild.",
     requestBody: {
         required: true,
         content: {
@@ -175,7 +181,7 @@ export const GuildMemberAddDescription = describeRoute({
             description: "Member added successfully.",
             content: {
                 "application/json": {
-                    schema: {},
+                    schema: GuildMemberResponseSchemaObj,
                 },
             },
         },
@@ -208,7 +214,7 @@ export const GuildMemberAddDescription = describeRoute({
 
 export const GuildMemberUpdateDescription = describeRoute({
     validateResponse: false,
-    description: "Update a guild member's role (admin only).",
+    description: "Update a guild member's role.",
     requestBody: {
         required: true,
         content: {
@@ -219,10 +225,10 @@ export const GuildMemberUpdateDescription = describeRoute({
     },
     responses: {
         200: {
-            description: "Member updated successfully.",
+            description: "Member role updated successfully.",
             content: {
                 "application/json": {
-                    schema: {},
+                    schema: GuildMemberResponseSchemaObj,
                 },
             },
         },
@@ -247,18 +253,18 @@ export const GuildMemberUpdateDescription = describeRoute({
 
 export const GuildMemberDeleteDescription = describeRoute({
     validateResponse: false,
-    description: "Remove a member from a guild (admin only).",
+    description: "Remove a member from a guild.",
     responses: {
         200: {
             description: "Member removed successfully.",
             content: {
                 "application/json": {
-                    schema: {},
+                    schema: GuildMemberResponseSchemaObj,
                 },
             },
         },
         404: {
-            description: "Guild or member not found, or user is the creator.",
+            description: "Guild or member not found.",
             content: {
                 "application/json": {
                     schema: ErrorResponseSchemaObj,
@@ -266,7 +272,46 @@ export const GuildMemberDeleteDescription = describeRoute({
             },
         },
         400: {
-            description: "Invalid parameters or removal not allowed.",
+            description: "Invalid request parameters or cannot remove guild creator.",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
+    },
+})
+
+export const GuildLeaveDescription = describeRoute({
+    validateResponse: false,
+    description: "Leave a guild.",
+    responses: {
+        200: {
+            description: "Successfully left the guild.",
+            content: {
+                "application/json": {
+                    schema: GuildMemberResponseSchemaObj,
+                },
+            },
+        },
+        404: {
+            description: "Guild not found.",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
+        400: {
+            description: "Invalid request parameters or user is the guild creator.",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
+        403: {
+            description: "Not a member of this guild.",
             content: {
                 "application/json": {
                     schema: ErrorResponseSchemaObj,

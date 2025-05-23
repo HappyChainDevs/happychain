@@ -1,10 +1,11 @@
 import { describeRoute } from "hono-openapi"
+import { ErrorResponseSchemaObj } from "../common"
 import {
     GameGuildLeaderBoardResponseObj,
     GameLeaderBoardResponseObj,
     GlobalLeaderBoardResponseObj,
     GuildLeaderBoardResponseObj,
-} from "./leaderBoardSchema"
+} from "./leaderBoardRouteValidations"
 
 export const GlobalLeaderboardDescription = describeRoute({
     validateResponse: false,
@@ -15,6 +16,14 @@ export const GlobalLeaderboardDescription = describeRoute({
             content: {
                 "application/json": {
                     schema: GlobalLeaderBoardResponseObj,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
                 },
             },
         },
@@ -33,6 +42,14 @@ export const GuildLeaderboardDescription = describeRoute({
                 },
             },
         },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
     },
 })
 
@@ -48,6 +65,14 @@ export const GameLeaderboardDescription = describeRoute({
                 },
             },
         },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
+                },
+            },
+        },
     },
 })
 
@@ -60,6 +85,14 @@ export const GameGuildLeaderboardDescription = describeRoute({
             content: {
                 "application/json": {
                     schema: GameGuildLeaderBoardResponseObj,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: ErrorResponseSchemaObj,
                 },
             },
         },

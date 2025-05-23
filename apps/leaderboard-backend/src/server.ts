@@ -1,3 +1,4 @@
+import type { Address } from "@happy.tech/common"
 import { Scalar } from "@scalar/hono-api-reference"
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
@@ -10,16 +11,24 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
+
+import type { AuthSessionTableId, UserTableId } from "./db/types"
 import { env } from "./env"
 import { type Repositories, repositories } from "./repositories"
+import authApi from "./routes/api/authRoutes"
 import gamesApi from "./routes/api/gamesRoutes"
 import guildsApi from "./routes/api/guildsRoutes"
 import leaderboardApi from "./routes/api/leaderboardRoutes"
 import usersApi from "./routes/api/usersRoutes"
 
+// Extend Hono's ContextVariableMap to include all custom context fields used across the app
 declare module "hono" {
     interface ContextVariableMap {
-        repos: Repositories
+        repos: Repositories // Database repositories, set globally in middleware
+        userId: UserTableId // Authenticated user's ID, set by requireAuth
+        primaryWallet: Address // Authenticated user's wallet address, set by requireAuth
+        sessionId: AuthSessionTableId // Current session ID, set by requireAuth
+        guildRole: string // User's role in a guild, set by guild middleware
     }
 }
 
@@ -45,9 +54,10 @@ const app = new Hono()
         <p>Visit the <a href="https://docs.happy.tech">Happy Docs</a> for more information, or the <a href="/docs">Open API Spec</a></p>`,
         ),
     )
+    .route("/auth", authApi)
     .route("/users", usersApi)
-    .route("/guilds", guildsApi)
     .route("/games", gamesApi)
+    .route("/guilds", guildsApi)
     .route("/leaderboards", leaderboardApi)
 
 // Serve OpenAPI JSON at /docs/openapi.json

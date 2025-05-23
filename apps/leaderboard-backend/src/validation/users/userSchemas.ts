@@ -1,5 +1,4 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
 
 // ====================================================================================================
@@ -24,14 +23,16 @@ const UserWalletSchema = z
         },
     })
 
-const UserResponseSchema = z
+export const UserWalletListSchema = z.array(UserWalletSchema)
+
+export const UserResponseSchema = z
     .object({
         id: z.number().int(),
         primary_wallet: z.string().refine(isHex),
         username: z.string(),
         created_at: z.string(),
         updated_at: z.string(),
-        wallets: z.array(UserWalletSchema).optional(),
+        wallets: UserWalletListSchema.optional(),
     })
     .strict()
     .openapi({
@@ -53,14 +54,7 @@ const UserResponseSchema = z
         },
     })
 
-export const UserResponseSchemaObj = resolver(UserResponseSchema)
-
-export const UserListResponseSchemaObj = resolver(z.array(UserResponseSchema))
-
-export const UserWalletListResponseSchemaObj = resolver(z.array(UserWalletSchema))
-
-// Generic error schema
-export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
+export const UserListSchema = z.array(UserResponseSchema)
 
 // ====================================================================================================
 // Request Body Schemas
@@ -123,9 +117,8 @@ export const UserWalletRequestSchema = z
 
 export const UserIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         param: {
             name: "id",
@@ -140,7 +133,6 @@ export const PrimaryWalletParamSchema = z
     .object({
         primary_wallet: z.string().refine(isHex, { message: "Primary wallet address must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         param: {
             name: "primary_wallet",

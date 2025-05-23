@@ -1,5 +1,6 @@
-import type { Address } from "@happy.tech/common"
+import type { Address, UUID } from "@happy.tech/common"
 import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
+import type { GameRole, GuildRole } from "../auth/roles"
 
 // --- Branded ID types for strong nominal typing ---
 export type UserTableId = number & { _brand: "users_id" }
@@ -7,6 +8,7 @@ export type GuildTableId = number & { _brand: "guilds_id" }
 export type GameTableId = number & { _brand: "games_id" }
 export type ScoreTableId = number & { _brand: "scores_id" }
 export type GuildMemberTableId = number & { _brand: "guild_members_id" }
+export type AuthSessionTableId = UUID
 
 // Main Kysely database schema definition
 export interface Database {
@@ -16,10 +18,12 @@ export interface Database {
     guild_members: GuildMemberTable
     games: GameTable
     user_game_scores: UserGameScoreTable
+    auth_sessions: AuthSessionTable
+    auth_challenges: AuthChallengeTable
 }
 
 // Registered users
-export interface UserTable {
+interface UserTable {
     id: Generated<UserTableId>
     primary_wallet: Address // Primary wallet for the user
     username: string
@@ -28,7 +32,7 @@ export interface UserTable {
 }
 
 // User wallet addresses (allows multiple wallets per user)
-export interface UserWalletTable {
+interface UserWalletTable {
     id: Generated<number>
     user_id: UserTableId // FK to users
     wallet_address: Address
@@ -37,7 +41,7 @@ export interface UserWalletTable {
 }
 
 // Guilds (groups of users)
-export interface GuildTable {
+interface GuildTable {
     id: Generated<GuildTableId>
     name: string
     icon_url: string | null
@@ -46,17 +50,16 @@ export interface GuildTable {
     updated_at: ColumnType<Date, string | undefined, string>
 }
 
-// Guild membership JOIN table (users in guilds with role)
-export interface GuildMemberTable {
+interface GuildMemberTable {
     id: Generated<GuildMemberTableId>
     guild_id: GuildTableId // FK to guilds
     user_id: UserTableId // FK to users
-    is_admin: boolean // Whether user is an admin of this guild
+    role: GuildRole // Enum-based role in guild
     joined_at: ColumnType<Date, string | undefined, never>
 }
 
 // Games available on the platform
-export interface GameTable {
+interface GameTable {
     id: Generated<GameTableId>
     name: string
     icon_url: string | null
@@ -67,14 +70,35 @@ export interface GameTable {
 }
 
 // User scores in games
-export interface UserGameScoreTable {
+interface UserGameScoreTable {
     id: Generated<ScoreTableId>
     user_id: UserTableId // FK to users
     game_id: GameTableId // FK to games
+    role: GameRole // Enum-based role in game
     score: number // The actual score
     metadata: string | null // JSON string for any additional game-specific data
     created_at: ColumnType<Date, string | undefined, never>
     updated_at: ColumnType<Date, string | undefined, string>
+}
+
+// Auth sessions
+interface AuthSessionTable {
+    id: AuthSessionTableId
+    user_id: UserTableId // FK to users
+    primary_wallet: Address
+    created_at: ColumnType<Date, string | undefined, never>
+    last_used_at: ColumnType<Date, string | undefined, string>
+}
+
+// Auth challenges
+interface AuthChallengeTable {
+    id: Generated<number>
+    primary_wallet: Address
+    nonce: string
+    message_hash: string // Hash of the challenge message for verification
+    expires_at: ColumnType<Date, string, string>
+    created_at: ColumnType<Date, string | undefined, never>
+    used: boolean
 }
 
 // Kysely helper types
@@ -106,6 +130,15 @@ export type UserGameScore = Selectable<UserGameScoreTable>
 export type NewUserGameScore = Insertable<UserGameScoreTable>
 export type UpdateUserGameScore = Updateable<UserGameScoreTable>
 
+export type AuthChallenge = Selectable<AuthChallengeTable>
+export type NewAuthChallenge = Insertable<AuthChallengeTable>
+export type UpdateAuthChallenge = Updateable<AuthChallengeTable>
+
+export type AuthSession = Selectable<AuthSessionTable>
+export type NewAuthSession = Insertable<AuthSessionTable>
+export type UpdateAuthSession = Updateable<AuthSessionTable>
+
+// Leaderboard entries
 export interface GlobalLeaderboardEntry {
     user_id: UserTableId
     username: string

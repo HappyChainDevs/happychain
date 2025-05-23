@@ -1,5 +1,4 @@
 import { z } from "@hono/zod-openapi"
-import { resolver } from "hono-openapi/zod"
 import { isHex } from "viem"
 
 // ====================================================================================================
@@ -28,6 +27,8 @@ export const GameResponseSchema = z
         },
     })
 
+export const GameListResponseSchema = z.array(GameResponseSchema)
+
 export const UserGameScoreResponseSchema = z
     .object({
         id: z.number().int(),
@@ -54,15 +55,6 @@ export const UserGameScoreResponseSchema = z
             game_name: "Crypto Racer",
         },
     })
-
-export const GameResponseSchemaObj = resolver(GameResponseSchema)
-
-export const GameListResponseSchemaObj = resolver(z.array(GameResponseSchema))
-
-export const UserGameScoreResponseSchemaObj = resolver(UserGameScoreResponseSchema)
-
-// Generic error schema
-export const ErrorResponseSchemaObj = resolver(z.object({ ok: z.literal(false), error: z.string() }))
 
 // ====================================================================================================
 // Request Body Schemas
@@ -149,18 +141,16 @@ export const GameScoresQuerySchema = z
 
 export const GameIdParamSchema = z
     .object({
-        id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: { id: "1" },
     })
 
 export const AdminIdParamSchema = z
     .object({
-        admin_id: z.string().regex(/^\d+$/, { message: "Must be a positive integer string" }),
+        admin_id: z.string().transform((val) => Number.parseInt(val)),
     })
-    .strict()
     .openapi({
         example: { admin_id: "1" },
     })
@@ -169,7 +159,6 @@ export const AdminWalletParamSchema = z
     .object({
         admin_wallet: z.string().refine(isHex, { message: "Admin wallet must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         example: { admin_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
     })
@@ -178,7 +167,6 @@ export const UserWalletParamSchema = z
     .object({
         user_wallet: z.string().refine(isHex, { message: "User wallet must be a valid hex string" }),
     })
-    .strict()
     .openapi({
         example: { user_wallet: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" },
     })

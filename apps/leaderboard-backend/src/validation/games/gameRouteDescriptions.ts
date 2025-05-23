@@ -1,10 +1,10 @@
 import { describeRoute } from "hono-openapi"
+import { ErrorResponseSchemaObj } from "../common"
 import {
-    ErrorResponseSchemaObj,
     GameListResponseSchemaObj,
     GameResponseSchemaObj,
     UserGameScoreResponseSchemaObj,
-} from "./gameSchemas"
+} from "./gameRouteValidations"
 
 // ====================================================================================================
 // Game Collection
@@ -191,7 +191,7 @@ export const GameListByAdminDescription = describeRoute({
 
 export const ScoreSubmitDescription = describeRoute({
     validateResponse: false,
-    description: "Submit a new score for a game.",
+    description: "Submit a new score for a game (creator only).",
     requestBody: {
         required: true,
         content: {
