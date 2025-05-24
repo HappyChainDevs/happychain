@@ -3,9 +3,9 @@
  * It creates a new account, prepares a boop that mints a token, and calls execute on the Entrypoint.
  */
 
-import { BoopClient, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
+import { BoopClient, CreateAccount, type ExecuteSuccess, GetNonce, Onchain } from "@happy.tech/boop-sdk"
 import { stringify } from "@happy.tech/common"
-import { createAndSignMintTx, getNonce, testAccount } from "./utils"
+import { createAndSignMintTx, testAccount } from "./utils"
 
 async function run() {
     const boopClient = new BoopClient()
@@ -13,28 +13,22 @@ async function run() {
         owner: testAccount.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
-
-    if (!("address" in createAccountResult)) {
+    if (createAccountResult.status !== CreateAccount.Success)
         throw new Error("Account creation failed: " + stringify(createAccountResult))
-    }
 
-    const tx = await createAndSignMintTx(createAccountResult.address, await getNonce(createAccountResult.address))
-    const executeResult = await boopClient.execute({ boop: tx })
+    const nonceResult = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
+    if (nonceResult.status !== GetNonce.Success) throw new Error(nonceResult.description)
 
-    if (executeResult.status !== Onchain.Success) {
-        throw new Error(`execute not successful: ${stringify(executeResult)}`)
-    }
+    const boop = await createAndSignMintTx(createAccountResult.address, nonceResult.nonceValue)
 
-    console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(executeResult as ExecuteSuccess).receipt.evmTxHash}`)
+    const result = await boopClient.execute({ boop })
+    if (result.status !== Onchain.Success) throw new Error(`execute failed: ${stringify(result)}`)
+    console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(result as ExecuteSuccess).receipt.evmTxHash}`)
 
-    const receiptResult = await boopClient.waitForReceipt({
-        boopHash: (executeResult as ExecuteSuccess).receipt.boopHash,
-    })
-    if (!("receipt" in receiptResult)) {
-        throw new Error("Receipt not found: " + stringify(receiptResult))
-    }
+    const receiptResult = await boopClient.waitForReceipt({ boopHash: result.receipt.boopHash })
+    if (receiptResult.status !== Onchain.Success) throw new Error(`Receipt not found: ${stringify(receiptResult)}`)
 }
 
-run().then(() => {
-    console.log("done")
-})
+await run()
+console.log("done")
+process.exit(0)
