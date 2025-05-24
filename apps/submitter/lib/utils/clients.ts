@@ -12,7 +12,7 @@ function getChain(): Chain {
                 ...chain.rpcUrls,
                 default: {
                     http: env.RPC_URL ? [env.RPC_URL, ...chain.rpcUrls.default.http] : chain.rpcUrls.default.http,
-                    webSocket: "webSocket" in chain.rpcUrls.default ? chain.rpcUrls.default.webSocket : undefined,
+                    webSocket: chain.rpcUrls.default.webSocket ?? undefined,
                 },
             },
         }
