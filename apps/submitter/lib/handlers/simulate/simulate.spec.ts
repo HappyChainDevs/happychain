@@ -5,26 +5,26 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import type { SimulateError, SimulateOutput, SimulateSuccess } from "#lib/handlers/simulate"
 import type { Boop } from "#lib/types"
 import { CallStatus, Onchain } from "#lib/types"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("submitter_simulate", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
     })
 
@@ -102,7 +102,7 @@ describe("submitter_simulate", () => {
         })
 
         it("should simulate revert on unfunded self-sponsored", async () => {
-            unsignedTx.payer = smartAccount
+            unsignedTx.payer = account
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
@@ -115,7 +115,7 @@ describe("submitter_simulate", () => {
 
         it("should revert on invalid call", async () => {
             // we're targeting a mint transaction at our own account, which doesn't support that ABI
-            unsignedTx.dest = smartAccount
+            unsignedTx.dest = account
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>

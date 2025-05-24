@@ -4,23 +4,23 @@ import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("submitter_pending", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
     })
 
     // TODO: Temporarily skipped: pending should return both the "blocked" boops (awaiting submission) and the "pending"
@@ -35,8 +35,8 @@ describe("submitter_pending", () => {
         expect(env.MAX_TOTAL_PENDING).toBeGreaterThanOrEqual(count)
 
         const transactions = await Promise.all(
-            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
+                const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
                 return await sign(dummyBoop)
             }),
         )
@@ -48,7 +48,7 @@ describe("submitter_pending", () => {
         )
 
         const pending = (await client.api.v1.boop.pending[":account"]
-            .$get({ param: { account: smartAccount } })
+            .$get({ param: { account: account } })
             .then((a) => a.json())) as any
         expect(pending.error).toBeUndefined()
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)

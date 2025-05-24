@@ -4,10 +4,10 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
-import { client, createMockTokenMint, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("routes: api/submitter", () => {
     let account: Address
@@ -23,7 +23,7 @@ describe("routes: api/submitter", () => {
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(account, nonceTrack)
-        unsignedTx = createMockTokenMint({ account, nonceTrack, nonceValue })
+        unsignedTx = createMintBoop({ account, nonceTrack, nonceValue })
         signedTx = await sign(unsignedTx)
     })
 

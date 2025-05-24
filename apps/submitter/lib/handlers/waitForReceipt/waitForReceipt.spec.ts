@@ -5,27 +5,27 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("submitter_receipt", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
     })
 

@@ -7,25 +7,29 @@ import {
     computeBoopHash,
 } from "@happy.tech/boop-sdk"
 import { delayed, stringify } from "@happy.tech/common"
-import type { Account } from "viem/accounts"
-import { createAndSignMintTx, testAccount } from "./utils"
+import { type PrivateKeyAccount, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { createAndSignMintBoop } from "#lib/utils/test"
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
  */
-async function run({ account = testAccount, numBoops = 80 }: { account?: Account; numBoops?: number } = {}) {
+async function run({
+    eoa = privateKeyToAccount(generatePrivateKey()),
+    numBoops = 80,
+}: { eoa?: PrivateKeyAccount; numBoops?: number } = {}) {
     const boopClient = new BoopClient({ rpcUrl: process.env.RPC_URL, baseUrl: process.env.SUBMITTER_URL })
 
     // Step 1: Create account (this remains serial)
     console.log("Creating test account...")
     const start = performance.now()
     const createAccountResult = await boopClient.createAccount({
-        owner: account.address,
+        owner: eoa.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
     if (createAccountResult.status !== CreateAccount.Success)
         throw new Error("Account creation failed: " + stringify(createAccountResult))
-    console.log(`Account created: ${createAccountResult.address} in ${performance.now() - start}`)
+    const account = createAccountResult.address
+    console.log(`Account created: ${account} in ${performance.now() - start}`)
     if (numBoops === 0) return
 
     const nonceOutput = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
@@ -40,8 +44,8 @@ async function run({ account = testAccount, numBoops = 80 }: { account?: Account
     // Step 2: Initiate transactions with a controlled delay
     console.log(`Initiating ${numBoops} transactions with a ${delayBetweenTransactions}ms delay between each...`)
     for (let i = 0; i < numBoops; i++) {
-        const currentNonce = baseNonce + BigInt(i)
-        const tx = await createAndSignMintTx(createAccountResult.address, currentNonce)
+        const nonceValue = baseNonce + BigInt(i)
+        const tx = await createAndSignMintBoop(eoa, { account, nonceValue })
         boopPromises[i] = delayed(i * delayBetweenTransactions, async () => {
             const start = performance.now()
             let status = "Unknown"
@@ -54,7 +58,7 @@ async function run({ account = testAccount, numBoops = 80 }: { account?: Account
                 evmTxHash = (result as ExecuteSuccess).receipt.evmTxHash
                 console.log(`Boop ${boopHash} Success: https://explorer.testnet.happy.tech/tx/${evmTxHash}`)
             } catch (error) {
-                console.error(`Error executing boop (nonce ${currentNonce}): ${stringify(error)}`)
+                console.error(`Error executing boop (nonce ${nonceValue}): ${stringify(error)}`)
                 status = "Error"
             } finally {
                 const end = performance.now()

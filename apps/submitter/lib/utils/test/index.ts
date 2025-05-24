@@ -35,7 +35,7 @@ export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigin
     })
 }
 
-export async function getMockTokenABalance(account: Address) {
+export async function getMockTokenBalance(account: Address) {
     return await publicClient.readContract({
         address: mockDeployments.MockTokenA,
         abi: mockAbis.MockTokenA,
@@ -44,60 +44,45 @@ export async function getMockTokenABalance(account: Address) {
     })
 }
 
-export type CreateMockTokenMintInput = {
+export const zeroGasLimits = {
+    gasLimit: 0,
+    executeGasLimit: 0,
+    validateGasLimit: 0,
+    validatePaymentGasLimit: 0,
+}
+
+export const nonZeroGasLimits = {
+    gasLimit: 1_000_000,
+    executeGasLimit: 100_000,
+    validateGasLimit: 100_000,
+    validatePaymentGasLimit: 100_000,
+}
+
+export type CreateMintBoopInput = {
     account: Address
     nonceValue: bigint
     nonceTrack?: bigint
     amount?: bigint
-    gasLimits?: {
-        total: number
-        execute: number
-        validate: number
-        validatePayment: number
-    }
+    gasLimits?: typeof zeroGasLimits
 }
 
-const defaultGasLimits = {
-    total: 1_000_000,
-    execute: 100_000,
-    validate: 100_000,
-    validatePayment: 100_000,
-}
-
-export function createMockTokenMint({
+export function createMintBoop({
     account,
-    nonceValue = 0n,
+    nonceValue,
     nonceTrack = 0n,
     amount = 10n ** 18n,
-    gasLimits = defaultGasLimits,
-}: CreateMockTokenMintInput): Boop {
-    const boop = createMockTokenAMintBoop(account, nonceValue, nonceTrack, amount)
-    boop.gasLimit = gasLimits.total
-    boop.executeGasLimit = gasLimits.execute
-    boop.validateGasLimit = gasLimits.validate
-    boop.validatePaymentGasLimit = gasLimits.validatePayment
-    return boop
-}
-
-export function createMockTokenAMintBoop(
-    account: Address,
-    nonceValue: bigint,
-    nonceTrack = 0n,
-    amount = 10n ** 18n,
-): Boop {
+    gasLimits = zeroGasLimits,
+}: CreateMintBoopInput): Boop {
     return {
         account,
         dest: mockDeployments.MockTokenA,
-        nonceTrack: nonceTrack, // using as default
+        nonceTrack: nonceTrack,
         nonceValue: nonceValue,
         value: 0n,
 
         // payer is default
         payer: zeroAddress,
-        gasLimit: 0,
-        validateGasLimit: 0,
-        validatePaymentGasLimit: 0,
-        executeGasLimit: 0,
+        ...gasLimits,
         maxFeePerGas: 0n,
         submitterFee: 0n,
 
@@ -111,10 +96,15 @@ export function createMockTokenAMintBoop(
     }
 }
 
-export async function signTx(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
+export async function signBoop(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return { ...boop, validatorData }
+}
+
+export async function createAndSignMintBoop(account: PrivateKeyAccount, input: CreateMintBoopInput): Promise<Boop> {
+    const boop = createMintBoop(input)
+    return signBoop(account, boop)
 }
 
 export function assertMintLog(receipt: BoopReceipt, smartAccount: Address) {
