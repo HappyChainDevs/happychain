@@ -2,6 +2,7 @@ import { hexToBytes, keccak256 } from "viem"
 import type { Block, Hex } from "viem"
 import { deployment } from "#lib/env"
 import { BOOP_STARTED_SELECTOR, BOOP_SUBMITTED_SELECTOR } from "../services/ReceiptService"
+import { logger } from "./logger"
 
 const BLOOM_SIZE_BYTES = 256 // fixed in protocol
 const ZERO_BLOOM = ("0x" + "0".repeat(512)) as Hex
@@ -27,13 +28,18 @@ const isInBloom = (bloom: Hex, input: Hex): boolean => {
 }
 
 export function headerCouldContainBoop(block: Block): boolean {
-    const bloom = block.logsBloom
-    if (!bloom || bloom === ZERO_BLOOM) return false
+    try {
+        const bloom = block.logsBloom
+        if (!bloom || bloom === ZERO_BLOOM) return false
 
-    // all three conditions must be *possible* in the bloom
-    return (
-        isInBloom(bloom, ENTRY_POINT) &&
-        isInBloom(bloom, BOOP_STARTED_SELECTOR) &&
-        isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
-    )
+        // all three conditions must be *possible* in the bloom
+        return (
+            isInBloom(bloom, ENTRY_POINT) &&
+            isInBloom(bloom, BOOP_STARTED_SELECTOR) &&
+            isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
+        )
+    } catch {
+        logger.error(`Invalid bloom filter in block: ${block}`)
+        return false
+    }
 }

@@ -80,7 +80,7 @@ export async function submitInternal(
             logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
             // TODO make sure this does no extra needless simulations
-            const txHash = await walletClient.writeContract({
+            const evmTxHash = await walletClient.writeContract({
                 address: input.entryPoint ?? deployment.EntryPoint,
                 args: [encodeBoop(boop)],
                 abi: abis.EntryPoint,
@@ -91,12 +91,12 @@ export async function submitInternal(
                 account,
             })
 
-            logger.trace("Successfully submitted", boopHash, txHash)
+            logger.trace("Successfully submitted", boopHash, evmTxHash)
             boopNonceManager.incrementLocalNonce(boop)
             // We need to monitor the receipt to detect if we're stuck, and to be able to construct the receipt
             // (requires knowing the txHash).
-            const receiptPromise = receiptService.waitForInclusion({ boopHash, txHash, timeout })
-            return { status: Onchain.Success, boopHash, entryPoint, txHash, receiptPromise }
+            const receiptPromise = receiptService.waitForInclusion({ boopHash, evmTxHash, timeout })
+            return { status: Onchain.Success, boopHash, entryPoint, txHash: evmTxHash, receiptPromise }
         })()
 
         if (earlyExit) return { status: Onchain.Success, boopHash, entryPoint }
