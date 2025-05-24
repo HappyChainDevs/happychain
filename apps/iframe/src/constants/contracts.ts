@@ -46,6 +46,7 @@ export const abis = getBoopAbis(chainId)
 export const entryPointAbi = abis.EntryPoint
 export const extensibleAccountAbi = abis.HappyAccountImpl
 export const sessionKeyValidatorAbi = abis.SessionKeyValidator
+export const happyPaymasterAbi = abis.HappyPaymaster
 
 //== Paymaster Selectors ===========================================================================
 
