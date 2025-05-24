@@ -1,107 +1,91 @@
-import { BoopClient, type ExecuteOutput, type ExecuteSuccess, Onchain, computeBoopHash } from "@happy.tech/boop-sdk"
-import { stringify } from "@happy.tech/common"
-import { createAndSignMintTx, getNonce, testAccount } from "./utils"
-// import { appendFileSync, existsSync, writeFileSync } from "node:fs";
-
-// const CSV_FILE = "./submitter_fastlane.csv";
-
-// if (!existsSync(CSV_FILE)) {
-//     writeFileSync(CSV_FILE, "Latency (ms),Status,TxHash\n");
-// }
+import {
+    BoopClient,
+    CreateAccount,
+    type ExecuteSuccess,
+    GetNonce,
+    Onchain,
+    computeBoopHash,
+} from "@happy.tech/boop-sdk"
+import { delayed, stringify } from "@happy.tech/common"
+import type { Account } from "viem/accounts"
+import { createAndSignMintTx, testAccount } from "./utils"
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
  */
-async function run() {
-    const boopClient = new BoopClient()
+async function run({ account = testAccount, numBoops = 80 }: { account?: Account; numBoops?: number } = {}) {
+    const boopClient = new BoopClient({ rpcUrl: process.env.RPC_URL, baseUrl: process.env.SUBMITTER_URL })
 
     // Step 1: Create account (this remains serial)
     console.log("Creating test account...")
+    const start = performance.now()
     const createAccountResult = await boopClient.createAccount({
-        owner: testAccount.address,
+        owner: account.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
-
-    if (!("address" in createAccountResult)) {
+    if (createAccountResult.status !== CreateAccount.Success)
         throw new Error("Account creation failed: " + stringify(createAccountResult))
-    }
-    console.log(`Account created: ${createAccountResult.address}`)
+    console.log(`Account created: ${createAccountResult.address} in ${performance.now() - start}`)
+    if (numBoops === 0) return
 
-    const baseNonce = await getNonce(createAccountResult.address)
-    const numTransactions = 50 // Number of transactions to send
-    const delayBetweenTransactions = 1000 // milliseconds
-
+    const nonceOutput = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
+    if (nonceOutput.status !== GetNonce.Success) throw new Error("couldn't fetch nonce")
+    const baseNonce = nonceOutput.nonceValue
+    // 80 boops spaced 50ms = consistently spaced sending for 4 seconds
+    const delayBetweenTransactions = 50
     // Array to store results for console.table
-    const results: { Latency: string; Status: string; TxHash: string }[] = []
-
-    const transactionPromises: Promise<void>[] = []
+    const results: { Latency: number; Status: string; EvmTxHash: string }[] = []
+    const boopPromises: Promise<void>[] = []
 
     // Step 2: Initiate transactions with a controlled delay
-    console.log(`Initiating ${numTransactions} transactions with a ${delayBetweenTransactions}ms delay between each...`)
-    for (let i = 0; i < numTransactions; i++) {
+    console.log(`Initiating ${numBoops} transactions with a ${delayBetweenTransactions}ms delay between each...`)
+    for (let i = 0; i < numBoops; i++) {
         const currentNonce = baseNonce + BigInt(i)
         const tx = await createAndSignMintTx(createAccountResult.address, currentNonce)
-
-        // Schedule the execution of each transaction
-        const transactionExecutionPromise = new Promise<void>((resolve) => {
-            setTimeout(async () => {
-                const start = performance.now()
-                let executeResult: ExecuteOutput | undefined
-                let status = "Unknown"
-                let txHash = "N/A"
-                let computedBoopHash: string
-
-                try {
-                    computedBoopHash = computeBoopHash(216n, tx)
-
-                    // console.log(`[TestLatency] Processing boop ${computedBoopHash} for nonce ${currentNonce}:`, JSON.stringify(tx, (key, value) =>
-                    //     typeof value === 'bigint' ? value.toString() + 'n' : value
-                    // ));
-
-                    executeResult = await boopClient.execute({ boop: tx })
-                    status = executeResult.status
-
-                    if (executeResult.status === Onchain.Success) {
-                        txHash = (executeResult as ExecuteSuccess).receipt.evmTxHash
-                        console.log(
-                            `Boop ${computedBoopHash} Success: https://explorer.testnet.happy.tech/tx/${txHash}`,
-                        )
-                    } else {
-                        console.error(
-                            `Execute not successful for boop ${computedBoopHash}: ${stringify(executeResult)}`,
-                        )
-                    }
-                } catch (error) {
-                    console.error(`Error executing boop (nonce ${currentNonce}): ${stringify(error)}`)
-                    status = "Error"
-                    // If error, txHash remains 'N/A'
-                } finally {
-                    const end = performance.now()
-                    const latency = (end - start).toFixed(2)
-                    // Store data in the array
-                    results.push({ Latency: latency, Status: status, TxHash: txHash })
-                    resolve() // Resolve this individual promise
-                }
-            }, i * delayBetweenTransactions) // Delay each transaction initiation
+        boopPromises[i] = delayed(i * delayBetweenTransactions, async () => {
+            const start = performance.now()
+            let status = "Unknown"
+            let evmTxHash = "N/A"
+            try {
+                const boopHash = computeBoopHash(216n, tx)
+                const result = await boopClient.execute({ boop: tx })
+                status = result.status
+                if (result.status !== Onchain.Success) throw new Error(result.description)
+                evmTxHash = (result as ExecuteSuccess).receipt.evmTxHash
+                console.log(`Boop ${boopHash} Success: https://explorer.testnet.happy.tech/tx/${evmTxHash}`)
+            } catch (error) {
+                console.error(`Error executing boop (nonce ${currentNonce}): ${stringify(error)}`)
+                status = "Error"
+            } finally {
+                const end = performance.now()
+                const latency = Math.round(end - start)
+                results.push({ Latency: latency, Status: status, EvmTxHash: evmTxHash })
+            }
         })
-        transactionPromises.push(transactionExecutionPromise)
     }
 
     // Step 3: Wait for all initiated transactions to complete
     console.log("All transactions initiated. Waiting for all to complete...")
-    await Promise.all(transactionPromises)
+    await Promise.all(boopPromises)
     console.log("All transactions completed.")
 
     // Display results in a console table
     console.log("\n--- Transaction Latency Results ---")
     console.table(results)
+    const average = results.reduce((sum, r) => sum + r.Latency, 0) / results.length
+    const variance = results.reduce((sum, r) => sum + (r.Latency - average) ** 2, 0) / results.length
+    const stdDeviation = Math.sqrt(variance)
+    const avgDeviation = results.reduce((sum, r) => sum + Math.abs(r.Latency - average), 0) / results.length
+    console.log(`Average: ${average}`)
+    console.log(`Average Deviation: ${avgDeviation}`)
+    console.log(`Standard Deviation: ${stdDeviation}`)
 }
 
-run()
-    .then(() => {
-        console.log("Script finished successfully.")
-    })
-    .catch((error) => {
-        console.error("Script failed:", error)
-        process.exit(1) // Exit with an error code
-    })
+// // Uncomment to benchmark account creation latency.
+// for (let i = 0; i < 10; i++) {
+//     await run({ numBoops: 0 })
+// }
+
+await run()
+console.log("done")
+process.exit(0)
