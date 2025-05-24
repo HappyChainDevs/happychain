@@ -39,8 +39,11 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness,apps/faucet
 # packages needed to build the backend services
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
+# all the swarm leaderboard packages
+LEADERBOARD_PKGS := apps/leaderboard-backend
+
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS},apps/leaderboard-backend
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
@@ -168,6 +171,20 @@ submitter.prod: submitter.build
 	cd apps/submitter && make migrate;
 	cd apps/submitter && make prod;
 .PHONY: submitter.prod
+
+leaderboard-backend.dev: setup.ts shared.dev
+	cd apps/leaderboard-backend && make migrate;
+	cd apps/leaderboard-backend && make dev;
+.PHONY: leaderboard-backend.dev
+
+leaderboard-backend.build: shared.build
+	cd apps/leaderboard-backend && make build;
+.PHONY: leaderboard-backend.build
+
+leaderboard-backend.prod: leaderboard-backend.build
+	cd apps/leaderboard-backend && make migrate;
+	cd apps/leaderboard-backend && make prod;
+.PHONY: leaderboard-backend.prod
 
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
