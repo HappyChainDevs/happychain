@@ -1,3 +1,4 @@
+import path from "node:path"
 /// <reference types="vitest" />
 import { SharedWorkerPlugin } from "@happy.tech/worker"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
@@ -6,23 +7,29 @@ import { defineConfig, loadEnv } from "vite"
 import z from "zod"
 
 const envConfigSchema = z.object({
+    HAPPY_CHAIN_ID: z.string(),
+    HAPPY_LOG_LEVEL: z.string(),
+
     HAPPY_SUBMITTER_URL: z.string(),
+
+    HAPPY_TURNSTILE_SITEKEY: z.string(),
+    HAPPY_FAUCET_ENDPOINT: z.string(),
+
     HAPPY_FIREBASE_API_KEY: z.string(),
     HAPPY_FIREBASE_AUTH_DOMAIN: z.string(),
     HAPPY_FIREBASE_PROJECT_ID: z.string(),
     HAPPY_FIREBASE_STORAGE_BUCKET: z.string(),
     HAPPY_FIREBASE_MESSAGE_SENDER_ID: z.string(),
     HAPPY_FIREBASE_APP_ID: z.string(),
+
     HAPPY_WEB3AUTH_CLIENT_ID: z.string(),
     HAPPY_WEB3AUTH_NETWORK: z.string(),
     HAPPY_WEB3AUTH_VERIFIER: z.string(),
-    HAPPY_TURNSTILE_SITEKEY: z.string(),
-    HAPPY_FAUCET_ENDPOINT: z.string(),
 })
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-    const env = loadEnv(mode, process.cwd(), "")
+    const env = loadEnv(mode, path.resolve("../.."), "HAPPY_")
     const validateConfig = envConfigSchema.safeParse(env)
     if (validateConfig.error) {
         console.error(validateConfig.error.errors)
@@ -30,6 +37,9 @@ export default defineConfig(({ command, mode }) => {
     }
     return {
         envPrefix: ["HAPPY_"],
+        define: {
+            __APP_ENV__: JSON.stringify(env.APP_ENV),
+        },
         optimizeDeps: {
             // Vite seems unable to properly optimize shared-workers with code-gen when switching
             // between branches.
