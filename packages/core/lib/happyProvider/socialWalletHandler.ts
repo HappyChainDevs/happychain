@@ -1,7 +1,7 @@
 import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { EIP1193RequestParameters, HappyUser, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
 import { AuthState, BasePopupProvider, LoginRequiredError, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
-import { config } from "../config"
+import { IFRAME_PATH } from "../env"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
 
@@ -21,7 +21,7 @@ type InFlightCheck = {
  */
 export class SocialWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
     // === SETUP ===================================================================================
-    protected popupBaseUrl = config.iframePath
+    protected popupBaseUrl = IFRAME_PATH
 
     private inFlightChecks = new Map<string, InFlightCheck>()
     private user: HappyUser | undefined

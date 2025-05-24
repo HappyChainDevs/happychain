@@ -1,5 +1,5 @@
 import { blankIcon } from "@happy.tech/common"
-import { config } from "../config"
+import { IFRAME_PATH } from "../env"
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
@@ -7,7 +7,7 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 
 type IframeSrcOptions = { windowId: string; chainId: string }
 export function makeIframeUrl({ windowId, chainId }: IframeSrcOptions) {
-    const urlBase = new URL("embed", config.iframePath)
+    const urlBase = new URL("embed", IFRAME_PATH)
 
     const searchParams = new URLSearchParams(filterUndefinedValues({ windowId: windowId, chainId: chainId })).toString()
     return `${urlBase.href}?${searchParams}`

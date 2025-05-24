@@ -22,7 +22,7 @@ import {
 } from "@happy.tech/wallet-common"
 import { announceProvider, createStore } from "mipd"
 import type { EIP1193Provider } from "viem"
-import { config } from "../config"
+import { IFRAME_PATH } from "../env"
 import { HappyProviderSSRSafe } from "./happyProviderSSRSafe"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderInternal } from "./interface"
@@ -39,7 +39,8 @@ import { SocialWalletHandler } from "./socialWalletHandler"
 const mipdStore = createStore()
 
 /** @internal */
-export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
+export type HappyProviderConfig = {
+    iframePath: string,
     logger?: Logger
     windowId: UUID
     providerBus: EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>
@@ -65,7 +66,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
                 typeof window === "undefined"
                     ? new HappyProviderSSRSafe()
                     : new HappyProviderImplem({
-                          iframePath: config.iframePath,
+                          iframePath: IFRAME_PATH,
                           windowId: windowId as UUID,
                           providerBus: new EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>({
                               mode: EventBusMode.AppPort,

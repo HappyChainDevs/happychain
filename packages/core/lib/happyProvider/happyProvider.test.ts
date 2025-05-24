@@ -16,7 +16,7 @@ import {
     serializeRpcError,
 } from "@happy.tech/wallet-common"
 import type { RpcBlock } from "viem"
-import { config } from "../config"
+import { IFRAME_PATH } from "../env"
 import { HappyProviderImplem } from "./happyProviderImplem"
 
 const emptyRpcBlock = {
@@ -118,7 +118,7 @@ describe("HappyProvider", () => {
         windowId = createUUID()
 
         provider = new HappyProviderImplem({
-            iframePath: config.iframePath,
+            iframePath: IFRAME_PATH,
             windowId: windowId,
             providerBus: appProviderBus,
             msgBus: appMessageBus,
