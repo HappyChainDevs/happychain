@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { useEffect, useState } from "preact/hooks"
-import { config } from "../config"
+import { IFRAME_PATH } from "../env"
 import { onUserUpdate } from "../functions"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
@@ -61,7 +61,7 @@ const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     if (!user?.avatar || loadFailed) {
         return (
             <img
-                src={`${config.iframePath}/images/happychainLogoSimple.png`}
+                src={`${IFRAME_PATH}/images/happychainLogoSimple.png`}
                 alt="HappyChain logo"
                 className="happychain-icon"
             />

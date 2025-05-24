@@ -1,3 +1,7 @@
+/**
+ * This file defines a shared base configuration for all our webapps (iframe and demos).
+ */
+
 import { defineConfig } from "vite"
 
 // Allowed Hosts is a comma-separated list of hostnames or IP addresses that the Vite dev server
@@ -9,7 +13,6 @@ const allowedHosts =
 if (allowedHosts?.length) console.log("\nVite Allowing access from hosts:", allowedHosts)
 const serverHostConfig = allowedHosts?.length ? { host: true, allowedHosts: allowedHosts } : {}
 
-// common config for all apps
 export default defineConfig({
     // We use strict ports for more reliable & easier demo setups
     // and easier interactions between apps
