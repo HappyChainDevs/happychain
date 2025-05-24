@@ -1,17 +1,8 @@
 {
     "name": "@happy.tech/happybuild",
-    "private": true,
     "version": "0.1.1",
-    "type": "module",
-    "files": ["lib"],
     "main": "lib/index.ts",
     "module": "lib/index.ts",
-    "bin": {
-        "happybuild": "./bin/happybuild.ts"
-    },
-    "exports": {
-        ".": "./lib/index.ts"
-    },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",
         "@happy.tech/configs": "workspace:0.1.0",
@@ -22,8 +13,18 @@
         "ajv": "^8.17.1",
         "byte-size": "^9.0.0",
         "chalk": "^5.3.0",
+        "dotenv": "^16.5.0",
         "pkg-size": "^2.4.0",
         "typescript": "^5.6.2",
         "yocto-spinner": "^0.1.0"
-    }
+    },
+    "exports": {
+        ".": "./lib/index.ts"
+    },
+    "bin": {
+        "happybuild": "./bin/happybuild.ts"
+    },
+    "files": ["lib"],
+    "private": true,
+    "type": "module"
 }
