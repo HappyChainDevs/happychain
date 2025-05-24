@@ -54,7 +54,7 @@ routes: ## Display all available routes
 .PHONY: routes
 
 latency: ## Benchmark latency
-	bun ./bin/testExecuteLatency.ts;
+	bun ./bin/benchmarkLatency.ts;
 .PHONY: latency
 
 args ?= --bail
