@@ -53,6 +53,10 @@ routes: ## Display all available routes
 	@./dist/cli routes
 .PHONY: routes
 
+latency: ## Benchmark latency
+	bun ./bin/testExecuteLatency.ts;
+.PHONY: latency
+
 args ?= --bail
 
 test: ## Run the submitter tests — runs Anvil and deploys contracts if not already running. Pass args in $args.
