@@ -8,6 +8,12 @@ export type ResolveType<T> = (value: ResolveInputType<T>) => void
 // biome-ignore lint/suspicious/noExplicitAny: actual library type
 export type RejectType = (reason: any) => void
 
+/** Type for a promise's resolve and reject function. */
+export type Resolvers<T> = {
+    resolve: ResolveType<T>
+    reject: RejectType
+}
+
 /** Object containing a promise and it's resolve and reject function. */
 export type PromiseWithResolvers<T> = {
     promise: Promise<T>
@@ -24,4 +30,17 @@ export function promiseWithResolvers<T>(): PromiseWithResolvers<T> {
         reject = _reject
     })
     return { promise, resolve: resolve!, reject: reject! }
+}
+
+/**
+ * Returns the value from the callback after the specified {@link timeout}.
+ */
+export async function delayed<T>(timeout: number, callback: () => T | Promise<T>): Promise<T> {
+    return await new Promise<T>((resolve, reject) => {
+        setTimeout(() => {
+            // biome-ignore format: terse
+            try { resolve(callback())}
+            catch (e) { reject(e) }
+        }, timeout)
+    })
 }
