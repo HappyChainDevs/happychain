@@ -7,27 +7,27 @@ import type { ExecuteSuccess } from "#lib/handlers/execute"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
-import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("submitter_state", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
     })
 
@@ -48,14 +48,14 @@ describe("submitter_state", () => {
 
     it("fetches state of an unknown tx", async () => {
         const state = (await client.api.v1.boop.state[":boopHash"]
-            .$get({ param: { boopHash: smartAccount } })
+            .$get({ param: { boopHash: account } })
             .then((a) => a.json())) as GetStateError
         expect(state.status).toBe(GetState.UnknownBoop)
     })
 
     it("fetches state of simulated (unconfirmed) future tx", async () => {
-        const nonce = nonceValue + 1n // future nonce so that is submits, but doesn't finalize
-        const futureUnsignedTx = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+        // future nonce so that is submits, but doesn't finalize
+        const futureUnsignedTx = createMintBoop({ account, nonceValue: nonceValue + 1n, nonceTrack })
         const futureSignedTx = await sign(futureUnsignedTx)
         const boopHash = computeBoopHash(env.CHAIN_ID, futureSignedTx)
         // submit transaction, but don't wait for it to complete

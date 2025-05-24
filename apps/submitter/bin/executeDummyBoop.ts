@@ -5,21 +5,25 @@
 
 import { BoopClient, CreateAccount, type ExecuteSuccess, GetNonce, Onchain } from "@happy.tech/boop-sdk"
 import { stringify } from "@happy.tech/common"
-import { createAndSignMintTx, testAccount } from "./utils"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { createAndSignMintBoop } from "#lib/utils/test"
 
 async function run() {
+    const eoa = privateKeyToAccount(generatePrivateKey())
     const boopClient = new BoopClient()
     const createAccountResult = await boopClient.createAccount({
-        owner: testAccount.address,
+        owner: eoa.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
     })
     if (createAccountResult.status !== CreateAccount.Success)
         throw new Error("Account creation failed: " + stringify(createAccountResult))
+    const account = createAccountResult.address
 
     const nonceResult = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
     if (nonceResult.status !== GetNonce.Success) throw new Error(nonceResult.description)
+    const nonceValue = nonceResult.nonceValue
 
-    const boop = await createAndSignMintTx(createAccountResult.address, nonceResult.nonceValue)
+    const boop = await createAndSignMintBoop(eoa, { account, nonceValue })
 
     const result = await boopClient.execute({ boop })
     if (result.status !== Onchain.Success) throw new Error(`execute failed: ${stringify(result)}`)

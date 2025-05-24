@@ -10,53 +10,53 @@ import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 import {
     assertMintLog,
-    createMockTokenAMintBoop,
+    createMintBoop,
     fundAccount,
-    getMockTokenABalance,
+    getMockTokenBalance,
     getNonce,
     mockDeployments,
-    signTx,
+    signBoop,
 } from "#lib/utils/test"
 import { client, createSmartAccount } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = async (tx: Boop) => await signTx(testAccount, tx)
+const sign = async (tx: Boop) => await signBoop(testAccount, tx)
 
 describe("submitter_execute", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
     })
 
     describe("self-paying", () => {
         beforeAll(async () => {
-            await fundAccount(smartAccount)
+            await fundAccount(account)
         })
 
         it("mints tokens - self-paying", async () => {
-            const beforeBalance = await getMockTokenABalance(smartAccount)
+            const beforeBalance = await getMockTokenBalance(account)
             // be your own payer! define your own gas!
             unsignedTx.gasLimit = 4_000_000
             unsignedTx.executeGasLimit = 1_000_000
             unsignedTx.validateGasLimit = 1_000_000
             unsignedTx.maxFeePerGas = 2_000_000_000n
-            unsignedTx.payer = smartAccount
+            unsignedTx.payer = account
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as unknown as ExecuteSuccess
-            const afterBalance = await getMockTokenABalance(smartAccount)
+            const afterBalance = await getMockTokenBalance(account)
             expect(result.status).toBe(200)
             expect(response.status).toBe(Onchain.Success)
             expect(response.receipt.evmTxHash).toBeString()
@@ -64,7 +64,7 @@ describe("submitter_execute", () => {
         })
 
         it("fails if signing over 0 gas values", async () => {
-            unsignedTx.payer = smartAccount
+            unsignedTx.payer = account
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
@@ -118,40 +118,40 @@ describe("submitter_execute", () => {
         })
 
         it("mints tokens (payer)", async () => {
-            const beforeBalance = await getMockTokenABalance(smartAccount)
+            const beforeBalance = await getMockTokenBalance(account)
 
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
-            const afterBalance = await getMockTokenABalance(smartAccount)
-            assertMintLog(response.receipt, smartAccount)
+            const afterBalance = await getMockTokenBalance(account)
+            assertMintLog(response.receipt, account)
             expect(response.status).toBe(Onchain.Success)
             expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
         it("executes with 0n gas", async () => {
-            const beforeBalance = await getMockTokenABalance(smartAccount)
+            const beforeBalance = await getMockTokenBalance(account)
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
-            assertMintLog(response.receipt, smartAccount)
-            const afterBalance = await getMockTokenABalance(smartAccount)
+            assertMintLog(response.receipt, account)
+            const afterBalance = await getMockTokenBalance(account)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
         it("executes with 10_000_000n gas", async () => {
-            const beforeBalance = await getMockTokenABalance(smartAccount)
+            const beforeBalance = await getMockTokenBalance(account)
             unsignedTx.executeGasLimit = 8_000_000
             unsignedTx.gasLimit = 10_000_000
             signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
-            const afterBalance = await getMockTokenABalance(smartAccount)
-            assertMintLog(response.receipt, smartAccount)
+            const afterBalance = await getMockTokenBalance(account)
+            assertMintLog(response.receipt, account)
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
@@ -161,11 +161,11 @@ describe("submitter_execute", () => {
             // execute tx with nonce, then another with nonce+1, wait for both to complete
             // this is to ensure that the nonce value is above `0` so that we don't fail for having a
             // _negative_ nonce
-            const tx1 = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack))
+            const tx1 = await sign(createMintBoop({ account, nonceValue, nonceTrack }))
             await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx1) } })
 
             // mints a different amount of tokens, computes a difference hash, same nonce though
-            const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack, 5n * 10n ** 18n))
+            const jsonTx = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 5n * 10n ** 18n }))
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as ExecuteError
             expect(result.status).toBe(400)
@@ -174,8 +174,8 @@ describe("submitter_execute", () => {
         })
 
         it("can't re-use a nonce", async () => {
-            const nonce = await getNonce(smartAccount, nonceTrack)
-            const jsonTx = await sign(createMockTokenAMintBoop(smartAccount, nonce, nonceTrack))
+            const nonceValue = await getNonce(account, nonceTrack)
+            const jsonTx = await sign(createMintBoop({ account, nonceValue, nonceTrack }))
 
             const result1 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             // again with same nonce, will fail
@@ -199,8 +199,8 @@ describe("submitter_execute", () => {
         })
 
         it("throws error when PaymentReverted with unsupported payer", async () => {
-            const nonce = await getNonce(smartAccount, nonceTrack)
-            const tx = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+            const nonceValue = await getNonce(account, nonceTrack)
+            const tx = createMintBoop({ account, nonceValue, nonceTrack })
 
             // invalid payer
             tx.payer = mockDeployments.MockTokenA
@@ -214,8 +214,8 @@ describe("submitter_execute", () => {
         })
 
         it("throws when invalid ABI is used to make call", async () => {
-            const nonce = await getNonce(smartAccount, nonceTrack)
-            const tx = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+            const nonceValue = await getNonce(account, nonceTrack)
+            const tx = createMintBoop({ account, nonceValue, nonceTrack })
 
             tx.callData = encodeFunctionData({
                 abi: [{ type: "function", name: "badFunc", inputs: [], outputs: [], stateMutability: "nonpayable" }],
@@ -233,11 +233,11 @@ describe("submitter_execute", () => {
         })
 
         it("throws when using the wrong user account", async () => {
-            const tx = createMockTokenAMintBoop(
-                `0x${(BigInt(smartAccount) + 1n).toString(16).padStart(40, "0")}`,
+            const tx = createMintBoop({
+                account: `0x${(BigInt(account) + 1n).toString(16).padStart(40, "0")}`,
                 nonceValue,
                 nonceTrack,
-            )
+            })
 
             const jsonTx = await sign(tx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
@@ -254,8 +254,8 @@ describe("submitter_execute", () => {
             expect(env.MAX_TOTAL_PENDING).toBeGreaterThanOrEqual(count)
 
             const transactions = await Promise.all(
-                Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                    const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+                Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
+                    const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
                     return await sign(dummyBoop)
                 }),
             )
@@ -268,7 +268,7 @@ describe("submitter_execute", () => {
                 expect(r.status, `status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.status, `receipt.status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.evmTxHash, `evmTxHash at index ${i}`).toEqual(expect.any(String))
-                assertMintLog(r.receipt, smartAccount)
+                assertMintLog(r.receipt, account)
             })
         })
     })

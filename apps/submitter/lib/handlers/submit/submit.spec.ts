@@ -5,26 +5,26 @@ import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
 import { type Boop, type BoopReceipt, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
-import { assertMintLog, client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
+import { assertMintLog, client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-const sign = (tx: Boop) => signTx(testAccount, tx)
+const sign = (tx: Boop) => signBoop(testAccount, tx)
 
 describe("submitter_submit", () => {
-    let smartAccount: Address
+    let account: Address
     let nonceTrack = 0n
     let nonceValue = 0n
     let unsignedTx: Boop
     let signedTx: Boop
 
     beforeAll(async () => {
-        smartAccount = await createSmartAccount(testAccount.address)
+        account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
-        nonceValue = await getNonce(smartAccount, nonceTrack)
-        unsignedTx = createMockTokenAMintBoop(smartAccount, nonceValue, nonceTrack)
+        nonceValue = await getNonce(account, nonceTrack)
+        unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
     })
 
@@ -45,8 +45,8 @@ describe("submitter_submit", () => {
         expect(env.MAX_TOTAL_PENDING).toBeGreaterThanOrEqual(count)
 
         const transactions = await Promise.all(
-            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
-                const dummyBoop = createMockTokenAMintBoop(smartAccount, nonce, nonceTrack)
+            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
+                const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
                 return await sign(dummyBoop)
             }),
         )
@@ -76,7 +76,7 @@ describe("submitter_submit", () => {
             receiptBodies.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 if (!("receipt" in a)) return { status: a.status }
-                assertMintLog(a.receipt as BoopReceipt, smartAccount)
+                assertMintLog(a.receipt as BoopReceipt, account)
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
                 return publicClient.waitForTransactionReceipt({ hash: receipt.evmTxHash, pollingInterval: 100 })
             }),
