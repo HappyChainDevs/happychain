@@ -310,12 +310,11 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case SubmitterError.ClientError:
         case SubmitterError.BoopReplaced:
         case SubmitterError.ExternalSubmit:
+        case GetNonce.Error:
             return new EIP1474InternalError(output.description, output)
         case GetState.UnknownState:
         case GetState.UnknownBoop:
-            return new EIP1474ResourceNotfound("Requesting state of unknown boop", output)
-        case GetNonce.Error:
-            return new EIP1474InternalError("Failed to get nonce from boop client", output)
+            return new EIP1474ResourceNotfound(output.description, output)
         case GetNonce.Success:
         case Onchain.Success:
         case GetState.Receipt:
