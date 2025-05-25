@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  VITE_IFRAME_URL: "https://iframe.happy.tech"
-  VITE_SUBMITTER_URL: "https://submitter.happy.tech"
+  HAPPY_IFRAME_URL: "https://iframe.happy.tech"
+  VITE_SUBMITTER_URL: "-"
   VITE_FIREBASE_API_KEY: "-"
   VITE_FIREBASE_AUTH_DOMAIN: "-"
   VITE_FIREBASE_PROJECT_ID: "-"
