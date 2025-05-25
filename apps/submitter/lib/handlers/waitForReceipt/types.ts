@@ -68,7 +68,7 @@ export type WaitForReceiptError = {
      * Onchain.ExecuteReverted} does not cause the transaction to revert when executed onchain),
      * and second we use "carrier errors" to transmit to tag the real errors with their context.
      *
-     * >> At the moment, this will always be undefined or empty. <<
+     * !! At the moment, this will always be undefined or empty. !!
      *
      * We can't parse the revert data from onchain execution — this is an EVM RPC limitation that is
      * difficult to work around (it requires tracing the transaction in its intra-block context).
