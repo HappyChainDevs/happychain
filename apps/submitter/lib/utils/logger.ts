@@ -1,8 +1,8 @@
 import { LogLevel, Logger, getProp, ifDef, isEmpty, logLevel } from "@happy.tech/common"
 import { createMiddleware } from "hono/factory"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
-import { env } from "../env"
 
 const defaultLogLevel = logLevel(env.LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
