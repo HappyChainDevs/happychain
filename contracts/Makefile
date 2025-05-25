@@ -409,9 +409,10 @@ define post-deploy
 	@cat out/deployment.json && printf "\n"
 
 	@# Extract ABIs from the deployed contracts and save to out/abis.json.
+	@# The metadata flag is crucial to avoid invalidating the build.
 	@export CONTRACTS=$$(bun node-jq '[.[]] | unique' out/abiMap.json) && \
 	node-jq '[.[]] | unique[]' out/abiMap.json \
-		| xargs -I'{}' forge inspect {} abi --json \
+		| xargs -I'{}' forge inspect {} abi --json $(METADATA_FLAG) \
 		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
 		> out/abis.json;
 
