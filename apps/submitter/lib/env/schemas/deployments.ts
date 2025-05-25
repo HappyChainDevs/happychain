@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import { isHexString } from "#lib/utils/validation/helpers"
 
 /**
  * Schema for all the configuration options related to chains and contract addresses.

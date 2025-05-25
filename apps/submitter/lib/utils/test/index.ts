@@ -4,18 +4,14 @@ import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/con
 import type { PrivateKeyAccount } from "viem"
 import { decodeEventLog, zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
-import type { z } from "zod"
 import { abis, deployment, env } from "#lib/env"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import type { inputSchema as ExecuteInputSchema } from "#lib/utils/validation/boop"
 
 export { mockDeployments, mockAbis }
 export { client, createSmartAccount } from "./client"
-
-export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 
 export async function fundAccount(address: Address) {
     const executor = findExecutionAccount(/* Default Execution Account */)

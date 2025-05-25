@@ -4,7 +4,7 @@ import { WaitForReceipt } from "#lib/handlers/waitForReceipt"
 import { Onchain } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
-import type { ExecuteInput, ExecuteOutput } from "./types"
+import type { ExecuteError, ExecuteInput, ExecuteOutput } from "./types"
 
 export async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
     try {
@@ -15,7 +15,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
         const waitOutput = await receiptPromise!
         return waitOutput.status === WaitForReceipt.Success
             ? waitOutput
-            : ({ ...waitOutput, stage: "execute" } satisfies Omit<ExecuteOutput, "status"> as ExecuteOutput)
+            : ({ ...waitOutput, stage: "execute" } satisfies Omit<ExecuteError, "status"> as ExecuteError)
     } catch (error) {
         return { ...outputForGenericError(error), stage: "execute" }
     }

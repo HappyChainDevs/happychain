@@ -1,54 +1,66 @@
+import type { AssertCompatible } from "@happy.tech/common"
+import { arktypeValidator } from "@hono/arktype-validator"
+import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { resolver } from "hono-openapi/zod"
-import { validator as zv } from "hono-openapi/zod"
-import { z } from "zod"
-import { simulateOutputSchema } from "#lib/handlers/simulate/validation"
-import { SubmitterError } from "#lib/types"
-import { isProduction } from "#lib/utils/isProduction"
-import { boopReceiptSchema } from "#lib/utils/validation/boopReceipt"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import type * as types from "#lib/handlers/getState/types"
+import { simulateOutputValidation } from "#lib/handlers/simulate/validation"
+import { Hash, openApiContent } from "#lib/utils/validation/ark"
+import { SBoopReceipt } from "#lib/utils/validation/boop"
 import { GetState } from "./types"
 
-export const inputSchema = z.object({
-    boopHash: z
-        .string()
-        .refine(isHexString)
-        .openapi({ example: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc" }),
+// TODO the type has an entrypoint, but we never pass one
+const getStateParam = type({
+    boopHash: Hash,
 })
 
-const getStateReceiptSchema = z.object({
-    status: z.literal(GetState.Receipt).openapi({ example: GetState.Receipt }),
-    receipt: boopReceiptSchema,
+const getStateReceipt = type({
+    status: type.unit(GetState.Receipt),
+    receipt: SBoopReceipt,
+    simulation: "undefined?",
+    description: "undefined?",
 })
 
-const getStateSimulatedSchema = z.object({
-    status: z.literal(GetState.Simulated).openapi({ example: GetState.Simulated }),
-    simulation: simulateOutputSchema,
+const getStateSimulated = type({
+    status: type.unit(GetState.Simulated),
+    simulation: simulateOutputValidation,
+    receipt: "undefined?",
+    description: "undefined?",
 })
 
-const getStateErrorSchema = z.object({
-    status: z.nativeEnum(SubmitterError),
-    description: z.string().optional(),
-})
+const getStateSuccess = type(getStateReceipt, "|", getStateSimulated)
 
-export const outputSchema = z.discriminatedUnion("status", [
-    getStateReceiptSchema,
-    getStateErrorSchema,
-    getStateSimulatedSchema,
-])
+const getStateError = type({
+    status: type.valueOf(GetState).exclude(type.enumerated(GetState.Receipt, GetState.Simulated)),
+    description: "string",
+    receipt: "undefined?",
+    simulation: "undefined?",
+})
 
 export const getStateDescription = describeRoute({
-    validateResponse: !isProduction,
-    description: "Retrieve state by BoopHash",
+    description: "Retrieve boop state (simulation results or receipt)",
     responses: {
         200: {
-            description: "Successful State Retrieval",
-            content: {
-                "application/json": {
-                    schema: resolver(outputSchema),
-                },
-            },
+            description: "Successfully retrieved boop state",
+            content: openApiContent(getStateSuccess),
+        },
+        other: {
+            description: "Failed to retrieve boop state",
+            content: openApiContent(getStateError),
         },
     },
 })
-export const getStateValidation = zv("param", inputSchema.strict())
+
+export const getStateParamValidation = arktypeValidator("param", getStateParam)
+export const getStateOutputValidation = type(getStateSuccess, "|", getStateError)
+
+type GetStateInput = typeof getStateParam.infer
+type GetStateReceipt = typeof getStateReceipt.infer
+type GetStateSimulated = typeof getStateSimulated.infer
+type GetStateError = typeof getStateError.infer
+type GetStateOutput = typeof getStateOutputValidation.infer
+
+type _a1 = AssertCompatible<GetStateInput, types.GetStateInput>
+type _a2 = AssertCompatible<GetStateReceipt, types.GetStateReceipt>
+type _a3 = AssertCompatible<GetStateSimulated, types.GetStateSimulated>
+type _a4 = AssertCompatible<GetStateError, types.GetStateError>
+type _a5 = AssertCompatible<GetStateOutput, types.GetStateOutput>

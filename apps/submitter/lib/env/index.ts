@@ -25,3 +25,5 @@ export type Environment = z.infer<typeof envSchema>
  */
 export const deployment = getDeployment(env)
 export const abis = getAbis(env)
+
+export const isProduction = ["staging", "production"].includes(env.NODE_ENV)

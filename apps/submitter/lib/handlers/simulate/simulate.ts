@@ -10,7 +10,7 @@ import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { getRevertError } from "#lib/utils/parsing"
-import type { SimulateInput, SimulateOutput } from "./types"
+import type { SimulateInput, SimulateOutput, SimulateSuccess } from "./types"
 
 export async function simulate(
     { entryPoint = deployment.EntryPoint, boop }: SimulateInput,
@@ -52,7 +52,8 @@ export async function simulate(
 
         const output = {
             ...entryPointOutput,
-            status,
+            status: Onchain.Success,
+            revertData: undefined,
             gas: boop.gasLimit || applyGasMargin(entryPointOutput.gas),
             validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
             validatePaymentGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validatePaymentGas),
@@ -60,9 +61,9 @@ export async function simulate(
             maxFeePerGas: boop.maxFeePerGas || (gasPrice * env.FEE_SAFETY_MARGIN) / 100n,
             submitterFee: getSubmitterFee(boop),
             feeTooLowDuringSimulation: boop.maxFeePerGas === 0n ? false : gasPrice > boop.maxFeePerGas,
-        }
+        } satisfies SimulateSuccess
 
-        if (output.status === Onchain.Success && balance !== null) {
+        if (balance !== null) {
             // `balance !== null` implies `selfPaying`
             // During simulation the gas price is usually 0, so we check here instead.
             const cost = BigInt(output.gas) * output.maxFeePerGas + output.submitterFee

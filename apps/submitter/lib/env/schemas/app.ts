@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import { isHexString } from "#lib/utils/validation/helpers"
 
 /**
  * Schema for configuration options related to misc operational concerns.

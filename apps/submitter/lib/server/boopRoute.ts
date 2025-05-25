@@ -1,58 +1,78 @@
 import { Hono } from "hono"
-import { executeDescription, executeValidation } from "#lib/handlers/execute"
+import { executeBodyValidation, executeDescription } from "#lib/handlers/execute"
 import { execute } from "#lib/handlers/execute/execute"
-import { getPending, getPendingDescription, getPendingValidation } from "#lib/handlers/getPending"
-import { getState, getStateDescription, getStateValidation } from "#lib/handlers/getState"
-import { simulate, simulateDescription, simulateValidation } from "#lib/handlers/simulate"
-import { submit, submitDescription, submitValidation } from "#lib/handlers/submit"
+import { executeOutputValidation } from "#lib/handlers/execute/validation"
+import {
+    getPending,
+    getPendingDescription,
+    getPendingOutputValidation,
+    getPendingParamValidation,
+} from "#lib/handlers/getPending"
+import {
+    getState,
+    getStateDescription,
+    getStateOutputValidation,
+    getStateParamValidation,
+} from "#lib/handlers/getState"
+import { simulate, simulateBodyValidation, simulateDescription, simulateOutputValidation } from "#lib/handlers/simulate"
+import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "#lib/handlers/submit"
 import {
     waitForReceipt,
     waitForReceiptDescription,
+    waitForReceiptOutputValidation,
     waitForReceiptParamValidation,
     waitForReceiptQueryValidation,
 } from "#lib/handlers/waitForReceipt"
 import { makeResponse } from "#lib/server/makeResponse"
+import { validateOutput } from "#lib/utils/validation/helpers"
 
 export default new Hono()
     .post(
         "/simulate", //
         simulateDescription,
-        simulateValidation,
+        simulateBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
-            const [response, code] = makeResponse(await simulate(input))
-            return c.json(response, code)
+            const output = await simulate(input)
+            validateOutput(output, simulateOutputValidation)
+            const [body, code] = makeResponse(output)
+            return c.json(body, code)
         },
     )
     .post(
         "/submit", //
         submitDescription,
-        submitValidation,
+        submitBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
-            const [response, code] = makeResponse(await submit(input))
-            return c.json(response, code)
+            const output = await submit(input)
+            validateOutput(output, submitOutputValidation)
+            const [body, code] = makeResponse(output)
+            return c.json(body, code)
         },
     )
     .post(
         "/execute", //
         executeDescription,
-        executeValidation,
+        executeBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
-            const [response, code] = makeResponse(await execute(input))
-            return c.json(response, code)
+            const output = await execute(input)
+            validateOutput(output, executeOutputValidation)
+            const [body, code] = makeResponse(output)
+            return c.json(body, code)
         },
     )
     .get(
         "/state/:boopHash", //
         getStateDescription,
-        getStateValidation,
+        getStateParamValidation,
         async (c) => {
             const input = c.req.valid("param")
             const output = await getState(input)
-            const [response, code] = makeResponse(output)
-            return c.json(response, code)
+            validateOutput(output, getStateOutputValidation)
+            const [body, code] = makeResponse(output)
+            return c.json(body, code)
         },
     )
     .get(
@@ -64,17 +84,19 @@ export default new Hono()
             const { boopHash } = c.req.valid("param")
             const { timeout } = c.req.valid("query")
             const output = await waitForReceipt({ boopHash, timeout })
-            const [response, code] = makeResponse(output)
-            return c.json(response, code)
+            validateOutput(output, waitForReceiptOutputValidation)
+            const [body, code] = makeResponse(output)
+            return c.json(body, code)
         },
     )
     .get(
         "/pending/:account", //
         getPendingDescription,
-        getPendingValidation,
+        getPendingParamValidation,
         async (c) => {
             const input = c.req.valid("param")
             const output = await getPending(input)
+            validateOutput(output, getPendingOutputValidation)
             const [response, code] = makeResponse(output)
             return c.json(response, code)
         },

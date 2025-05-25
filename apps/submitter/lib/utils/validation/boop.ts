@@ -1,58 +1,46 @@
-import { isAddress } from "@happy.tech/common"
-import { checksum } from "ox/Address"
-import { getAddress } from "viem"
-import { z } from "zod"
-import { deployment } from "#lib/env"
-import { isHexString } from "#lib/utils/validation/isHexString"
-import { toBigInt } from "#lib/utils/validation/toBigInt"
+import type { AssertCompatible } from "@happy.tech/common"
+import { type } from "arktype"
+import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
+import { Address, Bytes, Hash, Int256, UInt32, UInt256 } from "./ark"
 
-export const boopSchema = z.object({
-    account: z
-        .string()
-        .refine(isAddress)
-        .transform(checksum)
-        .openapi({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" }), // Address
-    dest: z
-        .string()
-        .refine(isAddress)
-        .transform(checksum)
-        .openapi({ example: "0x07b354EFA748883a342a9ba4780Cc9728f51e3D5" }), // Address
-    payer: z
-        .string()
-        .refine(isAddress)
-        .transform(checksum)
-        .openapi({ example: "0x0000000000000000000000000000000000000000" }), // Address
-    value: z.string().transform(toBigInt).openapi({ example: "0" }), // UInt256
-    callData: z.string().refine(isHexString).openapi({
-        example:
-            "0x40c10f1900000000000000000000000031b01adeb03855eecbaf17828bbd7d0ee918ed9200000000000000000000000000000000000000000000000000038d7ea4c68000",
-    }), // Bytes
-    nonceTrack: z.string().transform(toBigInt).openapi({ example: "0" }), // UInt256
-    nonceValue: z.string().transform(toBigInt).openapi({ example: "25" }), // UInt256
-
-    // gas
-    maxFeePerGas: z.string().transform(toBigInt).openapi({ example: "1200000000" }).default("0"), // UInt256
-    submitterFee: z.string().transform(toBigInt).openapi({ example: "100" }).default("0"), // Int256
-
-    gasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
-    validateGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
-    validatePaymentGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
-    executeGasLimit: z.coerce.number().openapi({ example: 4000000000 }).default(0), // UInt32
-
-    validatorData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
-    extraData: z.string().refine(isHexString).openapi({ example: "0x" }), // Bytes
+export const SBoop = type({
+    account: Address,
+    dest: Address,
+    payer: Address,
+    value: UInt256.default("0"),
+    nonceTrack: UInt256.configure({ example: 0 }),
+    nonceValue: UInt256.configure({ example: 42 }),
+    maxFeePerGas: UInt256.default("0"),
+    submitterFee: Int256.default("0"),
+    gasLimit: UInt32.default("0"),
+    validateGasLimit: UInt32.default("0"),
+    validatePaymentGasLimit: UInt32.default("0"),
+    executeGasLimit: UInt32.default("0"),
+    callData: Bytes.default("0x"),
+    validatorData: Bytes.default("0x"),
+    extraData: Bytes.default("0x"),
 })
 
-export const entryPointSchema = z
-    .string()
-    .refine(isAddress)
-    .optional()
-    .default(deployment.EntryPoint)
-    .transform((a) => getAddress(a))
-
-export const inputSchema = z.object({
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: entryPointSchema,
-    /** Boop to execute. */
-    boop: boopSchema,
+export const SBoopLog = type({
+    address: Address,
+    topics: Bytes.array().configure({ example: ["0x1beb36f4"] }),
+    data: Bytes,
 })
+
+export const SBoopReceipt = type({
+    boopHash: Hash,
+    boop: SBoop,
+    status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
+    description: type("string").configure({ example: "Boop executed successfully." }),
+    entryPoint: Address,
+    logs: SBoopLog.array(),
+    revertData: Bytes,
+    evmTxHash: Hash,
+    blockHash: Hash,
+    blockNumber: UInt256,
+    gasPrice: UInt256,
+})
+
+type _a1 = AssertCompatible<typeof SBoop.infer, Boop>
+type _a2 = AssertCompatible<typeof SBoopLog.infer, BoopLog>
+type _a3 = AssertCompatible<typeof SBoopReceipt.infer, BoopReceipt>

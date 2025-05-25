@@ -1,3 +1,3 @@
 export * from "./types"
 export { getPending } from "./getPending"
-export { getPendingValidation, getPendingDescription } from "./validation"
+export { getPendingParamValidation, getPendingDescription, getPendingOutputValidation } from "./validation"

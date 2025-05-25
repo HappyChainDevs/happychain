@@ -1,47 +1,57 @@
-import { isAddress } from "@happy.tech/common"
+import type { AssertCompatible } from "@happy.tech/common"
+import { arktypeValidator } from "@hono/arktype-validator"
+import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { resolver, validator as zv } from "hono-openapi/zod"
-import { z } from "zod"
-import { OnchainFail, SubmitterError, Success } from "#lib/types"
-import { isProduction } from "#lib/utils/isProduction"
-import { inputSchema } from "#lib/utils/validation/boop"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import { Address, Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
+import { SBoop } from "#lib/utils/validation/boop"
+import type * as types from "./types"
 import { Submit } from "./types"
 
-const outputSchema = z.discriminatedUnion("status", [
-    z.object({
-        status: z.literal(Success).openapi({ example: Submit.Success }),
-        boopHash: z
-            .string()
-            .refine(isHexString)
-            .openapi({ example: "0xa972fee74164415894187e2bdc820b38d3cca7786aa58db903b6bce7c5b535d7" }),
-        entryPoint: z.string().refine(isAddress).optional(),
-    }),
-    z.object({
-        status: z.nativeEnum(OnchainFail),
-        stage: z.literal("simulate"),
-        revertData: z.string().refine(isHexString).optional(),
-        description: z.string().optional(),
-    }),
-    z.object({
-        status: z.nativeEnum(SubmitterError),
-        stage: z.enum(["simulate", "submit"]),
-        description: z.string().optional(),
-    }),
-])
+const submitInput = type({
+    entryPoint: Address.optional(),
+    boop: SBoop,
+})
+
+const submitSuccess = type({
+    status: type.unit(Submit.Success),
+    boopHash: Hash,
+    entryPoint: Address,
+    revertData: "undefined?",
+    description: "undefined?",
+})
+
+const submitError = type({
+    status: type.valueOf(Submit).exclude(type.unit(Submit.Success)),
+    stage: type.enumerated("simulate", "submit"),
+    revertData: Bytes.optional(),
+    description: "string",
+    boopHash: "undefined?",
+    entryPoint: "undefined?",
+})
 
 export const submitDescription = describeRoute({
-    validateResponse: !isProduction,
-    description: "Submits Boop",
+    description: "Submits the supplied boop to the chain",
     responses: {
         200: {
             description: "Boop successfully submitted",
-            content: {
-                "application/json": {
-                    schema: resolver(outputSchema),
-                },
-            },
+            content: openApiContent(submitSuccess),
+        },
+        other: {
+            description: "Failed to submit the boop",
+            content: openApiContent(submitError),
         },
     },
 })
-export const submitValidation = zv("json", inputSchema.strict())
+
+export const submitBodyValidation = arktypeValidator("json", submitInput)
+export const submitOutputValidation = type(submitSuccess, "|", submitError)
+
+type SubmitInput = typeof submitInput.infer
+type SubmitSuccess = typeof submitSuccess.infer
+type SubmitError = typeof submitError.infer
+type SubmitOutput = typeof submitOutputValidation.infer
+
+type _a1 = AssertCompatible<SubmitInput, types.SubmitInput>
+type _a2 = AssertCompatible<SubmitSuccess, types.SubmitSuccess>
+type _a3 = AssertCompatible<SubmitError, types.SubmitError>
+type _a4 = AssertCompatible<SubmitOutput, types.SubmitOutput>
