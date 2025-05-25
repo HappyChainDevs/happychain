@@ -2,22 +2,28 @@
  * This file defines a shared base configuration for all our webapps (iframe and demos).
  */
 
-import { defineConfig } from "vite"
+import { resolve } from "node:path"
+import { defineConfig, loadEnv } from "vite"
 
-// Allowed Hosts is a comma-separated list of hostnames or IP addresses that the Vite dev server
-// will accept connections from. It is not needed in most cases, but is required when testing
-// across multiple devices on the same network.
-const allowedHosts =
-    import.meta.env?.NODE_ENV === "development" &&
-    import.meta.env.ALLOWED_SERVER_HOSTS?.split(", ").map((a: string) => a.trim())
+// Comma-separated list of hosts (IP addresses or domains) which are allowed to access this service. (Optional)
+// If empty, everyone is allowed.
+// This can be used to safely expose a local service to the internet, our main use case being testing on mobile devices.
+const allowedHosts = import.meta.env?.VITE_ALLOWED_HOSTS?.split(", ").map((a: string) => a.trim())
 if (allowedHosts?.length) console.log("\nVite Allowing access from hosts:", allowedHosts)
 const serverHostConfig = allowedHosts?.length ? { host: true, allowedHosts: allowedHosts } : {}
 
 export default defineConfig({
-    // We use strict ports for more reliable & easier demo setups
-    // and easier interactions between apps
+    // Strict port: use the exact port we specify.
+    // Without it, connection between apps (e.g. a demo and the iframe) can break.
     server: { strictPort: true, ...serverHostConfig },
     preview: { strictPort: true },
+    define: (() => {
+        if (process.cwd().includes("iframe")) return {}
+        // For demos: load the @happy.tech/core .env file.
+        // This is needed during dev as core won't be built and won't read its .env file.
+        const env = loadEnv("" /* no mode */, resolve("../../packages/core"), "HAPPY_")
+        return Object.fromEntries(Object.entries(env).map(([k, v]) => [`import.meta.env.${k}`, JSON.stringify(v)]))
+    })(),
     build: {
         rollupOptions: {
             onwarn(warning, defaultHandler) {

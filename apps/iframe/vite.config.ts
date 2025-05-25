@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 
-import sharedConfig from "@happy.tech/configs/vite.config.ts"
+import sharedConfig from "@happy.tech/configs/vite.config"
 import { SharedWorkerPlugin } from "@happy.tech/worker"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
@@ -37,7 +37,10 @@ export default defineConfig(({ command, mode }) => {
             // between branches.
             exclude: command === "serve" ? ["@happy.tech/worker"] : [],
         },
-
+        define: {
+            // TODO tmp until we transition VITE_ prefix over the HAPPY_
+            "import.meta.env.HAPPY_RPC_OVERRIDE": JSON.stringify(env.HAPPY_RPC_OVERRIDE),
+        },
         server: { port: 5160 },
         preview: { port: 5160 },
         plugins: [

@@ -1,4 +1,4 @@
-import sharedConfig from "@happy.tech/configs/vite.config.ts"
+import sharedConfig from "@happy.tech/configs/vite.config"
 import vue from "@vitejs/plugin-vue"
 import { defineConfig, mergeConfig } from "vite"
 
