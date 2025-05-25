@@ -1,3 +1,4 @@
+import { array, uniques } from "@happy.tech/common"
 import {
     type PublicClient as BasePublicClient,
     type WalletClient as BaseWalletClient,
@@ -11,27 +12,21 @@ import { logger } from "#lib/utils/logger"
 
 function getChain(): Chain {
     const chain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
-    if (chain)
-        return {
-            ...chain,
-            rpcUrls: {
-                ...chain.rpcUrls,
-                default: {
-                    http: env.RPC_URL ? [env.RPC_URL, ...chain.rpcUrls.default.http] : chain.rpcUrls.default.http,
-                    webSocket: chain.rpcUrls.default.webSocket ?? undefined,
-                },
-            },
-        }
-    if (!env.RPC_URL) {
-        throw new Error("Chain is not supported by default and the RPC_URL was not set in the env.")
+    if (chain) {
+        const http = uniques(array(env.RPC_HTTP_URL, ...chain.rpcUrls.default.http))
+        const webSocket = uniques(array(env.RPC_WS_URL, ...chain.rpcUrls.default.webSocket))
+        return { ...chain, rpcUrls: { default: { http, webSocket } } }
+    }
+    if (!env.RPC_HTTP_URL) {
+        throw new Error("Chain is not supported by default and RPC_HTTP_URL was not defined.")
     }
     return {
         id: env.CHAIN_ID,
         name: "Blockchain",
         rpcUrls: {
             default: {
-                http: [env.RPC_URL],
-                // TODO: websocket
+                http: [env.RPC_HTTP_URL],
+                webSocket: array(env.RPC_WS_URL),
             },
         },
         nativeCurrency: {
@@ -51,12 +46,12 @@ export const config = {
     },
     transport: fallback(
         [
-            ...(chain.rpcUrls.default.webSocket ?? []).map((url) => webSocket(url)),
+            ...(env.USE_WEBSOCKET ? (chain.rpcUrls.default.webSocket ?? []) : []).map((url) => webSocket(url)),
             ...chain.rpcUrls.default.http.map((url) => http(url)),
         ],
         {
             shouldThrow: (err: Error) => {
-                logger.warn("fallback: RPC error: ", err)
+                logger.warn("RPC failed, falling back to next RPC:", err)
                 return false // dont throw but proceed to the next RPC
             },
         },
