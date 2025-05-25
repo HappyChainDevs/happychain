@@ -51,7 +51,7 @@ export type WalletPermission = {
     // The app to which the permission is granted.
     invoker: AppURL
     // This is the EIP-1193 request that this permission is mapped to.
-    parentCapability: "eth_accounts" | string // TODO only string or make specific
+    parentCapability: Permissions | (string & {})
     caveats: WalletPermissionCaveat[]
     date: number
     // Not in the EIP, but Viem wants this.
