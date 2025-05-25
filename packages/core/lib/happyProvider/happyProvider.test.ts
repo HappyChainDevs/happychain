@@ -68,13 +68,11 @@ function createTestBusPair() {
     return [
         {
             scope,
-            logger: { log: mock(), warn: mock(), error: mock() },
             mode: EventBusMode.Forced,
             port: mc1.port1,
         },
         {
             scope,
-            logger: { log: mock(), warn: mock(), error: mock() },
             mode: EventBusMode.Forced,
             port: mc1.port2,
         },

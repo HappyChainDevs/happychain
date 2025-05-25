@@ -1,4 +1,4 @@
-import { type UUID, createUUID, happyProviderInfo, injectedProviderInfo } from "@happy.tech/common"
+import { type TaggedLogger, type UUID, createUUID, happyProviderInfo, injectedProviderInfo } from "@happy.tech/common"
 import {
     AuthState,
     type EIP1193RequestParameters,
@@ -7,7 +7,6 @@ import {
     EventBus,
     EventBusMode,
     type HappyUser,
-    type Logger,
     LoginRequiredError,
     Msgs,
     type MsgsFromApp,
@@ -40,8 +39,8 @@ const mipdStore = createStore()
 
 /** @internal */
 export type HappyProviderConfig = {
-    iframePath: string,
-    logger?: Logger
+    iframePath: string
+    logger?: TaggedLogger
     windowId: UUID
     providerBus: EventBus<ProviderMsgsFromWallet, ProviderMsgsFromApp>
     msgBus: EventBus<MsgsFromWallet, MsgsFromApp>
@@ -100,7 +99,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
      */
     constructor(private config: HappyProviderConfig) {
         super()
-        config.logger?.log("HappyProvider Created")
+        config.logger?.info("HappyProvider Created")
 
         this.iframeMsgBus = config.msgBus
 

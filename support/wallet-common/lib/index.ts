@@ -16,7 +16,6 @@ export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 
 // services
 export { EventBus, EventBusMode } from "./services/eventBus"
-export { logger } from "./services/logger"
 
 // utils
 export { waitForCondition } from "./utils/waitForCondition"
@@ -56,6 +55,5 @@ export type {
     EventHandler,
     EventKey,
 } from "./services/eventBus"
-export type { Logger } from "./services/logger"
 
 export { BasePopupProvider } from "./classes/BasePopupProvider"
