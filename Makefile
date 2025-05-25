@@ -530,6 +530,7 @@ endef
 
 select-submitter:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,$(url))
+	$(call update_env,apps/submitter/.env,SUBMITTER_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,$(url))
 .PHONY: select-submitter
 
