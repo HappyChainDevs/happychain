@@ -63,7 +63,8 @@ export const config = {
         ],
         {
             shouldThrow: (err: Error) => {
-                logger.warn("RPC failed, falling back to next RPC:", err)
+                if (err.message.includes("execution reverted")) return true
+                logger.warn("RPC failed, falling back to next RPC:", err.message)
                 return false // dont throw but proceed to the next RPC
             },
         },
