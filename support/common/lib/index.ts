@@ -75,6 +75,7 @@ export type {
 export { isHttpString } from "./utils/types"
 
 export { isAddress } from "./utils/address"
+export { array, uniques } from "./utils/arrays"
 export { HappyMethodNames, TransactionType } from "./utils/constants"
 export { nowInSeconds } from "./utils/date"
 export { debounce } from "./utils/debounce"

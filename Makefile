@@ -547,13 +547,17 @@ select-chain:
 	$(call update_env,packages/boop-sdk/.env,CHAIN_ID,$(chain))
 .PHONY: select-chain
 
-select-rpc:
-	$(call update_env,apps/submitter/.env,RPC_URL,$(url))
+select-http-rpc:
+	$(call update_env,apps/submitter/.env,RPC_HTTP_URL,$(url))
 	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
 	$(call update_env,apps/iframe/.env,HAPPY_RPC_OVERRIDE,$(url))
 	$(call update_env,packages/core/.env,HAPPY_RPC_OVERRIDE,$(url))
-.PHONY: select-rpc
+.PHONY: select-http-rpc
+
+select-ws-rpc:
+	$(call update_env,apps/submitter/.env,RPC_WS_URL,$(url))
+.PHONY: select-ws-rpc
 
 # Sets the allowed hosts for Vite.
 select-allowed-hosts:
@@ -592,13 +596,15 @@ select-iframe-prod:
 
 select-chain-local:
 	make select-chain chain=31337
-	make select-rpc url=http://localhost:8545
+	make select-http-rpc url=http://localhost:8545
+	make select-ws-rpc url=ws://localhost:8545
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-chain-local
 
 define select-chain-testnet
 	make select-chain chain=216
-	make select-rpc url=https://rpc.testnet.happy.tech
+	make select-http-rpc url=https://rpc.testnet.happy.tech
+	make select-ws-rpc url=wss://rpc.testnet.happy.tech/ws
 endef
 
 select-chain-staging:

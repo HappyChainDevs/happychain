@@ -23,9 +23,23 @@ export const deploymentsSchema = z.object({
      * The (HTTP) RPC url to use for the chain. Defaults to a well-known RPC if {@link
      * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
      *
-     * TODO: websocket support
+     * This is required if the chain is not supported by default.
+     *
+     * If you use this for a supported chain, you might want to set {@link USE_WEBSOCKET} to false.
      */
-    RPC_URL: z.string().url().optional(),
+    RPC_HTTP_URL: z.string().url().optional(),
+
+    /**
+     * The (WebScoket) RPC url to use for the chain. Defaults to a well-known RPC if {@link
+     * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
+     */
+    RPC_WS_URL: z.string().url().optional(),
+
+    /**
+     * Set this to false to not use WebSocket. This is mostly useful when you use {@link RPC_HTTP_URL} in
+     * conjunction with a supported chain and don't want the default WebSocket RPC to be used in priority.
+     */
+    USE_WEBSOCKET: z.coerce.boolean().optional().default(true),
 
     /**
      * The address of the EntryPoint contract to submit boops to.
