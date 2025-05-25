@@ -544,6 +544,7 @@ select-chain:
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,$(chain))
 	$(call update_env,demos/react/.env,VITE_CHAIN_ID,$(chain))
 	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,$(chain))
+	$(call update_env,packages/boop-sdk/.env,CHAIN_ID,$(chain))
 .PHONY: select-chain
 
 select-rpc:
