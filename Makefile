@@ -582,19 +582,53 @@ select-iframe-local:
 	make select-iframe url=http://localhost:5160
 .PHONY: select-iframe-local
 
-select-iframe-testnet:
-	make select-iframe url=https://iframe.happy.tech
+select-iframe-staging:
+	make select-iframe url=https://iframe-staging.happy.tech
 .PHONY: select-iframe-local
+
+select-iframe-prod:
+	make select-iframe url=https://iframe.happy.tech
+.PHONY: select-iframe-prod
 
 select-chain-local:
 	make select-chain chain=31337
 	make select-rpc url=http://localhost:8545
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
 .PHONY: select-chain-local
 
-select-chain-testnet:
+define select-chain-testnet
 	make select-chain chain=216
 	make select-rpc url=https://rpc.testnet.happy.tech
-.PHONY: select-chain-local
+endef
+
+select-chain-staging:
+	$(select-chain-testnet)
+	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,true)
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
+	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,true)
+.PHONY: select-chain-staging
+
+select-chain-prod:
+	$(select-chain-testnet)
+	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,false)
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
+	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,false)
+.PHONY: select-chain-prod
+
+select-all-local: select-chain-local select-submitter-local select-iframe-local
+.PHONY: select-all_local
+
+select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging
+.PHONY: select-all-staging
+
+select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod
+.PHONY: select-all-prod
+
+select-iframe-dev-staging: select-all-staging select-iframe-local
+.PHONY: select-iframe-dev-staging
+
+select-iframe-dev-prod: select-all-prod select-iframe-local
+.PHONY: select-iframe-dev-prod
 
 setup-local-chain: select-chain-local
 	@cd contracts && make anvil-background

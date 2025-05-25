@@ -1,7 +1,7 @@
 import type { Address, HTTPString } from "@happy.tech/common"
 import { deployment as stagingDeployment } from "@happy.tech/contracts/boop-staging/sepolia"
+import { deployment as anvilDeployment } from "@happy.tech/contracts/boop/anvil"
 import { deployment as happyChainSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
-import { deployment as anvilDeployment } from "@happy.tech/contracts/boop/sepolia"
 
 // Defaults to HappyChain Sepolia, can be configured in consuming app via new `BoopClient({ ...options })`.
 const SUBMITTER_URL = import.meta.env.SUBMITTER_URL ?? "https://submitter.happy.tech"
