@@ -50,9 +50,6 @@ anvil.log
 # Ignored to discourage manual editing
 apps/docs/src/pages/**/api
 
-# Cloned Repositories
-packages/bundler/alto
-
 # Editor configs and files
 .idea
 *.iml

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import "zod-openapi/extend" // Adds .openapi(...) to zod so that we can document the API as we validate
-import { getAbis, getDeployment } from "#lib/env/deployment"
+import { getAbis, getDeployment } from "./deployment"
 import { appSchema } from "./schemas/app"
 import { deploymentsSchema } from "./schemas/deployments"
 import { gasSchema } from "./schemas/gas"

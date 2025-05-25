@@ -4,8 +4,8 @@ import { jsonRpc } from "viem/nonce"
 import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import type { Boop } from "#lib/types"
+import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
-import { computeHash } from "../utils/boop/computeHash"
 
 /**
   flowchart TD
