@@ -7,6 +7,7 @@ import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissi
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
+import { disablePermissionWarnings } from "#src/testing/utils"
 
 const { appURL, walletID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/same_origin.mocks"))
@@ -15,6 +16,7 @@ vi.mock(import("#src/utils/appURL"), appURLMock)
 
 describe("#publicClient #wallet_requestPermissions #same_origin", () => {
     describe("disconnected user", () => {
+        disablePermissionWarnings()
         beforeEach(() => {
             clearPermissions()
             // logout

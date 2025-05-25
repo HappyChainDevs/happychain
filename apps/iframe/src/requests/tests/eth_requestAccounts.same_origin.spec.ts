@@ -6,6 +6,7 @@ import { vi } from "vitest"
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
+import { disablePermissionWarnings } from "#src/testing/utils"
 import { dispatchedPermissionlessRequest } from "../handlers/permissionless"
 
 const { appURL, walletID, appURLMock } = await vi //
@@ -15,6 +16,7 @@ vi.mock(import("#src/utils/appURL"), appURLMock)
 
 describe("#publicClient #eth_requestAccounts #same_origin", () => {
     describe("disconnected user", () => {
+        disablePermissionWarnings()
         beforeEach(() => {
             clearPermissions()
             // logout

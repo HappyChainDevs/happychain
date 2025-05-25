@@ -6,6 +6,7 @@ import { dispatchedPermissionlessRequest } from "#src/requests/handlers/permissi
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions"
 import { setUser } from "#src/state/user"
+import { disablePermissionWarnings } from "#src/testing/utils"
 
 const { appURL, parentID, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
@@ -14,6 +15,7 @@ vi.mock(import("#src/utils/appURL"), appURLMock)
 
 describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
     describe("disconnected user", () => {
+        disablePermissionWarnings()
         beforeEach(() => {
             clearPermissions()
             // logout
