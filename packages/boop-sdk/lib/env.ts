@@ -5,7 +5,7 @@ import { deployment as happyChainSepoliaDeployment } from "@happy.tech/contracts
 
 // Defaults to HappyChain Sepolia, can be configured in consuming app via new `BoopClient({ ...options })`.
 const SUBMITTER_URL = import.meta.env.SUBMITTER_URL ?? "https://submitter.happy.tech"
-const RPC_URL = import.meta.env.RPC_URL ?? "https://rpc.testnet.happy.tech"
+const RPC_URL = import.meta.env.RPC_URL ?? "https://rpc.testnet.happy.tech/http"
 
 const ENTRYPOINT = (() => {
     if (import.meta.env.ENTRYPOINT) return import.meta.env.ENTRYPOINT

@@ -603,7 +603,7 @@ select-chain-local:
 
 define select-chain-testnet
 	make select-chain chain=216
-	make select-http-rpc url=https://rpc.testnet.happy.tech
+	make select-http-rpc url=https://rpc.testnet.happy.tech/http
 	make select-ws-rpc url=wss://rpc.testnet.happy.tech/ws
 endef
 

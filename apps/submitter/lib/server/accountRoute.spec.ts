@@ -10,8 +10,10 @@ const testAccount = privateKeyToAccount(generatePrivateKey())
 describe("routes: api/accounts", () => {
     describe("200", () => {
         it("should create account", async () => {
+            console.log("entering should create account")
             const owner = testAccount.address
             const accountAddress = await createSmartAccount(owner)
+            console.log("finisehed")
             // Ensure its a valid address
             expect(accountAddress).toStartWith("0x")
             expect(accountAddress.length).toBe(42)

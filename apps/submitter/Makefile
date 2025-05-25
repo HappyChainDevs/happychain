@@ -15,7 +15,8 @@ export ANVIL_BLOCK_TIME ?= $(if $(findstring true,$(AUTOMINE_TESTS)),0,2)
 
 define setup-test-env
 	$(eval export CHAIN_ID=31337) \
-	$(eval export RPC_WS_URL=wss://localhost:8545) \
+	$(eval export RPC_HTTP_URL=http://localhost:8545) \
+	$(eval export RPC_WS_URL=ws://localhost:8545) \
   	$(eval export NODE_ENV=test) \
   	$(eval export DATABASE_URL=tests.sqlite) \
   	$(eval export EXECUTOR_KEYS=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
