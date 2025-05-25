@@ -20,7 +20,6 @@ describe("event bus", () => {
         beforeEach(() => {
             broadcastConfig = {
                 scope: createUUID(),
-                logger: { log: mock(), warn: mock(), error: mock() },
             }
 
             // using forced instead of MessagePort 1/2 to skip cross-window handshake

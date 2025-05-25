@@ -7,17 +7,14 @@ import { Logger, logLevel } from "@happy.tech/common"
 const defaultLogLevel = logLevel(import.meta.env.VITE_LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
 
-/**
- * Default logger instance. Also accessible in the browser console via `window.happyLogger`.
- */
+/** Default logger instance. Also accessible in the browser console via `window.happyLogger`. */
 export const logger = Logger.instance
 
-/**
- * Logger facade for tracing requests.
- */
+/** Logger facade for "back-end" request handling (i.e. not used in the request popups). */
 export const reqLogger = Logger.create("Requests")
 
-/**
- * Logger facade for Session Keys
- */
+/** Logger facade for session key logic. */
 export const sessionKeyLogger = Logger.create("SessionKeys")
+
+/** Logger facade for permission logic. */
+export const permissionsLogger = Logger.create("Permissions")

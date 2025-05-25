@@ -1,5 +1,8 @@
+import { LogLevel, Logger, type TaggedLogger } from "@happy.tech/common"
 import { waitForCondition } from "../utils/waitForCondition"
-import { type Logger, silentLogger } from "./logger"
+
+const silentLogger = Logger.create("silent")
+silentLogger.setLogLevel(LogLevel.OFF)
 
 // Browser APIs type definition for SSR safety
 type BrowserGlobal = typeof globalThis & {
@@ -45,7 +48,7 @@ type SafeMessagePort = globalThis.MessagePort
 export type EventBusOptions = {
     /** The unique name that identifies the bus. */
     scope: string
-    logger?: Logger
+    logger?: TaggedLogger
     onError?: (...params: unknown[]) => void
 } & (
     | { mode: EventBusMode.IframePort; target: Window }
@@ -66,7 +69,7 @@ export type EventBusOptions = {
 export class EventBus<SL, SE = SL> {
     private handlerMap: Map<keyof SL, Set<EventHandler<SL>>> = new Map()
     private port: SafeMessagePort | null = null
-    private isServer: boolean
+    private readonly isServer: boolean
 
     constructor(private config: EventBusOptions) {
         this.isServer = typeof window === "undefined"
@@ -131,7 +134,7 @@ export class EventBus<SL, SE = SL> {
         }
 
         if (!this.isServer) {
-            this.config.logger?.log(
+            this.config.logger?.info(
                 `[EventBus] Port initialized ${this.config.mode}=>${this.config.scope}`,
                 location.origin,
             )

@@ -1,9 +1,9 @@
 import { createUUID } from "@happy.tech/common"
 import type { Address, UUID } from "@happy.tech/common"
-import { logger } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import { Permissions } from "#src/constants/permissions"
+import { permissionsLogger } from "#src/utils/logger"
 import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
@@ -134,7 +134,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     const user = getUser()
     if (!user) {
         // This should never happen and requires investigating if it does!
-        logger.warn("No user found, returning empty permissions.")
+        permissionsLogger.warn("No user found, returning empty permissions.")
         return {}
     }
 
@@ -180,7 +180,7 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 
     if (!user) {
         // This should never happen and requires investigating if it does!
-        logger.warn("No user found, not setting permissions.")
+        permissionsLogger.warn("No user found, not setting permissions.")
         return
     }
 
