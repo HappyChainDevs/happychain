@@ -26,6 +26,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             return { status, salt, owner, address: predictedAddress }
         }
 
+        // TODO we could speed this up by hardcoding the gas and maintaining a gas pricing service
         logger.trace("Sending account creation transaction", predictedAddress)
         const hash = await walletClient.writeContract({
             address: deployment.HappyAccountBeaconProxyFactory,
@@ -36,7 +37,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
         })
 
         logger.trace("Waiting for transaction inclusion", hash, predictedAddress)
-        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        const receipt = await publicClient.waitForTransactionReceipt({ hash, pollingInterval: 200 })
 
         if (receipt.status === "success") {
             const foundLog = receipt.logs.find((log) => decodeEvent(log)?.eventName === "Deployed")
