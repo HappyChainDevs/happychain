@@ -41,8 +41,8 @@ contracts/out/
 contracts/lib/
 contracts/broadcast/
 contracts/docs/
-# Local deployments
-contracts/deployments/LOCAL/
+# Accidental ddeployments
+contracts/deployments/unknown/
 # Logs
 anvil.log
 

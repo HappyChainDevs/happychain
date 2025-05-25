@@ -451,9 +451,8 @@ endef
 # Will save the latest deployment from $DEPLOY_SCRIPT.
 define save-deployment
 	@mkdir -p deployments/$(DEPLOYMENT_NAME)
-	@cp -f out/deployment.json out/abiMap.json out/abis.json out/abis.ts deployments/$(DEPLOYMENT_NAME)
+	@cp -f out/{deployment.json,abiMap.json,abis.json,abis.ts} deployments/$(DEPLOYMENT_NAME)
 	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
-	@mkdir -p deployments/$(DEPLOYMENT_NAME)
 	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
 	@if [ "$(CONFIG)" != "LOCAL" ] && [ -f "$(__RUN_FILE)" ]; then \
 		cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json; \
@@ -504,12 +503,12 @@ deploy-l1-upgradeable: ## Deploys the upgradeable L1 contracts (only for referen
 # Performs checks related to contract upgradeability.
 # cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
 ifeq ($(CHECK_UPGRADE),true)
-	forge clean && forge build $(METADATA_FLAG) # doesn't work with incremental builds
+	forge clean && FOUNDRY_PROFILE=upgrade forge build $(METADATA_FLAG) # doesn't work with incremental builds
 	openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable;
 	openzeppelin-upgrades-core validate --contract HappyERC20Upgraded;
 endif
 	$(eval $(call set-deployment-name,l1-upgradeable))
-	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
+	FOUNDRY_PROFILE=upgrade make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1-upgradeable
 
 deploy-boop: ## Deploys the Boop contracts.
