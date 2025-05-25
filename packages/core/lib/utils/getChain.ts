@@ -10,6 +10,7 @@ import { anvil, happyChainSepolia } from "@happy.tech/wallet-common"
  * @throws Error if an rpc URL is not provided for a custom chain
  */
 export function getChain(chainId: number, rpc?: ChainRpcUrls): Chain {
+    // If `HAPPY_RPC_OVERRIDE` is set, the RPC URL of `happyChainSepolia` or `anvil` will be set to that RPC server.
     switch (chainId) {
         case happyChainSepolia.id:
             return happyChainSepolia

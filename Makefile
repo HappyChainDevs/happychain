@@ -526,17 +526,15 @@ define update_env
 		}' $(1) > $(1).tmp && mv $(1).tmp $(1)
 endef
 
+# NOTE: "127.0.0.1" doesn't always work on MacOS, prefer "localhost".
+
 select-submitter:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,$(url))
 .PHONY: select-submitter
 
 select-iframe:
-	$(call update_env,packages/core/.env,VITE_IFRAME_URL,$(url))
-	$(call update_env,apps/iframe/.env,VITE_IFRAME_URL,$(url))
-	$(call update_env,demos/js/.env,VITE_IFRAME_URL,$(url))
-	$(call update_env,demos/react/.env,VITE_IFRAME_URL,$(url))
-	$(call update_env,demos/vue/.env,VITE_IFRAME_URL,$(url))
+	$(call update_env,packages/core/.env,HAPPY_IFRAME_URL,$(url))
 .PHONY: select-iframe
 
 select-chain:
@@ -552,18 +550,16 @@ select-rpc:
 	$(call update_env,apps/submitter/.env,RPC_URL,$(url))
 	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
-	$(call update_env,apps/iframe/.env,VITE_DEV_RPC_URL,$(url))
-	$(call update_env,demos/js/.env,VITE_DEV_RPC_URL,$(url))
-	$(call update_env,demos/react/.env,VITE_DEV_RPC_URL,$(url))
-	$(call update_env,demos/vue/.env,VITE_DEV_RPC_URL,$(url))
+	$(call update_env,apps/iframe/.env,HAPPY_RPC_OVERRIDE,$(url))
+	$(call update_env,packages/core/.env,HAPPY_RPC_OVERRIDE,$(url))
 .PHONY: select-rpc
 
 # Sets the allowed hosts for Vite.
 select-allowed-hosts:
-	$(call update_env,apps/iframe/.env,VITE_ALLOWED_HOSTS,$(url))
-	$(call update_env,demos/js/.env,VITE_ALLOWED_HOSTS,$(url))
-	$(call update_env,demos/react/.env,VITE_ALLOWED_HOSTS,$(url))
-	$(call update_env,demos/vue/.env,VITE_ALLOWED_HOSTS,$(url))
+	$(call update_env,apps/iframe/.env,VITE_ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/js/.env,VITE_ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/react/.env,VITE_ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/vue/.env,VITE_ALLOWED_HOSTS,$(urls))
 .PHONY: select-allowed-hosts
 
 select-submitter-local:
@@ -591,7 +587,7 @@ select-iframe-testnet:
 
 select-chain-local:
 	make select-chain chain=31337
-	make select-rpc url=http://127.0.0.1:8545
+	make select-rpc url=http://localhost:8545
 .PHONY: select-chain-local
 
 select-chain-testnet:

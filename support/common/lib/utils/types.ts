@@ -3,6 +3,11 @@
 /** Type of http or https strings, starting with the proper protocol. */
 export type HTTPString = `http://${string}` | `https://${string}`
 
+/** Type predicate / assertion for {@link HTTPString}. */
+export function isHttpString(string: string | undefined): string is HTTPString {
+    return !!string && (string.startsWith("http://") || string.startsWith("https://"))
+}
+
 /** Type of hexadecimal strings prefixed with 0x. */
 export type Hex = `0x${string}`
 

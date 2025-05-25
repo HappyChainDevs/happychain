@@ -6,6 +6,8 @@ import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
 import { StorageKey } from "../services/storage"
 
+// NOTE: If `HAPPY_RPC_OVERRIDE` is set, the RPC URL of all default chains will be set to that RPC server.
+
 export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
     const chainKey = chainId && `0x${BigInt(chainId).toString(16)}`

@@ -72,6 +72,8 @@ export type {
     RecursiveReplace,
 } from "./utils/types"
 
+export { isHttpString } from "./utils/types"
+
 export { isAddress } from "./utils/address"
 export { HappyMethodNames, TransactionType } from "./utils/constants"
 export { nowInSeconds } from "./utils/date"
