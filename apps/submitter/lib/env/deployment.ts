@@ -23,7 +23,7 @@ export function getDeployment(env: Environment) {
     const deployment = getBaseDeployment()
     return {
         ...deployment,
-        // TODO: enable overriding the others + abstract over factory type
+        // TODO: abstract over factory type
         EntryPoint: env.DEPLOYMENT_ENTRYPOINT ?? deployment.EntryPoint,
         HappyAccountBeaconProxyFactory: env.DEPLOYMENT_ACCOUNT_FACTORY ?? deployment.HappyAccountBeaconProxyFactory,
         HappyAccountImpl: env.DEPLOYMENT_ACCOUNT_IMPLEMENTATION ?? deployment.HappyAccountImpl,

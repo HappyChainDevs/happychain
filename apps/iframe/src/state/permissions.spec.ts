@@ -9,12 +9,21 @@ import {
     hasPermissions,
     revokePermissions,
 } from "#src/state/permissions"
+import { disablePermissionWarnings } from "#src/testing/utils"
 import { setUser } from "../state/user"
 
 const { appURL, walletURL, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
+
+function withoutUserHooks() {
+    disablePermissionWarnings()
+    beforeEach(() => {
+        clearPermissions()
+        setUser(undefined)
+    })
+}
 
 describe("PermissionsService", () => {
     describe("hasPermissions", () => {
@@ -42,10 +51,7 @@ describe("PermissionsService", () => {
                 })
             })
             describe("without-user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
+                withoutUserHooks()
                 it("should return false if eth_accounts permission is granted", () => {
                     grantPermissions(appURL, "eth_accounts")
                     const result = hasPermissions(appURL, "eth_accounts")
@@ -115,10 +121,7 @@ describe("PermissionsService", () => {
             })
 
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
+                withoutUserHooks()
                 it("should not grant eth_accounts permission", () => {
                     const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
@@ -163,10 +166,7 @@ describe("PermissionsService", () => {
             })
 
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
+                withoutUserHooks()
                 it("should not grant eth_accounts permission", () => {
                     const initialStateA = hasPermissions(appURL, "eth_accounts")
                     expect(initialStateA).toBe(false)
@@ -214,10 +214,7 @@ describe("PermissionsService", () => {
             })
 
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
+                withoutUserHooks()
                 it("should not change state", () => {
                     const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
@@ -308,11 +305,7 @@ describe("PermissionsService", () => {
                 })
             })
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
-
+                withoutUserHooks()
                 it("returns empty array when no permissions have been granted", () => {
                     expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
                 })
@@ -357,11 +350,7 @@ describe("PermissionsService", () => {
             })
 
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
-
+                withoutUserHooks()
                 it("returns empty array when no permissions have been granted", () => {
                     expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
                     expect(getPermissions(walletURL, "eth_accounts").length).toBe(0)
@@ -392,11 +381,7 @@ describe("PermissionsService", () => {
                 })
             })
             describe("without user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(undefined)
-                })
-
+                withoutUserHooks()
                 it("returns empty array when no permissions have been granted", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
                 })
@@ -441,11 +426,7 @@ describe("PermissionsService", () => {
             })
         })
         describe("without user", () => {
-            beforeEach(() => {
-                clearPermissions()
-                setUser(undefined)
-            })
-
+            withoutUserHooks()
             it("clears all permissions granted", () => {
                 expect(getAllPermissions(appURL).length).toBe(0)
 
