@@ -58,7 +58,15 @@ export type SubmitError = {
     /** Whether the error occurred at the simulation stage or at the submit stage. */
     stage: "simulate" | "submit"
 
-    /** TODO copy from execute/types.ts */
+    /**
+     * If the status string ends in "Reverted" or "Rejected", this will hold the associated revert or rejection data,
+     * if available.
+     *
+     * Note that this will be different from the revert data of the simulation of the EVM
+     * tx that carried the boop, as first of all it might not have reverted (e.g. {@link
+     * Onchain.ExecuteReverted} does not cause the transaction to revert when executed onchain),
+     * and second we use "carrier errors" to transmit to tag the real errors with their context.
+     */
     revertData?: Bytes
 
     /** Description of the problem. */

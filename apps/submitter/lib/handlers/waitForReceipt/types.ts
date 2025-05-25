@@ -59,7 +59,23 @@ export type WaitForReceiptSuccess = {
 export type WaitForReceiptError = {
     status: Exclude<WaitForReceiptStatus, typeof WaitForReceipt.Success>
 
-    /** TODO copy from execute/types.ts */
+    /**
+     * If the status string ends in "Reverted" or "Rejected", this will hold the associated revert or rejection data,
+     * if available.
+     *
+     * Note that this will be different from the revert data of the onchain execution of the
+     * EVM tx that carried the boop, as first of all it might not have reverted (e.g. {@link
+     * Onchain.ExecuteReverted} does not cause the transaction to revert when executed onchain),
+     * and second we use "carrier errors" to transmit to tag the real errors with their context.
+     *
+     * >> At the moment, this will always be undefined or empty. <<
+     *
+     * We can't parse the revert data from onchain execution — this is an EVM RPC limitation that is
+     * difficult to work around (it requires tracing the transaction in its intra-block context).
+     *
+     * Onchain reverts should be rare, as the system is set up to avoid them — they can only result from incorrectly
+     * implemented accounts and paymasters, or from bugs in the submitter.
+     */
     revertData?: Bytes
 
     /** Description of the problem. */

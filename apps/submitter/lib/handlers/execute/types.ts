@@ -74,11 +74,14 @@ export type ExecuteError = {
      * Note that this will be different from the revert data of the simulation or onchain execution
      * of the EVM tx that carried the boop, as first of all it might not have reverted (e.g.
      * {@link Onchain.ExecuteReverted} does not cause the transaction to revert when executed
-     * onchain), and second we use carrier error to commit the errors back to the submitter.
+     * onchain), and second we use "carrier errors" to transmit to tag the real errors with their context.
      *
-     * TODO - Info about simulation vs execution (right now this is always simulation, but I think we can use an event
-     *        to get this from execution too).
-     *      - After, copy this docstring to the other `revertData` fields.
+     * At the moment, we can't parse the revert data from onchain execution, so when provided, this
+     * will always be an error detected during simulation — this is an EVM RPC limitation that is
+     * difficult to work around (it requires tracing the transaction in its intra-block context).
+     *
+     * Onchain reverts should be rare, as the system is set up to avoid them — they can only result from incorrectly
+     * implemented accounts and paymasters, or from bugs in the submitter.
      */
     revertData?: Bytes
 
