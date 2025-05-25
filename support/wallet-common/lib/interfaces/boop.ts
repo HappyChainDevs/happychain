@@ -71,7 +71,7 @@ type EntryPointOutput = {
 /**
  * Copied from `apps/submitter/lib/handlers/simulate/types.ts` to avoid dependency madness.
  */
-export type SimulateSuccess = EntryPointOutput & {
+export type SimulateSuccess = Omit<EntryPointOutput, "revertData"> & {
     status: "onchainSuccess"
 
     /** Estimated max fee per gas (in wei) for the Boop. */
@@ -79,4 +79,7 @@ export type SimulateSuccess = EntryPointOutput & {
 
     /** Total fee requested by the submitter for submitting this boop (in wei). */
     submitterFee: bigint
+
+    revertData?: undefined
+    description?: undefined
 }
