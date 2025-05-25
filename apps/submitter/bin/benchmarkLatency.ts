@@ -17,7 +17,7 @@ async function run({
     eoa = privateKeyToAccount(generatePrivateKey()),
     numBoops = 80,
 }: { eoa?: PrivateKeyAccount; numBoops?: number } = {}) {
-    const boopClient = new BoopClient({ rpcUrl: process.env.RPC_URL, baseUrl: process.env.SUBMITTER_URL })
+    const boopClient = new BoopClient({ rpcUrl: process.env.RPC_HTTP_URL, baseUrl: process.env.SUBMITTER_URL })
 
     // Step 1: Create account (this remains serial)
     console.log("Creating test account...")
