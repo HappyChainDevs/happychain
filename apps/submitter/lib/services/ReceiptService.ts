@@ -97,7 +97,9 @@ export class ReceiptService {
             let unwatch: WatchBlocksReturnType | null = null
             try {
                 unwatch = publicClient.watchBlocks({
-                    pollingInterval: publicClient.transport.type === "webSocket" ? undefined : 200,
+                    // If `poll` is undefined and transport is WebSocket (or fallback with first WebSocket transport),
+                    // Viem won't poll but subscribe, even if `pollingInterval` is set.
+                    pollingInterval: 200,
                     includeTransactions: false,
                     emitOnBegin: true,
                     emitMissed: true,

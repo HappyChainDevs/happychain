@@ -1,4 +1,9 @@
-import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient, Chain } from "viem"
+import {
+    type PublicClient as BasePublicClient,
+    type WalletClient as BaseWalletClient,
+    type Chain,
+    webSocket,
+} from "viem"
 import { http, createPublicClient, createWalletClient, fallback } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
@@ -45,7 +50,10 @@ export const config = {
         multicall: true,
     },
     transport: fallback(
-        chain.rpcUrls.default.http.map((url) => http(url)),
+        [
+            ...(chain.rpcUrls.default.webSocket ?? []).map((url) => webSocket(url)),
+            ...chain.rpcUrls.default.http.map((url) => http(url)),
+        ],
         {
             shouldThrow: (err: Error) => {
                 logger.warn("fallback: RPC error: ", err)
