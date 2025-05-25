@@ -1,46 +1,71 @@
+import type { AssertCompatible } from "@happy.tech/common"
+import { arktypeValidator } from "@hono/arktype-validator"
+import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { resolver } from "hono-openapi/zod"
-import { validator as zv } from "hono-openapi/zod"
-import { z } from "zod"
-import { Onchain } from "#lib/types"
-import { SubmitterError } from "#lib/types"
 import { CallStatus } from "#lib/types"
-import { isProduction } from "#lib/utils/isProduction"
-import { inputSchema } from "#lib/utils/validation/boop"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import { Address, Bytes, UInt32, UInt256, openApiContent } from "#lib/utils/validation/ark"
+import { SBoop } from "#lib/utils/validation/boop"
+import type * as types from "./types"
+import { Simulate } from "./types"
 
-export const simulateOutputSchema = z.discriminatedUnion("status", [
-    z.object({
-        status: z.enum([Onchain.Success]).openapi({ example: Onchain.Success }),
-        maxFeePerGas: z.string().openapi({ example: (1_200_000_000).toString() }),
-        submitterFee: z.string().openapi({ example: (100).toString() }),
-        gas: z.number().openapi({ example: 25_000_000 }),
-        validateGas: z.number().openapi({ example: 25_000_000 }),
-        validatePaymentGas: z.number().openapi({ example: 25_000_000 }),
-        executeGas: z.number().openapi({ example: 25_000_000 }),
-        validityUnknownDuringSimulation: z.boolean().openapi({}),
-        paymentValidityUnknownDuringSimulation: z.boolean().openapi({}),
-        futureNonceDuringSimulation: z.boolean().openapi({}),
-        callStatus: z.nativeEnum(CallStatus),
-        revertData: z.string().refine(isHexString),
-    }),
-    z.object({
-        status: z.enum([SubmitterError.UnexpectedError, Onchain.UnexpectedReverted]),
-    }),
-])
+const simulateInput = type({
+    entryPoint: Address.optional(),
+    boop: SBoop,
+})
+
+const entryPointOutput = type({
+    gas: UInt32,
+    validateGas: UInt32,
+    validatePaymentGas: UInt32,
+    executeGas: UInt32,
+    validityUnknownDuringSimulation: "boolean",
+    paymentValidityUnknownDuringSimulation: "boolean",
+    futureNonceDuringSimulation: "boolean",
+    callStatus: type.valueOf(CallStatus),
+    revertData: Bytes,
+})
+
+const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
+    status: type.unit(Simulate.Success),
+    maxFeePerGas: UInt256,
+    submitterFee: UInt256,
+    feeTooLowDuringSimulation: "boolean",
+    revertData: "undefined?",
+    description: "undefined?",
+})
+
+const simulateError = type({
+    status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
+    maxFeePerGas: "undefined?",
+    submitterFee: "undefined?",
+    feeTooLowDuringSimulation: "undefined?",
+    revertData: Bytes.optional(),
+    description: "string",
+})
 
 export const simulateDescription = describeRoute({
-    validateResponse: !isProduction,
-    description: "Simulates the supplied Boop",
+    description: "Simulates the supplied boop",
     responses: {
         200: {
-            description: "Successful simulation",
-            content: {
-                "application/json": {
-                    schema: resolver(simulateOutputSchema),
-                },
-            },
+            description: "Simulation successful",
+            content: openApiContent(simulateSuccess),
+        },
+        other: {
+            description: "Simulation failed",
+            content: openApiContent(simulateError),
         },
     },
 })
-export const simulateValidation = zv("json", inputSchema.strict())
+
+export const simulateBodyValidation = arktypeValidator("json", simulateInput)
+export const simulateOutputValidation = type(simulateSuccess, "|", simulateError)
+
+type SimulateInput = typeof simulateInput.infer
+type SimulateSuccess = typeof simulateSuccess.infer
+type SimulateError = typeof simulateError.infer
+type SimulateOutput = typeof simulateOutputValidation.infer
+
+type _a1 = AssertCompatible<SimulateInput, types.SimulateInput>
+type _a2 = AssertCompatible<SimulateSuccess, types.SimulateSuccess>
+type _a3 = AssertCompatible<SimulateError, types.SimulateError>
+type _a4 = AssertCompatible<SimulateOutput, types.SimulateOutput>

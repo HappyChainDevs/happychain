@@ -51,6 +51,10 @@ export type ExecuteSuccess = {
 
     /** Receipt for the included and successfully executed boop. */
     receipt: BoopReceipt
+
+    stage?: undefined
+    description?: undefined
+    revertData?: undefined
 }
 
 // =====================================================================================================================
@@ -80,6 +84,8 @@ export type ExecuteError = {
 
     /** Description of the problem. */
     description: string
+
+    receipt?: undefined
 }
 
 // =====================================================================================================================

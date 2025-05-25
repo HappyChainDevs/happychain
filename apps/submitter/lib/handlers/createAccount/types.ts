@@ -1,4 +1,4 @@
-import type { Address, Prettify } from "@happy.tech/common"
+import type { Address, Hex, Prettify } from "@happy.tech/common"
 import { SubmitterError } from "#lib/types"
 
 // =====================================================================================================================
@@ -8,8 +8,8 @@ import { SubmitterError } from "#lib/types"
 export type CreateAccountInput = {
     /** User EOA address */
     owner: Address
-    /** Salt for the account creation */
-    salt: Address
+    /** Salt for the account creation — no greater than 32 bytes. */
+    salt: Hex
 }
 
 // =====================================================================================================================
@@ -46,9 +46,9 @@ export type CreateAccountOutput = CreateAccountSuccess | CreateAccountError
 export type CreateAccountSuccess = Prettify<
     CreateAccountInput & {
         status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
-
         /** The address of the account. */
         address: Address
+        description?: undefined
     }
 >
 
@@ -59,9 +59,9 @@ export type CreateAccountSuccess = Prettify<
 export type CreateAccountError = Prettify<
     CreateAccountInput & {
         status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
-
         /** Description of the problem. */
         description: string
+        address?: undefined
     }
 >
 

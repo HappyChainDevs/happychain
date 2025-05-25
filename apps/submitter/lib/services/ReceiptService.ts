@@ -6,7 +6,7 @@ import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitFor
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { computeHash, dbService, simulationCache } from "#lib/services"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
-import { headerCouldContainBoop } from "#lib/utils/bloom.ts"
+import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"

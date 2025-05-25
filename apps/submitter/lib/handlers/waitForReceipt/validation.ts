@@ -1,60 +1,67 @@
+import type { AssertCompatible } from "@happy.tech/common"
+import { arktypeValidator } from "@hono/arktype-validator"
+import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { resolver, validator as zv } from "hono-openapi/zod"
-import { z } from "zod"
-import { env } from "#lib/env"
-import { simulateOutputSchema } from "#lib/handlers/simulate/validation"
-import { WaitForReceipt } from "#lib/handlers/waitForReceipt/types"
-import { SubmitterError } from "#lib/types"
-import { isProduction } from "#lib/utils/isProduction"
-import { boopReceiptSchema } from "#lib/utils/validation/boopReceipt"
-import { isHexString } from "#lib/utils/validation/isHexString"
+import { Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
+import { SBoopReceipt } from "#lib/utils/validation/boop"
+import { WaitForReceipt } from "./types"
+import type * as types from "./types"
 
-export const paramSchema = z.object({
-    boopHash: z
-        .string()
-        .refine(isHexString)
-        .openapi({ example: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc" }),
+const waitForReceiptQuery = type({
+    timeout: type("number.integer | string.integer.parse") //
+        .pipe(type("0 <= number <= 30000"))
+        .configure({ example: 500 })
+        .optional(),
 })
 
-const querySchema = z.object({
-    timeout: z.coerce.number().min(0).max(30_000).default(env.RECEIPT_TIMEOUT).openapi({ example: 500 }),
+const waitForReceiptParam = type({
+    boopHash: Hash,
 })
 
-const waitForReceiptSuccessSchema = z.object({
-    status: z.literal(WaitForReceipt.Success).openapi({ example: WaitForReceipt.Success }),
-    receipt: boopReceiptSchema,
+// TODO the type has an entrypoint, but we never pass one
+const waitForReceiptInput = type(waitForReceiptQuery, "&", waitForReceiptParam)
+
+const waitForReceiptSuccess = type({
+    status: type.unit(WaitForReceipt.Success),
+    receipt: SBoopReceipt,
+    revertData: "undefined?",
+    description: "undefined?",
 })
 
-const waitForReceiptErrorSchema = z.object({
-    status: z.nativeEnum(SubmitterError).openapi({ example: SubmitterError.ReceiptTimeout }),
-    simulation: simulateOutputSchema.optional(),
-    description: z.string().optional(),
+const waitForReceiptError = type({
+    status: type
+        .valueOf(WaitForReceipt)
+        .exclude(type.unit(WaitForReceipt.Success))
+        .configure({ example: WaitForReceipt.UnknownBoop }),
+    revertData: Bytes.optional(),
+    description: "string",
+    receipt: "undefined?",
 })
-
-const waitForReceiptUnknownSchema = z.object({
-    status: z.literal(WaitForReceipt.UnknownBoop).openapi({ example: WaitForReceipt.UnknownBoop }),
-})
-
-export const outputSchema = z.discriminatedUnion("status", [
-    waitForReceiptSuccessSchema,
-    waitForReceiptErrorSchema,
-    waitForReceiptUnknownSchema,
-])
 
 export const waitForReceiptDescription = describeRoute({
-    validateResponse: !isProduction,
-    description: "Retrieve state by BoopHash, waiting if necessary",
+    description: "Retrieve the receipt for the supplied boop hash, waiting if necessary",
     responses: {
         200: {
-            description: "Successful State Retrieval",
-            content: {
-                "application/json": {
-                    schema: resolver(outputSchema),
-                },
-            },
+            description: "Successfully retrieed the receipt",
+            content: openApiContent(waitForReceiptSuccess),
+        },
+        other: {
+            description: "Failed to retrieve the receipt",
+            content: openApiContent(waitForReceiptError),
         },
     },
 })
 
-export const waitForReceiptParamValidation = zv("param", paramSchema.strict())
-export const waitForReceiptQueryValidation = zv("query", querySchema.strict())
+export const waitForReceiptQueryValidation = arktypeValidator("query", waitForReceiptQuery)
+export const waitForReceiptParamValidation = arktypeValidator("param", waitForReceiptParam)
+export const waitForReceiptOutputValidation = type(waitForReceiptSuccess, "|", waitForReceiptError)
+
+type WaitForReceiptInput = typeof waitForReceiptInput.infer
+type WaitForReceiptSuccess = typeof waitForReceiptSuccess.infer
+type WaitForReceiptError = typeof waitForReceiptError.infer
+type WaitForReceiptOutput = typeof waitForReceiptOutputValidation.infer
+
+type _a1 = AssertCompatible<WaitForReceiptInput, types.WaitForReceiptInput>
+type _a2 = AssertCompatible<WaitForReceiptSuccess, types.WaitForReceiptSuccess>
+type _a3 = AssertCompatible<WaitForReceiptError, types.WaitForReceiptError>
+type _a4 = AssertCompatible<WaitForReceiptOutput, types.WaitForReceiptOutput>

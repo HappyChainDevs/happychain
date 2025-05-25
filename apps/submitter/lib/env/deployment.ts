@@ -8,7 +8,7 @@ import {
     deployment as deploymentHappyChainSepolia,
 } from "@happy.tech/contracts/boop/sepolia"
 import { anvil, happychainTestnet } from "viem/chains"
-import type { Environment } from "#lib/env/index"
+import type { Environment } from "#lib/env"
 
 export function getDeployment(env: Environment) {
     function getBaseDeployment() {

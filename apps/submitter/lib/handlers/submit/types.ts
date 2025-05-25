@@ -43,6 +43,9 @@ export type SubmitSuccess = {
 
     /** EntryPoint to which the boop was submitted onchain. */
     entryPoint: Address
+
+    revertData?: undefined
+    description?: undefined
 }
 
 // =====================================================================================================================
@@ -60,6 +63,9 @@ export type SubmitError = {
 
     /** Description of the problem. */
     description: string
+
+    boopHash?: undefined
+    entryPoint?: undefined
 }
 
 // =====================================================================================================================

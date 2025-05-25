@@ -40,7 +40,7 @@ export type SimulateOutput = SimulateSuccess | SimulateError
 // OUTPUT (SUCCESS)
 
 /** Successful `simulate` call. */
-export type SimulateSuccess = EntryPointOutput & {
+export type SimulateSuccess = Omit<EntryPointOutput, "revertData"> & {
     status: typeof Onchain.Success
 
     /** Estimated max fee per gas (in wei) for the Boop. */
@@ -51,6 +51,9 @@ export type SimulateSuccess = EntryPointOutput & {
 
     /** If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the current gas price. */
     feeTooLowDuringSimulation: boolean
+
+    revertData?: undefined
+    description?: undefined
 }
 
 // =====================================================================================================================
