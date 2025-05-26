@@ -2,6 +2,7 @@ import { type Address, type Hash, type Hex, delayed, getOrSet, promiseWithResolv
 import type { Log, TransactionReceipt, WatchBlocksReturnType } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
+import type { PendingBoopInfo as PendingBoop } from "#lib/handlers/getPending/types"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { computeHash, dbService, simulationCache } from "#lib/services"
@@ -10,7 +11,6 @@ import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
-import type { PendingBoopInfo as PendingBoop } from "#lib/handlers/getPending/types"
 
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
@@ -109,7 +109,7 @@ export class ReceiptService {
                 }
             }
         }
-        
+
         return pendingForAccount
     }
 
