@@ -100,11 +100,6 @@ setup: install-frozen enable-hooks ## To be run when first setting up the reposi
 	@cd contracts && make setup
 .PHONY: setup
 
-# Internal, to avoid cloning / rebuilding alto.
-setup.ts:
-	$(call forall_make , $(TS_PKGS) , setup)
-.PHONY: setup.ts
-
 clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
@@ -117,12 +112,6 @@ reset-dev: node_modules ## Resets to dev (no-build) mode
 
 nuke: clean ## Removes build artifacts and dependencies 
 	cd contracts && make nuke
-	cd packages/bundler && make nuke
-	$(MAKE) remove-modules
-.PHONY: nuke
-
-# Only cleans & removes node_modules (doesn't touch the bundler or contracts)
-nuke.ts: clean
 	$(MAKE) remove-modules
 .PHONY: nuke
 
@@ -149,12 +138,12 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 # ==================================================================================================
 ##@ Demos & Apps
 
-submitter.dev: setup.ts shared.dev ## Runs the submitter app at http://localhost:3001
+submitter.dev: setup shared.dev ## Runs the submitter app at http://localhost:3001
 	cd apps/submitter && make migrate;
 	cd apps/submitter && make dev;
 .PHONY: submitter.dev
 
-submitter-local.dev: setup.ts shared.dev setup-local-chain select-submitter-local ## Runs the submitter app on Anvil at http://localhost:3001
+submitter-local.dev: setup shared.dev setup-local-chain select-submitter-local ## Runs the submitter app on Anvil at http://localhost:3001
 	cd apps/submitter && make migrate-fresh;
 	cd apps/submitter && make dev;
 .PHONY: submitter-local.dev
@@ -173,29 +162,29 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
 
-demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application at http://localhost:6001
+demo-js.dev: setup shared.dev sdk.dev ## Serves the VanillaJS demo application at http://localhost:6001
 	$(call with_optional_iframe, "demo-js", "demos/js", "dev")
 .PHONY: demo-js.dev
 
-demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application at http://localhost:6002
+demo-react.dev: setup shared.dev sdk.dev ## Serves the React demo application at http://localhost:6002
 	$(call with_optional_iframe, "demo-react", "demos/react", "dev")
 .PHONY: demo-react.dev
 
-demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application at http://localhost:6003
+demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application at http://localhost:6003
 	$(call with_optional_iframe, "demo-vue", "demos/vue", "dev")
 .PHONY: demo-vue.dev
 
-demo-js.prod: setup.ts  ## Builds & runs the prod version of the JS demo at http://localhost:6001
+demo-js.prod: setup  ## Builds & runs the prod version of the JS demo at http://localhost:6001
 	make demo-js.build;
 	$(call with_optional_iframe, "demo-js", "demos/js", "preview")
 .PHONY: demo-js.prod
 
-demo-react.prod: setup.ts ## Builds & runs the prod version of the React demo at http://localhost:6002
+demo-react.prod: setup ## Builds & runs the prod version of the React demo at http://localhost:6002
 	make demo-react.build;
 	$(call with_optional_iframe, "demo-react", "demos/react", "preview")
 .PHONY: demo-react.prod
 
-demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue demo at http://localhost:6003
+demo-vue.prod: setup sdk.build  ## Builds & runs the prod version of the Vue demo at http://localhost:6003
 	make demo-vue.build;
 	$(call with_optional_iframe, "demo-vue", "demos/vue", "preview")
 .PHONY: demo-vue.prod
@@ -223,7 +212,7 @@ sdk.dev:
 .PHONY: sdk-dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
-docs.dev: setup.ts shared.dev sdk.dev
+docs.dev: setup shared.dev sdk.dev
 	cd apps/docs && make dev
 .PHONY: docs.dev
 
@@ -327,18 +316,18 @@ account.build:
 	make iframe.build
 .PHONY: account.build
 
-demo-js.build: setup.ts shared.build
+demo-js.build: setup shared.build
 	cd packages/core && make build
 	cd demos/js && make build
 .PHONY: demo-js.build
 
-demo-react.build: setup.ts shared.build
+demo-react.build: setup shared.build
 	cd packages/core && make build
 	cd packages/react && make build
 	cd demos/react && make build
 .PHONY: demo-react.build
 
-demo-vue.build: setup.ts shared.build
+demo-vue.build: setup shared.build
 	cd packages/core && make build
 	cd demos/vue && make build
 .PHONY: demo-vue.build
@@ -359,20 +348,20 @@ contracts.build:
 	cd contracts && make build
 .PHONY: contracts.build
 
-randomness.build: setup.ts shared.build
+randomness.build: setup shared.build
 	cd packages/txm && make build
 	cd apps/randomness && make build
 .PHONY: randomness.build
 
-randomness-monitor.build: setup.ts shared.build
+randomness-monitor.build: setup shared.build
 	cd apps/randomness-monitor && make build
 .PHONY: randomness-monitor.build
 
-txm.build: setup.ts shared.build
+txm.build: setup shared.build
 	cd packages/txm && make build
 .PHONY: txm.build
 
-faucet.build: setup.ts shared.build
+faucet.build: setup shared.build
 	cd packages/txm && make build
 	cd apps/faucet && make build
 .PHONY: faucet.build
@@ -385,7 +374,7 @@ docs.build: ## Build the docs
 .PHONY: docs.build
 
 # Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup.ts shared.dev sdk.dev docs.build 
+docs.contained: setup shared.dev sdk.dev docs.build 
 .PHONY: docs.contained
 
 docs.preview: ## Serve already-built docs

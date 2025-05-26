@@ -14,11 +14,9 @@ Discord, ...) + seamless 2FA, or via a traditional wallet extension (Metamask, R
 1. Install pre-requisite tooling:
     - Make
     - [Foundry](https://github.com/foundry-rs/foundry)
-    - [Bun](https://bun.sh/)
-    - Node.js 23.6+
+    - [Bun 1.2.4](https://bun.sh/)
+    - [Node.js 23.9+](https://nodejs.org/en)
         - We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
-    - [pnpm](https://pnpm.io/)
-        - This is only needed to build the bundler.
 
 2. **Run `make setup`**
 

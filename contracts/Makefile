@@ -20,9 +20,6 @@ export CONFIG ?= LOCAL
 # Valid values: "BEACON" or "UUPS". Defaults to BEACON.
 export PROXY_TYPE ?= BEACON
 
-# Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
-export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
-
 # Port at which Anvil will be running.
 export ANVIL_PORT ?= 8545
 
@@ -182,53 +179,6 @@ gas-logging-off:
 paymaster-flamechart:
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
-
-####################################################################################################
-# Demos
-
-# All-in-one run of the AA demo script, including Anvil & contract deployments.
-aa-demo:
-	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-	@make anvil > /dev/null 2>&1 &
-	@sleep 5
-	@make deploy-aa CONFIG=LOCAL
-	@make deploy-mocks CONFIG=LOCAL
-	@cd ../bundler && make build > /dev/null
-	@cd ../bundler && make run > /dev/null 2>&1 &
-	@sleep 5
-	@clear
-	@make aa-demo-only
-	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-.PHONY: aa-demo-auto
-
-# Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
-aa-demo-only:
-	@bun run ./scripts/aa_demo.ts;
-.PHONY: aa-demo
-
-# All-in-one generation of the gas breakdown for bundler transaction, including Anvil & contract deployments.
-bundler-gas:
-	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-	@make anvil > /dev/null 2>&1 &
-	@sleep 5
-	@make deploy-aa CONFIG=LOCAL
-	@make deploy-mocks CONFIG=LOCAL
-	@cd ../bundler && make build > /dev/null
-	@cd ../bundler && make run > /dev/null 2>&1 &
-	@sleep 5
-	@make bundler-gas-only
-	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-.PHONY: gas-bundler-auto
-
-# Generates a gas report (breakdown) for bundler transactions (requires Anvil & contract deployments).
-bundler-gas-only:
-	@echo "Generating the bundler gas report — this takes a while..."
-	@bun run ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
-.PHONY: gas-bundler
 
 ####################################################################################################
 ##@ Code Quality
