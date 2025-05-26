@@ -10,11 +10,13 @@ import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
+import type { PendingBoopInfo as PendingBoop } from "#lib/handlers/getPending/types"
 
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
 type PendingBoopInfo = {
+    account: Address
     count: number
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
 }
@@ -59,6 +61,7 @@ export class ReceiptService {
 
         // 2. get or create pending boop info
         const sub = getOrSet(this.#pendingBoops, boopHash, () => ({
+            account: boop.account,
             pwr: promiseWithResolvers<WaitForReceiptOutput>(),
             count: 0,
         }))
@@ -83,6 +86,31 @@ export class ReceiptService {
         }
 
         return output
+    }
+
+    getPendingBoops(account: Address): PendingBoop[] {
+        const pendingForAccount: PendingBoop[] = []
+        const lowerCaseAccountToFilter = account.toLowerCase()
+        const seenBoopHashes = new Set<Hash>() // To ensure uniqueness if multiple EVM txs map to the same Boop
+
+        // iterate over #pendingEvmTxs because it holds the Boop objects
+        for (const pendingEvmTx of this.#pendingEvmTxs.values()) {
+            // filter by the account on the Boop object itself
+            if (pendingEvmTx.boop.account.toLowerCase() === lowerCaseAccountToFilter) {
+                const boopHash = computeHash(pendingEvmTx.boop)
+                if (!seenBoopHashes.has(boopHash)) {
+                    pendingForAccount.push({
+                        boopHash: boopHash,
+                        nonceTrack: pendingEvmTx.boop.nonceTrack,
+                        nonceValue: pendingEvmTx.boop.nonceValue,
+                        submitted: true, // true because it's in ReceiptService, awaiting receipt
+                    })
+                    seenBoopHashes.add(boopHash)
+                }
+            }
+        }
+        
+        return pendingForAccount
     }
 
     async #startBlockWatcher(): Promise<void> {
