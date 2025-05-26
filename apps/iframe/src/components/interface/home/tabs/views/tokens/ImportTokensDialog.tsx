@@ -3,7 +3,7 @@ import { PlusIcon, XIcon } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
-import { type Address, isAddress } from "@happy.tech/common"
+import { type Address, isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { FormField } from "#src/components/primitives/form-field/FormField.tsx"
@@ -56,14 +56,9 @@ export const ImportTokensDialog = () => {
         !isFetching && isValidAddress && symbol === undefined && customTokenSymbol === ""
     const decimalsInputInvalidCondition = !isFetching && isValidAddress && decimals === undefined
 
-    // Determines whether the token symbol input field should be non-interactive.
-    // The field becomes non-interactive if:
-    // - The token symbol is undefined (contract read failed or not yet fetched)
-    // - The entered address is valid (implying a contract read is in progress or completed)
-    // - The symbol input is invalid (e.g., user hasn't provided a fallback symbol)
-    // - The token import process is currently pending
-    const isSymbolInputNonInteractive =
-        symbol === undefined || isValidAddress || symbolInputInvalidCondition || status === "pending"
+    // Fields should be readonly (uneditable) iff there's no data fetched from the contract
+    // indicating that the entered contract address is not a valid token contract
+    const symbolInputReadOnly = symbol === undefined
 
     // Button should be disabled if:
     // 1. Address is invalid OR
@@ -102,6 +97,8 @@ export const ImportTokensDialog = () => {
             const address = formData.get("address") as Address
             const symbol = formData.get("symbol") as string
             const decimals = formData.get("decimals") as string
+
+            console.log(address, symbol, decimals)
 
             if (address && symbol && decimals) {
                 try {
@@ -187,8 +184,13 @@ export const ImportTokensDialog = () => {
                         <FormField.Root
                             required
                             invalid={symbolInputInvalidCondition}
-                            readOnly={isSymbolInputNonInteractive}
-                            disabled={isSymbolInputNonInteractive}
+                            readOnly={
+                                symbolInputReadOnly ||
+                                isValidAddress ||
+                                symbolInputInvalidCondition ||
+                                status === "pending"
+                            }
+                            disabled={!isValidAddress || symbolInputInvalidCondition}
                         >
                             <FormField.Label>Token symbol</FormField.Label>
                             <FormField.Input
@@ -208,7 +210,7 @@ export const ImportTokensDialog = () => {
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
-                        <FormField.Root required readOnly disabled={!isValidAddress}>
+                        <FormField.Root required readOnly disabled={!isValidAddress || decimalsInputInvalidCondition}>
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
                                 Token decimals
                             </FormField.Label>
