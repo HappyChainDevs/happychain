@@ -43,4 +43,10 @@ export const limitsSchema = z.object({
      * simulation cache, in milliseconds. Defaults to 30 seconds.
      */
     SIMULATION_CACHE_TTL: z.coerce.number().positive().default(30_000),
+
+    /**
+     * The amount of time to wait before a submitted transaction is considered stuck
+     * and a replacement transaction is sent. Defaults to 3 seconds.
+     */
+    STUCK_TX_WAIT_TIME: z.coerce.number().positive().default(3_000),
 })

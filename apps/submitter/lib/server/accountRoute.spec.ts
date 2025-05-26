@@ -1,3 +1,6 @@
+// proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
+import "#lib/utils/test/proxy-server"
+
 import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { abis, deployment } from "#lib/env"
@@ -6,14 +9,11 @@ import { publicClient } from "#lib/utils/clients"
 import { createSmartAccount } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
-
 describe("routes: api/accounts", () => {
     describe("200", () => {
         it("should create account", async () => {
-            console.log("entering should create account")
             const owner = testAccount.address
             const accountAddress = await createSmartAccount(owner)
-            console.log("finisehed")
             // Ensure its a valid address
             expect(accountAddress).toStartWith("0x")
             expect(accountAddress.length).toBe(42)

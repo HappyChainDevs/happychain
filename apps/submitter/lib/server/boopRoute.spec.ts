@@ -1,10 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { computeHash } from "../services"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -42,14 +41,14 @@ describe("routes: api/submitter", () => {
         })
         it("should fetch state by hash", async () => {
             await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
-            const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
+            const boopHash = computeHash(unsignedTx)
             const result = await client.api.v1.boop.state[":boopHash"].$get({ param: { boopHash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {
             // We can't send the wait at the same time as the submitter rejects if the boop is unknown.
             await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
-            const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
+            const boopHash = computeHash(unsignedTx)
             const result = await client.api.v1.boop.receipt[":boopHash"].$get({
                 param: { boopHash },
                 query: { timeout: "2000" },

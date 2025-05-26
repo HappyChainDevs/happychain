@@ -3,7 +3,7 @@ import { encodePacked, keccak256 } from "viem/utils"
 import type { Boop } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 
-const zeroGasData = {
+export const zeroGasData = {
     maxFeePerGas: 0n,
     submitterFee: 0n,
     gasLimit: 0,

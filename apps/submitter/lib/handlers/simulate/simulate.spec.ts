@@ -50,6 +50,7 @@ describe("submitter_simulate", () => {
         expect(response.gas).toBeGreaterThan(10000)
         expect(response.validateGas).toBeGreaterThan(10000)
         expect(response.executeGas).toBeGreaterThan(10000n)
+        return response
     }
 
     describe("success", () => {
@@ -61,7 +62,10 @@ describe("submitter_simulate", () => {
             const signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutput>
-            await checks(results)
+            const response = await checks(results)
+            expect(response.gas).toBeGreaterThan(unsignedTx.gasLimit)
+            expect(response.validateGas).toBeGreaterThan(unsignedTx.validateGasLimit)
+            expect(response.executeGas).toBeGreaterThan(unsignedTx.executeGasLimit)
         })
 
         it("should simulate submit with 4_000_000n gas", async () => {
@@ -71,12 +75,17 @@ describe("submitter_simulate", () => {
             const signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutput>
-            await checks(results)
+            const response = await checks(results)
+            expect(response.gas).toBe(unsignedTx.gasLimit)
+            expect(response.validateGas).toBe(unsignedTx.validateGasLimit)
+            expect(response.executeGas).toBe(unsignedTx.executeGasLimit)
         })
 
         it("should succeed with future nonce, but indicate it", async () => {
-            unsignedTx.nonceValue += 1_000_000n
-            const signedTx = await sign(unsignedTx)
+            const signedTx = await sign({
+                ...unsignedTx,
+                nonceValue: 1_000_000n + unsignedTx.nonceValue,
+            })
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateOutput>
             await checks(results, { future: true })
@@ -102,9 +111,13 @@ describe("submitter_simulate", () => {
         })
 
         it("should simulate revert on unfunded self-sponsored", async () => {
-            unsignedTx.payer = account
-            unsignedTx.executeGasLimit = 0
-            unsignedTx.gasLimit = 0
+            unsignedTx = {
+                ...unsignedTx,
+                payer: account, // self-sponsored
+                executeGasLimit: 0,
+                gasLimit: 0,
+            }
+
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>
@@ -115,7 +128,7 @@ describe("submitter_simulate", () => {
 
         it("should revert on invalid call", async () => {
             // we're targeting a mint transaction at our own account, which doesn't support that ABI
-            unsignedTx.dest = account
+            unsignedTx = { ...unsignedTx, dest: account }
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateError>

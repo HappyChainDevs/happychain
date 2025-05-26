@@ -1,13 +1,18 @@
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+// proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
+import "#lib/utils/test/proxy-server"
+
+import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
-import { encodeFunctionData } from "viem"
+import { createTestClient, encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
+import { receiptService } from "#lib/services"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
+import { config } from "#lib/utils/clients"
 import {
     assertMintLog,
     createMintBoop,
@@ -19,6 +24,7 @@ import {
 } from "#lib/utils/test"
 import { client, createSmartAccount } from "#lib/utils/test"
 
+const testClient = createTestClient({ ...config, mode: "anvil" })
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = async (tx: Boop) => await signBoop(testAccount, tx)
 
@@ -30,6 +36,7 @@ describe("submitter_execute", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
+        await testClient.setAutomine(true)
         account = await createSmartAccount(testAccount.address)
     })
 
@@ -40,6 +47,31 @@ describe("submitter_execute", () => {
         signedTx = await sign(unsignedTx)
     })
 
+    describe("repricing", () => {
+        it("reprices", async () => {
+            // This test only works with automine off!
+            env.AUTOMINE_TESTS && (await testClient.setAutomine(false))
+            try {
+                const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
+
+                expect(spy).toHaveBeenCalledTimes(0)
+
+                // will wait a 1/4 second past the minimum wait time to ensure the tx is stuck & replaced
+                // before mining the next block
+                setTimeout(() => testClient.mine({ blocks: 1 }), env.STUCK_TX_WAIT_TIME + 250)
+
+                const result = await client.api.v1.boop.execute
+                    .$post({ json: { boop: serializeBigInt(signedTx) } })
+                    .then((a) => a.json())
+
+                expect(spy).toHaveBeenCalledTimes(1)
+                expect(result.status).toBe(Onchain.Success)
+            } finally {
+                await testClient.setAutomine(env.AUTOMINE_TESTS)
+            }
+        })
+    })
+
     describe("self-paying", () => {
         beforeAll(async () => {
             await fundAccount(account)
@@ -47,12 +79,16 @@ describe("submitter_execute", () => {
 
         it("mints tokens - self-paying", async () => {
             const beforeBalance = await getMockTokenBalance(account)
-            // be your own payer! define your own gas!
-            unsignedTx.gasLimit = 4_000_000
-            unsignedTx.executeGasLimit = 1_000_000
-            unsignedTx.validateGasLimit = 1_000_000
-            unsignedTx.maxFeePerGas = 2_000_000_000n
-            unsignedTx.payer = account
+
+            unsignedTx = {
+                ...unsignedTx,
+                // be your own payer! define your own gas!
+                payer: account,
+                gasLimit: 4_000_000,
+                executeGasLimit: 1_000_000,
+                validateGasLimit: 1_000_000,
+                maxFeePerGas: 2_000_000_000n,
+            }
             const signedTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as unknown as ExecuteSuccess
@@ -64,9 +100,12 @@ describe("submitter_execute", () => {
         })
 
         it("fails if signing over 0 gas values", async () => {
-            unsignedTx.payer = account
-            unsignedTx.executeGasLimit = 0
-            unsignedTx.gasLimit = 0
+            unsignedTx = {
+                ...unsignedTx,
+                executeGasLimit: 0,
+                payer: account,
+                gasLimit: 0,
+            }
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateError>
@@ -175,11 +214,12 @@ describe("submitter_execute", () => {
 
         it("can't re-use a nonce", async () => {
             const nonceValue = await getNonce(account, nonceTrack)
-            const jsonTx = await sign(createMintBoop({ account, nonceValue, nonceTrack }))
+            const jsonTx1 = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 10n ** 18n }))
+            const jsonTx2 = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 2000n ** 18n }))
 
-            const result1 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result1 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx1) } })
             // again with same nonce, will fail
-            const result2 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result2 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx2) } })
             const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
             expect(response1.error).toBeUndefined()
             expect(response2.error).toBeUndefined()
@@ -190,7 +230,10 @@ describe("submitter_execute", () => {
         })
 
         it("should fail with out of range future nonce", async () => {
-            unsignedTx.nonceValue = 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000))
+            unsignedTx = {
+                ...unsignedTx,
+                nonceValue: 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000)),
+            }
             const jsonTx = await sign(unsignedTx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
@@ -200,10 +243,11 @@ describe("submitter_execute", () => {
 
         it("throws error when PaymentReverted with unsupported payer", async () => {
             const nonceValue = await getNonce(account, nonceTrack)
-            const tx = createMintBoop({ account, nonceValue, nonceTrack })
-
-            // invalid payer
-            tx.payer = mockDeployments.MockTokenA
+            const tx = {
+                ...createMintBoop({ account, nonceValue, nonceTrack }),
+                // invalid payer
+                payer: mockDeployments.MockTokenA,
+            }
 
             const jsonTx = await sign(tx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
@@ -215,15 +259,18 @@ describe("submitter_execute", () => {
 
         it("throws when invalid ABI is used to make call", async () => {
             const nonceValue = await getNonce(account, nonceTrack)
-            const tx = createMintBoop({ account, nonceValue, nonceTrack })
+            const baseTx = createMintBoop({ account, nonceValue, nonceTrack })
 
-            tx.callData = encodeFunctionData({
-                abi: [{ type: "function", name: "badFunc", inputs: [], outputs: [], stateMutability: "nonpayable" }],
-                functionName: "badFunc",
-                args: [],
+            const jsonTx = await sign({
+                ...baseTx,
+                callData: encodeFunctionData({
+                    abi: [
+                        { type: "function", name: "badFunc", inputs: [], outputs: [], stateMutability: "nonpayable" },
+                    ],
+                    functionName: "badFunc",
+                    args: [],
+                }),
             })
-
-            const jsonTx = await sign(tx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 

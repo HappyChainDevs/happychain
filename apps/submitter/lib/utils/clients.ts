@@ -1,4 +1,4 @@
-import { array, uniques } from "@happy.tech/common"
+import { uniques } from "@happy.tech/common"
 import {
     type PublicClient as BasePublicClient,
     type WalletClient as BaseWalletClient,
@@ -10,7 +10,7 @@ import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
 import { logger } from "#lib/utils/logger"
 
-function canonicalize(type: "http" | "ws", rpcs: string[]): string[] {
+function canonicalize(type: "http" | "ws", rpcs: readonly string[]): string[] {
     return uniques(
         rpcs.map((rpc) => {
             let result = rpc.trim().replace("127.0.0.1", "localhost")
@@ -24,21 +24,26 @@ function canonicalize(type: "http" | "ws", rpcs: string[]): string[] {
 
 function getChain(): Chain {
     const chain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
+
     if (chain) {
-        const http = canonicalize("http", array(env.RPC_HTTP_URL, ...chain.rpcUrls.default.http))
-        const webSocket = canonicalize("ws", array(env.RPC_WS_URL, ...chain.rpcUrls.default.webSocket))
+        // TODO: don't want fallback to default values
+        const http = canonicalize("http", env.RPC_HTTP_URLS?.length ? env.RPC_HTTP_URLS : chain.rpcUrls.default.http)
+        const webSocket = canonicalize(
+            "ws",
+            env.RPC_WS_URLS?.length ? env.RPC_WS_URLS : chain.rpcUrls.default.webSocket,
+        )
         return { ...chain, rpcUrls: { default: { http, webSocket } } }
     }
-    if (!env.RPC_HTTP_URL) {
-        throw new Error("Chain is not supported by default and RPC_HTTP_URL was not defined.")
+    if (!env.RPC_HTTP_URLS) {
+        throw new Error("Chain is not supported by default and RPC_HTTP_URLS was not defined.")
     }
     return {
         id: env.CHAIN_ID,
         name: "Blockchain",
         rpcUrls: {
             default: {
-                http: [env.RPC_HTTP_URL],
-                webSocket: array(env.RPC_WS_URL),
+                http: env.RPC_HTTP_URLS,
+                webSocket: env.RPC_WS_URLS,
             },
         },
         nativeCurrency: {

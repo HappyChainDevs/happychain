@@ -559,7 +559,7 @@ select-chain:
 .PHONY: select-chain
 
 select-http-rpc:
-	$(call update_env,apps/submitter/.env,RPC_HTTP_URL,$(url))
+	$(call update_env,apps/submitter/.env,RPC_HTTP_URLS,$(url))
 	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
 	$(call update_env,apps/iframe/.env,HAPPY_RPC_OVERRIDE,$(url))
@@ -567,8 +567,14 @@ select-http-rpc:
 .PHONY: select-http-rpc
 
 select-ws-rpc:
-	$(call update_env,apps/submitter/.env,RPC_WS_URL,$(url))
+	$(call update_env,apps/submitter/.env,RPC_WS_URLS,$(url))
 .PHONY: select-ws-rpc
+
+select-staging-contracts:
+	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,$(use))
+	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,$(use))
+	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,$(use))
+.PHONY: select-staging-contracts
 
 # Sets the allowed hosts for Vite.
 select-allowed-hosts:
@@ -580,17 +586,17 @@ select-allowed-hosts:
 
 select-submitter-local:
 	make select-submitter url=http://localhost:3001
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
+	make select-staging-contracts use=false
 .PHONY: select-submitter-local
 
 select-submitter-staging:
 	make select-submitter url=https://submitter-staging.happy.tech
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
+	make select-staging-contracts use=true
 .PHONY: select-submitter-staging
 
 select-submitter-prod:
 	make select-submitter url=https://submitter.happy.tech
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
+	make select-staging-contracts use=false
 .PHONY: select-submitter-prod
 
 select-iframe-local:
@@ -609,7 +615,7 @@ select-chain-local:
 	make select-chain chain=31337
 	make select-http-rpc url=http://localhost:8545
 	make select-ws-rpc url=ws://localhost:8545
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
+	make select-staging-contracts use=false
 .PHONY: select-chain-local
 
 define select-chain-testnet
@@ -620,20 +626,16 @@ endef
 
 select-chain-staging:
 	$(select-chain-testnet)
-	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,true)
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,true)
-	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,true)
+	make select-staging-contracts use=true
 .PHONY: select-chain-staging
 
 select-chain-prod:
 	$(select-chain-testnet)
-	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,false)
-	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,false)
-	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,false)
+	make select-staging-contracts use=false
 .PHONY: select-chain-prod
 
-select-all-local: select-chain-local select-submitter-local select-iframe-local
-.PHONY: select-all_local
+select-all-local: setup-chain-local select-submitter-local select-iframe-local
+.PHONY: select-all-local
 
 select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging
 .PHONY: select-all-staging

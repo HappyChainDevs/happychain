@@ -8,6 +8,9 @@ const defaultLogLevel = logLevel(env.LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
 
 export const logger = Logger.create("Submitter")
+export const blockLogger = Logger.create("NewBlockService")
+export const receiptLogger = Logger.create("BoopReceiptService")
+export const proxyLogger = Logger.create("proxyServer")
 
 export const logJSONResponseMiddleware = createMiddleware(async (c, next) => {
     await next()

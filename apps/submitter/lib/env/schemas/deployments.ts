@@ -27,16 +27,38 @@ export const deploymentsSchema = z.object({
      *
      * If you use this for a supported chain, you might want to set {@link USE_WEBSOCKET} to false.
      */
-    RPC_HTTP_URL: z.string().url().optional(),
+    RPC_HTTP_URLS: z
+        .string()
+        .optional()
+        .transform((url) => {
+            if (!url) return undefined
+            return z.array(z.string().url()).parse(
+                url
+                    .split(",")
+                    .map((a: string) => a.trim())
+                    .filter(Boolean),
+            ) as readonly string[]
+        }),
 
     /**
-     * The (WebScoket) RPC url to use for the chain. Defaults to a well-known RPC if {@link
-     * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
+     * The (WebSocket) RPC url to use for the chain. Defaults to a well-known RPC if
+     * {@link CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
      */
-    RPC_WS_URL: z.string().url().optional(),
+    RPC_WS_URLS: z
+        .string()
+        .optional()
+        .transform((url) => {
+            if (!url) return undefined
+            return z.array(z.string().url()).parse(
+                url
+                    .split(",")
+                    .map((a: string) => a.trim())
+                    .filter(Boolean),
+            ) as readonly string[]
+        }),
 
     /**
-     * Set this to false to not use WebSocket. This is mostly useful when you use {@link RPC_HTTP_URL} in
+     * Set this to false to not use WebSocket. This is mostly useful when you use {@link RPC_HTTP_URLS} in
      * conjunction with a supported chain and don't want the default WebSocket RPC to be used in priority.
      */
     USE_WEBSOCKET: z.coerce.boolean().optional().default(true),

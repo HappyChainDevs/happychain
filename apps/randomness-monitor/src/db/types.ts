@@ -9,13 +9,7 @@ export interface CheckRow {
 }
 
 export function checkRowToEntity(row: CheckRow): Check {
-    return new Check(
-        BigInt(row.blockNumber),
-        BigInt(row.blockTimestamp),
-        row.result,
-        row.errorDescription,
-        row.value,
-    )
+    return new Check(BigInt(row.blockNumber), BigInt(row.blockTimestamp), row.result, row.errorDescription, row.value)
 }
 
 export function checkEntityToRow(entity: Check): CheckRow {

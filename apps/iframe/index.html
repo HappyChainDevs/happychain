@@ -8,17 +8,12 @@
   <title>Happy Account</title>
   <script>
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    if (mql.matches) {
-      // set daisyUI darkmode if user prefers dark-theme
-      document.querySelector('html').setAttribute('data-theme', "night")
-    }
+    // set daisyUI darkmode if user prefers dark-theme
+    if (mql.matches) document.querySelector('html').setAttribute('data-theme', "night")
 
     mql.onchange = (e) => {
-      if (e.matches) {
-        document.querySelector('html').setAttribute('data-theme', "night")
-      } else {
-        document.querySelector('html').removeAttribute('data-theme')
-      }
+      if (e.matches) document.querySelector('html').setAttribute('data-theme', "night")
+      else document.querySelector('html').removeAttribute('data-theme')
     };
   </script>
 </head>
