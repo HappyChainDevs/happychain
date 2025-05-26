@@ -98,8 +98,6 @@ export const ImportTokensDialog = () => {
             const symbol = formData.get("symbol") as string
             const decimals = formData.get("decimals") as string
 
-            console.log(address, symbol, decimals)
-
             if (address && symbol && decimals) {
                 try {
                     await watchAssetAsync({
