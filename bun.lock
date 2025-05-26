@@ -170,6 +170,7 @@
       },
       "dependencies": {
         "@hono/arktype-validator": "^2.0.1",
+        "@hono/node-ws": "^1.1.4",
         "@hono/zod-validator": "^0.4.3",
         "@scalar/hono-api-reference": "^0.5.175",
         "arktype": "^2.1.20",
@@ -916,6 +917,8 @@
     "@hono/arktype-validator": ["@hono/arktype-validator@2.0.1", "", { "peerDependencies": { "arktype": "^2.0.0-dev.14", "hono": "*" } }, "sha512-Z4PQFtzgbGneBap+TTViRIBAoUWbwEwg8PaKNqALAP6z9N2ksJI81PfcsSQNUzwtrn8LipkMvBb8/D9Pei2GJw=="],
 
     "@hono/node-server": ["@hono/node-server@1.14.3", "", { "peerDependencies": { "hono": "^4" } }, "sha512-KuDMwwghtFYSmIpr4WrKs1VpelTrptvJ+6x6mbUcZnFcc213cumTF5BdqfHyW93B19TNI4Vaev14vOI2a0Ie3w=="],
+
+    "@hono/node-ws": ["@hono/node-ws@1.1.4", "", { "dependencies": { "ws": "^8.17.0" }, "peerDependencies": { "@hono/node-server": "^1.11.1", "hono": "^4.6.0" } }, "sha512-eS/L5+xIgz5/FJOv1fiSIf5rCBO4rnVqEEqNKGN7CiA52tsdTSETDOQD6BuTDr+r5sbhdp0OuJXvMpEWOsAtXA=="],
 
     "@hono/zod-validator": ["@hono/zod-validator@0.4.3", "", { "peerDependencies": { "hono": ">=3.9.0", "zod": "^3.19.1" } }, "sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ=="],
 

@@ -1,6 +1,7 @@
-import type { Address } from "@happy.tech/common"
-import { createWalletClient } from "viem"
+import { type Address, promiseWithResolvers } from "@happy.tech/common"
+import { type TransactionReceipt, TransactionReceiptNotFoundError, createWalletClient } from "viem"
 import { abis, deployment } from "#lib/env"
+import { BlockService } from "#lib/services/BlockService.ts"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { config, publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
@@ -26,7 +27,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             return { status, salt, owner, address: predictedAddress }
         }
 
-        // TODO we could speed this up by hardcoding the gas and maintaining a gas pricing service
+        // TODO: we could speed this up by hardcoding the gas and maintaining a gas pricing service
         logger.trace("Sending account creation transaction", predictedAddress)
         const hash = await walletClient.writeContract({
             address: deployment.HappyAccountBeaconProxyFactory,
@@ -37,7 +38,8 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
         })
 
         logger.trace("Waiting for transaction inclusion", hash, predictedAddress)
-        const receipt = await publicClient.waitForTransactionReceipt({ hash, pollingInterval: 200 })
+
+        const receipt = await waitForTransactionReceipt(hash)
 
         if (receipt.status === "success") {
             const foundLog = receipt.logs.find((log) => decodeEvent(log)?.eventName === "Deployed")
@@ -62,4 +64,35 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
     } catch (error) {
         return { ...outputForGenericError(error), owner, salt }
     }
+}
+
+async function waitForTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
+    const { promise, resolve, reject } = promiseWithResolvers<TransactionReceipt>()
+
+    const timeout = setTimeout(() => reject(new Error("Account creation timed out")), 8_000)
+
+    const unwatch = BlockService.instance.onBlock(async (block) => {
+        const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
+        if (!receipt) return logger.trace("CreateAccount Transaction not yet mined", hash, block.number)
+        clearTimeout(timeout)
+        resolve(receipt)
+    })
+
+    try {
+        // we must fire once incase it's already been mined
+        const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
+        if (receipt) {
+            logger.trace("CreateAccount Transaction already mined", hash, receipt)
+            clearTimeout(timeout)
+            resolve(receipt)
+        }
+    } catch (err) {
+        // Failed to fetch receipt, which is fine, we will wait for it to be mined
+        if (!(err instanceof TransactionReceiptNotFoundError)) throw err
+    }
+
+    return await promise.finally(() => {
+        unwatch()
+        clearTimeout(timeout)
+    })
 }

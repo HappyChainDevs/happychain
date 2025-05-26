@@ -10,6 +10,8 @@ export function isHexString(str: string): str is Hex {
 export function validateOutput<T>(response: T, validator: (_: T) => ArkErrors | unknown): void {
     // Skip output validation in prod for performance & reliability.
     if (isProduction) return
-    const result = validator(response)
+    // we must use structuredClone here as arktype validators mutate the input object
+    // and our boops are (mostly) immutable. changes to most fields would effect the computed hash
+    const result = validator(structuredClone(response))
     if (result instanceof ArkErrors) result.throw()
 }

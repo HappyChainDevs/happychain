@@ -6,6 +6,9 @@ export const SubmitterError = {
     /** Some values provided as input are invalid (e.g. gas limits, timeout). */
     InvalidValues: "submitterInvalidValues",
 
+    /** A boop was submitted, but collides with a boop that is already currently being processed */
+    AlreadyProcessing: "submitterAlreadyProcessing",
+
     /** The submitter rejected the request because of its Boop buffering policies. */
     BufferExceeded: "submitterBufferExceeded",
 

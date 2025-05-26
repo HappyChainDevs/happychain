@@ -1,3 +1,5 @@
+import { blue, cyan, green, red, white, yellow } from "./colors"
+
 /**
  * Defines the allowed log levels.
  *
@@ -155,8 +157,30 @@ export class Logger {
     public log(level: LogLevel, tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
         const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
         if (this.shouldLog(level, tags)) {
-            const levelStr = LogLevel[level].toUpperCase()
-            console.log(`[${levelStr}]`, `${(new Date()).toISOString()}`, `[${tags.join(", ")}]`, ...args)
+            const levelStr = this.#formatLevel(level)
+            console.log(
+                `[${levelStr.padEnd(14, " ")}]`,
+                cyan(new Date().toISOString()),
+                `[${blue(`${tags.join(", ")}`)}]`,
+                ...args,
+            )
+        }
+    }
+
+    #formatLevel(level: LogLevel): string {
+        switch (level) {
+            case LogLevel.OFF:
+                return "OFF"
+            case LogLevel.ERROR:
+                return red("ERROR")
+            case LogLevel.WARN:
+                return yellow("WARN")
+            case LogLevel.INFO:
+                return green("INFO")
+            case LogLevel.TRACE:
+                return white("TRACE")
+            default:
+                return "UNKNOWN"
         }
     }
 

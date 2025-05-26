@@ -1,7 +1,7 @@
 import { hexToBytes, keccak256 } from "viem"
 import type { Block, Hex } from "viem"
 import { deployment } from "#lib/env"
-import { BOOP_STARTED_SELECTOR, BOOP_SUBMITTED_SELECTOR } from "../services/ReceiptService"
+import { BOOP_STARTED_SELECTOR, BOOP_SUBMITTED_SELECTOR } from "../services/BoopReceiptService"
 import { logger } from "./logger"
 
 const BLOOM_SIZE_BYTES = 256 // fixed in protocol
@@ -31,7 +31,6 @@ export function headerCouldContainBoop(block: Block): boolean {
     try {
         const bloom = block.logsBloom
         if (!bloom || bloom === ZERO_BLOOM) return false
-
         // all three conditions must be *possible* in the bloom
         return (
             isInBloom(bloom, ENTRY_POINT) &&

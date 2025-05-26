@@ -56,6 +56,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.ExtensionAlreadyRegistered:
         case Onchain.ExecuteReverted:
         case Onchain.CallReverted:
+        case Onchain.Cancel:
         case Onchain.GasPriceTooHigh:
         case Onchain.UnexpectedReverted:
         case Onchain.EntryPointOutOfGas:
@@ -63,6 +64,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case SubmitterError.NonceTooFarAhead:
         case SubmitterError.BoopReplaced:
         case SubmitterError.ExternalSubmit:
+        case SubmitterError.AlreadyProcessing:
             // signifying a correctly-formatted request, unable to process
             return [response, 422] // Unprocessable Content
         case SubmitterError.BufferExceeded:
@@ -73,7 +75,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
             // TODO set Retry-After HTTP header
             return [response, 503] // Service Unavailable
         case SubmitterError.ClientError:
-            throw "BUG: makeResponse" // only thrown client-side
+            throw new Error("BUG: makeResponse") // only thrown client-side
         default: {
             const _: never = output.status // exhaustiveness check
             return [response, 500]

@@ -33,7 +33,7 @@ export function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, sim
              *
              * TODO ... but in the current state we can't parse onchain execution revert, so if this is from
              *          onchain execution, it might hide any of the three previous xxxReverted statuses. In any case,
-             *          thiscan be penalized as the EntryPoint is never supposed to revert, so this should denote either
+             *          this can be penalized as the EntryPoint is never supposed to revert, so this should denote either
              *          an account or paymaster problem.
              */
         case Onchain.EntryPointOutOfGas:

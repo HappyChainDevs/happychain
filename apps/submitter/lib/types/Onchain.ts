@@ -6,6 +6,9 @@ export const Onchain = {
     /** The Boop succeeded: the intended call was made without errors. */
     Success: "onchainSuccess",
 
+    /** The Boop made it onchain but got stuck. It was replaced with a 0 value tx and cancelled */
+    Cancel: "onchainCancel",
+
     /**
      * The boop passes simulation but can't be submitted onchain because either validation or payment validation has
      * indicated that the status is unknown during validation. This typically means they need a signature, which could

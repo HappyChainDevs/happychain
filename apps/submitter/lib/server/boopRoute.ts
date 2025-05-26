@@ -24,6 +24,7 @@ import {
     waitForReceiptQueryValidation,
 } from "#lib/handlers/waitForReceipt"
 import { makeResponse } from "#lib/server/makeResponse"
+import { freezeBoopHashFields } from "#lib/utils/boop/freezeBoop.ts"
 import { validateOutput } from "#lib/utils/validation/helpers"
 
 export default new Hono()
@@ -32,8 +33,8 @@ export default new Hono()
         simulateDescription,
         simulateBodyValidation,
         async (c) => {
-            const input = c.req.valid("json")
-            const output = await simulate(input)
+            const { entryPoint, boop } = c.req.valid("json")
+            const output = await simulate({ entryPoint, boop: freezeBoopHashFields(boop) })
             validateOutput(output, simulateOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
@@ -44,8 +45,8 @@ export default new Hono()
         submitDescription,
         submitBodyValidation,
         async (c) => {
-            const input = c.req.valid("json")
-            const output = await submit(input)
+            const { entryPoint, boop } = c.req.valid("json")
+            const output = await submit({ entryPoint, boop: freezeBoopHashFields(boop) })
             validateOutput(output, submitOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
@@ -56,8 +57,8 @@ export default new Hono()
         executeDescription,
         executeBodyValidation,
         async (c) => {
-            const input = c.req.valid("json")
-            const output = await execute(input)
+            const { entryPoint, boop, timeout } = c.req.valid("json")
+            const output = await execute({ entryPoint, boop: freezeBoopHashFields(boop), timeout })
             validateOutput(output, executeOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
@@ -68,8 +69,8 @@ export default new Hono()
         getStateDescription,
         getStateParamValidation,
         async (c) => {
-            const input = c.req.valid("param")
-            const output = await getState(input)
+            const { boopHash } = c.req.valid("param")
+            const output = await getState({ boopHash })
             validateOutput(output, getStateOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
@@ -94,8 +95,8 @@ export default new Hono()
         getPendingDescription,
         getPendingParamValidation,
         async (c) => {
-            const input = c.req.valid("param")
-            const output = await getPending(input)
+            const { account } = c.req.valid("param")
+            const output = await getPending({ account })
             validateOutput(output, getPendingOutputValidation)
             const [response, code] = makeResponse(output)
             return c.json(response, code)
