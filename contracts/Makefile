@@ -336,9 +336,10 @@ kill-anvil: ## Kill an existing Anvil process running at $ANVIL_PORT
 ####################################################################################################
 ##@ Deployment
 
+strip_quotes = $(shell echo $(1) | sed -e 's/^["'\'']//; s/["'\'']$$//')
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
-VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
-VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_URL_$(CONFIG)),)
+VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(call strip_quotes,$(VERIFIER_FLAG_$(CONFIG))),)
+VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(call strip_quotes,$(VERIFIER_URL_$(CONFIG))),)
 CHECK_UPGRADE := true
 
 ifeq ($(DEPLOY),deploy)
