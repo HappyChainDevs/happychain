@@ -1,5 +1,5 @@
 import { Dialog } from "@ark-ui/react"
-import { Plus, X } from "@phosphor-icons/react"
+import { PlusIcon, XIcon } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
@@ -24,7 +24,7 @@ export const TriggerImportTokensDialog = () => {
                 setVisibility(!isVisible)
             }}
         >
-            <Plus size="0.875em" />
+            <PlusIcon size="0.875em" />
             <span className="text-sm">Import Tokens</span>
         </button>
     )
@@ -56,9 +56,14 @@ export const ImportTokensDialog = () => {
         !isFetching && isValidAddress && symbol === undefined && customTokenSymbol === ""
     const decimalsInputInvalidCondition = !isFetching && isValidAddress && decimals === undefined
 
-    // Fields should be readonly (uneditable) iff there's no data fetched from the contract
-    // indicating that the entered contract address is not a valid token contract
-    const symbolInputReadOnly = symbol === undefined
+    // Determines whether the token symbol input field should be non-interactive.
+    // The field becomes non-interactive if:
+    // - The token symbol is undefined (contract read failed or not yet fetched)
+    // - The entered address is valid (implying a contract read is in progress or completed)
+    // - The symbol input is invalid (e.g., user hasn't provided a fallback symbol)
+    // - The token import process is currently pending
+    const isSymbolInputNonInteractive =
+        symbol === undefined || isValidAddress || symbolInputInvalidCondition || status === "pending"
 
     // Button should be disabled if:
     // 1. Address is invalid OR
@@ -153,7 +158,7 @@ export const ImportTokensDialog = () => {
                         </div>
 
                         <Dialog.CloseTrigger>
-                            <X size={"1.25em"} />
+                            <XIcon size={"1.25em"} />
                         </Dialog.CloseTrigger>
                     </div>
                     <form className="w-full grid gap-4" onSubmit={submitWatchAssetData}>
@@ -182,12 +187,8 @@ export const ImportTokensDialog = () => {
                         <FormField.Root
                             required
                             invalid={symbolInputInvalidCondition}
-                            readOnly={
-                                symbolInputReadOnly ||
-                                isValidAddress ||
-                                symbolInputInvalidCondition ||
-                                status === "pending"
-                            }
+                            readOnly={isSymbolInputNonInteractive}
+                            disabled={isSymbolInputNonInteractive}
                         >
                             <FormField.Label>Token symbol</FormField.Label>
                             <FormField.Input
@@ -206,8 +207,10 @@ export const ImportTokensDialog = () => {
                          * - Empty if no valid address is entered
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
+                         * 
+                         * 
                          */}
-                        <FormField.Root required readOnly>
+                        <FormField.Root required readOnly disabled={!isValidAddress}>
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
                                 Token decimals
                             </FormField.Label>
