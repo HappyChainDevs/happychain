@@ -30,7 +30,6 @@ jobs:
           VITE_WEB3AUTH_CLIENT_ID="BAhlcPh6j9gJ3y1OclMfpEzvksJ-Vgq6YYIVYvn0SOkudbCyG4IXxRpuQer0WkDpr3MHITkOJtKfoBysLvfCDqc"
           VITE_WEB3AUTH_NETWORK="sapphire_devnet"
           VITE_WEB3AUTH_VERIFIER="firebase-1"
-          VITE_BUNDLER_RPC_URL="https://bundler.happy.tech"
           VITE_TURNSTILE_SITEKEY=0x4AAAAAABRnNdBbR6oFMviC
           VITE_FAUCET_ENDPOINT=https://faucet.testnet.happy.tech/faucet
           VITE_SUBMITTER_URL=https://submitter.happy.tech
