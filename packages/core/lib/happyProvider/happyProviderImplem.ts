@@ -105,7 +105,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
 
         this.hooks = registerListeners(config.msgBus)
 
-        this.hooks.onIframeInit((ready: boolean) => {
+        this.hooks.onWalletInit((ready: boolean) => {
             this.iframeReady = ready
 
             if ("ethereum" in window) {
@@ -173,7 +173,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
 
     public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         // wait until either authenticated or unauthenticated
-        await waitForCondition(() => this.iframeReady && this.authState !== AuthState.Initializing)
+        await waitForCondition(() => this.iframeReady)
 
         try {
             return await this.activeHandler.request(args)

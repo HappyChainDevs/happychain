@@ -21,7 +21,7 @@ export type AuthStateUpdateCallback = (state: AuthState) => void
 
 export type DisplayOverlayErrorCallback = (state: OverlayErrorCode) => void
 
-export type IframeInitCallback = (isInit: boolean) => void
+export type WalletInitCallback = (isInit: boolean) => void
 
 /**
  * Cleanup function which can be used to unsubscribe from the event which it was returned from.
@@ -52,14 +52,14 @@ function createListener<T>(callbacks: Set<T>, callback: T): ListenerUnsubscribeF
 export function registerListeners(messageBus: EventBus<MsgsFromWallet, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onWalletVisibilityCallbacks = new Set<WalletVisibilityCallback>()
-    const onIframeInitCallbacks = new Set<IframeInitCallback>()
+    const onWalletInitCallbacks = new Set<WalletInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
     const onDisplayOverlayErrorCallbacks = new Set<DisplayOverlayErrorCallback>()
 
     messageBus.on(Msgs.UserChanged, (user) => executeCallbacks(onUserUpdateCallbacks, user))
     messageBus.on(Msgs.AuthStateChanged, (state) => executeCallbacks(onAuthStateUpdateCallbacks, state))
     messageBus.on(Msgs.WalletVisibility, (isOpen) => executeCallbacks(onWalletVisibilityCallbacks, isOpen))
-    messageBus.on(Msgs.WalletInit, (isInit) => executeCallbacks(onIframeInitCallbacks, isInit))
+    messageBus.on(Msgs.WalletInit, (isInit) => executeCallbacks(onWalletInitCallbacks, isInit))
     messageBus.on(Msgs.DisplayOverlayError, (errorCode) => executeCallbacks(onDisplayOverlayErrorCallbacks, errorCode))
 
     /**
@@ -105,21 +105,21 @@ export function registerListeners(messageBus: EventBus<MsgsFromWallet, MsgsFromA
     }
 
     /**
-     * Called when the iframe finishes initializing and web3 connection is confirmed
+     * Called when the wallet finishes initializing and a web3 connection is confirmed
      *
      * @internal
-     * @param IframeInitCallback
+     * @param WalletInitCallback
      * @returns Unsubscribe function
      */
-    const onIframeInit = (callback: IframeInitCallback): ListenerUnsubscribeFn => {
-        return createListener(onIframeInitCallbacks, callback)
+    const onWalletInit = (callback: WalletInitCallback): ListenerUnsubscribeFn => {
+        return createListener(onWalletInitCallbacks, callback)
     }
 
     /**
-     * Called when the iframe finishes initializing and web3 connection is confirmed
+     * Called when the wallet requires an urgent overlay to be displayed.
      *
      * @internal
-     * @param IframeInitCallback
+     * @param DisplayOverlayErrorCallback
      * @returns Unsubscribe function
      */
     const onDisplayOverlayError = (callback: DisplayOverlayErrorCallback): ListenerUnsubscribeFn => {
@@ -130,7 +130,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromWallet, MsgsFromA
         onUserUpdate,
         onWalletVisibilityUpdate,
         onAuthStateUpdate,
-        onIframeInit,
+        onWalletInit,
         onDisplayOverlayError,
     }
 }
