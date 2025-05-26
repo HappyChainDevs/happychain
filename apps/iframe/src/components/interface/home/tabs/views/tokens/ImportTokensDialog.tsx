@@ -3,7 +3,7 @@ import { PlusIcon, XIcon } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
-import { type Address, isAddress } from "viem"
+import { type Address, isAddress } from "@happy.tech/common"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { FormField } from "#src/components/primitives/form-field/FormField.tsx"
@@ -207,8 +207,6 @@ export const ImportTokensDialog = () => {
                          * - Empty if no valid address is entered
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
-                         * 
-                         * 
                          */}
                         <FormField.Root required readOnly disabled={!isValidAddress}>
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
