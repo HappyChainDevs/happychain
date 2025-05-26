@@ -44,7 +44,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
     /// Custom executor that was dispatched to during this transaction.
-    address transient private dispatchedExecutor;
+    address private transient dispatchedExecutor;
 
     // ====================================================================================================
     // MODIFIERS

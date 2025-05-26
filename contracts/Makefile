@@ -184,22 +184,12 @@ paymaster-flamechart:
 ##@ Code Quality
 
 forge-fmt-check:
-	@# Temp workaround for forge fmt not supporting transient variables.
-	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt --check src || true
-	@sed -i.bak 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@rm src/boop/happychain/HappyAccount.sol.bak
 .PHONY: forge-fmt-check
 
 forge-fmt:
 	@biome check ./scripts --write;
-	@# Temp workaround for forge fmt not supporting transient variables.
-	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
-	@sed -i.bak 's/private dispatchedExecutor;/transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
-	@rm src/boop/happychain/HappyAccount.sol.bak
 .PHONY: forge-fmt
 
 solhint-check:
@@ -223,17 +213,7 @@ DOCS_OUT=docs/boop
 
 BOOP_SOL_FILES := $(shell find src/boop -type f -name '*.sol')
 
-patch-transient:
-	@sed -i.bak 's/transient private dispatchedExecutor;/private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol;
-	@rm -f src/boop/happychain/HappyAccount.sol.bak
-.PHONY: patch-transient
-
-unpatch-transient:
-	@sed -i.bak 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol;
-	@rm -f src/boop/happychain/HappyAccount.sol.bak
-.PHONY: unpatch-transient
-
-patch-docs: patch-transient
+patch-docs:
 	@for file in $(BOOP_SOL_FILES); do \
 		cp $$file $$file.bak; bun run scripts/utils/postProcessDocLinks.ts $$file.bak > $$file; \
 	done
@@ -243,8 +223,6 @@ unpatch-docs:
 	@for file in $(BOOP_SOL_FILES); \
 		do if [ -f $$file.bak ]; then mv $$file.bak $$file; fi;  \
 	done
-	@make unpatch-transient; # after or the loop will overwrite it
-	@rm -f src/boop/happychain/HappyAccount.sol.bak
 .PHONY: unpatch-docs
 
 # Note on traps: EXIT doesn't catch ctrl+c, but using INT EXIT makes the trap trigger twice on ctrl+c (the
