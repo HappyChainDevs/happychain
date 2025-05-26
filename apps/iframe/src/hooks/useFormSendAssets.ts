@@ -2,7 +2,7 @@ import type { Address } from "@happy.tech/common"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { type ChangeEvent, type FormEvent, useCallback, useEffect, useState } from "react"
-import { isAddress, parseEther } from "viem"
+import { formatUnits, isAddress, parseUnits } from "viem"
 import { useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
 import { getBalanceQueryKey } from "wagmi/query"
 import { ZodIssueCode, z } from "zod"
@@ -25,17 +25,19 @@ const recipientSchema = z
         message: "Ensure you provide a valid Ethereum address for the recipient.",
     })
 
-const amountSchema = z
-    .string()
-    .transform((val, ctx) => {
-        try {
-            return parseEther(val)
-        } catch {
-            ctx.addIssue({ code: ZodIssueCode.custom, message: "Make sure you provide a number." })
-            return z.NEVER
-        }
-    })
-    .pipe(z.bigint().positive({ message: "Make sure you provide a positive number." }))
+function prepareAmountSchema(decimals: number) {
+    return z
+        .string()
+        .transform((val, ctx) => {
+            try {
+                return parseUnits(val, decimals)
+            } catch {
+                ctx.addIssue({ code: ZodIssueCode.custom, message: "Make sure you provide a number." })
+                return z.NEVER
+            }
+        })
+        .pipe(z.bigint().positive({ message: "Make sure you provide a positive number." }))
+}
 
 /**
  * Custom hook for managing token transfers & the associated form state.
@@ -57,7 +59,10 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
             enabled: user?.address && isAddress(user?.address) && !isAddress(`${token}`),
         },
     })
-    const { value: balance, formatted: formattedBalance } = balanceData ?? {}
+    const { value: balance, decimals } = balanceData ?? {}
+
+    const tokenDecimals = decimals ?? 18
+    const formattedBalance = formatUnits(balance ?? 0n, tokenDecimals)
 
     const {
         data: hash,
@@ -108,9 +113,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
 
     const validateAmount = useCallback(
         (amount: string) => {
-            // Can't use refine here because that causes the balance issue to be added even when the transform
-            // in `amountSchema` fails. Pipe here is just a little terse than superRefine.
-            const schema = amountSchema.pipe(
+            const schema = prepareAmountSchema(tokenDecimals).pipe(
                 z.bigint().refine((val) => val <= (balance ?? 0), {
                     message: "The amount exceeds your available balance.",
                 }),
@@ -125,7 +128,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
             }
             return error
         },
-        [balance],
+        [balance, tokenDecimals],
     )
 
     /** Generic handler for input in fields changes. */
@@ -146,7 +149,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
     function handleOnSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
         if (sendIsPending || recipientError || amountError) return
-        sendTransaction({ to: recipient as Address, value: parseEther(amount) })
+        sendTransaction({ to: recipient as Address, value: parseUnits(amount, tokenDecimals) })
     }
 
     return {
