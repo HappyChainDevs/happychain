@@ -1,5 +1,6 @@
 import { bigIntToZeroPadded } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
+import { ProxyBehavior, ProxyMode, ProxyServer } from "@happy.tech/testing/ProxyServer"
 import { err } from "neverthrow"
 import type { Block, Chain, TransactionReceipt } from "viem"
 import { http, createPublicClient, createWalletClient, encodeFunctionData } from "viem"
@@ -12,7 +13,6 @@ import { AttemptType, TransactionStatus } from "../lib/Transaction"
 import type { Attempt, Transaction } from "../lib/Transaction"
 import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
 import { migrateToLatest } from "../lib/migrate"
-import { ProxyBehavior, ProxyMode, ProxyServer } from "./utils/ProxyServer"
 import { TestGasEstimator } from "./utils/TestGasEstimator"
 import { TestRetryManager } from "./utils/TestRetryManager"
 import { killAnvil, mineBlock } from "./utils/anvil"
@@ -27,6 +27,7 @@ import {
     PROXY_URL,
     RPC_URL,
 } from "./utils/constants"
+import { ANVIL_PORT, PROXY_PORT } from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
 import { assertIsDefined, assertIsOk, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
@@ -63,7 +64,7 @@ const txm = new TransactionManager(txmConfig)
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
 
-const proxyServer = new ProxyServer()
+const proxyServer = new ProxyServer(ANVIL_PORT, PROXY_PORT)
 
 let transactionQueue: Transaction[] = []
 
