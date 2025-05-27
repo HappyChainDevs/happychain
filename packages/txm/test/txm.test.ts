@@ -180,7 +180,7 @@ afterAll(() => {
     killAnvil()
 })
 
-test.only("NewBlock hook works correctly", async () => {
+test("NewBlock hook works correctly", async () => {
     let hookTriggered = false
     const cleanHook = await txm.addHook(TxmHookType.NewBlock, () => {
         hookTriggered = true
