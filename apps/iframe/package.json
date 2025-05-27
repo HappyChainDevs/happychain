@@ -18,7 +18,7 @@
         "@tanstack/react-router": "^1.51.0",
         "@toruslabs/tss-dkls-lib": "^4.1.0",
         "@wagmi/connectors": "^5.5.3",
-        "@wagmi/core": "^2.15.2",
+        "@wagmi/core": "^2.17.2",
         "@web3auth/ethereum-mpc-provider": "^9.2.3",
         "@web3auth/mpc-core-kit": "^3.2.4",
         "class-variance-authority": "^0.7.0",
@@ -28,7 +28,7 @@
         "react-dom": "^19.1.0",
         "permissionless": "^0.2.0",
         "viem": "^2.30.1",
-        "wagmi": "^2.13.3",
+        "wagmi": "^2.15.4",
         "zod": "^3.23.8"
     },
     "devDependencies": {
