@@ -1,6 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
-import { ArrowLeft, ArrowsInSimple } from "@phosphor-icons/react"
-import { GearSix } from "@phosphor-icons/react/dist/ssr"
+import { ArrowLeftIcon, ArrowsInSimpleIcon, GearSixIcon } from "@phosphor-icons/react"
 import { Link, useLocation } from "@tanstack/react-router"
 import { useAtom } from "jotai"
 import { appMessageBus } from "#src/services/eventBus"
@@ -18,7 +17,10 @@ const GlobalHeader = () => {
         <div className="relative max-w-prose mx-auto items-center w-full py-3 hidden lg:flex">
             {location.pathname !== "/embed" && (
                 <Link to={"/embed"}>
-                    <ArrowLeft weight="bold" className="text-base-content absolute start-2 top-1/2 -translate-y-1/2" />
+                    <ArrowLeftIcon
+                        weight="bold"
+                        className="text-base-content absolute start-2 top-1/2 -translate-y-1/2"
+                    />
                 </Link>
             )}
 
@@ -38,7 +40,7 @@ const GlobalHeader = () => {
                         if (!isVisible) setVisibility(true)
                     }}
                 >
-                    <GearSix weight="bold" />
+                    <GearSixIcon weight="bold" />
                 </button>
                 <button
                     title="Hide wallet"
@@ -47,7 +49,7 @@ const GlobalHeader = () => {
                     className="dark:opacity-60"
                     onClick={signalClosed}
                 >
-                    <ArrowsInSimple weight="bold" />
+                    <ArrowsInSimpleIcon weight="bold" />
                 </button>
             </div>
         </div>
