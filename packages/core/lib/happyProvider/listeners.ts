@@ -105,7 +105,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromWallet, MsgsFromA
     }
 
     /**
-     * Called when the wallet finishes initializing and a web3 connection is confirmed
+     * Called when the connection to the wallet has been made successfully.
      *
      * @internal
      * @param WalletInitCallback
