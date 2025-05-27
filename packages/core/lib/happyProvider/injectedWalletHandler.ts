@@ -1,7 +1,7 @@
-import { createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { Resolvers, UUID } from "@happy.tech/common"
 import { BasePopupProvider, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
 import type { EIP1193RequestParameters, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
+import { getCurrentUser } from "../functions"
 import { InjectedWalletWrapper } from "./InjectedWalletWrapper"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
@@ -50,7 +50,7 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
     }
 
     public isConnected(): boolean {
-        return Boolean(this.#wrapper.provider)
+        return !!this.#wrapper.provider && !!getCurrentUser()
     }
 
     protected onPopupBlocked() {
@@ -67,28 +67,16 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         })
     }
 
-    protected override requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
-        const key = createUUID()
-        const { promise, resolve, reject } = promiseWithResolvers<boolean>()
-        this.#inFlightPermissionChecks.set(key, { resolve, reject })
-        void this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
-            key,
-            windowId: this.config.windowId,
-            payload: args,
-            error: null,
-        })
-
-        return promise
+    protected override async requiresUserApproval(_args: EIP1193RequestParameters): Promise<boolean> {
+        // We only require approval (= popup) on the initial connection request for injected wallets. This will
+        // cause that request to flow to the approved handler, which is fine in this case. Everything else will flow
+        // to the injected handler, and if approval is required, it will be solliciated from the injected wallet.
+        return !(this.#wrapper.provider && getCurrentUser()) // !connected
     }
 
-    protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
-        // Note: approvals confirmed by the user in the popup will be directed to the approved handler,
-        // _not_ the injected handler as you may expect. This is acceptable for eth_requestAccounts &
-        // wallet_requestPermissions as they simply grant permissions.
-        const isConnectionRequest =
-            args.method === "eth_requestAccounts" ||
-            (args.method === "wallet_requestPermissions" && args.params.some((p) => p.eth_accounts))
-
-        return isConnectionRequest
+    protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
+        // Approvals are handled by the injected wallet, no need to request any extra here.
+        // If we needed approval (for the initial connection), we still do, so return true.
+        return true
     }
 }
