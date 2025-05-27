@@ -15,6 +15,7 @@ export enum ProxyMode {
 
 export class ProxyServer {
     readonly #PROXY_PORT: number
+    readonly #ANVIL_PORT: number
     private app: Hono
     private nextBehaviors: ProxyBehavior[]
     private mode: ProxyMode
@@ -26,6 +27,7 @@ export class ProxyServer {
 
     constructor(ANVIL_PORT: number, PROXY_PORT: number) {
         this.#PROXY_PORT = PROXY_PORT
+        this.#ANVIL_PORT = ANVIL_PORT
         this.app = new Hono()
         this.nextBehaviors = []
         this.mode = ProxyMode.Deterministic
@@ -52,7 +54,7 @@ export class ProxyServer {
                 }
             }
             const reqUrl = new URL(c.req.url)
-            const targetUrl = new URL(reqUrl.pathname + reqUrl.search, `http://localhost:${ANVIL_PORT}`)
+            const targetUrl = new URL(reqUrl.pathname + reqUrl.search, `http://localhost:${this.#ANVIL_PORT}`)
 
             try {
                 const response = await fetch(targetUrl.toString(), {
