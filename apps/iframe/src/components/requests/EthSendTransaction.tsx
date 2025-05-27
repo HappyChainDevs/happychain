@@ -134,10 +134,7 @@ export const EthSendTransaction = ({
                 {isRequestDisabled ? (
                     <SectionError>
                         <SubsectionContent>
-                            <SubsectionTitle>Error</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                <p>{requestDisabledDescription}</p>
-                            </FormattedDetailsLine>
+                            <p>{requestDisabledDescription}</p>
                         </SubsectionContent>
                     </SectionError>
                 ) : (
