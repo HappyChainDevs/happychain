@@ -244,7 +244,7 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "sonner": "^1.7.2",
-        "viem": "^^2.30.0",
+        "viem": "^2.30.0",
       },
       "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
