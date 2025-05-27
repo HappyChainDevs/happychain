@@ -115,7 +115,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
                 const sessionKey = getSessionKey(user.address, target)
                 return privateKeyToAccount(sessionKey).address
             }
-            installNewSessionKey(app, user.address, target)
+            await installNewSessionKey(app, user.address, target)
             return
         }
 
