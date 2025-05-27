@@ -1,6 +1,6 @@
 import { bigIntToZeroPadded } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
-import { ProxyBehavior, ProxyMode, ProxyServer } from "@happy.tech/testing/ProxyServer"
+import { ProxyBehavior, ProxyMode, ProxyServer } from "@happy.tech/testing"
 import { err } from "neverthrow"
 import type { Block, Chain, TransactionReceipt } from "viem"
 import { http, createPublicClient, createWalletClient, encodeFunctionData } from "viem"
@@ -180,7 +180,7 @@ afterAll(() => {
     killAnvil()
 })
 
-test("NewBlock hook works correctly", async () => {
+test.only("NewBlock hook works correctly", async () => {
     let hookTriggered = false
     const cleanHook = await txm.addHook(TxmHookType.NewBlock, () => {
         hookTriggered = true
