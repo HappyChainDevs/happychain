@@ -146,7 +146,11 @@ const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
             <div className="flex items-center justify-center gap-4">
                 <img alt="HappyChain Logo" src={"/images/happychainLogoSimple.png"} className="h-10" />
                 <DotLinearMotionBlurLoader />
-                <img className="h-8" src={provider?.icon} alt={`${provider?.name} icon`} />
+                <img
+                    className={cx("h-8", provider?.id === "injected:wallet.injected" && "dark:invert")}
+                    src={provider?.icon}
+                    alt={`${provider?.name} icon`}
+                />
             </div>
             <div className="text-center flex items-center justify-center">
                 Verify your {provider?.name} account to continue with HappyChain.
