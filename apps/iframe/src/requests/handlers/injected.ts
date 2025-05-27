@@ -57,8 +57,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
                 method: "personal_sign",
                 params: [
                     request.payload.params[0],
-                    // Need to substitute the user address with the controlling address
-                    // as the wallet is not aware of the session key functionality
+                    // Contracts can't sign, but the account accepts signature from its owners via EIP-1271.
                     user.controllingAddress,
                 ],
             })

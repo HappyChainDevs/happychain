@@ -53,6 +53,5 @@ export interface HappyProviderInternal extends HappyProvider {
 
 export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>
     extends SafeEventEmitter {
-    isConnected(): boolean
     request(args: EIP1193RequestParameters<TString>): Promise<EIP1193RequestResult<TString>>
 }
