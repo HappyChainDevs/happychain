@@ -53,16 +53,12 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
     // Stub for future support of ERC-20s.
     const token = undefined
 
-    const { data: balanceData } = useBalance({
+    const { data: balanceData, isPending: balanceDataIsPending } = useBalance({
         address: user?.address,
         query: {
             enabled: user?.address && isAddress(user?.address) && !isAddress(`${token}`),
         },
     })
-    const { value: balance, decimals } = balanceData ?? {}
-
-    const tokenDecimals = decimals ?? 18
-    const formattedBalance = formatUnits(balance ?? 0n, tokenDecimals)
 
     const {
         data: hash,
@@ -83,6 +79,13 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
         hash,
         query: { enabled: !!hash },
     })
+
+    const { value: balance, decimals } = balanceData ?? {}
+
+    const tokenDecimals = decimals ?? 18
+    const formattedBalance = formatUnits(balance ?? 0n, tokenDecimals)
+    /** Accounts for errors within the form, or if the user's balance data is still being fetchecd. */
+    const cannotSubmit = Boolean(recipientError || amountError || balanceDataIsPending)
 
     const onTransactionCompleted = useCallback(() => {
         reset()
@@ -113,6 +116,8 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
 
     const validateAmount = useCallback(
         (amount: string) => {
+            // Can't use refine here because that causes the balance issue to be added even when the transform
+            // in `amountSchema` fails. Pipe here is just a little terse than `superRefine`.
             const schema = prepareAmountSchema(tokenDecimals).pipe(
                 z.bigint().refine((val) => val <= (balance ?? 0), {
                     message: "The amount exceeds your available balance.",
@@ -148,7 +153,7 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
     /** Initiates transaction, but only if form data is valid. */
     function handleOnSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        if (sendIsPending || recipientError || amountError) return
+        if (cannotSubmit || sendIsPending) return
         sendTransaction({ to: recipient as Address, value: parseUnits(amount, tokenDecimals) })
     }
 
@@ -173,5 +178,6 @@ export function useFormSendAssets(args: UseFormSendAssetsArgs = {}) {
         handleOnClickMax,
         handleOnInput,
         handleOnSubmit,
+        cannotSubmit,
     }
 }
