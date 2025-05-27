@@ -3,18 +3,37 @@ import { $, sleep } from "bun"
 import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { anvil as anvilChain } from "viem/chains"
-import { env } from "#lib/env"
+import { env, type Environment} from "#lib/env"
 
-const proxyServer = new ProxyServer(env.ANVIL_PORT, env.PROXY_PORT)
+// Helper function to get test-specific ports
+function getTestPorts(currentEnv: Environment): { anvilPort: number; proxyPort: number } {
+    if (currentEnv.NODE_ENV === "test") {
+        // Inside this block, currentEnv is narrowed to the 'test' specific type
+        // which includes ANVIL_PORT and PROXY_PORT as numbers.
+        return {
+            anvilPort: currentEnv.ANVIL_PORT,
+            proxyPort: currentEnv.PROXY_PORT,
+        };
+    } else {
+        throw new Error(
+            `ANVIL_PORT and PROXY_PORT are only available in the 'test' environment. Current NODE_ENV: ${currentEnv.NODE_ENV}`
+        );
+    }
+}
+
+// Initialize ports using the helper function
+const { anvilPort: ANVIL_PORT_FOR_TEST, proxyPort: PROXY_PORT_FOR_TEST } = getTestPorts(env);
+
+const proxyServer = new ProxyServer(ANVIL_PORT_FOR_TEST, PROXY_PORT_FOR_TEST)
 proxyServer.start().then(() => {
-    console.log(`\n🚀 Proxy Server started on port ${env.PROXY_PORT}`)
+    console.log(`Proxy Server started on port ${PROXY_PORT_FOR_TEST}`)
     proxyServer.setMode(ProxyMode.Deterministic)
 })
 const anvilProxy = {
     ...anvilChain,
     rpcUrls: {
         default: {
-            http: [`http://localhost:${env.PROXY_PORT}`],
+            http: [`http://localhost:${PROXY_PORT_FOR_TEST}`],
         },
     },
 }

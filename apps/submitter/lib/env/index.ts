@@ -6,12 +6,50 @@ import { deploymentsSchema } from "./schemas/deployments"
 import { gasSchema } from "./schemas/gas"
 import { limitsSchema } from "./schemas/limits"
 
-const envSchema = z
+const baseEnvSchema = z
     .object({}) //
-    .merge(appSchema)
+    .merge(appSchema) // appSchema includes NODE_ENV with its default
     .merge(limitsSchema)
     .merge(deploymentsSchema)
     .merge(gasSchema)
+    .extend({
+        // Define ANVIL_PORT and PROXY_PORT as optional initially
+        ANVIL_PORT: z.coerce.number().int().positive().optional(),
+        PROXY_PORT: z.coerce.number().int().positive().optional(),
+    })
+type PreRefinementEnv = z.infer<typeof baseEnvSchema>
+const envSchema = baseEnvSchema
+    .superRefine((data: PreRefinementEnv, ctx: z.RefinementCtx) => {
+        if (data.NODE_ENV === "test") {
+            if (data.ANVIL_PORT === undefined) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "ANVIL_PORT is required when NODE_ENV is 'test'",
+                    path: ["ANVIL_PORT"],
+                })
+            }
+            if (data.PROXY_PORT === undefined) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "PROXY_PORT is required when NODE_ENV is 'test'",
+                    path: ["PROXY_PORT"],
+                })
+            }
+        }
+    })
+    .transform((data: PreRefinementEnv) => {
+        if (data.NODE_ENV === "test") {
+            return {
+                ...data,
+                ANVIL_PORT: data.ANVIL_PORT!,
+                PROXY_PORT: data.PROXY_PORT!,
+            }
+        } else {
+            // If not in 'test' environment, remove these properties from the object and its type.
+            const { ANVIL_PORT, PROXY_PORT, ...rest } = data
+            return rest
+        }
+    })
 
 /**
  * Provides access to filtered and validated environment variables, which define the configuration of the submitter.
