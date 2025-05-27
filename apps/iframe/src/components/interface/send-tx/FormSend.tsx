@@ -1,4 +1,4 @@
-import { WarningCircle } from "@phosphor-icons/react"
+import { WarningCircleIcon } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { Button } from "#src/components/primitives/button/Button"
@@ -20,11 +20,11 @@ export const FormSend = () => {
         handleOnClickMax,
         recipientError,
         amountError,
+        cannotSubmit,
     } = useFormSendAssets()
 
     const recipientHasError = Boolean(recipientError)
     const amountHasError = Boolean(amountError)
-    const hasFormErrors = recipientHasError || amountHasError
 
     return (
         <form onSubmit={handleOnSubmit} className="w-full grid gap-4">
@@ -93,7 +93,7 @@ export const FormSend = () => {
 
             {inFlight && (
                 <div className="flex items-start bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
-                    <WarningCircle size="1.25em" className="shrink-0 mt-[0.15em]" />
+                    <WarningCircleIcon size="1.25em" className="shrink-0 mt-[0.15em]" />
                     <p>{`${!waitingForInclusion ? "Once sent, the" : "The"} transaction will not be cancelled!`}</p>
                 </div>
             )}
@@ -102,7 +102,7 @@ export const FormSend = () => {
                 <Button
                     className="justify-center"
                     intent="primary"
-                    aria-disabled={inFlight || hasFormErrors || !recipient || !amount}
+                    aria-disabled={inFlight || !recipient || !amount || cannotSubmit}
                     isLoading={inFlight}
                     type="submit"
                 >
