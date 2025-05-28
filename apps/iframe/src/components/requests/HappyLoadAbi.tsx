@@ -12,8 +12,8 @@ import {
     SubsectionContent,
     SubsectionTitle,
 } from "./common/Layout"
-import type { RequestConfirmationProps } from "./props"
 import { RequestDisabled } from "./common/RequestDisabled"
+import type { RequestConfirmationProps } from "./props"
 export const HappyLoadAbi = ({
     method,
     params,
@@ -28,11 +28,13 @@ export const HappyLoadAbi = ({
     } = useSmartContract(params.address)
 
     if (import.meta.env.PROD)
-        return <RequestDisabled
+        return (
+            <RequestDisabled
                 headline={"loadAbi"}
                 description="The Happy Wallet is an HappyChain exclusive 🤠"
                 reject={reject}
             />
+        )
 
     return (
         <Layout
