@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/faucet",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "module",
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
@@ -10,8 +10,8 @@
         "./migrate": "./dist/migrate.es.js"
     },
     "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/txm": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:0.2.0",
+        "@happy.tech/txm": "workspace:0.1.1",
         "@hono/node-server": "^1.13.8",
         "@scalar/hono-api-reference": "^0.5.175",
         "better-sqlite3": "^11.7.0",
@@ -23,7 +23,7 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/happybuild": "workspace:0.2.0",
         "typescript": "^5.6.2",
         "hono-openapi": "^0.4.4"
     }

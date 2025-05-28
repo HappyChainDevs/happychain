@@ -4,4 +4,4 @@
 
 ### Minor Changes
 
-- fe5b333: Initial Release
+- Initial release

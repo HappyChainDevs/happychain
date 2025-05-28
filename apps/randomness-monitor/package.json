@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/randomness-monitor",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "module",
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
@@ -10,7 +10,7 @@
         "./migrate": "./dist/migrate.es.js"
     },
     "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:0.2.0",
         "zod": "^3.23.8",
         "better-sqlite3": "^11.7.0",
         "kysely": "^0.27.5",
@@ -19,7 +19,7 @@
         "@happy.tech/contracts": "workspace:0.1.0"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/happybuild": "workspace:0.2.0",
         "typescript": "^5.6.2"
     }
 }

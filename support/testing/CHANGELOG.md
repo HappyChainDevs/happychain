@@ -1,7 +1,11 @@
 # @happy.tech/testing
 
-## 0.1.0
+## 0.2.0
 
 ### Minor Changes
 
-- fe5b333: Initial Release
+- 61de8d9: Extend message type for popup <> iframe to include extra data.
+
+## 0.1.0
+
+- Initial release

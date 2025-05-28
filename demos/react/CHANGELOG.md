@@ -1,5 +1,16 @@
 # demo-react
 
+## 0.3.0
+
+### Minor Changes
+
+- 80b5e99: Rename useHappyChain hook to useHappyWallet.
+
+### Patch Changes
+
+- 3f5d45f: Add new happychain icon
+- Updated dependencies
+
 ## 0.2.0
 
 ### Minor Changes
@@ -9,15 +20,8 @@
 
 ### Patch Changes
 
-- @happy.tech/react@1.0.0
+- Updated dependencies
 
 ## 0.1.0
 
-### Minor Changes
-
-- fe5b333: Initial Release
-
-### Patch Changes
-
-- Updated dependencies [fe5b333]
-  - @happy.tech/react@0.1.0
+- Initial release
