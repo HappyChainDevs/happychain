@@ -9,7 +9,7 @@ export const AppStatus = () => {
     const chain = useAtomValue(currentChainAtom)
 
     return (
-        <div className="z-20 mt-auto py-2 bg-base-200 sticky bottom-0 focus-within:bg-neutral/5 rounded-md flex w-full items-center justify-center text-xs font-bold">
+        <div className="z-10 mt-auto py-2 bg-base-200 sticky bottom-0 focus-within:bg-neutral/5 rounded-md flex w-full items-center justify-center text-xs font-bold">
             <Link
                 to="/embed/permissions/$appURL"
                 params={{ appURL: encodeURI(getAppURL()) }}
