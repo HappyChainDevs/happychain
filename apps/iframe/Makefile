@@ -7,8 +7,9 @@ include ../../makefiles/help.mk
 dist: src/routeTree.gen.ts
 
 # Regenerates tanstack router routes
-src/routeTree.gen.ts: $(shell ls src/routes/**/*.tsx)
+src/routeTree.gen.ts: $(shell echo `ls src/routes/**/*.tsx`)
 	tsr generate;
+	touch src/routeTree.gen.ts # if file wouldn't change, still mark as updated
 
 test: ## Runs tests
 	@vitest run;
