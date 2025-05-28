@@ -1,4 +1,4 @@
-import { type Hex, isBigIntString, parseBigInt, stringToBigInt } from "@happy.tech/common"
+import type { Hex } from "@happy.tech/common"
 import { type Traversal, type Type, type } from "arktype"
 import { resolver } from "hono-openapi/arktype"
 import { checksum } from "ox/Address"
@@ -65,11 +65,11 @@ export const AddressValidation = Bytes20Validation
 
 export const BigIntValidation = type("/^-?[0-9]+n$/") as Type<string>
 
-export const UInt256Validation = BigIntValidation.configure({ example: 10_100_200_300_400_500_600n })
+export const UInt256Validation = BigIntValidation
 
-export const Int256Validation = BigIntValidation.configure({ example: 10_100_200_300_400_500_600n })
+export const Int256Validation = BigIntValidation
 
-export const UInt32Validation = type.number.configure({ example: 400_000 })
+export const UInt32Validation = type.number
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)

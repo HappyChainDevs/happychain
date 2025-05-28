@@ -17,21 +17,21 @@ const pendingBoopInfo = type({
     entryPoint: Address,
     nonceTrack: UInt256,
     nonceValue: UInt256,
-    submitted: "boolean",
+    submitted: type.boolean,
 })
 
 const getPendingSuccess = type({
     status: type.unit(GetPending.Success),
     account: Address,
     pending: pendingBoopInfo.array(),
-    description: "undefined?",
+    "description?": "never",
 })
 
 const getPendingError = type({
-    status: type.valueOf(SubmitterError),
+    status: type.valueOf(SubmitterError).configure({ example: SubmitterError.RpcError }),
     description: "string",
-    account: "undefined?",
-    pending: "undefined?",
+    "account?": "never",
+    "pending?": "never",
 })
 
 export const getPendingDescription = describeRoute({
