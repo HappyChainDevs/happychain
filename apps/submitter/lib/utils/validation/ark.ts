@@ -1,4 +1,4 @@
-import { type Hex, stringToBigInt } from "@happy.tech/common"
+import { type Hex, isBigIntString, parseBigInt, stringToBigInt } from "@happy.tech/common"
 import { type Traversal, type Type, type } from "arktype"
 import { resolver } from "hono-openapi/arktype"
 import { checksum } from "ox/Address"
@@ -21,6 +21,16 @@ export function openApiContent(schema: Type<unknown>) {
     return { "application/json": { schema: resolver(schema) } }
 }
 
+// TODO: Suggest a fix, stringToBigInt from @happy.tech/common is not suitable as it expects the `#bigint` prefix,
+// TODO: BigInt() constructor may return undefined so that fails too
+// TODO: parseBigInt from @happy.tech/common is not suitable as it returns undefined on failure
+function parseBigIntInternal(input: string | undefined): bigint {
+    try {
+        return input ? BigInt(input) : 0n
+    } catch {
+        return 0n
+    }
+}
 function padHex(count: number): (hex: Hex) => Hex {
     return (hex: Hex) => `0x${hex.slice(2).padStart(count, "0")}`
 }
@@ -53,7 +63,7 @@ export const HashValidation = Bytes32Validation
 
 export const AddressValidation = Bytes20Validation
 
-export const BigIntValidation = type.string
+export const BigIntValidation = type("/^-?[0-9]+n$/") as Type<string>
 
 export const UInt256Validation = BigIntValidation.configure({ example: 10_100_200_300_400_500_600n })
 
@@ -64,7 +74,7 @@ export const UInt32Validation = type.number.configure({ example: 400_000 })
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)
 
-export const Bytes = BytesValidation
+export const Bytes = BytesValidation.configure({ example: "0xdeadbeefdeadbeef" })
 
 export const Bytes20 = Bytes20Validation.pipe(padHex(40)).configure({
     example: "0x1234567890123456789012345678901234567890",
@@ -78,20 +88,14 @@ export const Address = Bytes20.pipe(checksum).configure({ example: "0x1234567890
 
 export const Hash = Bytes32.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" })
 
-export const BigIntSchema = BigIntValidation.pipe
-    .try(stringToBigInt)
-    .narrow(gte(0n))
-    .narrow(lt(1n << 256n, "2^256"))
-    .configure({ example: 10_100_200_300_400_500_600n })
-
 export const UInt256 = UInt256Validation.pipe
-    .try(stringToBigInt)
+    .try(parseBigIntInternal)
     .narrow(gte(0n))
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
 export const Int256 = Int256Validation.pipe
-    .try(stringToBigInt)
+    .try(parseBigIntInternal)
     .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
