@@ -1,7 +1,7 @@
 import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
 import { type Address, getProp, stringify } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import type { RpcTransactionRequest } from "viem"
 import { entryPoint } from "#src/constants/contracts"
 import { boopFromTransaction } from "#src/requests/utils/boop"
@@ -46,13 +46,14 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
 
     const jsonTxQueryKey = useMemo(() => ["simulate-boop", stringify(tx)], [tx])
 
+    const lastError = useRef<Error | null>(null)
     const {
         data,
         error,
         isPending: isSimulatePending,
     } = useQuery({
         queryKey: jsonTxQueryKey,
-        enabled: !!userAddress && enabled,
+        enabled: !!userAddress && enabled && !lastError.current,
         queryFn: async () => {
             const boop = await boopFromTransaction(userAddress!, filledTx!)
             return await boopClient.simulate({ entryPoint, boop })
@@ -63,6 +64,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
         refetchIntervalInBackground: false,
         refetchOnWindowFocus: true,
     })
+    lastError.current = error
 
     return {
         simulateOutput: data?.status === Simulate.Success ? data : undefined,
