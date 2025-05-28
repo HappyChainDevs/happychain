@@ -5,6 +5,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { anvil as anvilChain } from "viem/chains"
 import { env } from "#lib/env"
 
+// route all requests to Anvil through a proxy (this allows us to drop requests on demand)
 const proxyServer = new ProxyServer(env.ANVIL_PORT, env.PROXY_PORT)
 proxyServer.start().then(() => {
     console.log(`Proxy Server started on port ${env.PROXY_PORT}`)
