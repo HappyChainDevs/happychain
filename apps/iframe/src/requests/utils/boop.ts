@@ -118,7 +118,7 @@ export async function sendBoop(
         boopCache.putBoop(boopHash, boop)
 
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
-        addPendingBoop({ boopHash, value })
+        addPendingBoop({ boopHash, value, nonceTrack: signedBoop.nonceTrack, nonceValue: signedBoop.nonceValue })
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
