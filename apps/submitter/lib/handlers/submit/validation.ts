@@ -13,7 +13,6 @@ const submitInput = type({
     boop: SBoop,
 })
 
-// Success validator with transformations (for actual validation)
 const submitSuccess = type({
     status: type.unit(Submit.Success),
     boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
@@ -22,7 +21,6 @@ const submitSuccess = type({
     "description?": "never",
 })
 
-// Error validator with transformations (for actual validation)
 const submitError = type({
     status: type.valueOf(Submit).exclude(type.unit(Submit.Success)).configure({ example: Submit.CallReverted }),
     stage: type.enumerated("simulate", "submit").configure({ example: "simulate" }),
@@ -33,9 +31,6 @@ const submitError = type({
     "boopHash?": "never",
     "entryPoint?": "never",
 })
-
-// =====================================================================================================================
-// ROUTE DESCRIPTION
 
 export const submitDescription = describeRoute({
     validateResponse: false,

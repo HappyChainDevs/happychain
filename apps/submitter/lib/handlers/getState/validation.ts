@@ -16,24 +16,27 @@ const getStateParam = type({
 const getStateReceipt = type({
     status: type.unit(GetState.Receipt),
     receipt: SBoopReceipt,
-    simulation: "undefined?",
-    description: "undefined?",
+    "simulation?": "never",
+    "description?": "never",
 })
 
 const getStateSimulated = type({
     status: type.unit(GetState.Simulated),
     simulation: simulateOutputValidation,
-    receipt: "undefined?",
-    description: "undefined?",
+    "receipt?": "never",
+    "description?": "never",
 })
 
 const getStateSuccess = type(getStateReceipt, "|", getStateSimulated)
 
 const getStateError = type({
-    status: type.valueOf(GetState).exclude(type.enumerated(GetState.Receipt, GetState.Simulated)),
+    status: type
+        .valueOf(GetState)
+        .exclude(type.enumerated(GetState.Receipt, GetState.Simulated))
+        .configure({ example: GetState.ClientError }),
     description: "string",
-    receipt: "undefined?",
-    simulation: "undefined?",
+    "receipt?": "never",
+    "simulation?": "never",
 })
 
 export const getStateDescription = describeRoute({
