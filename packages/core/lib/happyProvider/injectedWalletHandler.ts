@@ -1,7 +1,7 @@
 import type { Resolvers, UUID } from "@happy.tech/common"
-import { BasePopupProvider, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
+import { BasePopupProvider, type HappyUser, Msgs, OverlayErrorCode } from "@happy.tech/wallet-common"
 import type { EIP1193RequestParameters, ProviderMsgsFromWallet } from "@happy.tech/wallet-common"
-import { getCurrentUser } from "../functions"
+// import { getCurrentUser } from "../functions"
 import { InjectedWalletWrapper } from "./InjectedWalletWrapper"
 import { type HappyProviderConfig, HappyProviderImplem } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
@@ -26,13 +26,17 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
     protected readonly popupBaseUrl: string
     #inFlightPermissionChecks = new Map<string, Resolvers<boolean>>()
     #wrapper: InjectedWalletWrapper
+    #getUser: () => HappyUser | undefined
 
-    constructor(protected config: HappyProviderConfig) {
+    constructor(
+        protected config: HappyProviderConfig,
+        getUser: () => HappyUser | undefined,
+    ) {
         super(config.windowId)
         this.popupBaseUrl = config.iframePath
-
         // local connection (injected wallet)
         this.#wrapper = new InjectedWalletWrapper(config)
+        this.#getUser = getUser // can't use `getCurrentUser` because of circular dependencies
 
         config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
@@ -47,10 +51,6 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
             inFlight.reject(data.error)
         }
         this.#inFlightPermissionChecks.delete(data.key)
-    }
-
-    public isConnected(): boolean {
-        return !!this.#wrapper.provider && !!getCurrentUser()
     }
 
     protected onPopupBlocked() {
@@ -71,7 +71,8 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         // We only require approval (= popup) on the initial connection request for injected wallets. This will
         // cause that request to flow to the approved handler, which is fine in this case. Everything else will flow
         // to the injected handler, and if approval is required, it will be solliciated from the injected wallet.
-        return !(this.#wrapper.provider && getCurrentUser()) // !connected
+        return true
+        //return !(this.#wrapper.provider && getCurrentUser()) // !connected
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
