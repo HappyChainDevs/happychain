@@ -10,17 +10,32 @@ import type * as types from "./types"
 
 const executeInput = type({
     "+": "reject",
-    entryPoint: Address.optional(),
+    entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }).optional(),
     boop: SBoop,
-    timeout: "number?",
+    "timeout?": type("number").configure({ example: 10_000 }),
 })
 
+// Success validator with transformations (for actual validation)
 const executeSuccess = type({
-    status: type.unit(Execute.Success),
-    receipt: SBoopReceipt,
-    stage: "undefined?",
-    revertData: "undefined?",
-    description: "undefined?",
+    status: type.unit(Execute.Success).configure({ example: Execute.Success }),
+    receipt: SBoopReceipt.configure({
+        example: {
+            boopHash: "0x1234567890123456789012345678901234567890",
+            boop: {
+                entryPoint: "0x1234567890123456789012345678901234567890",
+                data: "0x1234567890123456789012345678901234567890",
+            },
+            blockNumber: 1234567890,
+            blockHash: "0x1234567890123456789012345678901234567890123456789012345678901234",
+            transactionHash: "0x1234567890123456789012345678901234567890123456789012345678901234",
+            transactionIndex: 1234567890,
+            logIndex: 1234567890,
+            receiptRoot: "0x1234567890123456789012345678901234567890123456789012345678901234",
+        },
+    }),
+    "stage?": "never",
+    "revertData?": "never",
+    "description?": "never",
 })
 
 const executeError = type({
@@ -28,14 +43,24 @@ const executeError = type({
         .valueOf(Execute)
         .exclude(type.unit(Execute.Success))
         .configure({ example: Onchain.ValidationRejected }),
-    stage: type.enumerated("simulate", "submit", "execute"),
-    revertData: Bytes.optional(),
-    description: "string",
-    receipt: "undefined?",
+    stage: type.enumerated("simulate", "submit", "execute").configure({ example: "simulate" }),
+    revertData: Bytes.configure({ example: "0x1234567890123456789012345678901234567890" }).optional(),
+    description: type("string").configure({ example: "Invalid boop" }),
+    "receipt?": "never",
 })
 
 export const executeDescription = describeRoute({
+    validateResponse: false,
     description: "Execute the supplied boop",
+    requestBody: {
+        required: true,
+        description: "Account data to create",
+        content: {
+            "application/json": {
+                schema: {},
+            },
+        },
+    },
     responses: {
         200: {
             description: "Boop successfully executed 👉🐈",
