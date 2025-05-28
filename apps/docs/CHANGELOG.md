@@ -1,5 +1,11 @@
 # @happy.tech/docs
 
+## 0.3.0
+
+### Minor Changes
+
+- Prep docs for testnet release
+
 ## 0.2.0
 
 ### Minor Changes
@@ -10,4 +16,4 @@
 
 ### Minor Changes
 
-- fe5b333: Initial Release
+- Initial release

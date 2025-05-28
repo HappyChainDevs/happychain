@@ -1,14 +1,14 @@
 {
     "name": "demo-js",
     "private": true,
-    "version": "0.1.2",
+    "version": "0.3.0",
     "type": "module",
     "dependencies": {
-        "@happy.tech/core": "workspace:0.2.1",
+        "@happy.tech/core": "workspace:0.3.0",
         "ethers": "^6.13.7"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:*",
         "@types/bun": "^1.2.4",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",

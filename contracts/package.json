@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/contracts",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "Norswap",
     "license": "BSD-3-Clause-Clear",
     "type": "module",
@@ -15,9 +15,6 @@
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
         "./random/anvil": "./deployments/anvil/random/abis.ts"
     },
-    "scripts": {
-        "getAddressERC1967Tests": "vitest run getAddressERC1967.test.ts"
-    },
     "dependencies": {
         "@kevincharm/bls-bn254": "^2.0.0",
         "@openzeppelin/contracts": "^5.0.2",
@@ -29,12 +26,11 @@
         "solady": "0.0.237"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "@types/node": "^22.0.2",
         "node-jq": "^6.0.1",
-        "permissionless": "^0.2.0",
         "solhint": "^5.0.5",
         "viem": "^2.30.1"
     }

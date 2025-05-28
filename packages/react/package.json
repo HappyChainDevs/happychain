@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/react",
     "private": false,
-    "version": "0.2.1",
+    "version": "0.3.0",
     "type": "module",
     "files": ["dist"],
     "main": "./dist/index.es.js",
@@ -14,8 +14,8 @@
         }
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.2.4",
         "@types/node": "^22.5.0",
@@ -24,7 +24,7 @@
         "typescript": "^5.6.2"
     },
     "peerDependencies": {
-        "@happy.tech/core": "workspace:^0.2.1",
+        "@happy.tech/core": "workspace:0.3.0",
         "react": "^19.1.0",
         "react-dom": "^19.1.0"
     }

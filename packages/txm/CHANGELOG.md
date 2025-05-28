@@ -1,14 +1,11 @@
 # @happy.tech/txm
 
-## 0.1.0
-
-### Minor Changes
-
-- fe5b333: Initial Release
+## 0.1.1
 
 ### Patch Changes
 
-- Updated dependencies [fe5b333]
-  - @happy.tech/configs@0.1.0
-  - @happy.tech/common@0.1.0
-  - @happy.tech/contracts@0.1.0
+- Updated dependencies
+
+## 0.1.0
+
+- Initial release

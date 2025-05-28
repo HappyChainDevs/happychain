@@ -10,16 +10,16 @@
         "./migrate": "./dist/migrate.es.js"
     },
     "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "zod": "^3.23.8",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/contracts": "workspace:0.2.0",
         "better-sqlite3": "^11.7.0",
         "kysely": "^0.27.5",
-        "viem": "^2.30.1",
         "neverthrow": "^8.1.0",
-        "@happy.tech/contracts": "workspace:0.1.0"
+        "viem": "^2.30.1",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/happybuild": "workspace:*",
         "typescript": "^5.6.2"
     }
 }

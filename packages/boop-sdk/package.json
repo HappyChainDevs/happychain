@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/boop-sdk",
     "private": false,
-    "version": "0.0.0",
+    "version": "0.1.0",
     "type": "module",
     "files": ["dist"],
     "main": "./dist/index.es.js",
@@ -14,11 +14,11 @@
         }
     },
     "devDependencies": {
-        "@happy.tech/contracts": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "@happy.tech/submitter": "workspace:0.0.0",
+        "@happy.tech/contracts": "workspace:0.2.0",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
+        "@happy.tech/submitter": "workspace:0.1.0",
         "@types/bun": "^1.2.4",
         "typescript": "^5.6.2"
     }

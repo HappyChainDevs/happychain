@@ -12,11 +12,11 @@
     "dependencies": {
         "viem": "^2.21.53",
         "eventemitter3": "^5.0.1",
-        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:*",
         "@happy.tech/txm": "workspace:0.1.0"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/happybuild": "workspace:*",
         "typescript": "^5.6.2"
     }
 }

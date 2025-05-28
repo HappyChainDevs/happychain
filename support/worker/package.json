@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/worker",
     "private": true,
-    "version": "0.1.0",
+    "version": "1.0.0",
     "type": "module",
     "files": ["dist"],
     "main": "./dist/index.es.js",
@@ -20,8 +20,8 @@
         "@okikio/sharedworker": "^1.0.7"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/bun": "^1.2.4",
         "@types/node": "^22.7.4",
         "mlly": "^1.7.1",
