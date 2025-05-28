@@ -1,14 +1,29 @@
+import { ProxyMode, ProxyServer } from "@happy.tech/testing"
 import { $, sleep } from "bun"
 import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { anvil as anvilChain } from "viem/chains"
 import { env } from "#lib/env"
 
-const publicClient = createPublicClient({ chain: anvilChain, transport: http() })
+const proxyServer = new ProxyServer(env.ANVIL_PORT, env.PROXY_PORT)
+proxyServer.start().then(() => {
+    console.log(`Proxy Server started on port ${env.PROXY_PORT}`)
+    proxyServer.setMode(ProxyMode.Deterministic)
+})
+const anvilProxy = {
+    ...anvilChain,
+    rpcUrls: {
+        default: {
+            http: [`http://localhost:${env.PROXY_PORT}`],
+        },
+    },
+}
+
+const publicClient = createPublicClient({ chain: anvilProxy, transport: http() })
 
 const walletClient = createWalletClient({
     account: privateKeyToAccount(env.EXECUTOR_KEYS[0]),
-    chain: anvilChain,
+    chain: anvilProxy,
     transport: http(),
 })
 
