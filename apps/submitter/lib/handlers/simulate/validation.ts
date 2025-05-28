@@ -22,7 +22,7 @@ const entryPointOutput = type({
     validityUnknownDuringSimulation: "boolean",
     paymentValidityUnknownDuringSimulation: "boolean",
     futureNonceDuringSimulation: "boolean",
-    callStatus: type.valueOf(CallStatus),
+    callStatus: type.valueOf(CallStatus).configure({ example: CallStatus.SUCCEEDED }),
     revertData: Bytes,
 })
 
@@ -31,15 +31,15 @@ const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
     maxFeePerGas: UInt256,
     submitterFee: UInt256,
     feeTooLowDuringSimulation: "boolean",
-    revertData: "undefined?",
-    description: "undefined?",
+    "revertData?": "never",
+    "description?": "never",
 })
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
-    maxFeePerGas: "undefined?",
-    submitterFee: "undefined?",
-    feeTooLowDuringSimulation: "undefined?",
+    "maxFeePerGas?": "never",
+    "submitterFee?": "never",
+    "feeTooLowDuringSimulation?": "never",
     revertData: Bytes.optional(),
     description: "string",
 })

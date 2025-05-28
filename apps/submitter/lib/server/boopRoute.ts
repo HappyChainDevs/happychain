@@ -29,7 +29,7 @@ import { validateOutput } from "#lib/utils/validation/helpers"
 export default new Hono()
     .post(
         "/simulate", //
-        // simulateDescription,
+        simulateDescription,
         simulateBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
@@ -65,7 +65,7 @@ export default new Hono()
     )
     .get(
         "/state/:boopHash", //
-        // getStateDescription,
+        getStateDescription,
         getStateParamValidation,
         async (c) => {
             const input = c.req.valid("param")
@@ -77,7 +77,7 @@ export default new Hono()
     )
     .get(
         "/receipt/:boopHash", //
-        // waitForReceiptDescription,
+        waitForReceiptDescription,
         waitForReceiptParamValidation,
         waitForReceiptQueryValidation,
         async (c) => {
@@ -91,7 +91,7 @@ export default new Hono()
     )
     .get(
         "/pending/:account", //
-        // getPendingDescription,
+        getPendingDescription,
         getPendingParamValidation,
         async (c) => {
             const input = c.req.valid("param")

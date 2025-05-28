@@ -29,8 +29,8 @@ const waitForReceiptInput = type(
 const waitForReceiptSuccess = type({
     status: type.unit(WaitForReceipt.Success),
     receipt: SBoopReceipt,
-    revertData: "undefined?",
-    description: "undefined?",
+    "revertData?": "never",
+    "description?": "never",
 })
 
 const waitForReceiptError = type({
@@ -40,7 +40,7 @@ const waitForReceiptError = type({
         .configure({ example: WaitForReceipt.UnknownBoop }),
     revertData: Bytes.optional(),
     description: "string",
-    receipt: "undefined?",
+    "receipt?": "never",
 })
 
 export const waitForReceiptDescription = describeRoute({
