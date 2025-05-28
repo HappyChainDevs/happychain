@@ -48,7 +48,7 @@ export type CreateAccountSuccess = Prettify<
         status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
         /** The address of the account. */
         address: Address
-        description?: undefined
+        description?: never
     }
 >
 
@@ -61,7 +61,7 @@ export type CreateAccountError = Prettify<
         status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
         /** Description of the problem. */
         description: string
-        address?: undefined
+        address?: never
     }
 >
 

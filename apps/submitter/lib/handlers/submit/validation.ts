@@ -13,25 +13,42 @@ const submitInput = type({
     boop: SBoop,
 })
 
+// Success validator with transformations (for actual validation)
 const submitSuccess = type({
     status: type.unit(Submit.Success),
-    boopHash: Hash,
-    entryPoint: Address,
-    revertData: "undefined?",
-    description: "undefined?",
+    boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
+    entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    "revertData?": "never",
+    "description?": "never",
 })
 
+// Error validator with transformations (for actual validation)
 const submitError = type({
-    status: type.valueOf(Submit).exclude(type.unit(Submit.Success)),
-    stage: type.enumerated("simulate", "submit"),
-    revertData: Bytes.optional(),
-    description: "string",
-    boopHash: "undefined?",
-    entryPoint: "undefined?",
+    status: type.valueOf(Submit).exclude(type.unit(Submit.Success)).configure({ example: Submit.CallReverted }),
+    stage: type.enumerated("simulate", "submit").configure({ example: "simulate" }),
+    revertData: Bytes.configure({
+        example: "0x1234567890123456789012345678901234567890123456789012345678901234",
+    }).optional(),
+    description: type("string").configure({ example: "Invalid boop" }),
+    "boopHash?": "never",
+    "entryPoint?": "never",
 })
+
+// =====================================================================================================================
+// ROUTE DESCRIPTION
 
 export const submitDescription = describeRoute({
+    validateResponse: false,
     description: "Submits the supplied boop to the chain",
+    requestBody: {
+        required: true,
+        description: "Boop data to submit to the chain",
+        content: {
+            "application/json": {
+                schema: {},
+            },
+        },
+    },
     responses: {
         200: {
             description: "Boop successfully submitted",
