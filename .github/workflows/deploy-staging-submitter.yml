@@ -55,7 +55,8 @@ jobs:
             EXECUTOR_KEYS=${{ secrets.STAGING_SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.STAGING_SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
             APP_PORT=49535
-            LOG_LEVEL=INFO
+            LOG_LEVEL=TRACE
+            RPC_WS_URL=wss://rpc.testnet.happy.tech/ws
             DATABASE_URL=/home/staging_submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=staging
