@@ -43,7 +43,7 @@ BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
 
 # all packages that have a package.json
-NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
+NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs,support/happybuild
 
 # ==================================================================================================
 # CMDS
@@ -147,13 +147,15 @@ docs: node_modules docs.contained ## Builds latest docs and starts dev server ht
 ##@ Formatting
 # cf. makefiles/formatting.mk
 
-check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
+check: ## Runs code quality & formatting checks
+	$(call forall_make , $(NPM_PKGS) , check)
 	echo "Running make check in ./"
 	biome check ./;
 .PHONY: check
 
-format: ts.format contracts.format ## Formats code and tries to fix code quality issues
-	biome check ./ --write;
+format: ## Formats code and tries to fix code quality issues
+	$(call forall_make , $(NPM_PKGS) , format)
+	biome check ./ --write; # top-level only
 .PHONY: format
 
 # ==================================================================================================

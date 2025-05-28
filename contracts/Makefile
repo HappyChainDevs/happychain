@@ -201,9 +201,11 @@ solhint:
 .PHONY: solhint
 
 check: forge-fmt-check solhint-check ## Checks formatting & linting (no files touched)
+	biome check ./;
 .PHONY: check
 
 format: forge-fmt solhint ## Formats & lint (autofixes)
+	biome check ./ --write;
 .PHONY: format
 
 ####################################################################################################
