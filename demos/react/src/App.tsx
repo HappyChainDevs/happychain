@@ -21,7 +21,7 @@ function App() {
                 </div>
 
                 <WalletCallsDemo />
-                <ChainSwitchingDemo />
+                {!import.meta.env.PROD && <ChainSwitchingDemo />}
                 <WalletFunctionalityDemo />
                 <SessionKeyDemo />
             </div>
