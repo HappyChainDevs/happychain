@@ -7,7 +7,10 @@ import { gasSchema } from "./schemas/gas"
 import { limitsSchema } from "./schemas/limits"
 
 const envSchema = z
-    .object({}) //
+    .object({
+        ANVIL_PORT: z.coerce.number().int().positive().optional().default(8545),
+        PROXY_PORT: z.coerce.number().int().positive().optional().default(8546),
+    })
     .merge(appSchema)
     .merge(limitsSchema)
     .merge(deploymentsSchema)

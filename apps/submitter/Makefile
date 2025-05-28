@@ -9,6 +9,7 @@ include ../../makefiles/help.mk
 
 # Port at which Anvil will be running
 export ANVIL_PORT ?= 8545
+export PROXY_PORT ?= 8546
 
 # Honor AUTOMINE_TESTS by setting the block time to 0.
 export ANVIL_BLOCK_TIME ?= $(if $(findstring true,$(AUTOMINE_TESTS)),0,2)
