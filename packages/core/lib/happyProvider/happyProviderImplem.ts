@@ -100,7 +100,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
 
         this.iframeMsgBus = config.msgBus
 
-        this.injectedWalletHandler = new InjectedWalletHandler(config)
+        this.injectedWalletHandler = new InjectedWalletHandler(config, () => this.user)
         this.socialWalletHandler = new SocialWalletHandler(config)
 
         this.hooks = registerListeners(config.msgBus)
