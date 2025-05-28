@@ -1,8 +1,7 @@
 import { type Boop, type BoopReceipt, Onchain } from "@happy.tech/boop-sdk"
-import { createBigIntStorage } from "@happy.tech/common"
 import type { Address, Hash, UInt256 } from "@happy.tech/common"
-import { atom } from "jotai"
-import { getDefaultStore } from "jotai"
+import { createBigIntStorage } from "@happy.tech/common"
+import { atom, getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { StorageKey } from "#src/services/storage"
 import { logger } from "#src/utils/logger.ts"
@@ -30,7 +29,9 @@ export const historyAtom = atom(
     (get, set, history: HistoryEntry[]) => {
         const user = get(userAtom)
         if (!user) return
-        set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: trimAndSortEntries(history) }))
+        // Limit size of history to 50 entries.
+        const updatedHistory = history.toSorted(compareEntries).slice(0, 50)
+        set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: updatedHistory }))
     },
 )
 
@@ -133,8 +134,4 @@ function compareEntries(a: HistoryEntry, b: HistoryEntry): number {
 
     // 4. Sort by nonceValue
     return Number(b.nonceValue - a.nonceValue) // higher nonceValue = earlier
-}
-
-function trimAndSortEntries(entries: HistoryEntry[]): HistoryEntry[] {
-    return entries.toSorted(compareEntries).slice(0, 50)
 }
