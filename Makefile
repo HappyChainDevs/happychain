@@ -57,9 +57,6 @@ MULTIRUN ?= concurrently
 # Validation function for Ethereum addresses (0x followed by 40 hex chars)
 check_eth_address = $(shell echo $(1) | grep -E '^0x[a-fA-F0-9]{40}$$' > /dev/null && echo 1 || echo 0)
 
-# ==================================================================================================
-# FORALL
-
 define forall
 	$(eval PKGS := $(strip $(1)))
 	$(eval CMD := $(2))
@@ -90,6 +87,23 @@ define with_optional_iframe
 	fi
 endef
 
+# e.g. $(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,true)
+# Updates the .env file non-destructively, in a section delimited by "### AUTOGEN" at the bottom of the file.
+define update_env
+	awk -v var="$(2)" -v val="$(3)" -v delim="### AUTOGEN" ' \
+		BEGIN {found_delim=0; found_var=0;} \
+		$$0 == delim {found_delim=1; print; next} \
+		found_delim && $$0 ~ "^"var"=" {print var"="val; found_var=1; next} \
+		{print} \
+		END { \
+			if (!found_delim) { \
+				print ""; print delim; print var"="val; \
+			} else if (!found_var) { \
+				print var"="val; \
+			} \
+		}' $(1) > $(1).tmp && mv $(1).tmp $(1)
+endef
+
 # ==================================================================================================
 # BASICS COMMANDS
 #   To get the project running locally.
@@ -117,6 +131,13 @@ nuke: clean ## Removes build artifacts and dependencies
 
 test: sdk.test iframe.test ## Run tests
 .PHONY: test
+
+test.all: test contracts.test
+	# Not ideal, but for now we're assuming it was true.
+	$(call update_env,apps/submitter/.env,AUTOMINE_TESTS,false)
+	cd apps/submitter && make test || true
+	$(call update_env,apps/submitter/.env,AUTOMINE_TESTS,true)
+.PHONY: test.all
 
 docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4000
 	cd apps/docs && make preview
@@ -208,6 +229,10 @@ anvil: ## Runs anvil (local EVM node)
 deploy: ## Deploys contracts to Anvil
 	cd contracts && make deploy
 .PHONY: deploy
+
+contracts.test:
+	cd contracts && make test
+.PHONY: contracts.test
 
 # ==================================================================================================
 # DEVELOPMENT
@@ -508,21 +533,6 @@ pack: build ## Packs the tarball, ready to publish manually
 
 # ==================================================================================================
 # ENV CONFIG
-
-define update_env
-	@awk -v var="$(2)" -v val="$(3)" -v delim="### AUTOGEN" ' \
-		BEGIN {found_delim=0; found_var=0;} \
-		$$0 == delim {found_delim=1; print; next} \
-		found_delim && $$0 ~ "^"var"=" {print var"="val; found_var=1; next} \
-		{print} \
-		END { \
-			if (!found_delim) { \
-				print ""; print delim; print var"="val; \
-			} else if (!found_var) { \
-				print var"="val; \
-			} \
-		}' $(1) > $(1).tmp && mv $(1).tmp $(1)
-endef
 
 # NOTE: "127.0.0.1" doesn't always work on MacOS, prefer "localhost".
 
