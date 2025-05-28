@@ -1,4 +1,4 @@
-import type { Hex } from "@happy.tech/common"
+import { type Hex, stringToBigInt } from "@happy.tech/common"
 import { type Traversal, type Type, type } from "arktype"
 import { resolver } from "hono-openapi/arktype"
 import { checksum } from "ox/Address"
@@ -40,41 +40,64 @@ function gte<T extends bigint | number>(
 }
 
 // =====================================================================================================================
-// TYPES
+// VALIDATION-ONLY TYPES (for OpenAPI specs)
 
-export const Bytes = (type("/^0x[0-9a-fA-F]*/") as Type<Hex>) //
-    .configure({
-        example:
-            "0x40c10f1900000000000000000000000031b01adeb03855eecbaf17828bbd7d0ee918ed92" +
-            "00000000000000000000000000000000000000000000000000038d7ea4c68000",
-    })
+// Base validators without transformations for OpenAPI
+export const BytesValidation = type("/^0x[0-9a-fA-F]*/") as Type<Hex>
 
-export const Bytes20 = (type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>)
-    .pipe(padHex(40))
-    .configure({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" })
+export const Bytes20Validation = type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>
 
-export const Bytes32 = (type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>) //
-    .pipe(padHex(64))
-    .configure({ example: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" })
+export const Bytes32Validation = type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>
 
-export const Hash = Bytes32
+export const HashValidation = Bytes32Validation
 
-export const Address = Bytes20.pipe(checksum) //
-    .configure({ example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" })
+export const AddressValidation = Bytes20Validation
 
-export const BigIntSchema = type("bigint | string").pipe.try(BigInt)
+export const BigIntValidation = type.string
 
-export const UInt256 = type(BigIntSchema)
+export const UInt256Validation = BigIntValidation.configure({ example: 10_100_200_300_400_500_600n })
+
+export const Int256Validation = BigIntValidation.configure({ example: 10_100_200_300_400_500_600n })
+
+export const UInt32Validation = type.number.configure({ example: 400_000 })
+
+// =====================================================================================================================
+// TYPES WITH TRANSFORMATIONS (for input validation)
+
+export const Bytes = BytesValidation
+
+export const Bytes20 = Bytes20Validation.pipe(padHex(40)).configure({
+    example: "0x1234567890123456789012345678901234567890",
+})
+
+export const Bytes32 = Bytes32Validation.pipe(padHex(64)).configure({
+    example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+})
+
+export const Address = Bytes20.pipe(checksum).configure({ example: "0x1234567890123456789012345678901234567890" })
+
+export const Hash = Bytes32.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" })
+
+export const BigIntSchema = BigIntValidation.pipe
+    .try(stringToBigInt)
     .narrow(gte(0n))
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const Int256 = type(BigIntSchema)
-    .narrow(gte(-(1n << 255n), "-2^255"))
+export const UInt256 = UInt256Validation.pipe
+    .try(stringToBigInt)
+    .narrow(gte(0n))
+    .narrow(lt(1n << 256n, "2^256"))
+    .configure({ example: 10_100_200_300_400_500_600n })
+
+export const Int256 = Int256Validation.pipe
+    .try(stringToBigInt)
+    .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const UInt32 = type("number.integer | string.integer.parse")
+export const UInt32 = UInt32Validation.pipe
+    .try(Number)
     .narrow(gte(0))
     .narrow(lt(1n << 32n, "2^32"))
-    .configure({ example: 400_000n })
+    .configure({ example: 400_000 })

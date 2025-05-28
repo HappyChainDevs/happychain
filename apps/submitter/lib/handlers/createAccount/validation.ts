@@ -8,8 +8,8 @@ import type * as types from "./types"
 
 export const createAccountInput = type({
     "+": "reject",
-    owner: Address,
-    salt: Bytes32,
+    owner: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    salt: Bytes32.configure({ example: "0x1234567890123456789012345678901234567890" }),
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
@@ -17,21 +17,31 @@ const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.Alrea
 const createAccountSuccess = type({
     owner: Address,
     salt: Bytes32,
-    status: successStatus,
-    address: Address,
-    description: "undefined?",
+    status: successStatus.configure({ example: CreateAccount.Success }),
+    address: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    "description?": "never",
 })
 
 const createAccountError = type({
     owner: Address,
     salt: Bytes32,
-    status: type.valueOf(CreateAccount).exclude(successStatus),
+    status: type.valueOf(CreateAccount).exclude(successStatus).configure({ example: CreateAccount.Failed }),
     description: "string",
-    address: "undefined?",
+    "address?": "never",
 })
 
 export const createAccountDescription = describeRoute({
-    description: "Create a new account",
+    validateResponse: false,
+    description: "Creates an account",
+    requestBody: {
+        required: true,
+        description: "Account data to create",
+        content: {
+            "application/json": {
+                schema: {},
+            },
+        },
+    },
     responses: {
         200: {
             description: "The account already existed",
@@ -42,7 +52,7 @@ export const createAccountDescription = describeRoute({
             content: openApiContent(createAccountSuccess),
         },
         other: {
-            description: "Could not create theaccount",
+            description: "Could not create the account",
             content: openApiContent(createAccountError),
         },
     },
