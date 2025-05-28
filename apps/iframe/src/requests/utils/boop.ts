@@ -25,7 +25,7 @@ import { entryPoint } from "#src/constants/contracts"
 import { type BoopCacheEntry, boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { getBoopClient } from "#src/state/boopClient"
-import { addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
+import { type ErrorType, addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { reqLogger } from "#src/utils/logger"
 import { createValidatorExtraData } from "./sessionKeys"
@@ -129,12 +129,12 @@ export async function sendBoop(
         reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
-        if (boopHash) markBoopAsFailure({ boopHash }, serializeError(error))
+        if (boopHash) markBoopAsFailure(boopHash, serializeError(error))
         throw error
     }
 }
 
-function serializeError(err: unknown) {
+function serializeError(err: unknown): ErrorType | undefined {
     if (!err) return
     if (typeof err !== "object") return
     if (!("message" in err) || !err.message) return
