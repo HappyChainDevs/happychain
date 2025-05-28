@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/happybuild",
     "private": true,
-    "version": "0.1.1",
+    "version": "1.0.0",
     "type": "module",
     "files": ["lib"],
     "main": "lib/index.ts",
@@ -14,7 +14,7 @@
     },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",
-        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:*",
         "@microsoft/api-extractor": "^7.47.9",
         "@parcel/watcher": "^2.4.1",
         "@types/bun": "^1.2.4",

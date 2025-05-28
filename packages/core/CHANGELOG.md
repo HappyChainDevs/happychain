@@ -1,5 +1,18 @@
 # @happy.tech/core
 
+## 0.3.0
+
+### Minor Changes
+
+- a9130df: Add utilities to create Viem clients.
+- 9f1bcd5: Rename provider interface / implementation to HappyProvider / HappyProviderImplem.
+
+### Patch Changes
+
+- 0da44ab: Rename BadgeProps to ConnectButtonProps.
+- 3f5d45f: Add new happychain icon
+- 1b07b8a: Allow rpc requests as soon as iframe/wallet is ready to accept them
+
 ## 0.2.1
 
 ### Patch Changes
@@ -31,6 +44,4 @@
 
 ## 0.1.0
 
-### Minor Changes
-
-initial release
+- Initial release

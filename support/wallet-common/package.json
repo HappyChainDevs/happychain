@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/wallet-common",
     "private": true,
-    "version": "0.2.0",
+    "version": "1.0.0",
     "type": "module",
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
@@ -20,9 +20,9 @@
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/bun": "^1.2.4",
         "happy-dom": "^15.0.0",
         "typescript": "^5.6.2"

@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/common",
     "private": true,
-    "version": "0.1.0",
+    "version": "1.0.0",
     "type": "module",
     "main": "./dist/index.es.js",
     "files": ["dist"],
@@ -28,8 +28,8 @@
         }
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/react": "^19.1.4",
         "vite-plugin-node-polyfills": "^0.22.0"
     },

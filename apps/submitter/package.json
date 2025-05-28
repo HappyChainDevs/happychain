@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/submitter",
     "private": true,
-    "version": "0.0.0",
+    "version": "0.1.0",
     "type": "module",
     "files": ["dist", "build", "package.json"],
     "main": "./dist/index.es.js",
@@ -28,9 +28,9 @@
         }
     },
     "devDependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/bun": "^1.2.4",
         "kysely-codegen": "^0.17.0",
         "openapi-types": "^12.1.3"
