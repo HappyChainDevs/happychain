@@ -1,5 +1,5 @@
 import { type ExecuteOutput, type ExecuteSuccess, Onchain } from "@happy.tech/boop-sdk"
-import { binaryPartition, createBigIntStorage } from "@happy.tech/common"
+import { createBigIntStorage } from "@happy.tech/common"
 import type { Address, Hash } from "@happy.tech/common"
 import { atom } from "jotai"
 import { getDefaultStore } from "jotai"
@@ -42,6 +42,8 @@ export const boopsAtom = atom(
 
 // === Interfaces ==============================================================================
 
+export type ErrorType = { message: string; code?: number | string }
+
 export enum BoopStatus {
     Pending = "pending",
     Success = "success",
@@ -53,12 +55,10 @@ interface IStoredBoop {
     confirmedAt?: number
     createdAt: number
     value: bigint
-    error?: { message: string; code?: number | string }
+    error?: ErrorType
     failedAt?: number
     boopReceipt?: ExecuteOutput
     status: BoopStatus
-
-    // add noncetrack and noncevalue here
 }
 export type StoredBoop = PendingBoop | ConfirmedBoop | FailedBoop
 export interface PendingBoop extends IStoredBoop {
@@ -77,7 +77,7 @@ export interface ConfirmedBoop extends IStoredBoop {
 
 export interface FailedBoop extends IStoredBoop {
     confirmedAt?: never
-    error?: { message: string; code?: number | string }
+    error?: ErrorType
     failedAt: number
     boopReceipt?: never
     status: BoopStatus.Failure
@@ -108,37 +108,27 @@ export function markBoopAsSuccess(receipt: ExecuteSuccess): void {
         console.error("Cannot mark boop as confirmed: Boop hash is missing.")
         return
     }
-
-    updateBoopStatus(receipt.receipt.boopHash, {
+    // biome-ignore format: compact
+    updateBoop(receipt.receipt.boopHash, (old) => ({
+        ...old,
         status: BoopStatus.Success,
         confirmedAt: Date.now(),
         boopReceipt: receipt,
-    } satisfies Omit<ConfirmedBoop, "boopHash" | "createdAt" | "value">)
+    }) as ConfirmedBoop)
 }
 
-export function markBoopAsFailure(
-    failedBoop: Omit<PendingBoop, "createdAt" | "status" | "value">,
-    error?: {
-        message: string
-        code?: number | string
-    },
-): void {
-    updateBoopStatus(failedBoop.boopHash, {
+export function markBoopAsFailure(failedBoop: Hash, error?: ErrorType): void {
+    // biome-ignore format: compact
+    updateBoop(failedBoop, (old) => ({
+        ...old,
         status: BoopStatus.Failure,
         failedAt: Date.now(),
         error,
-    } satisfies Omit<FailedBoop, "boopHash" | "createdAt" | "value">)
+    }) as FailedBoop)
 }
 
-function updateBoopStatus(boopHash: Hash, update: Partial<StoredBoop>): void {
-    const [[existing], rest] = binaryPartition(
-        store.get(boopsAtom) ?? [], //
-        (boop) => boop.boopHash === boopHash,
-    )
-    if (!existing) {
-        console.warn("Boop not found in history, cannot update status", { boopHash, update })
-        return
-    }
-    const updated = { ...existing, ...update } as StoredBoop
-    store.set(boopsAtom, [...rest, updated])
+function updateBoop(boopHash: Hash, update: (_: PendingBoop) => StoredBoop): void {
+    const boops = store.get(boopsAtom) ?? []
+    const i = boops.findIndex((it) => it.boopHash === boopHash)
+    store.set(boopsAtom, [...boops].splice(i, 1, update(boops[i] as PendingBoop)))
 }

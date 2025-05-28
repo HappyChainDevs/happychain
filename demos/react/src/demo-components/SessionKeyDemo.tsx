@@ -48,7 +48,6 @@ const SessionKeyDemo = () => {
     const { counter, isLoading, refetch } = useCounter()
 
     async function incrementCounter() {
-        let _count = counter || 0n
         try {
             const hash = await walletClient.writeContract({
                 address: deployment.HappyCounter,
@@ -57,13 +56,7 @@ const SessionKeyDemo = () => {
             })
 
             if (!hash) throw new Error("No hash returned")
-
-            setCounter((count) => {
-                _count = (count || 0n) + 1n
-                return _count
-            })
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
-
             if (receipt.status === "reverted") {
                 toast.error("Boop reverted!")
                 return
@@ -93,7 +86,6 @@ const SessionKeyDemo = () => {
             const newCount = await refetch(getCurrentUser()!.address)
             toast.success(`Counter incremented to ${newCount}`)
         } catch (error) {
-            setCounter((count) => (_count === counter || !_count ? count : _count - 1n))
             console.warn("[incrementCounter] error:", error)
             toast.error("Failed to reset counter: " + (error instanceof Error ? error.message : "Unknown error"))
         }
