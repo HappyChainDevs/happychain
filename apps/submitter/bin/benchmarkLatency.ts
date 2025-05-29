@@ -8,7 +8,7 @@ import {
 } from "@happy.tech/boop-sdk"
 import { delayed, stringify } from "@happy.tech/common"
 import { type PrivateKeyAccount, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { createAndSignMintBoop } from "#lib/utils/test"
+import { createAndSignMintBoop } from "#lib/utils/test/helpers"
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
@@ -31,39 +31,44 @@ async function run({
     const account = createAccountResult.address
     console.log(`Account created: ${account} in ${performance.now() - start}`)
     if (numBoops === 0) return
-
-    const nonceOutput = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
-    if (nonceOutput.status !== GetNonce.Success) throw new Error("couldn't fetch nonce")
-    const baseNonce = nonceOutput.nonceValue
     // 80 boops spaced 50ms = consistently spaced sending for 4 seconds
     const delayBetweenTransactions = 50
     // Array to store results for console.table
-    const results: { Latency: number; Status: string; EvmTxHash: string }[] = []
+    const results: { Latency: number; Status: string; EvmTxHash: string; Nonce: bigint }[] = []
     const boopPromises: Promise<void>[] = []
 
     // Step 2: Initiate transactions with a controlled delay
     console.log(`Initiating ${numBoops} transactions with a ${delayBetweenTransactions}ms delay between each...`)
     for (let i = 0; i < numBoops; i++) {
-        const nonceValue = baseNonce + BigInt(i)
-        const tx = await createAndSignMintBoop(eoa, { account, nonceValue })
+        const nonceValue = BigInt(i) % 50n
+        const nonceTrack = i < 50 ? 0n : 1n
+        const tx = await createAndSignMintBoop(eoa, { account, nonceTrack, nonceValue })
         boopPromises[i] = delayed(i * delayBetweenTransactions, async () => {
             const start = performance.now()
-            let status = "Unknown"
-            let evmTxHash = "N/A"
+            let Status = "Unknown"
+            let EvmTxHash = "N/A"
+            const boopHash = computeBoopHash(216n, tx)
+            const stringBoop = `(nonce ${nonceValue} — ${boopHash})`
             try {
-                const boopHash = computeBoopHash(216n, tx)
-                const result = await boopClient.execute({ boop: tx })
-                status = result.status
-                if (result.status !== Onchain.Success) throw new Error(result.description)
-                evmTxHash = (result as ExecuteSuccess).receipt.evmTxHash
-                console.log(`Boop ${boopHash} Success: https://explorer.testnet.happy.tech/tx/${evmTxHash}`)
+                const { status, receipt, description } = await boopClient.execute({ boop: tx })
+                Status = status
+                if (receipt) {
+                    EvmTxHash = receipt.evmTxHash
+                    console.log(`Success ${stringBoop}: https://explorer.testnet.happy.tech/tx/${EvmTxHash}`)
+                } else {
+                    console.error(`Error ${stringBoop}: ${description}`)
+                }
             } catch (error) {
-                console.error(`Error executing boop (nonce ${nonceValue}): ${stringify(error)}`)
-                status = "Error"
+                console.error(`Non-response error ${stringBoop}: ${stringify(error)} — THIS SHOULD NOT HAPPEN`)
+                Status = "Non-Response Error"
             } finally {
                 const end = performance.now()
-                const latency = Math.round(end - start)
-                results.push({ Latency: latency, Status: status, EvmTxHash: evmTxHash })
+                results.push({
+                    Latency: Math.round(end - start),
+                    Status,
+                    EvmTxHash,
+                    Nonce: nonceTrack * 100n + nonceValue,
+                })
             }
         })
     }
@@ -75,7 +80,7 @@ async function run({
 
     // Display results in a console table
     console.log("\n--- Transaction Latency Results ---")
-    console.table(results)
+    console.table(results.sort((a, b) => Number(a.Nonce - b.Nonce)))
     const average = results.reduce((sum, r) => sum + r.Latency, 0) / results.length
     const variance = results.reduce((sum, r) => sum + (r.Latency - average) ** 2, 0) / results.length
     const stdDeviation = Math.sqrt(variance)
