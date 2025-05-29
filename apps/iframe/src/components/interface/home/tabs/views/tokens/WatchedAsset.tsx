@@ -1,7 +1,9 @@
 import type { HappyUser } from "@happy.tech/wallet-common"
-import { useMemo, useState } from "react"
+import { useAtom } from "jotai"
+import { useEffect, useMemo, useState } from "react"
 import type { Address, WatchAssetParameters } from "viem"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
+import { walletOpenSignalAtom } from "#src/state/interfaceState.ts"
 import BalanceDisplay from "./BalanceDisplay"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
@@ -22,10 +24,11 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const tokenAddress = asset.options.address
 
     const [isImageSourceBroken, setIsImageSourceBroken] = useState(false)
+    const [walletOpenSignal, setWalletOpenSignal] = useAtom(walletOpenSignalAtom)
 
     // type assertion(s) as Address here valid since before adding a token
     // we check that the input string is an Address using the viem helper
-    const { data: balanceData, isLoading } = useERC20Balance(tokenAddress as Address, userAddress)
+    const { data: balanceData, isLoading, refetch } = useERC20Balance(tokenAddress as Address, userAddress)
 
     // shortened fields for UI visibility
     const tokenSymbol = useMemo(
@@ -33,13 +36,18 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         [asset],
     )
     const truncatedBalance = useMemo(() => {
-        if (!balanceData?.formatted) return undefined
+        if (!balanceData?.value) return undefined
 
         return new Intl.NumberFormat(navigator.language, {
             minimumFractionDigits: 4,
             maximumFractionDigits: 4,
-        }).format(Number(balanceData.formatted))
-    }, [balanceData?.formatted])
+        }).format(Number(balanceData.value))
+    }, [balanceData])
+
+    useEffect(() => {
+        if (!walletOpenSignal) return
+        void refetch().then(() => setWalletOpenSignal(false))
+    }, [refetch, walletOpenSignal, setWalletOpenSignal])
 
     const imageSource =
         asset.options.image && !isImageSourceBroken
