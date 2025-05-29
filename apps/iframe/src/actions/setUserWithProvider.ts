@@ -2,6 +2,7 @@ import type { HappyUser } from "@happy.tech/wallet-common"
 import { AuthState } from "@happy.tech/wallet-common"
 import { getDefaultStore } from "jotai"
 import type { EIP1193Provider } from "viem"
+import { resetChainsAtom } from "#src/state/chains.ts"
 import { connectWagmi, disconnectWagmi } from "#src/wagmi/utils"
 import { authStateAtom } from "../state/authState"
 import { providerAtom } from "../state/provider"
@@ -22,7 +23,10 @@ export async function setUserWithProvider(user: HappyUser, provider: EIP1193Prov
 export async function setUserWithProvider(user: HappyUser | undefined, provider: EIP1193Provider | undefined) {
     const isConnecting = Boolean(user && provider)
 
-    if (!isConnecting) await disconnectWagmi()
+    if (!isConnecting) {
+        await disconnectWagmi()
+        resetChainsAtom()
+    }
 
     store.set(providerAtom, provider)
     store.set(userAtom, user)

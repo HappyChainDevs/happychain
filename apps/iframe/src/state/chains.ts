@@ -29,6 +29,10 @@ export const chainsAtom = atomWithStorage<
     Record<string, AddEthereumChainParameter> //
 >(StorageKey.Chains, getDefaultChainsRecord(), undefined, { getOnInit: true })
 
+export function resetChainsAtom() {
+    setChains(getDefaultChainsRecord())
+}
+
 export const {
     /** See {@link chainsAtom} */
     getValue: getChains,
