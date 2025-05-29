@@ -102,13 +102,23 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
 
         case "wallet_getCapabilities": {
             checkAuthenticated()
-            if (!request.payload?.params?.[0]) {
-                throw new EIP1474InvalidInput("Missing payload")
+            if (!request.payload?.params?.[0] || !request.payload?.params?.[1]) {
+                throw new EIP1474InvalidInput("Missing payload parameters")
             }
-
             checkAndChecksumAddress(request.payload.params[0])
 
             const currentChainId = getCurrentChain().chainId
+            if (request.payload.params[1].length > 1) {
+                const requestedChainIds = request.payload.params[1]
+                for (const chainId of requestedChainIds) {
+                    if (chainId !== currentChainId) {
+                        console.warn(
+                            `Unsupported chain ID requested: ${chainId}. The Happy Wallet is a HappyChain exclusive 🤠!`,
+                        )
+                    }
+                }
+            }
+
             const capabilities: Capabilities = {
                 [currentChainId]: Object.fromEntries(
                     Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),

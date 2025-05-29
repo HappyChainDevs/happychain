@@ -19,7 +19,7 @@ export const WalletSwitchEthereumChain = ({
     if (import.meta.env.PROD)
         return <RequestDisabled
                 headline={headline}
-                description="The Happy Wallet is an HappyChain exclusive 🤠"
+                description="The Happy Wallet is a HappyChain exclusive 🤠"
                 reject={reject}
             />
 
