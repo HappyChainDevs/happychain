@@ -168,6 +168,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_addEthereumChain": {
+            if(import.meta.env.PROD) { throw new Error("feature not available in production") }
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
             if (!isValid) throw new EIP1474InvalidInput("Invalid wallet_addEthereumChain request body")
@@ -190,6 +191,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         }
 
         case "wallet_switchEthereumChain": {
+            if(import.meta.env.PROD) { throw new Error("feature not available in production") }
             const chains = getChains()
             const chainId = request.payload.params[0].chainId
             if (!(chainId in chains))

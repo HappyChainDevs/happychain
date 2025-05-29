@@ -85,11 +85,9 @@ const WalletFunctionalityDemo = () => {
                     Mint Token
                 </button>
             </div>
-            {!import.meta.env.PROD && (
-                <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                    Load ABI
-                </button>
-            )}
+            <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Load ABI
+            </button>
         </div>
     )
 }

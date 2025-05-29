@@ -4,10 +4,10 @@ import ConnectionDemo from "./demo-components/ConnectionDemo"
 import SessionKeyDemo from "./demo-components/SessionKeyDemo"
 import WalletCallsDemo from "./demo-components/WalletCallsDemo"
 import WalletFunctionalityDemo from "./demo-components/WalletFunctionalityDemo"
+import { WalletType } from "@happy.tech/wallet-common"
 
 function App() {
     const { user } = useHappyWallet()
-
     return (
         <main className='flex min-h-dvh w-full flex-col items-center pb-24 gap-4 bg-[url("/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg")] bg-cover p-4'>
             <h1 className="p-16 text-4xl font-bold text-white">HappyChain + TS + React + Viem</h1>
@@ -21,7 +21,7 @@ function App() {
                 </div>
 
                 <WalletCallsDemo />
-                {!import.meta.env.PROD && <ChainSwitchingDemo />}
+                {!(user?.type === WalletType.Injected)  && <ChainSwitchingDemo />}
                 <WalletFunctionalityDemo />
                 <SessionKeyDemo />
             </div>
