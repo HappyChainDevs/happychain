@@ -9,6 +9,7 @@ import {
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { addBanner } from "#src/state/banner"
+import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user"
 import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
 import { getAuthState } from "../state/authState"
@@ -45,7 +46,7 @@ export class IframeProvider extends BasePopupProvider {
         // injected wallets don't need permissions here (handled by the wallet)
         if (this.isInjectedUser) return false
 
-        return checkIfRequestRequiresConfirmation(getWalletURL(), args)
+        return await checkIfRequestRequiresConfirmation(getWalletURL(), args)
     }
 
     private get isInjectedUser() {
@@ -64,6 +65,10 @@ export class IframeProvider extends BasePopupProvider {
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
         // The iframe is auto-connected by default, there is never a need for extra permissions.
         return true
+    }
+
+    protected override getChainId(): string {
+        return getCurrentChain().chainId
     }
 }
 

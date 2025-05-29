@@ -45,7 +45,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         HappyProviderImplem.instance().displayError(OverlayErrorCode.PopupBlocked)
     }
 
-    protected override requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+    protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         const key = createUUID()
         const { promise, resolve, reject } = promiseWithResolvers<boolean>()
         this.#inFlightPermissionChecks.set(key, { resolve, reject })
@@ -57,7 +57,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             error: null,
         })
 
-        return promise
+        return await promise
     }
 
     protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
