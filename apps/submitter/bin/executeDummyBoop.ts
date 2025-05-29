@@ -10,6 +10,7 @@ import { createAndSignMintBoop } from "#lib/utils/test"
 
 if(process.env.SUBMITTER_URL === undefined) {
     throw new Error("SUBMITTER_URL is not defined. Please set it in your environment variables.")
+}
 
 async function run() {
     const eoa = privateKeyToAccount(generatePrivateKey())
