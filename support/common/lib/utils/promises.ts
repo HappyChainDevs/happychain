@@ -5,8 +5,7 @@ export type ResolveInputType<T> = T | PromiseLike<T>
 export type ResolveType<T> = (value: ResolveInputType<T>) => void
 
 /** Type of the {@link PromiseConstructor#reject} function. */
-// biome-ignore lint/suspicious/noExplicitAny: actual library type
-export type RejectType = (reason: any) => void
+export type RejectType = (reason: unknown) => void
 
 export type Resolvers<T> = {
     resolve: ResolveType<T>
