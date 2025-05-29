@@ -1,4 +1,4 @@
-name: Submitter Check Cron Job
+name: Staging Submitter Check Cron Job
 
 on:
   workflow_dispatch:
