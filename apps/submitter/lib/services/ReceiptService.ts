@@ -1,5 +1,13 @@
 import { type Address, type Hash, type Hex, delayed, getOrSet, promiseWithResolvers, sleep } from "@happy.tech/common"
-import type { Log, TransactionReceipt, WatchBlocksReturnType } from "viem"
+import {
+    http,
+    type Log,
+    type PublicClient,
+    type TransactionReceipt,
+    type WatchBlocksReturnType,
+    createPublicClient,
+    fallback,
+} from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
@@ -7,7 +15,7 @@ import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { computeHash, dbService, simulationCache } from "#lib/services"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { headerCouldContainBoop } from "#lib/utils/bloom"
-import { publicClient } from "#lib/utils/clients"
+import { chain, config, publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 
@@ -31,6 +39,7 @@ export type WaitForInclusionArgs = {
 export class ReceiptService {
     #pendingEvmTxs = new Map</* evmTxHash: */ Hash, PendingEvmTxInfo>()
     #pendingBoops = new Map</* boopHash: */ Hash, PendingBoopInfo>()
+    #publicClient: PublicClient = publicClient
 
     constructor() {
         void this.#startBlockWatcher()
@@ -97,7 +106,7 @@ export class ReceiptService {
             let unwatch: WatchBlocksReturnType | null = null
             try {
                 logger.info("Starting block watcher with transport", publicClient.transport)
-                unwatch = publicClient.watchBlocks({
+                unwatch = this.#publicClient.watchBlocks({
                     // If `poll` is undefined and transport is WebSocket (or fallback with first WebSocket transport),
                     // Viem won't poll but subscribe, even if `pollingInterval` is set.
                     pollingInterval: 200,
@@ -130,8 +139,16 @@ export class ReceiptService {
                 //      We have Viem fallback enabled, but how does it work with watchblocks and websocket?
                 if (unwatch) unwatch()
                 else logger.error("Error starting block watcher", e)
-                if (currentRetry === maxRetries)
-                    throw new Error(`Unable to restart block watch after ${maxRetries} attempts`)
+                if (currentRetry === maxRetries) {
+                    // we have exhausted all retries, automatic fallback with websocket not working,
+                    // so we create a new public client with only http transports
+                    const httpOnlyConfig = {
+                        ...config,
+                        transport: fallback([...chain.rpcUrls.default.http.map((url) => http(url))]),
+                    }
+                    this.#publicClient = createPublicClient(httpOnlyConfig)
+                }
+
                 currentRetry++
                 const delay = Math.min(initialRetryDelay * 2 ** (currentRetry - 1), maxRetryDelay) // exponential backoff
                 logger.warn(`Retrying block watcher in ${delay / 1000} seconds (Attempt ${currentRetry}/${maxRetries})`)
