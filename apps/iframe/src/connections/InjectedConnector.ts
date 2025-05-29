@@ -1,4 +1,4 @@
-import { type Hex, createUUID, promiseWithResolvers } from "@happy.tech/common"
+import { type Hex, createUUID, getProp, promiseWithResolvers } from "@happy.tech/common"
 import type {
     ConnectionProvider,
     EIP6963ProviderDetail,
@@ -186,9 +186,9 @@ export class InjectedConnector implements ConnectionProvider {
                 if (!address) return reject(new EIP1193UnauthorizedError())
 
                 const user = await createHappyUserFromWallet(this.id, address)
-                return this.switchInjectedWalletToHappyChain().then(() => {
-                    return resolve({ user, request, response })
-                })
+                return this.switchInjectedWalletToHappyChain()
+                    .then(() => resolve({ user, request, response }))
+                    .catch((err) => reject(err))
             },
         )
 
@@ -218,7 +218,9 @@ export class InjectedConnector implements ConnectionProvider {
                 params: [{ chainId: configuredChain.chainId }],
             })
         } catch (e) {
-            console.error(e)
+            // Hotfix for MetaMask, tracking: https://github.com/MetaMask/metamask-extension/issues/33213
+            if (getProp(e, "message", "string")?.includes("is not a function")) return
+            throw e
         }
     }
 }
