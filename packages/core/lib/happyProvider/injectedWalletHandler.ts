@@ -71,8 +71,7 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         // We only require approval (= popup) on the initial connection request for injected wallets. This will
         // cause that request to flow to the approved handler, which is fine in this case. Everything else will flow
         // to the injected handler, and if approval is required, it will be solliciated from the injected wallet.
-        return true
-        //return !(this.#wrapper.provider && getCurrentUser()) // !connected
+        return !(this.#wrapper.provider && this.#getUser()) // !connected
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
