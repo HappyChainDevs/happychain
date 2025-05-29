@@ -1,4 +1,4 @@
-import { createUUID, promiseWithResolvers } from "@happy.tech/common"
+import { type Resolvers, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import type { SerializedRpcError } from "@happy.tech/wallet-common"
 import {
     type EIP1193RequestParameters,
@@ -18,6 +18,10 @@ import { getUser } from "#src/state/user"
 import { getAppURL, isStandaloneWallet, walletID } from "#src/utils/appURL"
 import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet"
 import { iframeProvider } from "#src/wagmi/provider"
+
+type InFlightRequest = Resolvers<EIP1193RequestResult> & {
+    request: ProviderEventPayload<EIP1193RequestParameters>
+}
 
 /**
  * A proxy implementation of the EIP-1193 provider interface
@@ -45,7 +49,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
         return InjectedProviderProxy.instance
     }
 
-    private inFlight = new Map()
+    private inFlight = new Map<UUID, InFlightRequest>()
 
     private isStandalone = isStandaloneWallet()
 
