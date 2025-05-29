@@ -36,6 +36,6 @@ export function getAbis(env: Environment) {
             return abisAnvil
         case happychainTestnet.id:
         default:
-            return env.USE_STAGING_CONTRACTS ? abisHappyChainSepolia : abisHappyChainSepoliaStaging
+            return env.USE_STAGING_CONTRACTS ? abisHappyChainSepoliaStaging : abisHappyChainSepolia
     }
 }
