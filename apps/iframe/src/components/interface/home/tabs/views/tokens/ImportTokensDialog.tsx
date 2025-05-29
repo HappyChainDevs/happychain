@@ -213,7 +213,12 @@ export const ImportTokensDialog = () => {
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
                                 Token decimals
                             </FormField.Label>
-                            <FormField.Input value={decimals || ""} name="decimals" type="number" className="select-none pointer-events-none" />
+                            <FormField.Input
+                                value={decimals || ""}
+                                name="decimals"
+                                type="number"
+                                className="select-none pointer-events-none"
+                            />
                             <FormField.ErrorText>
                                 {/* Spacing */}
                                 {""}
