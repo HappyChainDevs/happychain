@@ -1,4 +1,4 @@
-import { Coins } from "@phosphor-icons/react"
+import { CoinsIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
 import { watchedAssetsAtom } from "#src/state/watchedAssets"
@@ -26,7 +26,7 @@ const TokenView = () => {
                 ))
             ) : (
                 <div className="flex flex-col gap-3 items-center justify-center pt-6">
-                    <Coins className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
+                    <CoinsIcon className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
                     <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
                         Your watched tokens will appear here.
                     </p>

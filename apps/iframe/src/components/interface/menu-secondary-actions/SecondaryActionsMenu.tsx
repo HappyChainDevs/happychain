@@ -1,5 +1,5 @@
 import { Menu } from "@ark-ui/react/menu"
-import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react"
+import { CaretDownIcon, CaretRightIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
@@ -19,7 +19,7 @@ const TriggerSecondaryActionsMenu = () => {
                 setVisibility(!isVisible)
             }}
         >
-            {isVisible ? <CaretUp size="1.15em" /> : <CaretDown size="1.15em" />}
+            {isVisible ? <CaretUpIcon size="1.15em" /> : <CaretDownIcon size="1.15em" />}
         </button>
     )
 }
@@ -93,7 +93,7 @@ const SecondaryActionsMenu = () => {
                             <Link preload="intent" to="/embed/permissions">
                                 <span className="w-full max-w-prose mx-auto justify-between items-center inline-flex">
                                     <span>Permissions</span>
-                                    <CaretRight size="1em" />
+                                    <CaretRightIcon size="1em" />
                                 </span>
                             </Link>
                         </Menu.Item>

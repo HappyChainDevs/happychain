@@ -1,6 +1,12 @@
 import { Onchain } from "@happy.tech/boop-sdk"
 import { shortenAddress } from "@happy.tech/wallet-common"
-import { ArrowUp, Lightning, LightningSlash, PencilSimple, WarningOctagon } from "@phosphor-icons/react"
+import {
+    ArrowUpIcon,
+    LightningIcon,
+    LightningSlashIcon,
+    PencilSimpleIcon,
+    WarningOctagonIcon,
+} from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { formatEther, formatUnits } from "viem"
 import { BoopStatus, type StoredBoop } from "#src/state/boopHistory"
@@ -10,27 +16,27 @@ import { OperationType, useClassifyActivity } from "./useClassifyActivity"
 const ACTIVITY_HEADLINE = {
     [OperationType.NativeTransfer]: {
         label: "Send HAPPY",
-        icon: ArrowUp,
+        icon: ArrowUpIcon,
     },
     [OperationType.ERC20Transfer]: {
         label: (symbol?: string) => `Send ${symbol ?? "ERC20 token"}`,
-        icon: ArrowUp,
+        icon: ArrowUpIcon,
     },
     [OperationType.ContractInteraction]: {
         label: "Contract interaction",
-        icon: PencilSimple,
+        icon: PencilSimpleIcon,
     },
     [OperationType.SessionKeyAdded]: {
         label: "Session key created",
-        icon: Lightning,
+        icon: LightningIcon,
     },
     [OperationType.SessionKeyRemoved]: {
         label: "Session key(s) removed",
-        icon: LightningSlash,
+        icon: LightningSlashIcon,
     },
     [OperationType.Failed]: {
         label: "Failed",
-        icon: WarningOctagon,
+        icon: WarningOctagonIcon,
     },
 }
 

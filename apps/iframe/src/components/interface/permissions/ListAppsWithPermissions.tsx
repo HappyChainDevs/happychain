@@ -1,4 +1,4 @@
-import { CaretRight } from "@phosphor-icons/react"
+import { CaretRightIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { AppPermissions } from "#src/state/permissions"
@@ -29,7 +29,7 @@ const ListItem = ({ appURL }: ListItemProps) => {
                 />
                 <span className="me-auto inline-block">{appURL}</span>
                 <span className="p-0.5 rounded-full center" data-part="icon">
-                    <CaretRight />
+                    <CaretRightIcon />
                 </span>
             </span>
             <Link

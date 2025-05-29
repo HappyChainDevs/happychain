@@ -1,5 +1,5 @@
 import { Checkbox } from "@ark-ui/react"
-import { Check } from "@phosphor-icons/react"
+import { CheckIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
@@ -48,7 +48,7 @@ export const SessionKeyCheckbox = ({
                 }
             >
                 <Checkbox.Indicator className="text-transparent">
-                    <Check />
+                    <CheckIcon />
                 </Checkbox.Indicator>
             </Checkbox.Control>
             <Checkbox.HiddenInput />

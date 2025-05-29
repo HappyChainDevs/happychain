@@ -1,5 +1,5 @@
 import { type HTMLArkProps, ark } from "@ark-ui/react"
-import { Spinner } from "@phosphor-icons/react"
+import { SpinnerIcon } from "@phosphor-icons/react"
 import { forwardRef } from "react"
 import { type ButtonVariantsProps, recipeButton } from "./variants"
 
@@ -13,7 +13,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <ark.button className={recipeButton({ scale, intent, className })} ref={ref} {...rest}>
                 {isLoading && (
                     <span data-loader className="pe-1">
-                        <Spinner className="animate-spin text-[1.25em]" />
+                        <SpinnerIcon className="animate-spin text-[1.25em]" />
                     </span>
                 )}
                 {children}
