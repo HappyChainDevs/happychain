@@ -16,7 +16,7 @@ export const WalletSwitchEthereumChain = ({
     const headline = "Switch chain"
 
     // biome-ignore format: save space
-    if (import.meta.env.PROD) // is this sufficient?
+    if (import.meta.env.PROD)
         return <RequestDisabled
                 headline={headline}
                 description="The Happy Wallet is an HappyChain exclusive 🤠"
