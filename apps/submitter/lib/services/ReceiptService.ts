@@ -105,7 +105,7 @@ export class ReceiptService {
             const { promise, reject } = promiseWithResolvers<void>()
             let unwatch: WatchBlocksReturnType | null = null
             try {
-                logger.info("Starting block watcher with transport", publicClient.transport)
+                logger.info("Starting block watcher with transport", this.#publicClient.transport)
                 unwatch = this.#publicClient.watchBlocks({
                     // If `poll` is undefined and transport is WebSocket (or fallback with first WebSocket transport),
                     // Viem won't poll but subscribe, even if `pollingInterval` is set.
@@ -159,7 +159,7 @@ export class ReceiptService {
 
     async #handleTransactionInBlock(txHash: Hash, boop: Boop, sub: PendingBoopInfo): Promise<void> {
         try {
-            const receipt = await publicClient.getTransactionReceipt({ hash: txHash })
+            const receipt = await this.#publicClient.getTransactionReceipt({ hash: txHash })
             sub.pwr.resolve(await this.#getReceiptResult(boop, receipt))
         } catch {
             sub.pwr.resolve({
