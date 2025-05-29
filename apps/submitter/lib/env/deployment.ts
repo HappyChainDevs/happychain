@@ -17,7 +17,7 @@ export function getDeployment(env: Environment) {
                 return deploymentAnvil
             case happychainTestnet.id:
             default:
-                return env.USE_STAGING_CONTRACTS ? deploymentHappyChainSepolia : deploymentHappyChainSepoliaStaging
+                return env.USE_STAGING_CONTRACTS ? deploymentHappyChainSepoliaStaging : deploymentHappyChainSepolia
         }
     }
     const deployment = getBaseDeployment()
