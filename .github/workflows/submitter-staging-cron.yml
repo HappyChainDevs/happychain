@@ -3,7 +3,7 @@ name: Staging Submitter Check Cron Job
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *' # every 30 min
+    - cron: '*/30 * * * *' # every 30 min
 env:
     CHAIN_ID: 216
     VITE_SUBMITTER_URL: "https://submitter.happy.tech"
