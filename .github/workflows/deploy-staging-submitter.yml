@@ -59,7 +59,10 @@ jobs:
             DATABASE_URL=/home/staging_submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=staging
-            RPC_URL=http://localhost:8545
+            USE_STAGING_CONTRACTS=true
+            RPC_HTTP_URL=http://localhost:8545
+            RPC_WS_URL=ws://localhost:8546
+            USE_WEBSOCKET=true
             EOF
               cd /home/staging_submitter/build
               bun migrate.es.js
