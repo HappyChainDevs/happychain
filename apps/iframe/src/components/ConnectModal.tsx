@@ -3,7 +3,7 @@ import type { ConnectionProvider, MsgsFromApp } from "@happy.tech/wallet-common"
 import { Msgs, WalletDisplayAction } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { FirebaseErrorCode, isFirebaseError } from "#src/connections/firebase/errors"
 import { walletID } from "#src/utils/appURL"
 import { patchTimeoutOff, signalClosed } from "#src/utils/walletState"
@@ -71,6 +71,8 @@ function useClientConnectionRequest() {
 const ConnectContent = () => {
     const [popupBlocked, setPopupBlocked] = useState(false)
     const { clientConnectionRequest, clearClientConnectionRequest } = useClientConnectionRequest()
+    const abortRef = useRef(new AbortController())
+    const abort = abortRef.current
 
     const mutationLogin = useMutation({
         mutationFn: async (provider: ConnectionProvider) => {
@@ -81,12 +83,14 @@ const ConnectContent = () => {
                 error: null,
                 payload: { method: "eth_requestAccounts" },
             }
-
             const { response, request } = await provider.connect(connectRequest)
-
             return clientConnectionRequest ? { response, request } : undefined
         },
         onSettled(response, _error) {
+            // User pressed "Cancel", ignore result.
+            // This captures the abort controller in use when the mutation is created.
+            if (abort.signal.aborted) return
+
             // popup was blocked
             if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) return setPopupBlocked(true)
 
@@ -110,35 +114,58 @@ const ConnectContent = () => {
         },
     })
 
-    if (popupBlocked || mutationLogin.isError) {
+    const reset = () => {
+        mutationLogin.reset()
+        abortRef.current = new AbortController()
+    }
+
+    const cancel = () => {
+        abort.abort()
+        reset()
+    }
+
+    if (popupBlocked || mutationLogin.isError)
         return (
             <div className="overflow-y-auto scrollbar-thin">
                 <ErrorDisplay
                     popupBlocked={popupBlocked}
                     onAccept={() => {
                         setPopupBlocked(false)
-                        mutationLogin.reset()
+                        reset()
                     }}
                 />
             </div>
         )
-    }
 
-    return (
+    return mutationLogin.isPending ? (
         <>
             <div className="overflow-y-auto scrollbar-thin">
-                {mutationLogin.isPending ? (
-                    <LoginPending provider={mutationLogin.variables} />
-                ) : (
-                    <ProviderList onSelect={(prov) => mutationLogin.mutate(prov)} />
-                )}
+                <LoginPending provider={mutationLogin.variables} />
             </div>
-            <Button intent="ghost" type="button" className="h-fit justify-center" onClick={() => signalClosed()}>
-                Close
-            </Button>
+            <CloseButton />
+            <CancelButton cancel={cancel} />
+        </>
+    ) : (
+        <>
+            <div className="overflow-y-auto scrollbar-thin">
+                <ProviderList onSelect={mutationLogin.mutate} />
+            </div>
+            <CloseButton />
         </>
     )
 }
+
+const CloseButton = () => (
+    <Button intent="ghost" type="button" className="h-fit justify-center" onClick={signalClosed}>
+        Close
+    </Button>
+)
+
+const CancelButton = ({ cancel }: { cancel: () => void }) => (
+    <Button intent="outline-negative" type="button" className="h-fit justify-center" onClick={cancel}>
+        Cancel
+    </Button>
+)
 
 const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
     return (
