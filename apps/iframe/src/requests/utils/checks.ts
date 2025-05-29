@@ -9,14 +9,29 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1474InvalidInput,
+    HappyWalletCapability,
     permissionsLists,
 } from "@happy.tech/wallet-common"
 import { checksum } from "ox/Address"
-import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex } from "viem"
+import {
+    AtomicityNotSupportedError,
+    BundleTooLargeError,
+    type Hex,
+    type RpcTransactionRequest,
+    UnsupportedChainIdError,
+    UnsupportedNonOptionalCapabilityError,
+    type WalletSendCallsParameters,
+    type WatchAssetParameters,
+    isAddress,
+    isHex,
+    toHex,
+} from "viem"
 import { getAuthState } from "#src/state/authState"
+import { getCurrentChain } from "#src/state/chains.ts"
 import { getUser } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
+import { parseSendCallParams } from "#src/utils/isSendCallsParams"
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
@@ -130,4 +145,93 @@ export function ensureIsNotHappyMethod(
         throw new EIP1193UnsupportedMethodError(
             `happy method unsupported by this handle: ${requestParams.method} — IMPLEMENTATION BUG`,
         )
+}
+
+// ================================= EIP-5792 =================================
+const SUPPORTED_CAPABILITIES = [HappyWalletCapability.BoopPaymaster] as const
+
+export type ValidWalletSendCallsRequest = {
+    id: string
+    from: Address
+    chainId: Hex
+    atomicRequired: false
+    version: "2.0.0"
+    calls: [
+        {
+            to: Address
+            data?: Hex
+            value?: Hex | bigint
+            capabilities?: {
+                [HappyWalletCapability.BoopPaymaster]?: {
+                    address: Address
+                    optional?: boolean
+                }
+            }
+        },
+    ]
+    capabilities?: {
+        [HappyWalletCapability.BoopPaymaster]?: {
+            address: Address
+            optional?: boolean
+        }
+    }
+}
+
+type BoopPaymasterCapability = {
+    [HappyWalletCapability.BoopPaymaster]: {
+        address: Address
+        optional?: boolean
+    }
+}
+
+type WalletSendCallsParams = WalletSendCallsParameters<BoopPaymasterCapability, Hex, Hex | bigint>
+
+export function checkedWalletSendCallsParams(params: WalletSendCallsParams | undefined): ValidWalletSendCallsRequest {
+    // 1474 - invalid params
+    const parsed = parseSendCallParams(params)
+    if (!parsed.success && parsed.error)
+        throw new EIP1474InvalidInput("Invalid wallet_sendCalls request body:", parsed.error)
+    // 4100	- Unauthorised
+    checkAuthenticated()
+    const [reqBody] = parsed.data
+    // 5710 - unsupported chain ID
+    if (reqBody.chainId !== getCurrentChain().chainId) throw new UnsupportedChainIdError(new Error("Not HappyChain"))
+    // // 5740 - bundle too large, we currently only support only one call per bundle
+    if (reqBody.calls.length > 1)
+        throw new BundleTooLargeError(new Error("Happy Wallet currently only supports 1 call per bundle"))
+    // 5760 - no atomicity
+    if (reqBody.atomicRequired)
+        throw new AtomicityNotSupportedError(new Error("Happy Wallet does not support atomicity (yet)"))
+    // 5700 - unsupported capability (global + at the call level)
+    validateCapabilities(reqBody.capabilities ?? {}, SUPPORTED_CAPABILITIES)
+    validateCapabilities(reqBody.calls[0].capabilities ?? {}, SUPPORTED_CAPABILITIES)
+
+    return reqBody as ValidWalletSendCallsRequest
+}
+
+export function extractValidTxFromCall(request: ValidWalletSendCallsRequest): ValidRpcTransactionRequest {
+    const call = request.calls[0]
+
+    const tx: ValidRpcTransactionRequest = {
+        from: request.from!,
+        to: call.to!,
+        value: call.value !== undefined ? toHex(call.value) : undefined,
+        data: call.data,
+    }
+
+    return tx
+}
+
+function validateCapabilities(
+    // biome-ignore lint/suspicious/noExplicitAny: viem does it
+    capabilities: Record<string, any>,
+    supported: readonly string[],
+) {
+    for (const [key, value] of Object.entries(capabilities)) {
+        const isSupported = supported.includes(key)
+        const isOptional = typeof value === "object" && value?.optional === true
+        if (!isSupported && !isOptional) {
+            throw new UnsupportedNonOptionalCapabilityError(new Error(`Unsupported non-optional capability: ${key}`))
+        }
+    }
 }

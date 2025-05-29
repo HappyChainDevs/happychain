@@ -1,6 +1,7 @@
 import { loadAbi, showSendScreen } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
+import { parseEther } from "viem"
 import { walletClient } from "../clients"
 import { abis, deployment } from "../deployments"
 
@@ -62,6 +63,23 @@ const WalletFunctionalityDemo = () => {
         }
     }
 
+    async function sendBatch() {
+        try {
+            const batchCalls = await walletClient?.sendCalls({
+                account: user?.address,
+                calls: [
+                    {
+                        to: "0x77e351bd9C2EF18aB7070f37a5A8108279553F91",
+                        value: parseEther("0.001"),
+                    },
+                ],
+            })
+            console.log(batchCalls)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     async function loadAbiStub() {
         await loadAbi(deployment.MockTokenA, abis.MockTokenA)
         toast.success(
@@ -87,6 +105,9 @@ const WalletFunctionalityDemo = () => {
             </div>
             <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Load ABI
+            </button>
+            <button type="button" onClick={sendBatch} className="rounded-lg bg-amber-300 font-mono p-2 shadow-xl">
+                wallet_sendCalls
             </button>
         </div>
     )

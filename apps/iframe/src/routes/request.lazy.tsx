@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
 import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
+import { WalletSendCalls } from "#src/components/requests/WalletSendCalls.tsx"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -133,6 +134,8 @@ function Request() {
             return <EthRequestAccounts {...props} />
         case "wallet_watchAsset":
             return <WalletWatchAsset {...props} />
+        case "wallet_sendCalls":
+            return <WalletSendCalls {...props} />
         case HappyMethodNames.LOAD_ABI:
             return <HappyLoadAbi {...props} />
         case HappyMethodNames.REQUEST_SESSION_KEY:

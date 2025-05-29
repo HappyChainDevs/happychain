@@ -117,6 +117,8 @@ const unsafeList = new Set([
     // cryptography
     "eth_decrypt",
     "eth_getEncryptionPublicKey",
+    // eip-5792
+    "wallet_sendCalls",
 ])
 
 /**

@@ -1,7 +1,14 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
+import type { WalletSendCallsReturnType } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
-import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
+import {
+    checkAndChecksumAddress,
+    checkedTx,
+    checkedWalletSendCallsParams,
+    checkedWatchedAsset,
+    extractValidTxFromCall,
+} from "#src/requests/utils/checks"
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
 import { installNewSessionKey } from "#src/requests/utils/sessionKeys"
 import { eoaSigner } from "#src/requests/utils/signers"
@@ -13,6 +20,7 @@ import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { reqLogger } from "#src/utils/logger"
+import { happyPaymaster } from "../../constants/contracts"
 
 export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
@@ -69,6 +77,24 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
         case "wallet_watchAsset": {
             const params = checkedWatchedAsset(request.payload.params)
             return addWatchedAsset(user.address, params)
+        }
+
+        case "wallet_sendCalls": {
+            const checkedParams = checkedWalletSendCallsParams(request.payload.params)
+            const extractedTx = extractValidTxFromCall(checkedParams)
+            const boopHash = await sendBoop({
+                account: user.address,
+                tx: extractedTx,
+                signer: eoaSigner,
+                paymaster: checkedParams.capabilities?.boopPaymaster?.address,
+            })
+
+            return {
+                id: boopHash,
+                capabilities: {
+                    boopPaymaster: happyPaymaster,
+                },
+            } satisfies WalletSendCallsReturnType
         }
 
         case HappyMethodNames.LOAD_ABI: {
