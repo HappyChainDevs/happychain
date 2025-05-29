@@ -73,7 +73,8 @@ export const EthSendTransaction = ({
         }
     }, [simulateOutput])
 
-    const notEnoughFunds = !!userBalance?.value && !!values?.cost && userBalance.value < txValue + values.cost
+    const fundsNeeded = isSelfPaying && values ? txValue + values.cost : txValue
+    const notEnoughFunds = !!userBalance && userBalance.value < fundsNeeded
     const isConfirmActionDisabled = (txValue && isBalancePending) || isSimulatePending
     const isRequestDisabled = Boolean(
         !isValidTransaction || notEnoughFunds || simulateError || simulateOutput?.feeTooLowDuringSimulation,
