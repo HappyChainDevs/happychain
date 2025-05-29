@@ -188,13 +188,14 @@ export const ImportTokensDialog = () => {
                                 symbolInputInvalidCondition ||
                                 status === "pending"
                             }
-                            disabled={!isValidAddress || symbolInputInvalidCondition}
+                            disabled
                         >
                             <FormField.Label>Token symbol</FormField.Label>
                             <FormField.Input
                                 name="symbol"
                                 value={customTokenSymbol}
                                 onChange={handleCustomSymbolInputChange}
+                                className="select-none pointer-events-none"
                             />
                             <FormField.ErrorText>
                                 {/* Spacing */}
@@ -208,11 +209,11 @@ export const ImportTokensDialog = () => {
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
-                        <FormField.Root required readOnly disabled={!isValidAddress || decimalsInputInvalidCondition}>
+                        <FormField.Root required readOnly disabled>
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
                                 Token decimals
                             </FormField.Label>
-                            <FormField.Input value={decimals || ""} name="decimals" type="number" step="1" min="1" />
+                            <FormField.Input value={decimals || ""} name="decimals" type="number" className="select-none pointer-events-none" />
                             <FormField.ErrorText>
                                 {/* Spacing */}
                                 {""}
@@ -223,7 +224,7 @@ export const ImportTokensDialog = () => {
                             intent="primary"
                             className="text-neutral-content justify-center"
                             isLoading={status === "pending"}
-                            aria-disabled={submitButtonDisabledCondition || status === "pending"}
+                            disabled={submitButtonDisabledCondition || status === "pending"}
                         >
                             Submit
                         </Button>
