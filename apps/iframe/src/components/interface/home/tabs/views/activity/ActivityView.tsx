@@ -1,4 +1,4 @@
-import { Clock } from "@phosphor-icons/react"
+import { ClockIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { BoopStatus, boopsAtom } from "#src/state/boopHistory"
 import { userAtom } from "#src/state/user"
@@ -22,7 +22,7 @@ export const ActivityView = () => {
     if (!boops.length) {
         return (
             <div className="flex flex-col gap-3 items-center justify-center pt-6">
-                <Clock className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
+                <ClockIcon className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
                 <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
                     No transactions to display.
                 </p>

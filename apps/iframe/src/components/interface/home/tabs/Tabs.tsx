@@ -1,5 +1,5 @@
 import { Tabs } from "@ark-ui/react/tabs"
-import { Spinner } from "@phosphor-icons/react"
+import { SpinnerIcon } from "@phosphor-icons/react"
 import type { PropsWithChildren } from "react"
 import type { ContentType } from "#src/state/interfaceState"
 
@@ -16,7 +16,7 @@ export const Tab = ({ title, isDataLoading }: TabProps) => {
         >
             <div className="flex flex-row items-center gap-2">
                 {title}
-                {isDataLoading && <Spinner className="animate-spin text-[0.875em]" weight="regular" />}
+                {isDataLoading && <SpinnerIcon className="animate-spin text-[0.875em]" weight="regular" />}
             </div>
         </Tabs.Trigger>
     )

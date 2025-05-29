@@ -1,4 +1,4 @@
-import { CreditCard, type Icon, PaperPlaneTilt, Swap } from "@phosphor-icons/react"
+import { CreditCardIcon, type Icon, PaperPlaneTiltIcon, Swap } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import type { PropsWithChildren } from "react"
 
@@ -26,7 +26,7 @@ const ACTIONS: Action[] = [
         key: "send",
         to: "/embed/send",
         label: "Send",
-        icon: PaperPlaneTilt,
+        icon: PaperPlaneTiltIcon,
         enabled: true,
     },
     {
@@ -41,7 +41,7 @@ const ACTIONS: Action[] = [
         key: "topup",
         to: "/",
         label: "Top up",
-        icon: CreditCard,
+        icon: CreditCardIcon,
         target: "_blank",
         enabled: false,
     },

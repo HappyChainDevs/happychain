@@ -1,4 +1,4 @@
-import { CaretDown, WarningCircle } from "@phosphor-icons/react"
+import { CaretDownIcon, WarningCircleIcon } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import type { AbiFunction } from "viem"
 import {
@@ -22,7 +22,7 @@ const DecodedData = ({ data }: DecodedDataProps) => {
         <details className={recipeDisclosureDetails({ intent: "neutral" })}>
             <summary className={recipeDisclosureSummary()}>
                 Decoded Function Data:
-                <CaretDown size="1.25em" />
+                <CaretDownIcon size="1.25em" />
             </summary>
             <div
                 className={cx(
@@ -31,7 +31,7 @@ const DecodedData = ({ data }: DecodedDataProps) => {
                 )}
             >
                 <div className="flex w-full justify-start items-center gap-[1ex]">
-                    <WarningCircle size={"1.25em"} />
+                    <WarningCircleIcon size={"1.25em"} />
                     <span className="italic text-neutral">This ABI is not verified.</span>
                 </div>
                 <div className="flex w-full justify-between items-baseline gap-[1ex]">

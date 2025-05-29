@@ -1,7 +1,7 @@
 import { loadAbi } from "@happy.tech/core"
 import { getCurrentUser, requestSessionKey } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
-import { Spinner } from "@phosphor-icons/react"
+import { SpinnerIcon } from "@phosphor-icons/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { Address } from "viem"
@@ -135,7 +135,7 @@ const SessionKeyDemo = () => {
                 {counter !== undefined ? (
                     <div className="text-4xl font-bold">{counter.toString()}</div>
                 ) : isLoading ? (
-                    <Spinner className="animate-spin mx-auto" size="2.25rem" />
+                    <SpinnerIcon className="animate-spin mx-auto" size="2.25rem" />
                 ) : (
                     <div className="text-4xl font-bold">×</div>
                 )}

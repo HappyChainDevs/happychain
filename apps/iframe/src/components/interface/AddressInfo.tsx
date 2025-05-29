@@ -1,6 +1,6 @@
 import { Clipboard as ArkClipboard, useClipboard } from "@ark-ui/react/clipboard"
 import { shortenAddress } from "@happy.tech/wallet-common"
-import { Check, Copy } from "@phosphor-icons/react"
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 import type { Address } from "viem"
 
 interface AddressInfoProps {
@@ -28,8 +28,10 @@ const AddressInfo = ({ address }: AddressInfoProps) => {
                 </ArkClipboard.Label>
                 <ArkClipboard.Control>
                     <ArkClipboard.Input className="hidden" />
-                    <ArkClipboard.Indicator copied={<Check weight="bold" className="animate-appear text-primary" />}>
-                        <Copy weight="duotone" className="text-base-content" />
+                    <ArkClipboard.Indicator
+                        copied={<CheckIcon weight="bold" className="animate-appear text-primary" />}
+                    >
+                        <CopyIcon weight="duotone" className="text-base-content" />
                     </ArkClipboard.Indicator>
                 </ArkClipboard.Control>
             </ArkClipboard.RootProvider>

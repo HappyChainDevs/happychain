@@ -1,5 +1,5 @@
 import { Menu } from "@ark-ui/react/menu"
-import { DotsThreeVertical } from "@phosphor-icons/react"
+import { DotsThreeVerticalIcon } from "@phosphor-icons/react"
 import type { Address } from "viem"
 import { recipeContent } from "#src/components/primitives/popover/variants"
 import { removeWatchedAsset } from "#src/state/watchedAssets"
@@ -21,7 +21,7 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
     return (
         <Menu.Root aria-label="Asset Options Menu" lazyMount={true} unmountOnExit={true}>
             <Menu.Trigger>
-                <DotsThreeVertical className="opacity-80" size="1.5em" />
+                <DotsThreeVerticalIcon className="opacity-80" size="1.5em" />
             </Menu.Trigger>
             <Menu.Positioner className="[--z-index:1!important]">
                 <Menu.Content

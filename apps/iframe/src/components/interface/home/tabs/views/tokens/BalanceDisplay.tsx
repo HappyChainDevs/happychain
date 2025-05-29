@@ -1,4 +1,4 @@
-import { Spinner } from "@phosphor-icons/react"
+import { SpinnerIcon } from "@phosphor-icons/react"
 
 interface BalanceDisplayProps {
     isLoading: boolean
@@ -15,7 +15,7 @@ interface BalanceDisplayProps {
  */
 const BalanceDisplay = ({ isLoading, balance }: BalanceDisplayProps) => {
     if (isLoading && !balance) {
-        return <Spinner className="animate-spin" size="1.25em" />
+        return <SpinnerIcon className="animate-spin" size="1.25em" />
     }
 
     if (balance) {
