@@ -8,14 +8,14 @@ import { stringify } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { createAndSignMintBoop } from "#lib/utils/test"
 
-if(process.env.SUBMITTER_URL === undefined) {
+if (process.env.SUBMITTER_URL === undefined) {
     throw new Error("SUBMITTER_URL is not defined. Please set it in your environment variables.")
 }
 
 async function run() {
     const eoa = privateKeyToAccount(generatePrivateKey())
     const boopClient = new BoopClient({
-        baseUrl: process.env.SUBMITTER_URL
+        baseUrl: process.env.SUBMITTER_URL,
     })
     const createAccountResult = await boopClient.createAccount({
         owner: eoa.address,

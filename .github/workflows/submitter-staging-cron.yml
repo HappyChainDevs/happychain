@@ -33,14 +33,14 @@ jobs:
         run: |
           cd apps/submitter/bin
           bun executeDummyBoop.ts
-      - name: Send failure to Slack
-        if: failure() # Only on failure
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_WORKFLOW_BOT_TOKEN }}
-          payload: |
-            {
-              "channel": "C08JMNRJNR1",
-              "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Failing Workflow Logs>"
-            }
+      # - name: Send failure to Slack
+      #   if: failure() # Only on failure
+      #   uses: slackapi/slack-github-action@v2.1.0
+      #   with:
+      #     method: chat.postMessage
+      #     token: ${{ secrets.SLACK_WORKFLOW_BOT_TOKEN }}
+      #     payload: |
+      #       {
+      #         "channel": "C08JMNRJNR1",
+      #         "text": "❌ Workflow *${{ github.workflow }}* failed on *${{ github.ref_name }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Failing Workflow Logs>"
+      #       }
