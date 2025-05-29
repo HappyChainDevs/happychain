@@ -137,6 +137,16 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     // Return type is undefined on purpose, avoid overrides returning anything.
     protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined
 
+    /**
+     * Returns the connected chainId.
+     *
+     * The default implementation returns the empty string, it is suitable for the app side where we will populate
+     * the chain iframe from the iframe URL in {@link openPopupAndAwaitResponse}.
+     */
+    protected getChainId(): string {
+        return ""
+    }
+
     // === PRIVATE METHODS =========================================================================
 
     /**
@@ -146,12 +156,14 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         const url = new URL("request", this.popupBaseUrl)
         const selector = `iframe[slot=frame][title=happy-iframe-slot][src^='${this.popupBaseUrl}']`
         const DOMframe = document.querySelector(selector) as HTMLIFrameElement
+        // Will be -1 iframe-side, handled correctly by the request route.
         const iframeIndex = Array.from(window.frames).findIndex((frame) => frame === DOMframe?.contentWindow)
         const opts = {
             windowId: windowId,
             key: key,
             args: btoa(JSON.stringify(args)),
-            chainId: new URL(DOMframe.src).searchParams.get("chainId") || "",
+            // Get on iframe-side, read from iframe URL app-side.
+            chainId: this.getChainId() || new URL(DOMframe.src).searchParams.get("chainId") || "",
             iframeIndex: iframeIndex.toString(),
         }
         const searchParams = new URLSearchParams(opts).toString()
