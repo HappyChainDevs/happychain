@@ -67,6 +67,7 @@ const safeList = new Set([
     "web3_clientVersion",
     "web3_sha3",
     "wallet_getCapabilities",
+    "wallet_getCallsStatus",
 ])
 
 /**
