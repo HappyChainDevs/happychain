@@ -27,6 +27,7 @@ import {
     toHex,
 } from "viem"
 import { getAuthState } from "#src/state/authState"
+import { getCurrentChain } from "#src/state/chains.ts"
 import { getUser } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
@@ -185,7 +186,6 @@ type BoopPaymasterCapability = {
 
 type WalletSendCallsParams = WalletSendCallsParameters<BoopPaymasterCapability, Hex, Hex | bigint>
 
-// cf.
 export function checkedWalletSendCallsParams(params: WalletSendCallsParams | undefined): ValidWalletSendCallsRequest {
     // 1474 - invalid params
     const parsed = parseSendCallParams(params)
