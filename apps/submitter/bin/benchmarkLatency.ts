@@ -1,11 +1,4 @@
-import {
-    BoopClient,
-    CreateAccount,
-    type ExecuteSuccess,
-    GetNonce,
-    Onchain,
-    computeBoopHash,
-} from "@happy.tech/boop-sdk"
+import { BoopClient, CreateAccount, computeBoopHash } from "@happy.tech/boop-sdk"
 import { delayed, stringify } from "@happy.tech/common"
 import { type PrivateKeyAccount, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { createAndSignMintBoop } from "#lib/utils/test/helpers"
@@ -17,6 +10,7 @@ async function run({
     eoa = privateKeyToAccount(generatePrivateKey()),
     numBoops = 80,
 }: { eoa?: PrivateKeyAccount; numBoops?: number } = {}) {
+    console.log("rpcUrl", process.env.RPC_HTTP_URL, "baseUrl", process.env.SUBMITTER_URL)
     const boopClient = new BoopClient({ rpcUrl: process.env.RPC_HTTP_URL, baseUrl: process.env.SUBMITTER_URL })
 
     // Step 1: Create account (this remains serial)
@@ -54,7 +48,7 @@ async function run({
                 Status = status
                 if (receipt) {
                     EvmTxHash = receipt.evmTxHash
-                    console.log(`Success ${stringBoop}: https://explorer.testnet.happy.tech/tx/${EvmTxHash}`)
+                    // console.log(`Success ${stringBoop}: https://explorer.testnet.happy.tech/tx/${EvmTxHash}`)
                 } else {
                     console.error(`Error ${stringBoop}: ${description}`)
                 }
@@ -94,7 +88,8 @@ async function run({
 // for (let i = 0; i < 10; i++) {
 //     await run({ numBoops: 0 })
 // }
-
-await run()
+for (let i = 0; i < 10; i++) {
+    await run()
+}
 console.log("done")
 process.exit(0)
