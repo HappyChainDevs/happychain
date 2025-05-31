@@ -3,12 +3,14 @@ import {
     EIP1193SwitchChainError,
     EIP1193UnauthorizedError,
     EIP1474InvalidInput,
+    HappyWalletCapability,
     type Msgs,
     type ProviderMsgsFromApp,
     WalletType,
 } from "@happy.tech/wallet-common"
+import type { Capabilities } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkAuthenticated, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
 import { sendToPublicClient, sendToWalletClient } from "#src/requests/utils/sendToClient"
 import {
     getSessionKey,
@@ -25,7 +27,7 @@ import {
     getTransactionReceipt,
 } from "#src/requests/utils/shared"
 import { eoaSigner, sessionKeySigner } from "#src/requests/utils/signers"
-import { getChains, setChains, setCurrentChain } from "#src/state/chains"
+import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/state/chains"
 import { revokedSessionKeys } from "#src/state/interfaceState"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
@@ -218,6 +220,34 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const params = checkedWatchedAsset(request.payload.params)
             return addWatchedAsset(user.address, params)
+        }
+
+        case "wallet_getCapabilities": {
+            checkAuthenticated()
+            if (!request.payload?.params?.[0] || !request.payload?.params?.[1]) {
+                throw new EIP1474InvalidInput("Missing payload parameters")
+            }
+            checkAndChecksumAddress(request.payload.params[0])
+
+            const currentChainId = getCurrentChain().chainId
+            if (request.payload.params[1].length > 1) {
+                const requestedChainIds = request.payload.params[1]
+                for (const chainId of requestedChainIds) {
+                    if (chainId !== currentChainId) {
+                        console.warn(
+                            `Unsupported chain ID requested: ${chainId}. The Happy Wallet is a HappyChain exclusive 🤠!`,
+                        )
+                    }
+                }
+            }
+
+            const capabilities: Capabilities = {
+                [currentChainId]: Object.fromEntries(
+                    Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
+                ),
+            }
+
+            return capabilities
         }
 
         case HappyMethodNames.LOAD_ABI: {

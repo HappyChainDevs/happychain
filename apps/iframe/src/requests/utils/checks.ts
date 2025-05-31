@@ -89,8 +89,8 @@ export function checkedWatchedAsset(params: WatchAssetParameters) {
  * Checks that the address is valid, or throws.
  * @throws EIP1474InvalidInput if the address is invalid
  */
-export function checkAddress(address: string): asserts address is Address {
-    if (!isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
+export function checkAddress(address?: string): asserts address is Address {
+    if (!address || !isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
 }
 
 /**
