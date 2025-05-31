@@ -2,6 +2,7 @@ import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, Msgs, type PopupMsgs, serializeRpcError } from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
+import { EthSignTypedDataV4 } from "#src/components/requests/EthSignTypedDatav4.tsx"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
 import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
@@ -123,6 +124,8 @@ function Request() {
             return <PersonalSign {...props} />
         case "eth_sendTransaction":
             return <EthSendTransaction {...props} />
+        case "eth_signTypedData_v4":
+            return <EthSignTypedDataV4 {...props} />
         case "wallet_switchEthereumChain":
             return <WalletSwitchEthereumChain {...props} />
         case "wallet_addEthereumChain":

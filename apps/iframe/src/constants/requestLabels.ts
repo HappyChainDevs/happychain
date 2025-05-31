@@ -4,6 +4,7 @@ import { Permissions } from "./permissions"
 export const requestLabels = {
     eth_requestAccounts: "Connect",
     eth_sendTransaction: "Send transaction",
+    eth_signTypedData_v4: "Signature Request",
     personal_sign: "Sign message",
     wallet_addEthereumChain: "Add chain",
     wallet_requestPermissions: "Grant permissions",
