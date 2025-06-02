@@ -45,8 +45,8 @@ export type WaitForReceiptOutput = WaitForReceiptSuccess | WaitForReceiptError
 export type WaitForReceiptSuccess = {
     status: typeof WaitForReceipt.Success
     receipt: BoopReceipt
-    revertData?: never
-    description?: never
+    revertData?: undefined
+    description?: undefined
 }
 
 // =====================================================================================================================
@@ -78,7 +78,7 @@ export type WaitForReceiptError = {
     /** Description of the problem. */
     description: string
 
-    receipt?: never
+    receipt?: undefined
 }
 
 // =====================================================================================================================

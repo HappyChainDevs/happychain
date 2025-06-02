@@ -63,7 +63,8 @@ export const HashValidation = Bytes32Validation
 
 export const AddressValidation = Bytes20Validation
 
-export const BigIntValidation = type("/^-?[0-9]+n$/") as Type<string>
+// Accept both formats: plain numbers (from serializeBigInt) and numbers with 'n' suffix
+export const BigIntValidation = type("/^-?[0-9]+(n)?$/") as Type<string>
 
 export const UInt256Validation = BigIntValidation
 

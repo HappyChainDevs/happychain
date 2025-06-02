@@ -15,8 +15,8 @@ export const SBoop = type({
     dest: Address,
     payer: Address,
     value: UInt256.default("0n"),
-    nonceTrack: UInt256,
-    nonceValue: UInt256,
+    nonceTrack: UInt256.configure({ example: "0n" }),
+    nonceValue: UInt256.configure({ example: "42n" }),
     maxFeePerGas: UInt256.default("0n"),
     submitterFee: Int256.default("0n"),
     gasLimit: UInt32.default(0),
@@ -30,7 +30,7 @@ export const SBoop = type({
 
 export const SBoopLog = type({
     address: Address,
-    topics: Bytes.array().configure({ example: ["0x1beb36f4"] }),
+    topics: Bytes.array(),
     data: Bytes,
 })
 
@@ -40,9 +40,7 @@ export const SBoopReceipt = type({
     status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
     description: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: Address,
-    logs: SBoopLog.array().configure({
-        example: [{ address: "0x1234567890123456789012345678901234567890", topics: ["0x1beb36f4"], data: "0x" }],
-    }),
+    logs: SBoopLog.array(),
     revertData: Bytes,
     evmTxHash: Hash,
     blockHash: Hash,
