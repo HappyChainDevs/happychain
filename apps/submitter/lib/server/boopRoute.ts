@@ -15,16 +15,16 @@ import {
     getStateParamValidation,
 } from "#lib/handlers/getState"
 import { simulate, simulateBodyValidation, simulateDescription, simulateOutputValidation } from "#lib/handlers/simulate"
-import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "#lib/handlers/submit"
+import { makeResponse } from "#lib/server/makeResponse"
+import { validateSerializedOutput } from "#lib/utils/validation/helpers"
+import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "../handlers/submit"
 import {
     waitForReceipt,
     waitForReceiptDescription,
     waitForReceiptOutputValidation,
     waitForReceiptParamValidation,
     waitForReceiptQueryValidation,
-} from "#lib/handlers/waitForReceipt"
-import { makeResponse } from "#lib/server/makeResponse"
-import { validateOutput } from "#lib/utils/validation/helpers"
+} from "../handlers/waitForReceipt"
 
 export default new Hono()
     .post(
@@ -33,8 +33,10 @@ export default new Hono()
         simulateBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
+            console.log("=== SIMULATE INPUT ===")
+            console.log(input)
             const output = await simulate(input)
-            validateOutput(output, simulateOutputValidation) // temp: disabled, getting "description should be string error"
+            validateSerializedOutput(output, simulateOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
         },
@@ -46,7 +48,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await submit(input)
-            validateOutput(output, submitOutputValidation)
+            validateSerializedOutput(output, submitOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
         },
@@ -58,7 +60,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await execute(input)
-            validateOutput(output, executeOutputValidation)
+            validateSerializedOutput(output, executeOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
         },
@@ -70,7 +72,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getState(input)
-            validateOutput(output, getStateOutputValidation)
+            validateSerializedOutput(output, getStateOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
         },
@@ -84,7 +86,7 @@ export default new Hono()
             const param = c.req.valid("param")
             const query = c.req.valid("query")
             const output = await waitForReceipt({ ...param, ...query })
-            validateOutput(output, waitForReceiptOutputValidation)
+            validateSerializedOutput(output, waitForReceiptOutputValidation)
             const [body, code] = makeResponse(output)
             return c.json(body, code)
         },
@@ -96,7 +98,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getPending(input)
-            validateOutput(output, getPendingOutputValidation)
+            validateSerializedOutput(output, getPendingOutputValidation)
             const [response, code] = makeResponse(output)
             return c.json(response, code)
         },

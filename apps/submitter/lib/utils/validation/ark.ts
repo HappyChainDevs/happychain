@@ -21,16 +21,32 @@ export function openApiContent(schema: Type<unknown>) {
     return { "application/json": { schema: resolver(schema) } }
 }
 
-// TODO: Suggest a fix, stringToBigInt from @happy.tech/common is not suitable as it expects the `#bigint` prefix,
-// TODO: BigInt() constructor may return undefined so that fails too
-// TODO: parseBigInt from @happy.tech/common is not suitable as it returns undefined on failure
+/**
+ * Parse a string to a bigint, with strict validation.
+ * Expected format: Plain number strings without 'n' suffix (e.g., "123", "-456", "0")
+ *
+ * @param input A string representation of a BigInt value
+ * @returns The parsed bigint value
+ * @throws Error if parsing fails or input format is invalid
+ */
 function parseBigIntInternal(input: string | undefined): bigint {
+    if (!input) {
+        throw new Error("BigInt input must not be empty")
+    }
+
+    if (!/^-?[0-9]+$/.test(input)) {
+        throw new Error(`BigInt input must be numeric: ${input}`)
+    }
+
     try {
-        return input ? BigInt(input) : 0n
-    } catch {
-        return 0n
+        return BigInt(input)
+    } catch (error) {
+        throw new Error(
+            `Failed to parse BigInt value: ${input}. ${error instanceof Error ? error.message : "Unknown error"}`,
+        )
     }
 }
+
 function padHex(count: number): (hex: Hex) => Hex {
     return (hex: Hex) => `0x${hex.slice(2).padStart(count, "0")}`
 }
@@ -52,56 +68,51 @@ function gte<T extends bigint | number>(
 // =====================================================================================================================
 // VALIDATION-ONLY TYPES (for OpenAPI specs)
 
-// Base validators without transformations for OpenAPI
-export const BytesValidation = type("/^0x[0-9a-fA-F]*/") as Type<Hex>
+export const Bytes = type("/^0x[0-9a-fA-F]*/") as Type<Hex>
 
-export const Bytes20Validation = type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>
+export const Bytes32 = type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>
 
-export const Bytes32Validation = type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>
+export const Hash = Bytes32
 
-export const HashValidation = Bytes32Validation
+export const Address = type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>
 
-export const AddressValidation = Bytes20Validation
+export const BigIntType = type("/^-?[0-9]+$/") as Type<string>
 
-// Accept both formats: plain numbers (from serializeBigInt) and numbers with 'n' suffix
-export const BigIntValidation = type("/^-?[0-9]+(n)?$/") as Type<string>
+// Only allow positive integers using a predicate function
+export const UInt256 = BigIntType
 
-export const UInt256Validation = BigIntValidation
+export const Int256 = BigIntType
 
-export const Int256Validation = BigIntValidation
-
-export const UInt32Validation = type.number
+export const UInt32 = type.number
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)
 
-export const Bytes = BytesValidation.configure({ example: "0xdeadbeefdeadbeef" })
+export const BytesIn = Bytes.configure({ example: "0xdeadbeefdeadbeef" })
 
-export const Bytes20 = Bytes20Validation.pipe(padHex(40)).configure({
-    example: "0x1234567890123456789012345678901234567890",
-})
-
-export const Bytes32 = Bytes32Validation.pipe(padHex(64)).configure({
+export const Bytes32In = Bytes32.pipe(padHex(64)).configure({
     example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
 })
 
-export const Address = Bytes20.pipe(checksum).configure({ example: "0x1234567890123456789012345678901234567890" })
+export const HashIn = Bytes32In
 
-export const Hash = Bytes32.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" })
+export const AddressIn = Address.pipe(padHex(40))
+    .pipe(checksum)
+    .configure({ example: "0xf4822fc7cb2ec69a5f9d4b5d4a59b949effa8311" })
 
-export const UInt256 = UInt256Validation.pipe
+export const UInt256In = UInt256.pipe
     .try(parseBigIntInternal)
     .narrow(gte(0n))
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const Int256 = Int256Validation.pipe
+export const Int256In = Int256.pipe
     .try(parseBigIntInternal)
     .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const UInt32 = UInt32Validation.pipe
+export const UInt32In = UInt32.pipe
     .try(Number)
     .narrow(gte(0))
     .narrow(lt(1n << 32n, "2^32"))

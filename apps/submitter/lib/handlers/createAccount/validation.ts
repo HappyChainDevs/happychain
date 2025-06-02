@@ -2,14 +2,14 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, Bytes32, openApiContent } from "#lib/utils/validation/ark"
+import { Address, AddressIn, Bytes32, Bytes32In, openApiContent } from "#lib/utils/validation/ark"
 import { CreateAccount } from "./types"
 import type * as types from "./types"
 
 export const createAccountInput = type({
     "+": "reject",
-    owner: Address,
-    salt: Bytes32,
+    owner: AddressIn,
+    salt: Bytes32In,
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
@@ -19,15 +19,15 @@ const createAccountSuccess = type({
     salt: Bytes32,
     status: successStatus.configure({ example: CreateAccount.Success }),
     address: Address,
-    "description?": "never",
+    "description?": type.never,
 })
 
 const createAccountError = type({
     owner: Address,
     salt: Bytes32,
     status: type.valueOf(CreateAccount).exclude(successStatus).configure({ example: CreateAccount.Failed }),
-    description: "string",
-    "address?": "never",
+    description: type.string.configure({ example: "Invalid account data" }),
+    "address?": type.never,
 })
 
 export const createAccountDescription = describeRoute({

@@ -4,27 +4,28 @@ import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import type * as types from "#lib/handlers/getState/types"
 import { simulateOutputValidation } from "#lib/handlers/simulate/validation"
-import { Hash, openApiContent } from "#lib/utils/validation/ark"
+import { HashIn, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopReceipt } from "#lib/utils/validation/boop"
+import type { SerializedObject } from "#lib/utils/validation/helpers.ts"
 import { GetState } from "./types"
 
 const getStateParam = type({
     "+": "reject",
-    boopHash: Hash,
+    boopHash: HashIn,
 })
 
 const getStateReceipt = type({
     status: type.unit(GetState.Receipt),
-    receipt: SBoopReceipt,
-    "simulation?": "never",
-    "description?": "never",
+    receipt: SBoopReceipt, // Use SBoopReceiptIn for input validation to transform strings to bigint
+    "simulation?": type.never,
+    "description?": type.never,
 })
 
 const getStateSimulated = type({
     status: type.unit(GetState.Simulated),
     simulation: simulateOutputValidation,
-    "receipt?": "never",
-    "description?": "never",
+    "receipt?": type.never,
+    "description?": type.never,
 })
 
 const getStateSuccess = type(getStateReceipt, "|", getStateSimulated)
@@ -34,9 +35,9 @@ const getStateError = type({
         .valueOf(GetState)
         .exclude(type.enumerated(GetState.Receipt, GetState.Simulated))
         .configure({ example: GetState.ClientError }),
-    description: "string",
-    "receipt?": "never",
-    "simulation?": "never",
+    description: type.string,
+    "receipt?": type.never,
+    "simulation?": type.never,
 })
 
 export const getStateDescription = describeRoute({
@@ -62,8 +63,12 @@ type GetStateSimulated = typeof getStateSimulated.infer
 type GetStateError = typeof getStateError.infer
 type GetStateOutput = typeof getStateOutputValidation.infer
 
+// Input validation should match the actual TypeScript interfaces (without SerializedObject)
 type _a1 = AssertCompatible<GetStateInput, types.GetStateInput>
-type _a2 = AssertCompatible<GetStateReceipt, types.GetStateReceipt>
-type _a3 = AssertCompatible<GetStateSimulated, types.GetStateSimulated>
-type _a4 = AssertCompatible<GetStateError, types.GetStateError>
-type _a5 = AssertCompatible<GetStateOutput, types.GetStateOutput>
+
+// Output validation schemas use regular types that expect serialized BigInt strings
+// Type assertions need SerializedObject to bridge the gap between string in schema and bigint in interface
+type _a2 = AssertCompatible<GetStateReceipt, SerializedObject<types.GetStateReceipt>>
+type _a3 = AssertCompatible<GetStateSimulated, SerializedObject<types.GetStateSimulated>>
+type _a4 = AssertCompatible<GetStateError, types.GetStateError> // No BigInt fields, so no SerializedObject needed
+type _a5 = AssertCompatible<GetStateOutput, SerializedObject<types.GetStateOutput>>
