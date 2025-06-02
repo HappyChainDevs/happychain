@@ -37,11 +37,11 @@ const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
+    revertData: Bytes.optional(),
+    description: type("string").configure({ example: "Invalid boop" }),
     "maxFeePerGas?": "never",
     "submitterFee?": "never",
     "feeTooLowDuringSimulation?": "never",
-    revertData: Bytes.optional(),
-    description: "string",
 })
 
 export const simulateDescription = describeRoute({
