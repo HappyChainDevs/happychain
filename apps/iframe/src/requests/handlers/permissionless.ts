@@ -1,5 +1,10 @@
 import { HappyMethodNames } from "@happy.tech/common"
-import { EIP1193UnsupportedMethodError, EIP1193UserRejectedRequestError, type Msgs, type ProviderMsgsFromApp } from "@happy.tech/wallet-common"
+import {
+    EIP1193UnsupportedMethodError,
+    EIP1193UserRejectedRequestError,
+    type Msgs,
+    type ProviderMsgsFromApp,
+} from "@happy.tech/wallet-common"
 import { isAddress } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
