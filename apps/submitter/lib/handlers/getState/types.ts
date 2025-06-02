@@ -42,16 +42,16 @@ export type GetStateOutput = GetStateReceipt | GetStateSimulated | GetStateError
 export type GetStateReceipt = {
     status: typeof GetState.Receipt
     receipt: BoopReceipt
-    simulation?: never
-    description?: never
+    simulation?: undefined
+    description?: undefined
 }
 
 /** The boop was simulated and the simulation result is available. */
 export type GetStateSimulated = {
     status: typeof GetState.Simulated
     simulation: SimulateOutput
-    receipt?: never
-    description?: never
+    receipt?: undefined
+    description?: undefined
 }
 
 // =====================================================================================================================
@@ -61,8 +61,8 @@ export type GetStateSimulated = {
 export type GetStateError = {
     status: Exclude<GetStateStatus, typeof GetState.Receipt | typeof GetState.Simulated>
     description: string
-    receipt?: never
-    simulation?: never
+    receipt?: undefined
+    simulation?: undefined
 }
 
 // =====================================================================================================================

@@ -52,8 +52,8 @@ export type SimulateSuccess = Omit<EntryPointOutput, "revertData"> & {
     /** If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the current gas price. */
     feeTooLowDuringSimulation: boolean
 
-    revertData?: never
-    description?: never
+    revertData?: undefined
+    description?: undefined
 }
 
 // =====================================================================================================================

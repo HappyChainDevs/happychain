@@ -18,21 +18,7 @@ const executeInput = type({
 // Success validator with transformations (for actual validation)
 const executeSuccess = type({
     status: type.unit(Execute.Success).configure({ example: Execute.Success }),
-    receipt: SBoopReceipt.configure({
-        example: {
-            boopHash: "0x1234567890123456789012345678901234567890",
-            boop: {
-                entryPoint: "0x1234567890123456789012345678901234567890",
-                data: "0x1234567890123456789012345678901234567890",
-            },
-            blockNumber: 1234567890,
-            blockHash: "0x1234567890123456789012345678901234567890123456789012345678901234",
-            transactionHash: "0x1234567890123456789012345678901234567890123456789012345678901234",
-            transactionIndex: 1234567890,
-            logIndex: 1234567890,
-            receiptRoot: "0x1234567890123456789012345678901234567890123456789012345678901234",
-        },
-    }),
+    receipt: SBoopReceipt,
     "stage?": "never",
     "revertData?": "never",
     "description?": "never",
@@ -50,7 +36,6 @@ const executeError = type({
 })
 
 export const executeDescription = describeRoute({
-    validateResponse: false,
     description: "Execute the supplied boop",
     requestBody: {
         required: true,

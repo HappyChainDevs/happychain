@@ -8,8 +8,8 @@ import type * as types from "./types"
 
 export const createAccountInput = type({
     "+": "reject",
-    owner: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
-    salt: Bytes32.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    owner: Address,
+    salt: Bytes32,
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
@@ -18,7 +18,7 @@ const createAccountSuccess = type({
     owner: Address,
     salt: Bytes32,
     status: successStatus.configure({ example: CreateAccount.Success }),
-    address: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    address: Address,
     "description?": "never",
 })
 
@@ -31,8 +31,7 @@ const createAccountError = type({
 })
 
 export const createAccountDescription = describeRoute({
-    validateResponse: false,
-    description: "Creates an account",
+    description: "Creates a new account or returns an existing account address for the given owner",
     requestBody: {
         required: true,
         description: "Account data to create",
