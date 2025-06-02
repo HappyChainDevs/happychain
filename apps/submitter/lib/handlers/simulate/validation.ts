@@ -3,45 +3,47 @@ import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { CallStatus } from "#lib/types"
-import { Address, Bytes, UInt32, UInt256, openApiContent } from "#lib/utils/validation/ark"
-import { SBoop } from "#lib/utils/validation/boop"
+import { AddressIn, BytesIn, UInt32In, UInt256, openApiContent } from "#lib/utils/validation/ark"
+import { SBoopIn } from "#lib/utils/validation/boop"
+import type { SerializedObject } from "#lib/utils/validation/helpers"
 import type * as types from "./types"
 import { Simulate } from "./types"
 
 const simulateInput = type({
     "+": "reject",
-    entryPoint: Address.optional(),
-    boop: SBoop,
+    entryPoint: AddressIn.optional(),
+    boop: SBoopIn,
 })
 
 const entryPointOutput = type({
-    gas: UInt32,
-    validateGas: UInt32,
-    validatePaymentGas: UInt32,
-    executeGas: UInt32,
-    validityUnknownDuringSimulation: "boolean",
-    paymentValidityUnknownDuringSimulation: "boolean",
-    futureNonceDuringSimulation: "boolean",
+    gas: UInt32In,
+    validateGas: UInt32In,
+    validatePaymentGas: UInt32In,
+    executeGas: UInt32In,
+    validityUnknownDuringSimulation: type.boolean,
+    paymentValidityUnknownDuringSimulation: type.boolean,
+    futureNonceDuringSimulation: type.boolean,
     callStatus: type.valueOf(CallStatus).configure({ example: CallStatus.SUCCEEDED }),
-    revertData: Bytes,
+    revertData: BytesIn,
 })
 
+// For output validation, use UInt256 (not UInt256In) to expect serialized BigInt strings
 const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
-    status: type.unit(Simulate.Success),
-    maxFeePerGas: UInt256,
-    submitterFee: UInt256,
+    status: type.unit(Simulate.Success).configure({ example: Simulate.Success }),
+    maxFeePerGas: UInt256, // Use UInt256 for output validation to expect serialized strings
+    submitterFee: UInt256, // Use UInt256 for output validation to expect serialized strings
     feeTooLowDuringSimulation: "boolean",
-    "revertData?": "never",
-    "description?": "never",
+    "revertData?": type.never,
+    "description?": type.never,
 })
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
-    revertData: Bytes.optional(),
-    description: type("string").configure({ example: "Invalid boop" }),
-    "maxFeePerGas?": "never",
-    "submitterFee?": "never",
-    "feeTooLowDuringSimulation?": "never",
+    revertData: BytesIn.optional(),
+    description: type.string.configure({ example: "Invalid boop" }),
+    "maxFeePerGas?": type.never,
+    "submitterFee?": type.never,
+    "feeTooLowDuringSimulation?": type.never,
 })
 
 export const simulateDescription = describeRoute({
@@ -66,7 +68,11 @@ type SimulateSuccess = typeof simulateSuccess.infer
 type SimulateError = typeof simulateError.infer
 type SimulateOutput = typeof simulateOutputValidation.infer
 
+// Input validation should match the actual TypeScript interfaces (without SerializedObject)
 type _a1 = AssertCompatible<SimulateInput, types.SimulateInput>
-type _a2 = AssertCompatible<SimulateSuccess, types.SimulateSuccess>
-type _a3 = AssertCompatible<SimulateError, types.SimulateError>
-type _a4 = AssertCompatible<SimulateOutput, types.SimulateOutput>
+
+// Output validation schemas use regular types that expect serialized BigInt strings
+// Type assertions need SerializedObject to bridge the gap between string in schema and bigint in interface
+type _a2 = AssertCompatible<SimulateSuccess, SerializedObject<types.SimulateSuccess>>
+type _a3 = AssertCompatible<SimulateError, types.SimulateError> // No BigInt fields, so no SerializedObject needed
+type _a4 = AssertCompatible<SimulateOutput, SerializedObject<types.SimulateOutput>>

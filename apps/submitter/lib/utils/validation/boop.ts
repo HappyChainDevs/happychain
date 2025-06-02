@@ -1,24 +1,53 @@
 import type { AssertCompatible } from "@happy.tech/common"
 import { type } from "arktype"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
-import { Address, Bytes, Hash, Int256, UInt32, UInt256 } from "./ark"
+import {
+    Address,
+    AddressIn,
+    Bytes,
+    BytesIn,
+    Hash,
+    HashIn,
+    Int256,
+    Int256In,
+    UInt32,
+    UInt32In,
+    UInt256,
+    UInt256In,
+} from "./ark"
+import type { SerializedObject } from "./helpers"
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)
 
-/**
- * SBoop validator with transformations
- */
+export const SBoopIn = type({
+    account: AddressIn,
+    dest: AddressIn,
+    payer: AddressIn,
+    value: UInt256In.default("0"),
+    nonceTrack: UInt256In,
+    nonceValue: UInt256In,
+    maxFeePerGas: UInt256In.default("0"),
+    submitterFee: Int256In.default("0"),
+    gasLimit: UInt32In.default(0),
+    validateGasLimit: UInt32In.default(0),
+    validatePaymentGasLimit: UInt32In.default(0),
+    executeGasLimit: UInt32In.default(0),
+    callData: BytesIn.default("0x"),
+    validatorData: BytesIn.default("0x"),
+    extraData: BytesIn.default("0x"),
+})
+
 export const SBoop = type({
     "+": "reject",
     account: Address,
     dest: Address,
     payer: Address,
-    value: UInt256.default("0n"),
-    nonceTrack: UInt256.configure({ example: "0n" }),
-    nonceValue: UInt256.configure({ example: "42n" }),
-    maxFeePerGas: UInt256.default("0n"),
-    submitterFee: Int256.default("0n"),
+    value: UInt256.default("0"),
+    nonceTrack: UInt256,
+    nonceValue: UInt256,
+    maxFeePerGas: UInt256.default("0"),
+    submitterFee: Int256.default("0"),
     gasLimit: UInt32.default(0),
     validateGasLimit: UInt32.default(0),
     validatePaymentGasLimit: UInt32.default(0),
@@ -29,9 +58,9 @@ export const SBoop = type({
 })
 
 export const SBoopLog = type({
-    address: Address,
-    topics: Bytes.array(),
-    data: Bytes,
+    address: AddressIn,
+    topics: BytesIn.array(),
+    data: BytesIn,
 })
 
 export const SBoopReceipt = type({
@@ -48,6 +77,26 @@ export const SBoopReceipt = type({
     gasPrice: UInt256,
 })
 
-type _a1 = AssertCompatible<typeof SBoop.infer, Boop>
-type _a2 = AssertCompatible<typeof SBoopLog.infer, BoopLog>
-type _a3 = AssertCompatible<typeof SBoopReceipt.infer, BoopReceipt>
+// Input validation version with transformations
+export const SBoopReceiptIn = type({
+    boopHash: HashIn,
+    boop: SBoopIn,
+    status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
+    description: type("string").configure({ example: "Boop executed successfully." }),
+    entryPoint: AddressIn,
+    logs: SBoopLog.array(),
+    revertData: BytesIn,
+    evmTxHash: HashIn,
+    blockHash: HashIn,
+    blockNumber: UInt256In,
+    gasPrice: UInt256In,
+})
+
+// Use SerializedObject to handle the string vs bigint type differences
+// SBoopIn transforms strings to bigint, so it should match the actual Boop type
+type _a1 = AssertCompatible<typeof SBoopIn.infer, Boop>
+// For output validation schemas, use SerializedObject since they contain serialized BigInt values
+type _a2 = AssertCompatible<typeof SBoopLog.infer, SerializedObject<BoopLog>>
+type _a3 = AssertCompatible<typeof SBoopReceipt.infer, SerializedObject<BoopReceipt>>
+// SBoopReceiptIn transforms strings to bigint, so it should match the actual BoopReceipt type
+type _a4 = AssertCompatible<typeof SBoopReceiptIn.infer, BoopReceipt>
