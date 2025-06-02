@@ -46,7 +46,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
 
         case "wallet_addEthereumChain": {
             if (import.meta.env.PROD) {
-                throw new Error("feature not available in production")
+                throw new EIP1474InvalidInput("Feature not available in production")
             }
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
@@ -60,7 +60,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
 
         case "wallet_switchEthereumChain": {
             if (import.meta.env.PROD) {
-                throw new Error("feature not available in production")
+                throw new EIP1474InvalidInput("Feature not available in production")
             }
             const chains = getChains()
             const chainId = request.payload.params[0].chainId
