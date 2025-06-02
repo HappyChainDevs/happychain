@@ -3,25 +3,26 @@ import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { Onchain } from "#lib/types"
-import { Address, Bytes, openApiContent } from "#lib/utils/validation/ark"
-import { SBoop, SBoopReceipt } from "#lib/utils/validation/boop"
+import { AddressIn, Bytes, openApiContent } from "#lib/utils/validation/ark"
+import { SBoopIn, SBoopReceipt } from "#lib/utils/validation/boop"
+import type { SerializedObject } from "#lib/utils/validation/helpers"
 import { Execute } from "./types"
 import type * as types from "./types"
 
 const executeInput = type({
     "+": "reject",
-    entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }).optional(),
-    boop: SBoop,
-    "timeout?": type("number").configure({ example: 10_000 }),
+    entryPoint: AddressIn.optional(),
+    boop: SBoopIn,
+    "timeout?": type.number.configure({ example: 60 }),
 })
 
 // Success validator with transformations (for actual validation)
 const executeSuccess = type({
     status: type.unit(Execute.Success).configure({ example: Execute.Success }),
     receipt: SBoopReceipt,
-    "stage?": "never",
-    "revertData?": "never",
-    "description?": "never",
+    "stage?": type.never,
+    "revertData?": type.never,
+    "description?": type.never,
 })
 
 const executeError = type({
@@ -31,8 +32,8 @@ const executeError = type({
         .configure({ example: Onchain.ValidationRejected }),
     stage: type.enumerated("simulate", "submit", "execute").configure({ example: "simulate" }),
     revertData: Bytes.configure({ example: "0x1234567890123456789012345678901234567890" }).optional(),
-    description: type("string").configure({ example: "Invalid boop" }),
-    "receipt?": "never",
+    description: type.string.configure({ example: "Invalid boop" }),
+    "receipt?": type.never,
 })
 
 export const executeDescription = describeRoute({
@@ -66,7 +67,9 @@ type ExecuteSuccess = typeof executeSuccess.infer
 type ExecuteError = typeof executeError.infer
 type ExecuteOutput = typeof executeOutputValidation.infer
 
+// Input validation should match the actual types
 type _a1 = AssertCompatible<ExecuteInput, types.ExecuteInput>
-type _a2 = AssertCompatible<ExecuteSuccess, types.ExecuteSuccess>
+// Output validation needs SerializedObject to handle BigInt serialization
+type _a2 = AssertCompatible<ExecuteSuccess, SerializedObject<types.ExecuteSuccess>>
 type _a3 = AssertCompatible<ExecuteError, types.ExecuteError>
-type _a4 = AssertCompatible<ExecuteOutput, types.ExecuteOutput>
+type _a4 = AssertCompatible<ExecuteOutput, SerializedObject<types.ExecuteOutput>>

@@ -2,23 +2,23 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
-import { SBoop } from "#lib/utils/validation/boop"
+import { Address, AddressIn, Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
+import { SBoopIn } from "#lib/utils/validation/boop"
 import type * as types from "./types"
 import { Submit } from "./types"
 
 const submitInput = type({
     "+": "reject",
-    entryPoint: Address.optional(),
-    boop: SBoop,
+    entryPoint: AddressIn.optional(),
+    boop: SBoopIn,
 })
 
 const submitSuccess = type({
     status: type.unit(Submit.Success),
     boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
     entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
-    "revertData?": "never",
-    "description?": "never",
+    "revertData?": type.never,
+    "description?": type.never,
 })
 
 const submitError = type({
@@ -28,8 +28,8 @@ const submitError = type({
         example: "0x1234567890123456789012345678901234567890123456789012345678901234",
     }).optional(),
     description: type("string").configure({ example: "Invalid boop" }),
-    "boopHash?": "never",
-    "entryPoint?": "never",
+    "boopHash?": type.never,
+    "entryPoint?": type.never,
 })
 
 export const submitDescription = describeRoute({
