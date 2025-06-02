@@ -11,7 +11,7 @@ import { type Address, isAddressEqual } from "viem"
 // works with other chains, but they will need to have the exact same contract deployment (addresses & ABIs).
 const chainId = Number(import.meta.env.VITE_CHAIN_ID)
 
-// Only used for chainId === 217 (HappyChain Sepolia).
+// Only used for chainId === 216 (HappyChain Sepolia).
 const useStagingContracts =
     import.meta.env.VITE_USE_STAGING_CONTRACTS === "true" || import.meta.env.VITE_USE_STAGING_CONTRACTS === "1"
 
