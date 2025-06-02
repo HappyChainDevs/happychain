@@ -21,7 +21,7 @@ function App() {
                 </div>
 
                 <WalletCallsDemo />
-                {!(user?.type === WalletType.Injected) && <ChainSwitchingDemo />}
+                {!(user?.type === WalletType.Injected && import.meta.env.prod) && <ChainSwitchingDemo />}
                 <WalletFunctionalityDemo />
                 <SessionKeyDemo />
             </div>
