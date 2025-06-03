@@ -9,6 +9,7 @@ import type * as types from "./types"
 import { Simulate } from "./types"
 
 const simulateInput = type({
+    "+": "reject",
     entryPoint: Address.optional(),
     boop: SBoop,
 })

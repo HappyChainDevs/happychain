@@ -7,7 +7,6 @@ import { encodeFunctionData } from "viem/utils"
 import { abis, deployment, env } from "#lib/env"
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
-import { freezeBoopHashFields } from "#lib/utils/boop/freezeBoop"
 import { publicClient } from "#lib/utils/clients"
 
 /**
@@ -60,7 +59,7 @@ export function createMintBoop({
     amount = 10n ** 18n,
     gasLimits = zeroGasLimits,
 }: CreateMintBoopInput): Boop {
-    return freezeBoopHashFields({
+    return {
         account,
         dest: mockDeployments.MockTokenA,
         nonceTrack: nonceTrack,
@@ -80,13 +79,13 @@ export function createMintBoop({
         }),
         validatorData: "0x",
         extraData: "0x",
-    })
+    }
 }
 
 export async function signBoop(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
-    return freezeBoopHashFields({ ...boop, validatorData })
+    return { ...boop, validatorData }
 }
 
 export async function createAndSignMintBoop(account: PrivateKeyAccount, input: CreateMintBoopInput): Promise<Boop> {

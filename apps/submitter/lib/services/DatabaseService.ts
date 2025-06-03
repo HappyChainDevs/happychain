@@ -49,8 +49,8 @@ export class DatabaseService {
                 .where("boopHash", "=", boopHash)
                 .executeTakeFirst()
             if (!storedBoop) return {}
-            if (!storedReceipt) return { boop: storedBoop }
             const { entryPoint, ...boop } = storedBoop
+            if (!storedReceipt) return { boop }
             const { logs, ...receipt } = storedReceipt
             return {
                 boop,

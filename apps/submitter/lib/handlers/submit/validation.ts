@@ -8,6 +8,7 @@ import type * as types from "./types"
 import { Submit } from "./types"
 
 const submitInput = type({
+    "+": "reject",
     entryPoint: Address.optional(),
     boop: SBoop,
 })
