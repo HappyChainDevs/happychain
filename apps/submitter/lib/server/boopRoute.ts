@@ -33,8 +33,6 @@ export default new Hono()
         simulateBodyValidation,
         async (c) => {
             const input = c.req.valid("json")
-            console.log("=== SIMULATE INPUT ===")
-            console.log(input)
             const output = await simulate(input)
             validateSerializedOutput(output, simulateOutputValidation)
             const [body, code] = makeResponse(output)

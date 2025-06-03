@@ -100,20 +100,25 @@ export const AddressIn = Address.pipe(padHex(40))
     .pipe(checksum)
     .configure({ example: "0xf4822fc7cb2ec69a5f9d4b5d4a59b949effa8311" })
 
-export const UInt256In = UInt256.pipe
-    .try(parseBigIntInternal)
+export const UInt256In = UInt256.pipe(
+    (input, ctx) =>
+        parseBigIntInternal(input) ?? ctx.error("a decimal string or number representing a 256-bit unsigned integer"),
+)
     .narrow(gte(0n))
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const Int256In = Int256.pipe
-    .try(parseBigIntInternal)
+export const Int256In = Int256.pipe(
+    (input, ctx) =>
+        parseBigIntInternal(input) ?? ctx.error("a decimal string or number representing a 256-bit signed integer"),
+)
     .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const UInt32In = UInt32.pipe
-    .try(Number)
+export const UInt32In = UInt32.pipe(
+    (input, ctx) => Number(input) ?? ctx.error("a decimal string or number representing a 32-bit unsigned integer"),
+)
     .narrow(gte(0))
     .narrow(lt(1n << 32n, "2^32"))
     .configure({ example: 400_000 })
