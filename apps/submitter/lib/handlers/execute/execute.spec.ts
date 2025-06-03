@@ -1,5 +1,5 @@
 // proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
-import "#lib/utils/test/proxy-server"
+import "#lib/utils/test/proxyServer"
 
 import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"

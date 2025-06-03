@@ -1,5 +1,5 @@
 // proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
-import "#lib/utils/test/proxy-server"
+import "#lib/utils/test/proxyServer"
 
 import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"

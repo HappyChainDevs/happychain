@@ -1,8 +1,8 @@
 import { ProxyServer } from "@happy.tech/testing"
 import { type TestClient, createTestClient } from "viem"
-import { env } from "../../env"
-import { config } from "../clients"
-import { proxyLogger } from "../logger"
+import { env } from "#lib/env"
+import { config } from "#lib/utils/clients"
+import { proxyLogger } from "#lib/utils/logger"
 
 export const proxyServer = new ProxyServer(env.ANVIL_PORT, env.PROXY_PORT, proxyLogger)
 await proxyServer.start()
