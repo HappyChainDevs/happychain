@@ -121,7 +121,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                             chainId: env.CHAIN_ID,
                             client: walletClient,
                         })),
-                    maxFeePerGas: getMaxFeePerGas(simulation, replacedTx),
+                    maxFeePerGas: getMaxFeePerGas(simulation.maxFeePerGas, replacedTx),
                     maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
                 }
 
