@@ -65,6 +65,10 @@ validate-simulate: ## Validate simulate output
 	bun ./bin/testSimulateValidation.ts
 .PHONY: validate-simulate
 
+test-optional: ## Validate optional field validation
+	bun ./bin/testOptionalFieldValidation.ts
+.PHONY: test-optional
+
 args ?= --bail
 
 define test-run-anvil-shared
