@@ -2,10 +2,11 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { env } from "#lib/env"
 import type { ExecuteSuccess } from "#lib/handlers/execute"
-import { computeHash } from "#lib/services/index.ts"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
 
@@ -56,7 +57,7 @@ describe("submitter_state", () => {
         // future nonce so that is submits, but doesn't finalize
         const futureUnsignedTx = createMintBoop({ account, nonceValue: nonceValue + 1n, nonceTrack })
         const futureSignedTx = await sign(futureUnsignedTx)
-        const boopHash = computeHash(futureSignedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, futureSignedTx)
 
         // submit transaction, but don't wait for it to complete
         const blockedTx = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
