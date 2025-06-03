@@ -1,6 +1,6 @@
 import type { Server } from "node:http"
 import type { Http2SecureServer, Http2Server } from "node:http2"
-import type { Logger, TaggedLogger } from "@happy.tech/common"
+import { type Logger, type TaggedLogger, stringify } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
 import { serve } from "@hono/node-server"
 import { createNodeWebSocket } from "@hono/node-ws"
@@ -47,8 +47,7 @@ export class ProxyServer {
         this.nextBehaviors = []
         this.mode = ProxyMode.Deterministic
 
-        // Enable basic cors support for easier debugging and usage
-        // in browser contexts
+        // Enable basic cors support for easier debugging and usage in browser contexts.
         this.app.use("*", cors())
         this.#setupWebsocketProxy()
         this.#setupHttpProxy()
@@ -202,9 +201,8 @@ export class ProxyServer {
                 const data = await response.json()
 
                 return c.json(data, response.status as ContentfulStatusCode)
-            } catch (_) {
-                // TODO: forward errors?
-                return c.json({ error: "Proxy error" }, 500)
+            } catch (error) {
+                return c.json({ error: `Proxy error: ${stringify(error)}` }, 500)
             }
         })
     }

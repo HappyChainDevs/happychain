@@ -14,31 +14,29 @@ import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
-    return await submitInternal(input, { earlyExit: true })
+    return await submitInternal({ ...input, earlyExit: true })
 }
 
-type SubmitOptionsEarlyExit = { timeout?: number; earlyExit: true; replacedTx?: undefined }
-type SubmitOptionsLazyExit = { timeout?: number; earlyExit: false; replacedTx?: Transaction }
-type SubmitOutputLazyExit =
-    | (SubmitSuccess & { txHash: Hash; receiptPromise: Promise<WaitForReceiptOutput> })
-    | (SubmitError & { txHash?: undefined; receiptPromise?: undefined })
-type SubmitOptions = SubmitOptionsEarlyExit | SubmitOptionsLazyExit
-type SubmitInternalOutput = SubmitOutput | SubmitOutputLazyExit
+type SubmitInternalInput = SubmitInput & {
+    timeout?: number
+    earlyExit?: boolean
+    replacedTx?: Transaction
+}
 
-export async function submitInternal(input: SubmitInput, options: SubmitOptionsEarlyExit): Promise<SubmitOutput>
-export async function submitInternal(input: SubmitInput, options: SubmitOptionsLazyExit): Promise<SubmitOutputLazyExit>
-export async function submitInternal(input: SubmitInput, options: SubmitOptions): Promise<SubmitInternalOutput> {
-    const { entryPoint = deployment.EntryPoint, boop } = input
-    const { timeout, earlyExit, replacedTx } = options
+type SubmitInternalOutput =
+    | (SubmitSuccess & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> })
+    | (SubmitError & { txHash?: undefined; receiptPromise?: undefined })
+
+export async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
+    const { entryPoint = deployment.EntryPoint, boop, timeout, earlyExit, replacedTx } = input
 
     const boopHash = computeHash(boop)
     try {
-        const [ogBoop, ogBoopError] = getOgBoop(boop, replacedTx)
-
+        const [ogBoop, ogBoopError] = getOriginalBoop(boop, replacedTx)
         if (ogBoopError) return ogBoopError
 
         logger.trace("Submitting boop", boopHash)
-        let simulation = await simulate({ entryPoint, boop: ogBoop }, true)
+        let simulation = await simulate({ entryPoint, boop }, true)
         if (simulation.status !== Onchain.Success) {
             boopStore.delete(input.boop)
             return { ...simulation, stage: "simulate" }
@@ -76,13 +74,13 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
             }
         }
 
-        mutateBoopGasFromSimulation(boop, simulation)
+        mutateBoopGasFromSimulation(ogBoop, boop, simulation)
 
         // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path
         // so that we can service incoming waitForReceipt requests.
         await dbService.saveBoop(entryPoint, boop)
 
-        const afterSimulationPromise = (async (): ReturnType<typeof submitInternal> => {
+        const afterSimulationPromise = (async (): Promise<SubmitInternalOutput> => {
             try {
                 if (simulation.futureNonceDuringSimulation && !replacedTx) {
                     logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
@@ -92,18 +90,19 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
                         boopStore.delete(input.boop)
                         return error
                     }
-                    simulation = await simulate({ entryPoint, boop: ogBoop }) // update simulation
+                    // Update simulation with the original boop so we can get updated gas values.
+                    simulation = await simulate({ entryPoint, boop: ogBoop })
                     if (simulation.status !== Onchain.Success) {
                         boopStore.delete(input.boop)
                         return { ...simulation, stage: "simulate" }
                     }
-                    mutateBoopGasFromSimulation(boop, simulation)
+                    mutateBoopGasFromSimulation(ogBoop, boop, simulation)
                     await dbService.saveBoop(entryPoint, boop)
                 } else {
                     boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue)
                 }
 
-                const account = findExecutionAccount(ogBoop)
+                const account = findExecutionAccount(boop)
                 logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
                 // TODO make sure this does no extra needless simulations
@@ -139,58 +138,50 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
     }
 }
 
-function getOgBoop(boop: Boop, replacedTx?: Transaction): [Boop, undefined] | [undefined, SubmitError] {
+function getOriginalBoop(boop: Boop, replacedTx?: Transaction): [Boop, undefined] | [undefined, SubmitError] {
     const ogBoop = boopStore.getByHash(computeHash(boop))
 
     if (replacedTx) {
-        // is a replacement tx, and has OG Boop in cache, everything is ok
         if (ogBoop) return [ogBoop, undefined]
-        // if we have a replacement TX, but no original boop
-        // something went terribly wrong.
+        // If we have a replacement TX, but no original boop, something went terribly wrong.
         logger.error("Replaced transaction without original boop in cache", { boop, replacedTx })
-        return [
-            undefined,
-            {
-                status: SubmitterError.UnexpectedError,
-                description: "Replaced transaction without original boop in cache.",
-                stage: "submit",
-            },
-        ]
+        // biome-ignore format: terse
+        return [ undefined, {
+            status: SubmitterError.UnexpectedError,
+            description: "Replaced EVM transaction without original boop in cache.",
+            stage: "submit",
+        }]
     }
 
-    // has an OG boop, but not a replacement tx - must be re-submit from outside
-    // or something went wrong
-    if (ogBoop) {
-        return [
-            undefined,
-            {
-                status: SubmitterError.AlreadyProcessing,
-                description: "Already processing a boop with the same hash.",
-                stage: "submit",
-            },
-        ]
+    if (!ogBoop) {
+        // This is the first time we see the boop, save it, then return the frozen version from the store.
+        boopStore.set(boop)
+        return [boopStore.getByHash(computeHash(boop))!, undefined]
     }
 
-    boopStore.set(boop)
-    // return the frozen version of the boop from the store
-    return [boopStore.getByHash(computeHash(boop))!, undefined]
+    // The boop is already known but this isn't an internal replacement — the boop was resubmitted by the user.
+    // The current behaviour is to always reject in this case.
+    return [
+        undefined,
+        {
+            status: SubmitterError.AlreadyProcessing,
+            description: "Already processing a boop with the same hash.",
+            stage: "submit",
+        },
+    ]
 }
 
-function mutateBoopGasFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop {
-    if (boop.account === boop.payer) return boop
-
-    const ogBoop = boopStore.getByHash(computeHash(boop))
-    if (!ogBoop) {
-        logger.error("Tried to mutate boop from simulation, but original boop not found in cache", boop)
-        return boop
-    }
-
+/**
+ * Mutates {@link boop} with updated gas limit & fees from the simulation, honoring
+ * values specified in the original boop ({@link ogBoop} whenever specified).
+ */
+function mutateBoopGasFromSimulation(ogBoop: Boop, boop: Boop, simulation: SimulateSuccess): void {
+    // We can't mutate self-paying boop values, but they will be validated during simulation.
+    if (boop.account === boop.payer) return
     boop.gasLimit = ogBoop.gasLimit || simulation.gas
     boop.validateGasLimit = ogBoop.validateGasLimit || simulation.validateGas
     boop.validatePaymentGasLimit = ogBoop.validatePaymentGasLimit || simulation.validatePaymentGas
     boop.executeGasLimit = ogBoop.executeGasLimit || simulation.executeGas
     boop.maxFeePerGas = ogBoop.maxFeePerGas || simulation.maxFeePerGas
     boop.submitterFee = ogBoop.submitterFee || simulation.submitterFee
-
-    return boop
 }

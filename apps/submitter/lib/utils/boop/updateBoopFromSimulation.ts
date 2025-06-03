@@ -1,6 +1,7 @@
 import type { SimulateSuccess } from "#lib/handlers/simulate"
 import type { Boop } from "#lib/types"
 
+// Exported for SDK use, internally we use `mutateBoopGasFromSimulation` in simulate.ts.
 /**
  * Given a boop and a successful simulation output, returns an updated version of the boop,
  * with the gas limits and gas fees set according to the simulation.

@@ -29,8 +29,6 @@ export class BlockService {
     }
 
     onBlock(callback: (block: BlockHeader) => void): () => void {
-        // This is a placeholder implementation. In a real application, this would
-        // subscribe to new blocks on the blockchain and call the callback with the block number.
         blockLogger.trace("Subscribed to new blocks")
         this.onBlockCallbacks.add(callback)
 
