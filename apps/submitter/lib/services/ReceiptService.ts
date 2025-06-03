@@ -95,64 +95,90 @@ export class ReceiptService {
     }
 
     async #startBlockWatcher(): Promise<void> {
-        const initialRetryDelay = 1000 // ms
-        const maxRetryDelay = 30_000 // ms
-        const maxRetries = 5
-        let currentRetry = 0
+        const initialRetryDelay = 1000; // ms
+        const maxRetryDelay = 30_000; // ms
+        const maxRetriesPerClientConfig = 5; // Max retries for both websocket and HTTP clients
 
-        // we actually exit loop in catch clause, if ever
-        while (currentRetry < maxRetries) {
-            const { promise, reject } = promiseWithResolvers<void>()
-            let unwatch: WatchBlocksReturnType | null = null
+        let retriesForCurrentClient = 0;
+        let switchedToHttp = false;
+
+        while (true) {
+            const { promise, reject } = promiseWithResolvers<void>();
+            let unwatch: WatchBlocksReturnType | null = null;
+
             try {
-                logger.info("Starting block watcher with transport", this.#publicClient.transport)
+                const clientDescription = switchedToHttp ? "HTTP-only client" : "Websocket client";
+                logger.info(
+                    `Starting block watcher with ${clientDescription} (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig}). Transport type:`,
+                    this.#publicClient.transport.type
+                );
+
                 unwatch = this.#publicClient.watchBlocks({
-                    // If `poll` is undefined and transport is WebSocket (or fallback with first WebSocket transport),
-                    // Viem won't poll but subscribe, even if `pollingInterval` is set.
                     pollingInterval: 200,
                     includeTransactions: false,
                     emitOnBegin: true,
                     emitMissed: true,
                     onBlock: (header) => {
-                        if (currentRetry > 0) {
-                            logger.info("Block watcher recovered and processed a block. Resetting retry attempts.")
-                            currentRetry = 0
+                        if (retriesForCurrentClient > 0 || switchedToHttp) {
+                            logger.info(
+                                `Block watcher successfully retrieved block ${header.number} with ${clientDescription}. Resetting its retry count.`
+                            );
+                            retriesForCurrentClient = 0;
                         }
-                        if (!header.hash || !headerCouldContainBoop(header)) return
+                        if (!header.hash || !headerCouldContainBoop(header)) return;
                         for (const evmTxHash of header.transactions) {
-                            const pending = this.#pendingEvmTxs.get(evmTxHash)
-                            if (!pending) continue // not one of our transactions
-                            void this.#handleTransactionInBlock(evmTxHash, pending.boop, pending.sub)
+                            const pending = this.#pendingEvmTxs.get(evmTxHash);
+                            if (!pending) continue;
+                            void this.#handleTransactionInBlock(evmTxHash, pending.boop, pending.sub);
                         }
                     },
                     onError: (e) => {
-                        // We technically do not need to restart the watcher here, but we have observed cases where
-                        // it is in fact necessary to do so, so for now we always restart.
-                        logger.error("Error in block watcher", e)
-                        reject(e)
+                        logger.error(`Error in block watcher callback with ${clientDescription}`, e);
+                        reject(e);
                     },
-                })
-                logger.trace("Block watcher started successfully.")
-                await promise // block forever unless an error occurs
+                });
+                logger.trace(`Block watcher started successfully with ${clientDescription}.`);
+                await promise;
             } catch (e) {
-                // TODO Can we make this more robust with a fallback to another RPC?
-                //      We have Viem fallback enabled, but how does it work with watchblocks and websocket?
-                if (unwatch) unwatch()
-                else logger.error("Error starting block watcher", e)
-                if (currentRetry === maxRetries) {
-                    // we have exhausted all retries, automatic fallback with websocket not working,
-                    // so we create a new public client with only http transports
-                    const httpOnlyConfig = {
-                        ...config,
-                        transport: fallback([...chain.rpcUrls.default.http.map((url) => http(url))]),
+                if (unwatch) {
+                    unwatch();
+                    unwatch = null;
+                }
+                logger.error(`Block watcher attempt failed with ${switchedToHttp ? "HTTP-only client" : "primary client"}:`, e);
+
+                retriesForCurrentClient++;
+
+                if (retriesForCurrentClient >= maxRetriesPerClientConfig) {
+                    if (!switchedToHttp) {
+                        logger.warn(
+                            `Max retries (${maxRetriesPerClientConfig}) reached with the Websocket client. Attempting to switch to HTTP-only client.`
+                        );
+                        try {
+                            const httpOnlyConfig = {
+                                ...config,
+                                transport: fallback([...chain.rpcUrls.default.http.map((url) => http(url))]),
+                            };
+                            this.#publicClient = createPublicClient(httpOnlyConfig);
+                            logger.info("Successfully switched to HTTP-only public client. Resetting retries for new configuration.");
+                            switchedToHttp = true;
+                            retriesForCurrentClient = 0;
+                        } catch (creationError) {
+                            logger.error("Fatal: Failed to create HTTP-only public client. Exiting program.", creationError);
+                            process.exit(1); // Exit the entire program
+                        }
+                    } else {
+                        logger.error(
+                            `Max retries (${maxRetriesPerClientConfig}) reached even with HTTP-only client. Block watcher failed permanently. Exiting program.`
+                        );
+                        process.exit(1); // Exit the entire program
                     }
-                    this.#publicClient = createPublicClient(httpOnlyConfig)
                 }
 
-                currentRetry++
-                const delay = Math.min(initialRetryDelay * 2 ** (currentRetry - 1), maxRetryDelay) // exponential backoff
-                logger.warn(`Retrying block watcher in ${delay / 1000} seconds (Attempt ${currentRetry}/${maxRetries})`)
-                sleep(delay)
+                const delay = Math.min(initialRetryDelay * 2 ** (retriesForCurrentClient -1), maxRetryDelay); // Exponential backoff
+                logger.warn(
+                    `Retrying block watcher in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for ${switchedToHttp ? "HTTP-only client" : "primary client"})`
+                );
+                await sleep(delay);
             }
         }
     }
