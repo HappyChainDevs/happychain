@@ -30,7 +30,10 @@ const InlineDrawer = ({ rootContext, trigger, children }: InlineDrawerProps) => 
         >
             <div
                 data-part="wrapper"
-                className={`${rootContext.visible ? "rounded-t-[2rem] rounded-b-none pt-6" : "rounded-t-none"} rounded-b-xl [animation-delay:250ms] [animation-fill-mode:both] animate-growIn bg-base-100 fixed z-30 flex flex-col bottom-0 start-0  min-h-12 w-[calc(100%-2px)] border-t border-neutral/10`}
+                className={cx(
+                    "rounded-b-xl [animation-delay:250ms] [animation-fill-mode:both] animate-growIn bg-base-100 fixed z-30 flex flex-col bottom-0 start-0 min-h-12 w-[calc(100%-2px)] border-t border-neutral/10",
+                    rootContext.visible ? "rounded-t-[2rem] rounded-b-none pt-6" : "rounded-t-none",
+                )}
             >
                 <Collapsible.Trigger
                     className={cx(
