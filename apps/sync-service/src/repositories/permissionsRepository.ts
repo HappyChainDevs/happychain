@@ -2,12 +2,14 @@ import type { Hex } from "@happy.tech/common"
 import type { Insertable, Selectable } from "kysely"
 import { db } from "../db/driver"
 import type { WalletPermisisonRow } from "../db/types"
-import type { WalletPermission } from "../dtos"
+import type { WalletPermission, WalletPermissionUpdate } from "../dtos"
 
-function fromDtoToDb(permission: WalletPermission): Insertable<WalletPermisisonRow> {
+function fromDtoToDbUpdate(permission: WalletPermissionUpdate): Partial<Insertable<WalletPermisisonRow>> {
+    const { type, caveats, ...rest } = permission
     return {
-        ...permission,
-        caveats: JSON.stringify(permission.caveats),
+        ...rest,
+        ...(caveats && { caveats: JSON.stringify(caveats) }),
+        updatedAt: Date.now(),
     }
 }
 
@@ -15,11 +17,8 @@ function fromDbToDto(permission: Selectable<WalletPermisisonRow>): WalletPermiss
     return {
         type: "WalletPermissions",
         ...permission,
+        deleted: permission.deleted === 1,
     }
-}
-
-export function savePermission(permission: WalletPermission) {
-    return db.insertInto("walletPermissions").values(fromDtoToDb(permission)).execute()
 }
 
 export function getPermission(id: string) {
@@ -37,14 +36,26 @@ export async function listPermissions(user: Hex, lastUpdated?: number): Promise<
     return result.map(fromDbToDto)
 }
 
-export async function updatePermission(permission: WalletPermission) {
+export async function savePermission(permission: WalletPermissionUpdate) {
+    const existing = await getPermission(permission.id)
+    if (existing) {
+        return await db
+            .updateTable("walletPermissions")
+            .set(fromDtoToDbUpdate(permission))
+            .where("id", "=", permission.id)
+            .execute()
+    }
+
     return await db
-        .updateTable("walletPermissions")
-        .set(fromDtoToDb(permission))
-        .where("id", "=", permission.id)
+        .insertInto("walletPermissions")
+        .values(fromDtoToDbUpdate(permission) as Insertable<WalletPermisisonRow>)
         .execute()
 }
 
 export async function deletePermission(id: string) {
-    return await db.deleteFrom("walletPermissions").where("id", "=", id).execute()
+    return await db
+        .updateTable("walletPermissions")
+        .set({ deleted: true, updatedAt: Date.now() })
+        .where("id", "=", id)
+        .execute()
 }

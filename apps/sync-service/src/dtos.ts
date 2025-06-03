@@ -2,7 +2,6 @@ import { isAddress } from "@happy.tech/common"
 import { checksum } from "ox/Address"
 import { z } from "zod"
 import { isAppUrl } from "./utils/isAppUrl"
-import { isUUID } from "./utils/isUUID"
 
 export const walletPermission = z.object({
     type: z.literal("WalletPermissions").openapi({
@@ -25,6 +24,36 @@ export const walletPermission = z.object({
     id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
     updatedAt: z.number().openapi({ example: 1715702400 }),
     createdAt: z.number().openapi({ example: 1715702400 }),
+    deleted: z.boolean().openapi({ example: false }),
 })
 
 export type WalletPermission = z.infer<typeof walletPermission>
+
+export const walletPermissionUpdate = walletPermission.partial().extend({
+    type: z.literal("WalletPermissions").openapi({
+        example: "WalletPermissions",
+        type: "string",
+    }),
+    user: z.string().refine(isAddress).transform(checksum).openapi({
+        example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        type: "string",
+    }),
+    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+})
+
+export type WalletPermissionUpdate = z.infer<typeof walletPermissionUpdate>
+
+export const updateEvent = z.object({
+    event: z.enum(["WalletPermissions.updated", "WalletPermissions.deleted", "WalletPermissions.created"]),
+    data: z.object({
+        destination: z.string().refine(isAddress).transform(checksum).openapi({
+            example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+            type: "string",
+        }),
+        resourceId: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+        updatedAt: z.number().openapi({ example: 1715702400 }),
+    }),
+    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+})
+
+export type UpdateEvent = z.infer<typeof updateEvent>

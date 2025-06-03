@@ -3,7 +3,6 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { isProduction } from "../../utils/isProduction"
-import { isUUID } from "../../utils/isUUID"
 
 export const deleteConfigSchema = z
     .object({

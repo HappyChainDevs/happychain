@@ -91,10 +91,13 @@ export type PermissionsRequest = string | PermissionRequestObject
 
 export const permissionsMapLegend = observable(
     syncedCrud({
-        list: async () => {
+        list: async ({ lastSync }) => {
             const user = getUser()
             if (!user) return []
-            const response = await fetch(`http://localhost:3000/api/v1/settings/list?user=${user.address}`)
+
+            const response = await fetch(
+                `http://localhost:3000/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`,
+            )
             const data = await response.json()
 
             return data.data as WalletPermission[]
@@ -110,21 +113,35 @@ export const permissionsMapLegend = observable(
             await response.json()
         },
         update: async (data: WalletPermission) => {
+            const user = getUser()
+            if (!user) return
+
             const response = await fetch("http://localhost:3000/api/v1/settings/update", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    ...data,
+                    type: "WalletPermissions",
+                    user: user.address,
+                }),
             })
             await response.json()
         },
         subscribe: ({ refresh }) => {
-            // Set up an interval to refresh messages every 5 seconds
-            setInterval(() => {
-                console.log("Refreshing config (5-second interval)")
+            const user = getUser()
+            if (!user) return () => {}
+
+            console.log("Subscribing to updates for user", user.address)
+
+            const eventSource = new EventSource(`http://localhost:3000/api/v1/settings/subscribe?user=${user.address}`)
+            eventSource.addEventListener("update", (event) => {
+                const data = JSON.parse(event.data)
+                console.log("Received update", data)
                 refresh()
-            }, 5000)
+            })
+            return () => eventSource.close()
         },
         delete: async ({ id }) => {
             const response = await fetch("http://localhost:3000/api/v1/settings/delete", {
@@ -142,12 +159,41 @@ export const permissionsMapLegend = observable(
             retrySync: true, // Retry sync after reload
         },
         initial: {},
-        fieldCreatedAt: "created_at",
+        fieldCreatedAt: "createdAt",
         fieldUpdatedAt: "updatedAt",
         fieldDeleted: "deleted",
-        changesSince: "all",
+        changesSince: "last-sync",
+        updatePartial: true,
     }),
 )
+
+// // === RANDOM PERMISSION UPDATE SIMULATION ========================================================================
+
+const mockPermissionUpdates = () => {
+    const permissions = permissionsMapLegend.get()
+    const permissionArray = Object.values(permissions)
+    
+    if (permissionArray.length === 0) return
+    
+    // Randomly select a permission to update
+    const randomIndex = Math.floor(Math.random() * permissionArray.length)
+    const permissionToUpdate = permissionArray[randomIndex]
+    
+    // Update the timestamp
+    const updatedPermission = {
+        ...permissionToUpdate,
+        caveats: [...permissionToUpdate.caveats, { type: "random", value: String(Math.random()) }],
+        updatedAt: Date.now()
+    }
+
+    
+    // Update in the legend
+    permissionsMapLegend[permissionToUpdate.id].set(updatedPermission)
+}
+
+// Set up interval for random updates every 5 seconds
+setInterval(mockPermissionUpdates, 5000)
+
 
 // === GET ALL PERMISSIONS =======================================================================================
 
@@ -359,6 +405,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
                 createdAt: Date.now(),
                 type: "WalletPermissions",
                 user: user.address,
+                deleted: false,
             }
             grantedPermissions.push(grantedPermission)
 

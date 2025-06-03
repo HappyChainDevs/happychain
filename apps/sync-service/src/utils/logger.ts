@@ -13,6 +13,7 @@ export const logJSONResponseMiddleware = createMiddleware(async (c, next) => {
 
     if (LogLevel.TRACE > responseLogger.logLevel) return
     if (!c.req.path.startsWith("/api")) return
+    if (c.req.path.includes("/api/v1/settings/subscribe")) return
     try {
         responseLogger.trace(c.res.status, await c.res.clone().json())
     } catch (e) {

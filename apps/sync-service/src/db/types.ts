@@ -30,6 +30,7 @@ export type WalletPermisisonRow = {
     id: string
     updatedAt: number
     createdAt: number
+    deleted: ColumnType<number, boolean, boolean>
 }
 
 export interface Database {

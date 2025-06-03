@@ -4,15 +4,15 @@ import type { Database } from "../types"
 export async function up(db: Kysely<Database>) {
     await db.schema
         .createTable("walletPermissions")
-        .addColumn("user", "text")
-        .addColumn("invoker", "text")
-        .addColumn("parentCapability", "text")
-        .addColumn("caveats", "jsonb")
-        .addColumn("date", "integer")
-        .addColumn("id", "text", (col) => col.notNull())
-        .addColumn("updatedAt", "integer")
-        .addColumn("createdAt", "integer")
-        .addColumn("deleted", "boolean")
+        .addColumn("user", "text", (col) => col.notNull())
+        .addColumn("invoker", "text", (col) => col.notNull())
+        .addColumn("parentCapability", "text", (col) => col.notNull())
+        .addColumn("caveats", "jsonb", (col) => col.notNull())
+        .addColumn("date", "integer", (col) => col.notNull())
+        .addColumn("id", "text", (col) => col.notNull().primaryKey())
+        .addColumn("updatedAt", "integer", (col) => col.notNull())
+        .addColumn("createdAt", "integer", (col) => col.notNull())
+        .addColumn("deleted", "boolean", (col) => col.notNull())
         .execute()
 }
 

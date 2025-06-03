@@ -26,9 +26,9 @@ app.use(
     }),
 )
 app.use("*", timingMiddleware())
-app.use("*", loggerMiddleware())
-app.use("*", logJSONResponseMiddleware)
-app.use("*", prettyJSONMiddleware())
+// app.use("*", loggerMiddleware())
+// app.use("*", logJSONResponseMiddleware)
+// app.use("*", prettyJSONMiddleware())
 app.use("*", timeoutMiddleware(30_000))
 app.use("*", requestIdMiddleware())
 
