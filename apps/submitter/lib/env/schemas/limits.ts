@@ -39,8 +39,9 @@ export const limitsSchema = z.object({
     SIMULATION_CACHE_SIZE: z.coerce.number().positive().default(20_000),
 
     /**
-     * The time-to-live (time before pruning) for results in the
-     * simulation cache, in milliseconds. Defaults to 30 seconds.
+     * The time-to-live (time before pruning) for results in the simulation cache, in
+     * milliseconds. Defaults to 30 seconds. Set to 0 to disable TTL (then simulations
+     * only expires when the cache reaches max size ({@link SIMULATION_CACHE_SIZE}).
      */
     SIMULATION_CACHE_TTL: z.coerce.number().positive().default(30_000),
 

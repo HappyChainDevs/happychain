@@ -14,7 +14,6 @@ export class SimulationCache {
         this.#lru = new LruCache({
             max: size,
             maxAge: ttl,
-            stale: false,
         })
     }
 
