@@ -155,6 +155,7 @@ export default {
                     scrollbarColor: "rgba(100, 100, 100, 0.5) transparent",
                 },
                 ".scrollbar-thin::-webkit-scrollbar": {
+                    // If these change, be sure to match the firefox fix in tailwind.css
                     width: "6px",
                     height: "6px",
                 },

@@ -38,7 +38,8 @@ const recipeContent = cva(
                 modal: "motion-safe:[&[data-state=open]_[data-part=wrapper]]:animate-growIn motion-safe:[&[data-state=closed]_[data-part=wrapper]]:animate-growOut",
             },
             intent: {
-                default: "bg-base-100",
+                // needs extra ff-scrollbar-padding fix due to position 'absolute' of the popover
+                default: "bg-base-200 ff-scrollbar-px",
             },
             scale: {
                 default: "text-sm",
