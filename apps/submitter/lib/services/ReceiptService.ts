@@ -95,23 +95,23 @@ export class ReceiptService {
     }
 
     async #startBlockWatcher(): Promise<void> {
-        const initialRetryDelay = 1000; // ms
-        const maxRetryDelay = 30_000; // ms
-        const maxRetriesPerClientConfig = 5; // Max retries for both websocket and HTTP clients
+        const initialRetryDelay = 1000 // ms
+        const maxRetryDelay = 30_000 // ms
+        const maxRetriesPerClientConfig = 5 // Max retries for both websocket and HTTP clients
 
-        let retriesForCurrentClient = 0;
-        let switchedToHttp = false;
+        let retriesForCurrentClient = 0
+        let switchedToHttp = false
 
         while (true) {
-            const { promise, reject } = promiseWithResolvers<void>();
-            let unwatch: WatchBlocksReturnType | null = null;
+            const { promise, reject } = promiseWithResolvers<void>()
+            let unwatch: WatchBlocksReturnType | null = null
 
             try {
-                const clientDescription = switchedToHttp ? "HTTP-only client" : "Websocket client";
+                const clientDescription = switchedToHttp ? "HTTP-only client" : "Websocket client"
                 logger.info(
                     `Starting block watcher with ${clientDescription} (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig}). Transport type:`,
-                    this.#publicClient.transport.type
-                );
+                    this.#publicClient.transport.type,
+                )
 
                 unwatch = this.#publicClient.watchBlocks({
                     pollingInterval: 200,
@@ -121,64 +121,72 @@ export class ReceiptService {
                     onBlock: (header) => {
                         if (retriesForCurrentClient > 0 || switchedToHttp) {
                             logger.info(
-                                `Block watcher successfully retrieved block ${header.number} with ${clientDescription}. Resetting its retry count.`
-                            );
-                            retriesForCurrentClient = 0;
+                                `Block watcher successfully retrieved block ${header.number} with ${clientDescription}. Resetting its retry count.`,
+                            )
+                            retriesForCurrentClient = 0
                         }
-                        if (!header.hash || !headerCouldContainBoop(header)) return;
+                        if (!header.hash || !headerCouldContainBoop(header)) return
                         for (const evmTxHash of header.transactions) {
-                            const pending = this.#pendingEvmTxs.get(evmTxHash);
-                            if (!pending) continue;
-                            void this.#handleTransactionInBlock(evmTxHash, pending.boop, pending.sub);
+                            const pending = this.#pendingEvmTxs.get(evmTxHash)
+                            if (!pending) continue
+                            void this.#handleTransactionInBlock(evmTxHash, pending.boop, pending.sub)
                         }
                     },
                     onError: (e) => {
-                        logger.error(`Error in block watcher callback with ${clientDescription}`, e);
-                        reject(e);
+                        logger.error(`Error in block watcher callback with ${clientDescription}`, e)
+                        reject(e)
                     },
-                });
-                logger.trace(`Block watcher started successfully with ${clientDescription}.`);
-                await promise;
+                })
+                logger.trace(`Block watcher started successfully with ${clientDescription}.`)
+                await promise
             } catch (e) {
                 if (unwatch) {
-                    unwatch();
-                    unwatch = null;
+                    unwatch()
+                    unwatch = null
                 }
-                logger.error(`Block watcher attempt failed with ${switchedToHttp ? "HTTP-only client" : "primary client"}:`, e);
+                logger.error(
+                    `Block watcher attempt failed with ${switchedToHttp ? "HTTP-only client" : "primary client"}:`,
+                    e,
+                )
 
-                retriesForCurrentClient++;
+                retriesForCurrentClient++
 
                 if (retriesForCurrentClient >= maxRetriesPerClientConfig) {
                     if (!switchedToHttp) {
                         logger.warn(
-                            `Max retries (${maxRetriesPerClientConfig}) reached with the Websocket client. Attempting to switch to HTTP-only client.`
-                        );
+                            `Max retries (${maxRetriesPerClientConfig}) reached with the Websocket client. Attempting to switch to HTTP-only client.`,
+                        )
                         try {
                             const httpOnlyConfig = {
                                 ...config,
                                 transport: fallback([...chain.rpcUrls.default.http.map((url) => http(url))]),
-                            };
-                            this.#publicClient = createPublicClient(httpOnlyConfig);
-                            logger.info("Successfully switched to HTTP-only public client. Resetting retries for new configuration.");
-                            switchedToHttp = true;
-                            retriesForCurrentClient = 0;
+                            }
+                            this.#publicClient = createPublicClient(httpOnlyConfig)
+                            logger.info(
+                                "Successfully switched to HTTP-only public client. Resetting retries for new configuration.",
+                            )
+                            switchedToHttp = true
+                            retriesForCurrentClient = 0
                         } catch (creationError) {
-                            logger.error("Fatal: Failed to create HTTP-only public client. Exiting program.", creationError);
-                            process.exit(1); // Exit the entire program
+                            logger.error(
+                                "Fatal: Failed to create HTTP-only public client. Exiting program.",
+                                creationError,
+                            )
+                            process.exit(1) // Exit the entire program
                         }
                     } else {
                         logger.error(
-                            `Max retries (${maxRetriesPerClientConfig}) reached even with HTTP-only client. Block watcher failed permanently. Exiting program.`
-                        );
-                        process.exit(1); // Exit the entire program
+                            `Max retries (${maxRetriesPerClientConfig}) reached even with HTTP-only client. Block watcher failed permanently. Exiting program.`,
+                        )
+                        process.exit(1) // Exit the entire program
                     }
                 }
 
-                const delay = Math.min(initialRetryDelay * 2 ** (retriesForCurrentClient -1), maxRetryDelay); // Exponential backoff
+                const delay = Math.min(initialRetryDelay * 2 ** (retriesForCurrentClient - 1), maxRetryDelay) // Exponential backoff
                 logger.warn(
-                    `Retrying block watcher in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for ${switchedToHttp ? "HTTP-only client" : "primary client"})`
-                );
-                await sleep(delay);
+                    `Retrying block watcher in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for ${switchedToHttp ? "HTTP-only client" : "primary client"})`,
+                )
+                await sleep(delay)
             }
         }
     }
