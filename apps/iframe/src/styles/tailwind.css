@@ -3,9 +3,52 @@
 @tailwind utilities;
 
 @layer base {
+    /**
+     * Firefox doesn't add padding to scrollbarGutter: "stable both-edges"
+     * So here we will simply add padding ourselves. This only works since
+     * firefox also does not support the `overlay` value for scrollbarGutter.
+     *
+     * spacing values should match .scrollbar-thin::-webkit-scrollbar in tailwind.config.ts
+     */
+    :root {
+        --tailwind-scrollbar-width: 10px;
+    }
+
     @font-face {
         font-family: "Inter", sans-serif;
         font-optical-sizing: auto;
         font-style: normal;
+    }
+}
+
+/* biome-ignore lint/correctness/noUnknownProperty: its available on chrome, not firefox */
+@supports (not (overlay: none)) {
+    .overflow-y-auto.scrollbar-stable {
+        padding-left: var(--tailwind-scrollbar-width);
+        padding-right: var(--tailwind-scrollbar-width);
+    }
+    .overflow-x-auto.scrollbar-stable {
+        padding-top: var(--tailwind-scrollbar-width);
+        padding-bottom: var(--tailwind-scrollbar-width);
+    }
+    .overflow-auto.scrollbar-stable {
+        padding: var(--tailwind-scrollbar-width);
+    }
+
+    .ff-scrollbar-py {
+        padding-top: var(--tailwind-scrollbar-width);
+        padding-bottom: var(--tailwind-scrollbar-width);
+    }
+
+    .ff-scrollbar-px {
+        padding-left: var(--tailwind-scrollbar-width);
+        padding-right: var(--tailwind-scrollbar-width);
+    }
+
+    .ff-scrollbar-p {
+        padding-left: var(--tailwind-scrollbar-width);
+        padding-right: var(--tailwind-scrollbar-width);
+        padding-top: var(--tailwind-scrollbar-width);
+        padding-bottom: var(--tailwind-scrollbar-width);
     }
 }

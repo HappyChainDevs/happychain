@@ -13,10 +13,10 @@ const ListItem = ({ appURL }: ListItemProps) => {
 
     return (
         <li className="p-2 min-h-10 flex hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center text-sm">
-            <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
+            <span className="inline-flex items-center gap-2 w-full max-w-prose mx-auto">
                 <img
                     alt={appURL}
-                    className="text-transparent rounded-full h-[1.3rem] w-[1.5rem]"
+                    className="text-transparent rounded-full h-[1.5rem] w-[1.5rem] object-contain"
                     loading="lazy"
                     width="20"
                     height="20"
@@ -50,7 +50,7 @@ interface ListDappsWithPermissionsProps {
 export const ListAppsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
     if (items.length === 0)
         return (
-            <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-neutral/50">
+            <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-content">
                 {" "}
                 It seems there aren't any apps you gave permissions to.
             </p>

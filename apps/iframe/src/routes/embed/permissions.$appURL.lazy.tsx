@@ -24,7 +24,7 @@ function DappPermissions() {
     //      and then adds new permissions. Not a huge priority, granting permissions is rare.
 
     return (
-        <div className="bg-base-100 pb-14 overflow-x-hidden">
+        <div className="pb-14 overflow-x-hidden">
             <div className="animate-appear">
                 <h2 className="sticky top-0 text-center bg-base-200 text-base-content font-bold p-1 text-sm">
                     {appURL}

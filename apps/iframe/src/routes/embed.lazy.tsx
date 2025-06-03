@@ -89,7 +89,7 @@ function Embed() {
                 <BannerList />
                 <section
                     ref={scrollableSectionRef}
-                    className="relative grid min-h-0 h-full gap-4 overflow-y-auto scrollbar-stable scrollbar-thin auto-rows-[1fr] has-[.lock-parent-scroll[data-state=open]]:overflow-hidden"
+                    className="relative grid min-h-0 h-full gap-4 overflow-y-auto scrollbar-stable scrollbar-thin auto-rows-[1fr] has-[.lock-parent-scroll[data-state=open]]:overflow-hidden bg-base-200"
                 >
                     <Outlet />
                     {!location.pathname.includes("permissions") && (

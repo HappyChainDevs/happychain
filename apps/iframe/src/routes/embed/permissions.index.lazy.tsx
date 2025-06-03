@@ -12,7 +12,7 @@ function Permissions() {
 
     return (
         <>
-            <div className="bg-base-100 pb-14 relative">
+            <div className="pb-14 relative">
                 <h2 className="sticky z-10 top-0 text-center bg-base-200 text-base-content font-bold p-1 text-sm">
                     Permissions
                 </h2>
