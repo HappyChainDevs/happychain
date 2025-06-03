@@ -9,7 +9,7 @@ import { computeHash, dbService, findExecutionAccount, simulationCache } from "#
 import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { getMaxPriorityFeePerGas } from "#lib/utils/gas"
+import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 import type { BlockService } from "./BlockService"
@@ -151,18 +151,12 @@ export class BoopReceiptService {
     async #cancelEvmTx(sub: PendingBoopInfo, tx: EvmTxInfo): Promise<void> {
         this.#cancelledBoopHashes.add(sub.boopHash)
         receiptLogger.warn(`Cancelling Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
+
         const account = findExecutionAccount(sub.boop)
-
-        const maxPriorityFeePerGas = getMaxPriorityFeePerGas(tx)
-
         const block = await this.#blockService.getCurrentBlock()
-
-        // TODO call gas helpers here
-        const latestBaseFee = block.baseFeePerGas!
-        const estimatedNextBaseFee = (latestBaseFee * 1125n) / 1000n // +12.5% worst case
-        const calculatedMaxFeePerGas = estimatedNextBaseFee + maxPriorityFeePerGas
-        const repriced = (tx.maxFeePerGas! * 115n) / 100n
-        const maxFeePerGas = calculatedMaxFeePerGas > repriced ? calculatedMaxFeePerGas : repriced
+        const fetchedMaxFeePerGas = block.baseFeePerGas! + tx.maxPriorityFeePerGas
+        const maxPriorityFeePerGas = getMaxPriorityFeePerGas(tx)
+        const maxFeePerGas = getMaxFeePerGas(fetchedMaxFeePerGas, tx)
 
         const evmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
             to: account.address,
