@@ -80,8 +80,8 @@ export type ExecuteError = {
      * will always be an error detected during simulation — this is an EVM RPC limitation that is
      * difficult to work around (it requires tracing the transaction in its intra-block context).
      *
-     * Onchain reverts should be rare, as the system is set up to avoid them — they can only result from incorrectly
-     * implemented accounts and paymasters, or from bugs in the submitter.
+     * True onchain reverts (as opposed to rejections) should be rare, as the system is set up to avoid them —
+     * they can only result from incorrectly implemented accounts and paymasters, or from bugs in the submitter.
      */
     revertData?: Bytes
 
