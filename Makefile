@@ -634,7 +634,7 @@ select-chain-prod:
 	make select-staging-contracts use=false
 .PHONY: select-chain-prod
 
-select-all-local: setup-chain-local select-submitter-local select-iframe-local
+select-all-local: select-chain-local select-submitter-local select-iframe-local
 .PHONY: select-all-local
 
 select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging
