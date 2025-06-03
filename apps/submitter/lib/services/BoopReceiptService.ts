@@ -46,9 +46,11 @@ export class BoopReceiptService {
     constructor(blockService: BlockService) {
         this.#blockService = blockService
         this.#blockService.onBlock((header) => {
-            if (!header.hash) return
+            if (!header.hash) {
+                logger.error("Undefined hash", header)
+                return
+            }
 
-            //
             if (!this.#cancelledBoopHashes && !headerCouldContainBoop(header)) return
 
             for (const evmTxHash of header.transactions) {
@@ -68,6 +70,7 @@ export class BoopReceiptService {
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
         // 1. fast‑path → receipt already in DB?
         try {
+            // TODO we should only store receipts, so boop without receipts will not be able to occur anymore
             const { boop: savedBoop, receipt } = await dbService.findReceiptOrBoop(boopHash)
             if (receipt) return { status: WaitForReceipt.Success, receipt }
             if (!savedBoop) return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
@@ -81,29 +84,25 @@ export class BoopReceiptService {
         }
 
         // 2. get or create pending boop info
-        const sub = getOrSet(
-            this.#pendingBoopInfos,
+        // biome-ignore format: terse
+        const sub = getOrSet(this.#pendingBoopInfos, boopHash, () => ({
+            pwr: promiseWithResolvers<WaitForReceiptOutput>(),
+            count: 0,
+            boop,
             boopHash,
-            () =>
-                ({
-                    pwr: promiseWithResolvers<WaitForReceiptOutput>(),
-                    count: 0,
-                    boop,
-                    boopHash,
-                    interval: undefined,
-                    evmTxHashes: new Set<Hash>(),
-                }) satisfies PendingBoopInfo,
-        )
+            interval: undefined,
+            evmTxHashes: new Set<Hash>(),
+        }) satisfies PendingBoopInfo)
 
         sub.count += 1
 
-        // 3. if evmTxHash supplied, and no interval exists, start monitoring for replacement or cancellation
+        // 3. if evmTxHash supplied and no interval exists, start monitoring for replacement or cancellation
         if (evmTxHash) {
             this.#setActiveEvmTxHash(sub, evmTxHash)
             sub.interval ??= setInterval(() => void this.cancelOrReplace(sub), env.STUCK_TX_WAIT_TIME)
         }
 
-        // 4. race the real receipt vs timeout
+        // 4. race the receipt against a timeout
         const output = await Promise.race([
             sub.pwr.promise,
             delayed<WaitForReceiptOutput>(timeout, () => ({
@@ -127,19 +126,15 @@ export class BoopReceiptService {
     // Note: must be 'private func' not '#func' to be callable and spied on from the tests!
     private async cancelOrReplace(sub: PendingBoopInfo): Promise<void> {
         if (!sub.latestEvmTxHash) {
+            // TODO this should never occur
             receiptLogger.warn("No evmTxHash set for boop, cannot cancel or replace", sub.boopHash)
             return
         }
-
+        // TODO we could probably cache this
         const tx = await publicClient.getTransaction({ hash: sub.latestEvmTxHash })
+        receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${sub.latestEvmTxHash}`)
+        const results = await submitInternal({ boop: sub.boop, entryPoint: tx.to!, replacedTx: tx })
 
-        receiptLogger.warn(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${sub.latestEvmTxHash}`)
-
-        // use boopCache first, as `.get` will update last access time
-        const results = await submitInternal(
-            { boop: sub.boop, entryPoint: tx.to! },
-            { earlyExit: false, replacedTx: tx },
-        )
         // Only cancel if the simulation was not successful, otherwise keep retying indefinitely
         if (results.status !== Onchain.Success) await this.#cancelEvmTx(sub, tx)
     }

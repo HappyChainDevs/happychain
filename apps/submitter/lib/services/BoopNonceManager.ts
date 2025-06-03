@@ -52,8 +52,6 @@ export class BoopNonceManager {
      * Used to set the nonce after a simulation succeds without indicating a future nonce.
      * This will only increase the nonce, never decrease it as we might already have submitted
      * (in case of a replacement boop).
-     *
-     * TODO think more about user-initiated replacement and their consequences
      */
     hintNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
         const currentNonce = this.#nonces.get(account, nonceTrack)
