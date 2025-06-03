@@ -68,7 +68,7 @@ const SecondaryActionsMenu = () => {
                         [
                             "lock-parent-scroll",
                             // Animation
-                            "motion-safe:data-[state=open]:animate-growIn",
+                            "motion-safe:data-[state=open]:animate-growIn motion-safe:data-[state=closed]:animate-growOut",
                             "py-2 sm:pb-0",
                             // Item
                             "[&_[data-part=item]]:font-medium",
