@@ -1,7 +1,8 @@
 interface LruCacheOptions {
+    /** Maximum number of entries in the cache. */
     max?: number
+    /** If > 0, the maximum age (in milliseconds) that entries stay in the cache. */
     maxAge?: number
-    stale?: boolean
 }
 
 interface LruCacheEntry<T> {
@@ -9,23 +10,20 @@ interface LruCacheEntry<T> {
     content: T
 }
 
+/**
+ * A least-recently-used with optional age-based expiry.
+ */
 export class LruCache<K, V> {
-    #max: number
-    #maxAge: number
-    #stale: boolean
-    #map: Map<K, LruCacheEntry<V>>
+    readonly #max: number
+    readonly #maxAge: number
+    readonly #map: Map<K, LruCacheEntry<V>>
     #pruneInterval: NodeJS.Timeout | null = null
 
     constructor(opts?: LruCacheOptions | number) {
-        const {
-            max = Number.POSITIVE_INFINITY,
-            maxAge = -1,
-            stale = false,
-        } = typeof opts === "number" ? { max: opts } : opts || {}
+        const { max = Number.POSITIVE_INFINITY, maxAge = 0 } = typeof opts === "number" ? { max: opts } : opts || {}
         this.#map = new Map()
         this.#max = max
         this.#maxAge = maxAge
-        this.#stale = stale
     }
 
     // --- Core Methods ---
@@ -36,35 +34,39 @@ export class LruCache<K, V> {
     }
 
     set(key: K, content: V): this {
-        if (this.has(key)) this.delete(key)
+        if (!this.has(key)) {
+            // cache will grow
 
-        // prune entries on insert
-        this.prune()
+            // Start background age-based pruning if not already running.
+            this.startBackgroundPruning()
 
-        // start background pruneing if not already running
-        this.startBackgroundPruning()
+            if (this.size + 1 > this.#max) {
+                // We're full — run age-based pruning now.
+                this.prune()
+            }
 
-        if (this.size + 1 > this.#max) {
-            const firstKey = this.keys().next().value
-            if (firstKey !== undefined) this.delete(firstKey)
+            if (this.size + 1 > this.#max) {
+                // Still full, evict oldest key.
+                const firstKey = this.keys().next().value
+                this.delete(firstKey!)
+            }
         }
 
-        const expires = this.#maxAge > -1 ? this.#maxAge + Date.now() : false
+        const expires = this.#maxAge > 0 ? this.#maxAge + Date.now() : false
         this.#map.set(key, { expires, content })
         return this
     }
 
-    get(key: K, mut = true): V | undefined {
+    /**
+     * Returns the value associated with the key. If {@link refresh} is true (the default)
+     * and age-based expiry is enabled, resets the value's age.
+     */
+    get(key: K, refresh = true): V | undefined {
         const entry = this.#map.get(key)
         if (entry === undefined) return undefined
-
         const { expires, content } = entry
-        if (this.#isExpired(expires)) {
-            this.delete(key)
-            return this.#stale ? content : undefined
-        }
-
-        if (mut) this.set(key, content)
+        if (this.#isExpired(expires)) return undefined
+        if (refresh && this.#maxAge > 0) this.set(key, content)
         return content
     }
 
@@ -84,13 +86,14 @@ export class LruCache<K, V> {
     }
 
     prune(): void {
-        if (this.#stale) return // Don’t prune if stale is allowed
+        if (this.#maxAge <= 0) return
         for (const key of this.expiredKeys()) this.delete(key)
         if (!this.size) this.stopBackgroundPruning()
     }
 
     expiredKeys(): K[] {
         const expiredKeys: K[] = []
+        if (this.#maxAge <= 0) return expiredKeys
         for (const [key, { expires }] of this.#map) {
             if (this.#isExpired(expires)) expiredKeys.push(key)
         }
@@ -98,9 +101,8 @@ export class LruCache<K, V> {
     }
 
     startBackgroundPruning(): void {
-        if (this.#maxAge <= 0) return // max age is disabled
-        if (this.#stale) return // stale values are allowed, no need for background pruning
-        if (this.#pruneInterval) return // Already running
+        if (this.#maxAge <= 0) return
+        if (this.#pruneInterval) return // already running
         this.#pruneInterval = setInterval(() => this.prune(), this.#maxAge)
     }
 
@@ -113,7 +115,7 @@ export class LruCache<K, V> {
     get size(): number {
         let count = 0
         for (const { expires } of this.#map.values()) {
-            if (!this.#isExpired(expires) || this.#stale) count++
+            if (!this.#isExpired(expires)) count++
         }
         return count
     }
@@ -128,7 +130,7 @@ export class LruCache<K, V> {
 
     *entries(): IterableIterator<[K, V]> {
         for (const [key, { expires, content }] of this.#map) {
-            if (!this.#isExpired(expires) || this.#stale) {
+            if (!this.#isExpired(expires)) {
                 yield [key, content]
             }
         }
@@ -136,7 +138,7 @@ export class LruCache<K, V> {
 
     *keys(): IterableIterator<K> {
         for (const [key, { expires }] of this.#map) {
-            if (!this.#isExpired(expires) || this.#stale) {
+            if (!this.#isExpired(expires)) {
                 yield key
             }
         }
@@ -144,7 +146,7 @@ export class LruCache<K, V> {
 
     *values(): IterableIterator<V> {
         for (const [_, { expires, content }] of this.#map) {
-            if (!this.#isExpired(expires) || this.#stale) {
+            if (!this.#isExpired(expires)) {
                 yield content
             }
         }
