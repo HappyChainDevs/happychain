@@ -4,11 +4,11 @@ import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/con
 import type { PrivateKeyAccount } from "viem"
 import { decodeEventLog, zeroAddress } from "viem"
 import { encodeFunctionData } from "viem/utils"
-import { abis, deployment } from "#lib/env"
+import { abis, deployment, env } from "#lib/env"
 import type { Boop, BoopReceipt } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { freezeBoopHashFields } from "#lib/utils/boop/freezeBoop"
 import { publicClient } from "#lib/utils/clients"
-import { computeHash } from "../boop/computeHash"
-import { freezeBoopHashFields } from "../boop/freezeBoop"
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
@@ -84,7 +84,7 @@ export function createMintBoop({
 }
 
 export async function signBoop(account: PrivateKeyAccount, boop: Boop): Promise<Boop> {
-    const boopHash = computeHash(boop)
+    const boopHash = computeBoopHash(env.CHAIN_ID, boop)
     const validatorData = await account.signMessage({ message: { raw: boopHash } })
     return freezeBoopHashFields({ ...boop, validatorData })
 }

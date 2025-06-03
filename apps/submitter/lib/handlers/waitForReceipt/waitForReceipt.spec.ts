@@ -2,8 +2,9 @@ import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { computeHash } from "#lib/services/index.ts"
+import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
 
@@ -29,7 +30,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
-        const boopHash = computeHash(signedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
         // submit transaction and wait to complete
         await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
@@ -44,7 +45,7 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const boopHash = computeHash(signedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
         // Submit transaction but don't wait for inclusion.
         await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
@@ -63,7 +64,7 @@ describe("submitter_receipt", () => {
         expect((stateResolved as any).simulation).toBeUndefined()
     })
     it("should reject immediately if the boop isn't known", async () => {
-        const boopHash = computeHash(unsignedTx)
+        const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
         const result = await client.api.v1.boop.receipt[":boopHash"].$get({
             param: { boopHash },
             query: { timeout: "2000" },
