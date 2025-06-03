@@ -1,6 +1,6 @@
 import { ArkErrors } from "arktype"
-import { Simulate, type SimulateOutput } from "#lib/handlers/simulate/types"
-import { simulateOutputValidation } from "#lib/handlers/simulate/validation"
+import { Simulate, type SimulateOutput, type SimulateSuccess } from "#lib/handlers/simulate/types"
+import { simulateOutputValidation, simulateSuccessValidation } from "#lib/handlers/simulate/validation"
 import { type SerializedObject, validateOutput, validateSerializedOutput } from "#lib/utils/validation/helpers"
 
 /**
@@ -89,6 +89,31 @@ async function run() {
     console.log("\n=== TEST 2b: Simulate Error Serialized ===")
     try {
         validateSerializedOutput(simulateErrorCase, simulateOutputValidation)
+        console.log("✅ validateSerializedOutput passed")
+    } catch (err) {
+        console.error("❌ validateSerializedOutput failed:", formatError(err))
+    }
+
+    /// Test ONLY the success case explicitly as that's where the error is present
+    const serializedSimulateSuccessOutput: SerializedObject<SimulateSuccess> = {
+        gas: 174338,
+        validateGas: 25923,
+        validatePaymentGas: 0,
+        executeGas: 66213,
+        validityUnknownDuringSimulation: false,
+        paymentValidityUnknownDuringSimulation: false,
+        futureNonceDuringSimulation: false,
+        callStatus: 0,
+        revertData: undefined,
+        status: Simulate.Success,
+        maxFeePerGas: "1886338380",
+        submitterFee: "0",
+        feeTooLowDuringSimulation: false,
+    }
+
+    console.log("\n=== TEST 2c: Simulate Success Serialized ===")
+    try {
+        validateSerializedOutput(serializedSimulateSuccessOutput, simulateSuccessValidation)
         console.log("✅ validateSerializedOutput passed")
     } catch (err) {
         console.error("❌ validateSerializedOutput failed:", formatError(err))
