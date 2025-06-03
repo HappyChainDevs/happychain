@@ -61,6 +61,7 @@ export const simulateDescription = describeRoute({
 
 export const simulateBodyValidation = arktypeValidator("json", simulateInput)
 export const simulateOutputValidation = type(simulateSuccess, "|", simulateError)
+export const simulateSuccessValidation = simulateSuccess // temp: To test success output
 
 type SimulateInput = typeof simulateInput.infer
 type SimulateSuccess = typeof simulateSuccess.infer
