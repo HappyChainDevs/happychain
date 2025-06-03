@@ -5,6 +5,7 @@ import { setUserWithProvider } from "#src/actions/setUserWithProvider"
 import { StorageKey, storage } from "#src/services/storage"
 import { getChains } from "#src/state/chains"
 import { grantPermissions } from "#src/state/permissions"
+import { getUser } from "#src/state/user.ts"
 import { getAppURL } from "#src/utils/appURL"
 import { FirebaseConnector } from "./firebase"
 import { googleLogo } from "./firebase/logos"
@@ -47,7 +48,7 @@ export class GoogleConnector extends FirebaseConnector {
 
     async onDisconnect() {
         /**
-         * Note: its important to check user in localStorage here instead of userAtom for
+         * Note: its important to check user in localStorage here as well as userAtom for
          * the page-load reconnect to work properly.
          *
          * 'userAtom' is undefined on page load, and is set after a successful login attempt is made.
@@ -58,8 +59,9 @@ export class GoogleConnector extends FirebaseConnector {
          * and the user cache in localStorage here will never be cleared properly, causing this process
          * to repeat on the next page refresh.
          */
-        if (storage.get(StorageKey.HappyUser)?.type !== WalletType.Social) return
 
+        const user = getUser() ?? storage.get(StorageKey.HappyUser)
+        if (user?.type !== WalletType.Social) return
         await setUserWithProvider(undefined, undefined)
     }
 
