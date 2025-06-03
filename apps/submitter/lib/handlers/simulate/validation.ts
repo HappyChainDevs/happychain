@@ -27,11 +27,10 @@ const entryPointOutput = type({
     revertData: BytesIn,
 })
 
-// For output validation, use UInt256 (not UInt256In) to expect serialized BigInt strings
 const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
     status: type.unit(Simulate.Success).configure({ example: Simulate.Success }),
-    maxFeePerGas: UInt256, // Use UInt256 for output validation to expect serialized strings
-    submitterFee: UInt256, // Use UInt256 for output validation to expect serialized strings
+    maxFeePerGas: UInt256,
+    submitterFee: UInt256,
     feeTooLowDuringSimulation: "boolean",
     "revertData?": type.never,
     "description?": type.never,
@@ -68,11 +67,7 @@ type SimulateSuccess = typeof simulateSuccess.infer
 type SimulateError = typeof simulateError.infer
 type SimulateOutput = typeof simulateOutputValidation.infer
 
-// Input validation should match the actual TypeScript interfaces (without SerializedObject)
 type _a1 = AssertCompatible<SimulateInput, types.SimulateInput>
-
-// Output validation schemas use regular types that expect serialized BigInt strings
-// Type assertions need SerializedObject to bridge the gap between string in schema and bigint in interface
 type _a2 = AssertCompatible<SimulateSuccess, SerializedObject<types.SimulateSuccess>>
-type _a3 = AssertCompatible<SimulateError, types.SimulateError> // No BigInt fields, so no SerializedObject needed
+type _a3 = AssertCompatible<SimulateError, types.SimulateError>
 type _a4 = AssertCompatible<SimulateOutput, SerializedObject<types.SimulateOutput>>

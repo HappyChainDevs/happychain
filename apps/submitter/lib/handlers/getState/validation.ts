@@ -16,7 +16,7 @@ const getStateParam = type({
 
 const getStateReceipt = type({
     status: type.unit(GetState.Receipt),
-    receipt: SBoopReceipt, // Use SBoopReceiptIn for input validation to transform strings to bigint
+    receipt: SBoopReceipt,
     "simulation?": type.never,
     "description?": type.never,
 })
@@ -63,11 +63,7 @@ type GetStateSimulated = typeof getStateSimulated.infer
 type GetStateError = typeof getStateError.infer
 type GetStateOutput = typeof getStateOutputValidation.infer
 
-// Input validation should match the actual TypeScript interfaces (without SerializedObject)
 type _a1 = AssertCompatible<GetStateInput, types.GetStateInput>
-
-// Output validation schemas use regular types that expect serialized BigInt strings
-// Type assertions need SerializedObject to bridge the gap between string in schema and bigint in interface
 type _a2 = AssertCompatible<GetStateReceipt, SerializedObject<types.GetStateReceipt>>
 type _a3 = AssertCompatible<GetStateSimulated, SerializedObject<types.GetStateSimulated>>
 type _a4 = AssertCompatible<GetStateError, types.GetStateError> // No BigInt fields, so no SerializedObject needed

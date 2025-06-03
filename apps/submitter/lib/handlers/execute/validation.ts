@@ -16,7 +16,6 @@ const executeInput = type({
     "timeout?": type.number.configure({ example: 60 }),
 })
 
-// Success validator with transformations (for actual validation)
 const executeSuccess = type({
     status: type.unit(Execute.Success).configure({ example: Execute.Success }),
     receipt: SBoopReceipt,
@@ -67,9 +66,7 @@ type ExecuteSuccess = typeof executeSuccess.infer
 type ExecuteError = typeof executeError.infer
 type ExecuteOutput = typeof executeOutputValidation.infer
 
-// Input validation should match the actual types
 type _a1 = AssertCompatible<ExecuteInput, types.ExecuteInput>
-// Output validation needs SerializedObject to handle BigInt serialization
 type _a2 = AssertCompatible<ExecuteSuccess, SerializedObject<types.ExecuteSuccess>>
 type _a3 = AssertCompatible<ExecuteError, types.ExecuteError>
 type _a4 = AssertCompatible<ExecuteOutput, SerializedObject<types.ExecuteOutput>>
