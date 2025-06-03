@@ -33,12 +33,10 @@ export class ApiClient {
             headers,
             body: hasBody ? JSON.stringify(body) : null,
         }
-        const response = await fetch(url, init)
-        return await this.#handleResponse(response)
-    }
 
-    async #handleResponse(response: Response): Promise<unknown> {
+        let response: Response | undefined
         try {
+            const response = await fetch(url, init)
             return await response.json()
         } catch (error) {
             return {

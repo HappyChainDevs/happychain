@@ -91,6 +91,7 @@ export type { PromiseWithResolvers, Resolvers, RejectType, ResolveInputType, Res
 export { entries, keys } from "./utils/records"
 export { validateNumericInput } from "./utils/regexChecks"
 export { sleep } from "./utils/sleep"
+export { retry } from "./utils/retry"
 export { onlyUnique } from "./utils/streams"
 export { stringify } from "./utils/string"
 export { throttle } from "./utils/throttle"
