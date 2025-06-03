@@ -20,6 +20,9 @@ const UNSUPPORTED_WALLETS = [
     happyProviderInfo.rdns,
     "app.phantom",
 ]
+// create a simple RDNS set here so that providers can't be added multiple times,
+// even if they announce themselves multiple times
+const createdInjectors = new Set<string>()
 
 // === REACT HOOKS =================================================================================
 
@@ -48,25 +51,27 @@ addProvider(new GoogleConnector())
  */
 if (isStandaloneWallet()) {
     const mipdStore = createStore()
-
     // load all initialized providers
     mipdStore.getProviders().forEach((detail) => {
         if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
+        if (createdInjectors.has(detail.info.rdns)) return
+        createdInjectors.add(detail.info.rdns)
         addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
     })
-
     // subscribe to any async changes
     mipdStore.subscribe((details, meta) => {
         for (const detail of details) {
             if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
             if (meta?.added) {
+                if (createdInjectors.has(detail.info.rdns)) return
+                createdInjectors.add(detail.info.rdns)
                 addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
             } else if (meta?.removed) {
+                createdInjectors.delete(detail.info.rdns)
                 removeProvider(new InjectedConnector({ ...detail, autoConnect: false }))
             }
         }
     })
-
     if (window.ethereum) {
         addProvider(
             new InjectedConnector({
@@ -82,6 +87,8 @@ if (isStandaloneWallet()) {
     // injected into iframes.
     appMessageBus.on(Msgs.AnnounceInjectedProvider, (detail) => {
         if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
+        if (createdInjectors.has(detail.info.rdns)) return
+        createdInjectors.add(detail.info.rdns)
         addProvider(
             new InjectedConnector({
                 info: detail.info,

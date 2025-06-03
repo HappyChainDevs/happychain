@@ -9,6 +9,7 @@ import {
     SafeEventEmitter,
     standardizeRpcError,
 } from "@happy.tech/wallet-common"
+import { checksum } from "ox/Address"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider"
 import { happyProviderBus } from "#src/services/eventBus"
@@ -143,7 +144,9 @@ export class InjectedProviderProxy extends SafeEventEmitter {
                     await setUserWithProvider(undefined, undefined)
                 } else if (Array.isArray(req.payload.params) && user) {
                     const [address] = req.payload.params
-                    const _user = await createHappyUserFromWallet(user.provider, address)
+                    const checkedAddress = checksum(address)
+                    if (checkedAddress === user.controllingAddress) return
+                    const _user = await createHappyUserFromWallet(user.provider, checkedAddress)
                     await setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
                 }
             }
