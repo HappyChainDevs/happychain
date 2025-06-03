@@ -35,9 +35,11 @@ import { logger } from "#lib/utils/logger"
     P --> Q
  */
 
-const nonceManager = createNonceManager({ source: jsonRpc() })
+export const evmNonceManager = createNonceManager({ source: jsonRpc() })
 
-const evmAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) => privateKeyToAccount(key, { nonceManager }))
+const evmAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
+    privateKeyToAccount(key, { nonceManager: evmNonceManager }),
+)
 const executorService = new ExecutorCacheService(evmAccounts)
 
 export const defaultAccount: Account = evmAccounts[0]
@@ -52,7 +54,7 @@ export function findExecutionAccount(tx?: Boop): Account {
 function getAccountDeployer(): Account {
     if (env.PRIVATE_KEY_ACCOUNT_DEPLOYER) {
         try {
-            return privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER, { nonceManager })
+            return privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER, { nonceManager: evmNonceManager })
         } catch (error) {
             logger.warn(
                 "Failed to parse PRIVATE_KEY_ACCOUNT_DEPLOYER. Falling back to default execution account.",

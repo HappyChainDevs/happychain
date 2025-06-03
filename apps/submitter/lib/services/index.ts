@@ -16,4 +16,4 @@ export const boopStore = new BoopStore()
 
 export type { WaitForInclusionArgs } from "./BoopReceiptService"
 export { computeHash } from "../utils/boop/computeHash"
-export { findExecutionAccount } from "./evmAccounts"
+export { findExecutionAccount, evmNonceManager } from "./evmAccounts"

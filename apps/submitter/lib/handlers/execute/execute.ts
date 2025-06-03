@@ -10,7 +10,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
     try {
         const boopHash = computeHash(input.boop)
         logger.trace("Executing boop", boopHash)
-        const { txHash, receiptPromise, ...submission } = await submitInternal(input)
+        const { evmTxHash, receiptPromise, ...submission } = await submitInternal(input)
         if (submission.status !== Onchain.Success) return submission
         const waitOutput = await receiptPromise!
         return waitOutput.status === WaitForReceipt.Success
