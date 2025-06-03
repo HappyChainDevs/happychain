@@ -20,7 +20,7 @@ define setup-test-env
 	$(eval export RPC_WS_URLS=ws://localhost:8546) \
   	$(eval export NODE_ENV=test) \
   	$(eval export DATABASE_URL=tests.sqlite) \
-	$(eval export STUCK_TX_WAIT_TIME=500) \
+	$(eval export STUCK_TX_WAIT_TIME=$(if $(findstring true,$(AUTOMINE_TESTS)),500,3000)) \
   	$(eval export EXECUTOR_KEYS=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
   	$(eval export PRIVATE_KEY_ACCOUNT_DEPLOYER=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
   	if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi; \

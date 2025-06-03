@@ -49,8 +49,9 @@ describe("submitter_execute", () => {
 
     describe("repricing", () => {
         it("reprices", async () => {
-            // This test only works with automine off!
-            env.AUTOMINE_TESTS && (await testClient.setAutomine(false))
+            // This test only works with mining disabled.
+            if (env.AUTOMINE_TESTS) await testClient.setAutomine(false)
+            else testClient.setIntervalMining({ interval: 0 })
             try {
                 const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
 
@@ -67,7 +68,8 @@ describe("submitter_execute", () => {
                 expect(spy).toHaveBeenCalledTimes(1)
                 expect(result.status).toBe(Onchain.Success)
             } finally {
-                await testClient.setAutomine(env.AUTOMINE_TESTS)
+                if (env.AUTOMINE_TESTS) await testClient.setAutomine(true)
+                else testClient.setIntervalMining({ interval: 2 })
             }
         })
     })
