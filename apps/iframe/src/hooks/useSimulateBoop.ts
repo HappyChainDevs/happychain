@@ -46,7 +46,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
 
     const jsonTxQueryKey = useMemo(() => ["simulate-boop", stringify(tx)], [tx])
 
-    const lastError = useRef<Error | null>(null)
+    const lastError = useRef<Error>(null)
     const {
         data,
         error,

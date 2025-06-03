@@ -5,6 +5,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { BannerList } from "#src/components/interface/banners/BannerList.tsx"
 import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
+import { useScrollToTop } from "#src/hooks/useScrollToTop"
 import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 import { signalClosed, signalOpen } from "#src/utils/walletState"
 import { ConnectModal } from "../components/ConnectModal"
@@ -25,8 +26,9 @@ function Embed() {
     const user = useAtomValue(userAtom)
     const activeProvider = useActiveConnectionProvider()
     const navigate = useNavigate()
-    const [, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
+    const [secondaryMenuVisibility, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const [, setDialogLogoutVisibility] = useAtom(dialogLogOutConfirmationVisibilityAtom)
+    const scrollableSectionRef = useScrollToTop(secondaryMenuVisibility)
 
     useEffect(() => {
         const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
@@ -66,6 +68,7 @@ function Embed() {
     if (!user) {
         return <ConnectModal />
     }
+
     return (
         <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
             <div className="flex flex-col gap-2 size-full">
@@ -80,7 +83,10 @@ function Embed() {
                     </section>
                 )}
                 <BannerList />
-                <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto scrollbar-stable scrollbar-thin auto-rows-[1fr]">
+                <section
+                    ref={scrollableSectionRef}
+                    className="relative grid min-h-0 h-full gap-4 overflow-y-auto scrollbar-stable scrollbar-thin auto-rows-[1fr] has-[.lock-parent-scroll[data-state=open]]:overflow-hidden"
+                >
                     <Outlet />
                     {!location.pathname.includes("permissions") && (
                         <>
