@@ -13,7 +13,6 @@ const getPendingParam = type({
     account: AddressIn,
 })
 
-// Define schema for pending boop info with serialized BigInt values
 const pendingBoopInfo = type({
     boopHash: Hash,
     entryPoint: Address,
@@ -60,10 +59,7 @@ type GetPendingSuccess = typeof getPendingSuccess.infer
 type GetPendingError = typeof getPendingError.infer
 type GetPendingOutput = typeof getPendingOutputValidation.infer
 
-// Using SerializedObject imported from helpers.ts
-
 type _a1 = AssertCompatible<GetPendingInput, types.GetPendingInput>
-// Use SerializedObject to make the comparison work with string values instead of bigint
 type _a2 = AssertCompatible<PendingBoopInfoSchema, SerializedObject<types.PendingBoopInfo>>
 type _a3 = AssertCompatible<GetPendingSuccess, SerializedObject<types.GetPendingSuccess>>
 type _a4 = AssertCompatible<GetPendingError, types.GetPendingError>
