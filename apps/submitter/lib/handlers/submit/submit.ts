@@ -1,11 +1,18 @@
 import type { Hash } from "@happy.tech/common"
-import type { Transaction } from "viem"
-import { abis, deployment } from "#lib/env"
+import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
-import { boopNonceManager, boopStore, computeHash, dbService, receiptService } from "#lib/services"
-import { findExecutionAccount } from "#lib/services/evmAccounts"
+import {
+    boopNonceManager,
+    boopStore,
+    computeHash,
+    dbService,
+    evmNonceManager,
+    findExecutionAccount,
+    receiptService,
+} from "#lib/services"
+import type { EvmTxInfo } from "#lib/services/BoopReceiptService"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { walletClient } from "#lib/utils/clients"
@@ -14,18 +21,19 @@ import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
-    return await submitInternal({ ...input, earlyExit: true })
+    const { evmTxHash, receiptPromise, ...output } = await submitInternal({ ...input, earlyExit: true })
+    return output
 }
 
 type SubmitInternalInput = SubmitInput & {
     timeout?: number
     earlyExit?: boolean
-    replacedTx?: Transaction
+    replacedTx?: EvmTxInfo
 }
 
 type SubmitInternalOutput =
-    | (SubmitSuccess & { txHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> })
-    | (SubmitError & { txHash?: undefined; receiptPromise?: undefined })
+    | (SubmitSuccess & { evmTxHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> })
+    | (SubmitError & { evmTxHash?: undefined; receiptPromise?: undefined })
 
 export async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
     const { entryPoint = deployment.EntryPoint, boop, timeout, earlyExit, replacedTx } = input
@@ -105,25 +113,37 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 const account = findExecutionAccount(boop)
                 logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
+                const evmTxInfoPartial: Omit<EvmTxInfo, "evmTxHash" | "to"> = {
+                    nonce:
+                        replacedTx?.nonce ??
+                        (await evmNonceManager.consume({
+                            address: account.address,
+                            chainId: env.CHAIN_ID,
+                            client: walletClient,
+                        })),
+                    maxFeePerGas: getMaxFeePerGas(simulation, replacedTx),
+                    maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
+                }
+
                 // TODO make sure this does no extra needless simulations
                 const evmTxHash = await walletClient.writeContract({
-                    address: entryPoint ?? deployment.EntryPoint,
+                    account,
+                    address: entryPoint,
                     args: [encodeBoop(boop)],
                     abi: abis.EntryPoint,
                     functionName: "submit",
-                    nonce: replacedTx?.nonce,
                     gas: BigInt(simulation.gas),
-                    maxFeePerGas: getMaxFeePerGas(simulation, replacedTx),
-                    maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
-                    account,
+                    ...evmTxInfoPartial,
                 })
 
                 logger.trace("Successfully submitted", boopHash, evmTxHash)
                 if (!replacedTx) boopNonceManager.incrementLocalNonce(boop)
+
                 // We need to monitor the receipt to detect if we're stuck, and to be able to construct the receipt
                 // (requires knowing the txHash).
-                const receiptPromise = receiptService.waitForInclusion({ boopHash, boop, evmTxHash, timeout })
-                return { status: Onchain.Success, boopHash, entryPoint, txHash: evmTxHash, receiptPromise }
+                const evmTxInfo = { ...evmTxInfoPartial, to: entryPoint, evmTxHash }
+                const receiptPromise = receiptService.waitForInclusion({ boopHash, boop, evmTxInfo, timeout })
+                return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
                 boopStore.delete(input.boop)
                 return { ...outputForGenericError(error), stage: "submit" }
@@ -138,7 +158,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
     }
 }
 
-function getOriginalBoop(boop: Boop, replacedTx?: Transaction): [Boop, undefined] | [undefined, SubmitError] {
+function getOriginalBoop(boop: Boop, replacedTx?: EvmTxInfo): [Boop, undefined] | [undefined, SubmitError] {
     const ogBoop = boopStore.getByHash(computeHash(boop))
 
     if (replacedTx) {

@@ -1,5 +1,5 @@
 import { type Address, type Hash, type Hex, delayed, getOrSet, promiseWithResolvers } from "@happy.tech/common"
-import { type Log, type Transaction, type TransactionReceipt, TransactionRejectedRpcError } from "viem"
+import { type Log, type TransactionReceipt, TransactionRejectedRpcError } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { submitInternal } from "#lib/handlers/submit/submit"
@@ -17,13 +17,22 @@ import type { BlockService } from "./BlockService"
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
+// TODO move this? or re-export from services
+export type EvmTxInfo = {
+    to: Address // TODO replace with EntryPoint
+    evmTxHash: Hash
+    nonce: number
+    maxFeePerGas: bigint
+    maxPriorityFeePerGas: bigint
+}
+
 type PendingBoopInfo = {
     count: number
     /** Current boop version with most recent gas values */
     boop: Boop
     boopHash: Hash
     interval: NodeJS.Timeout | undefined
-    latestEvmTxHash?: Hash
+    latestEvmTx?: EvmTxInfo
     evmTxHashes: Set<Hash>
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
 }
@@ -33,7 +42,7 @@ export type WaitForInclusionArgs = {
     /** Mutated boop with latest gas values */
     boop?: Boop
     timeout?: number
-    evmTxHash?: Hash
+    evmTxInfo?: EvmTxInfo
 }
 
 export class BoopReceiptService {
@@ -65,7 +74,7 @@ export class BoopReceiptService {
     async waitForInclusion({
         boopHash,
         boop,
-        evmTxHash,
+        evmTxInfo,
         timeout = env.RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
         // 1. fast‑path → receipt already in DB?
@@ -96,9 +105,9 @@ export class BoopReceiptService {
 
         sub.count += 1
 
-        // 3. if evmTxHash supplied and no interval exists, start monitoring for replacement or cancellation
-        if (evmTxHash) {
-            this.#setActiveEvmTxHash(sub, evmTxHash)
+        // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
+        if (evmTxInfo) {
+            this.#setActiveEvmTx(sub, evmTxInfo)
             sub.interval ??= setInterval(() => void this.cancelOrReplace(sub), env.STUCK_TX_WAIT_TIME)
         }
 
@@ -125,47 +134,46 @@ export class BoopReceiptService {
 
     // Note: must be 'private func' not '#func' to be callable and spied on from the tests!
     private async cancelOrReplace(sub: PendingBoopInfo): Promise<void> {
-        if (!sub.latestEvmTxHash) {
+        const tx = sub.latestEvmTx
+        if (!tx) {
             // TODO this should never occur
             receiptLogger.warn("No evmTxHash set for boop, cannot cancel or replace", sub.boopHash)
             return
         }
-        // TODO we could probably cache this
-        const tx = await publicClient.getTransaction({ hash: sub.latestEvmTxHash })
-        receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${sub.latestEvmTxHash}`)
+
+        receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
         const results = await submitInternal({ boop: sub.boop, entryPoint: tx.to!, replacedTx: tx })
 
         // Only cancel if the simulation was not successful, otherwise keep retying indefinitely
         if (results.status !== Onchain.Success) await this.#cancelEvmTx(sub, tx)
     }
 
-    async #cancelEvmTx(sub: PendingBoopInfo, tx: Transaction) {
+    async #cancelEvmTx(sub: PendingBoopInfo, tx: EvmTxInfo): Promise<void> {
         this.#cancelledBoopHashes.add(sub.boopHash)
-        receiptLogger.warn(`Cancelling Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${sub.latestEvmTxHash}`)
+        receiptLogger.warn(`Cancelling Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
         const account = findExecutionAccount(sub.boop)
 
         const maxPriorityFeePerGas = getMaxPriorityFeePerGas(tx)
 
         const block = await this.#blockService.getCurrentBlock()
 
+        // TODO call gas helpers here
         const latestBaseFee = block.baseFeePerGas!
         const estimatedNextBaseFee = (latestBaseFee * 1125n) / 1000n // +12.5% worst case
         const calculatedMaxFeePerGas = estimatedNextBaseFee + maxPriorityFeePerGas
         const repriced = (tx.maxFeePerGas! * 115n) / 100n
         const maxFeePerGas = calculatedMaxFeePerGas > repriced ? calculatedMaxFeePerGas : repriced
 
-        try {
-            const cancelHash = await walletClient.sendTransaction({
-                to: account.address,
-                value: 0n,
-                nonce: tx.nonce,
-                // Take the higher number here to ensure most favourable outcome
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                account,
-            })
+        const evmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
+            to: account.address,
+            nonce: tx.nonce,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+        }
 
-            this.#setActiveEvmTxHash(sub, cancelHash)
+        try {
+            const evmTxHash = await walletClient.sendTransaction({ ...evmTxInfo, account })
+            this.#setActiveEvmTx(sub, { ...evmTxInfo, evmTxHash })
         } catch (error) {
             // Must have landed on chain earlier and cancellation is no longer possible
             if (error instanceof TransactionRejectedRpcError && error.message.includes("nonce too low")) {
@@ -176,10 +184,10 @@ export class BoopReceiptService {
         }
     }
 
-    #setActiveEvmTxHash(sub: PendingBoopInfo, evmTxHash: Hash): void {
-        sub.latestEvmTxHash = evmTxHash
-        sub.evmTxHashes.add(evmTxHash)
-        this.#evmTxHashMap.set(evmTxHash, sub)
+    #setActiveEvmTx(sub: PendingBoopInfo, evmTx: EvmTxInfo): void {
+        sub.latestEvmTx = evmTx
+        sub.evmTxHashes.add(evmTx.evmTxHash)
+        this.#evmTxHashMap.set(evmTx.evmTxHash, sub)
     }
 
     async #handleTransactionInBlock(txHash: Hash, sub: PendingBoopInfo): Promise<void> {
