@@ -4,7 +4,7 @@ import { abis, deployment } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
-import { boopNonceManager, computeHash, dbService, ogBoopCache, receiptService } from "#lib/services"
+import { boopNonceManager, boopStore, computeHash, dbService, receiptService } from "#lib/services"
 import { findExecutionAccount } from "#lib/services/evmAccounts"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
@@ -40,12 +40,12 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
         logger.trace("Submitting boop", boopHash)
         let simulation = await simulate({ entryPoint, boop: ogBoop }, true)
         if (simulation.status !== Onchain.Success) {
-            ogBoopCache.delete(input.boop)
+            boopStore.delete(input.boop)
             return { ...simulation, stage: "simulate" }
         }
 
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation) {
-            ogBoopCache.delete(input.boop)
+            boopStore.delete(input.boop)
             return {
                 status: Onchain.ValidationReverted,
                 description: "More information needed for the boop to pass validation — most likely a signature.",
@@ -53,7 +53,7 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
             }
         }
         if (simulation.feeTooLowDuringSimulation) {
-            ogBoopCache.delete(input.boop)
+            boopStore.delete(input.boop)
             return {
                 status: Onchain.GasPriceTooHigh,
                 description: `The onchain gas price is higher than the specified maxFeePerGas (${boop.maxFeePerGas} wei/gas).`,
@@ -61,7 +61,7 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
             }
         }
         if (boop.account === boop.payer) {
-            ogBoopCache.delete(input.boop)
+            boopStore.delete(input.boop)
             // Self-paying boop must specifies its maxFeePerGas and gas limits to be
             // submitted (but not to be simulated). This will usually be caught above by the
             // lack of valid signature, but we must guard against signatures over zero values.
@@ -89,12 +89,12 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
                     const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
                     logger.trace("boop unblocked", boopHash)
                     if (error) {
-                        ogBoopCache.delete(input.boop)
+                        boopStore.delete(input.boop)
                         return error
                     }
                     simulation = await simulate({ entryPoint, boop: ogBoop }) // update simulation
                     if (simulation.status !== Onchain.Success) {
-                        ogBoopCache.delete(input.boop)
+                        boopStore.delete(input.boop)
                         return { ...simulation, stage: "simulate" }
                     }
                     mutateBoopGasFromSimulation(boop, simulation)
@@ -126,7 +126,7 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
                 const receiptPromise = receiptService.waitForInclusion({ boopHash, boop, evmTxHash, timeout })
                 return { status: Onchain.Success, boopHash, entryPoint, txHash: evmTxHash, receiptPromise }
             } catch (error) {
-                ogBoopCache.delete(input.boop)
+                boopStore.delete(input.boop)
                 return { ...outputForGenericError(error), stage: "submit" }
             }
         })()
@@ -134,13 +134,13 @@ export async function submitInternal(input: SubmitInput, options: SubmitOptions)
         if (earlyExit) return { status: Onchain.Success, boopHash, entryPoint }
         else return await afterSimulationPromise
     } catch (error) {
-        ogBoopCache.delete(input.boop)
+        boopStore.delete(input.boop)
         return { ...outputForGenericError(error), stage: "submit" }
     }
 }
 
 function getOgBoop(boop: Boop, replacedTx?: Transaction): [Boop, undefined] | [undefined, SubmitError] {
-    const ogBoop = ogBoopCache.get(boop)
+    const ogBoop = boopStore.getByHash(computeHash(boop))
 
     if (replacedTx) {
         // is a replacement tx, and has OG Boop in cache, everything is ok
@@ -171,14 +171,15 @@ function getOgBoop(boop: Boop, replacedTx?: Transaction): [Boop, undefined] | [u
         ]
     }
 
-    // set the boop in the cache
-    return [ogBoopCache.set(boop).get(boop)!, undefined]
+    boopStore.set(boop)
+    // return the frozen version of the boop from the store
+    return [boopStore.getByHash(computeHash(boop))!, undefined]
 }
 
 function mutateBoopGasFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop {
     if (boop.account === boop.payer) return boop
 
-    const ogBoop = ogBoopCache.get(boop)
+    const ogBoop = boopStore.getByHash(computeHash(boop))
     if (!ogBoop) {
         logger.error("Tried to mutate boop from simulation, but original boop not found in cache", boop)
         return boop

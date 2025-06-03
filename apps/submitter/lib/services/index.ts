@@ -1,8 +1,8 @@
 import { db } from "#lib/database"
 import { BlockService } from "./BlockService"
-import { OgBoopCache } from "./BoopCache"
 import { BoopNonceManager } from "./BoopNonceManager"
 import { BoopReceiptService } from "./BoopReceiptService"
+import { BoopStore } from "./BoopStore"
 import { DatabaseService } from "./DatabaseService"
 import { SimulationCache } from "./SimulationCache"
 
@@ -12,7 +12,7 @@ export const dbService = new DatabaseService(db)
 export const receiptService = new BoopReceiptService(BlockService.instance)
 export const boopNonceManager = new BoopNonceManager()
 export const simulationCache = new SimulationCache()
-export const ogBoopCache = new OgBoopCache()
+export const boopStore = new BoopStore()
 
 export type { WaitForInclusionArgs } from "./BoopReceiptService"
 export { computeHash } from "../utils/boop/computeHash"
