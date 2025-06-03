@@ -43,11 +43,13 @@ export function validateOutput<T>(response: T, validator: (_: T) => ArkErrors | 
  *
  * @param response The response object to validate
  * @param validator The validation schema
- * @returns The original response (for chaining)
  */
-export function validateSerializedOutput<T>(response: T, validator: (serialized: unknown) => ArkErrors | unknown): T {
+export function validateSerializedOutput<T>(
+    response: T,
+    validator: (serialized: unknown) => ArkErrors | unknown,
+): void {
     // Skip output validation in prod for performance & reliability.
-    if (isProduction) return response
+    if (isProduction) return
 
     // Serialize BigInt values to strings
     const serialized = serializeBigInt(response)
@@ -55,7 +57,4 @@ export function validateSerializedOutput<T>(response: T, validator: (serialized:
     // Validate the serialized output
     const result = validator(serialized)
     if (result instanceof ArkErrors) result.throw()
-
-    // Return the original response for chaining
-    return response
 }
