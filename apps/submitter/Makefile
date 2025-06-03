@@ -61,6 +61,10 @@ latency: ## Benchmark latency
 	bun ./bin/benchmarkLatency.ts;
 .PHONY: latency
 
+validate-simulate: ## Validate simulate output
+	bun ./bin/testSimulateValidation.ts
+.PHONY: validate-simulate
+
 args ?= --bail
 
 define test-run-anvil-shared
