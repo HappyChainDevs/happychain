@@ -9,6 +9,7 @@ import { Execute } from "./types"
 import type * as types from "./types"
 
 const executeInput = type({
+    "+": "reject",
     entryPoint: Address.optional(),
     boop: SBoop,
     timeout: "number?",

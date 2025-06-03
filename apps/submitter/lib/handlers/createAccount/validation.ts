@@ -7,19 +7,24 @@ import { CreateAccount } from "./types"
 import type * as types from "./types"
 
 export const createAccountInput = type({
+    "+": "reject",
     owner: Address,
     salt: Bytes32,
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
 
-const createAccountSuccess = type(createAccountInput, "&", {
+const createAccountSuccess = type({
+    owner: Address,
+    salt: Bytes32,
     status: successStatus,
     address: Address,
     description: "undefined?",
 })
 
-const createAccountError = type(createAccountInput, "&", {
+const createAccountError = type({
+    owner: Address,
+    salt: Bytes32,
     status: type.valueOf(CreateAccount).exclude(successStatus),
     description: "string",
     address: "undefined?",

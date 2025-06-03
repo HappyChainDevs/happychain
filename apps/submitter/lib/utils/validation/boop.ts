@@ -4,6 +4,7 @@ import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
 import { Address, Bytes, Hash, Int256, UInt32, UInt256 } from "./ark"
 
 export const SBoop = type({
+    "+": "reject",
     account: Address,
     dest: Address,
     payer: Address,
@@ -29,7 +30,7 @@ export const SBoopLog = type({
 
 export const SBoopReceipt = type({
     boopHash: Hash,
-    boop: SBoop,
+    boop: SBoop.onUndeclaredKey("ignore"), // ignore the extra boopHash in here for now, TODO actually remove it
     status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
     description: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: Address,

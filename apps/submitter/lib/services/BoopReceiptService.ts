@@ -277,7 +277,6 @@ export class BoopReceiptService {
             blockHash: evmTxReceipt.blockHash,
             blockNumber: evmTxReceipt.blockNumber,
             gasPrice: evmTxReceipt.effectiveGasPrice,
-            // boop: boop,
             boop,
         }
         void dbService.saveReceipt(receipt)

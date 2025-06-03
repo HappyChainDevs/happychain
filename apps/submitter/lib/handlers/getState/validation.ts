@@ -10,6 +10,7 @@ import { GetState } from "./types"
 
 // TODO the type has an entrypoint, but we never pass one
 const getStateParam = type({
+    "+": "reject",
     boopHash: Hash,
 })
 

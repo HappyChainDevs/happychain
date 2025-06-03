@@ -9,6 +9,7 @@ import { GetPending } from "./types"
 
 // TODO we may want to have an optional entrypoint here
 const getPendingParam = type({
+    "+": "reject",
     account: Address,
 })
 
