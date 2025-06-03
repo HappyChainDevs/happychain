@@ -20,7 +20,6 @@ const waitForReceiptParam = type({
     boopHash: Hash,
 })
 
-// TODO the type has an entrypoint, but we never pass one
 const waitForReceiptInput = type(
     waitForReceiptQuery.onUndeclaredKey("ignore"),
     "&",
@@ -62,12 +61,12 @@ export const waitForReceiptQueryValidation = arktypeValidator("query", waitForRe
 export const waitForReceiptParamValidation = arktypeValidator("param", waitForReceiptParam)
 export const waitForReceiptOutputValidation = type(waitForReceiptSuccess, "|", waitForReceiptError)
 
-// type WaitForReceiptInput = typeof waitForReceiptInput.infer
+type WaitForReceiptInput = typeof waitForReceiptInput.infer
 type WaitForReceiptSuccess = typeof waitForReceiptSuccess.infer
 type WaitForReceiptError = typeof waitForReceiptError.infer
 type WaitForReceiptOutput = typeof waitForReceiptOutputValidation.infer
 
-//type _a1 = AssertCompatible<WaitForReceiptInput, types.WaitForReceiptInput>
+type _a1 = AssertCompatible<WaitForReceiptInput, types.WaitForReceiptInput>
 type _a2 = AssertCompatible<WaitForReceiptSuccess, types.WaitForReceiptSuccess>
 type _a3 = AssertCompatible<WaitForReceiptError, types.WaitForReceiptError>
 type _a4 = AssertCompatible<WaitForReceiptOutput, types.WaitForReceiptOutput>

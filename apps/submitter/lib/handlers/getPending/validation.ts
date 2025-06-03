@@ -7,12 +7,12 @@ import { Address, Hash, UInt256, openApiContent } from "#lib/utils/validation/ar
 import type * as types from "./types"
 import { GetPending } from "./types"
 
-// TODO we may want to have an optional entrypoint here
 const getPendingParam = type({
     "+": "reject",
     account: Address,
 })
 
+// TODO this needs entryPoint
 const pendingBoopInfo = type({
     boopHash: Hash,
     nonceTrack: UInt256,

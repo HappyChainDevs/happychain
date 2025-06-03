@@ -8,7 +8,6 @@ import { Hash, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopReceipt } from "#lib/utils/validation/boop"
 import { GetState } from "./types"
 
-// TODO the type has an entrypoint, but we never pass one
 const getStateParam = type({
     "+": "reject",
     boopHash: Hash,
