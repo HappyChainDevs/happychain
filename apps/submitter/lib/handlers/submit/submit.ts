@@ -82,7 +82,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
         const afterSimulationPromise = (async (): Promise<SubmitInternalOutput> => {
             try {
-                if (simulation.futureNonceDuringSimulation && !replacedTx) {
+                if (simulation.futureNonceDuringSimulation && !replacedTx && boopNonceManager.isBlocked(boop)) {
                     logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
                     const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
                     logger.trace("boop unblocked", boopHash)
