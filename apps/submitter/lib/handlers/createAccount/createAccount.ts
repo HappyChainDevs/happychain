@@ -73,19 +73,13 @@ async function waitForTransactionReceipt(hash: `0x${string}`): Promise<Transacti
 
     const unwatch = BlockService.instance.onBlock(async (block) => {
         const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
-        if (!receipt) return logger.trace("CreateAccount Transaction not yet mined", hash, block.number)
-        clearTimeout(timeout)
-        resolve(receipt)
+        if (receipt) resolve(receipt)
     })
 
     try {
-        // we must fire once incase it's already been mined
+        // We must fire once incase it's already been included.
         const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
-        if (receipt) {
-            logger.trace("CreateAccount Transaction already mined", hash, receipt)
-            clearTimeout(timeout)
-            resolve(receipt)
-        }
+        if (receipt) resolve(receipt)
     } catch (err) {
         // Failed to fetch receipt, which is fine, we will wait for it to be mined
         if (!(err instanceof TransactionReceiptNotFoundError)) throw err
