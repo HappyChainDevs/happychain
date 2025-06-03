@@ -310,6 +310,7 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case SubmitterError.ClientError:
         case SubmitterError.BoopReplaced:
         case SubmitterError.ExternalSubmit:
+        case SubmitterError.AlreadyProcessing:
         case GetNonce.Error:
             return new EIP1474InternalError(output.description, output)
         case GetState.UnknownState:
