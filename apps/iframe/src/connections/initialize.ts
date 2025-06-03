@@ -14,6 +14,13 @@ const store = getDefaultStore()
 
 const connectionProvidersAtom = atom<Record<string, ConnectionProvider>>({})
 
+const UNSUPPORTED_WALLETS = [
+    // These wallets are not supported by the app,
+    // or should not be listed as available connection providers.
+    happyProviderInfo.rdns,
+    "app.phantom",
+]
+
 // === REACT HOOKS =================================================================================
 
 export function useConnectionProviders() {
@@ -44,14 +51,14 @@ if (isStandaloneWallet()) {
 
     // load all initialized providers
     mipdStore.getProviders().forEach((detail) => {
-        if (detail.info.rdns === happyProviderInfo.rdns) return
+        if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
         addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
     })
 
     // subscribe to any async changes
     mipdStore.subscribe((details, meta) => {
         for (const detail of details) {
-            if (detail.info.rdns === happyProviderInfo.rdns) continue
+            if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
             if (meta?.added) {
                 addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
             } else if (meta?.removed) {
@@ -73,11 +80,11 @@ if (isStandaloneWallet()) {
     // Instead of listening to the EIP-6963 events inside the happy-wallet, the app listens to them
     // and forwards them here, as not every injected wallet will allow itself to be
     // injected into iframes.
-    appMessageBus.on(Msgs.AnnounceInjectedProvider, (provider) => {
-        if (provider.info.rdns === happyProviderInfo.rdns) return
+    appMessageBus.on(Msgs.AnnounceInjectedProvider, (detail) => {
+        if (UNSUPPORTED_WALLETS.includes(detail.info.rdns)) return
         addProvider(
             new InjectedConnector({
-                info: provider.info,
+                info: detail.info,
                 provider: InjectedProviderProxy.getInstance() as EIP6963ProviderDetail["provider"],
                 autoConnect: true,
             }),
