@@ -1,4 +1,4 @@
-import type { Address, Hash } from "@happy.tech/common"
+import type { Hash } from "@happy.tech/common"
 import type { SimulateOutput } from "#lib/handlers/simulate/types"
 import { type BoopReceipt, SubmitterError } from "#lib/types"
 
@@ -7,9 +7,6 @@ import { type BoopReceipt, SubmitterError } from "#lib/types"
 
 /** Input for a `getState` call (`boop/state` route) */
 export type GetStateInput = {
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint?: Address
-
     /** Hash of the boop whose state to retrieve. */
     boopHash: Hash
 }

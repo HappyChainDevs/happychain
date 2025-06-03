@@ -1,4 +1,4 @@
-import type { Address, Bytes, Hash } from "@happy.tech/common"
+import type { Bytes, Hash } from "@happy.tech/common"
 import { GetState } from "#lib/handlers/getState/types"
 import { type BoopReceipt, Onchain, SubmitterError } from "#lib/types"
 
@@ -7,9 +7,6 @@ import { type BoopReceipt, Onchain, SubmitterError } from "#lib/types"
 
 /** Input of a `waitForReceipt` call (`boop/receipt` route). */
 export type WaitForReceiptInput = {
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint?: Address
-
     /** Hash of the boop whose receipt is requested. */
     boopHash: Hash
 
