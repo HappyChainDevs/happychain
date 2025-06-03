@@ -214,7 +214,7 @@ export class BoopReceiptService {
             // raw transaction, so will just rely on self-sends
             if (evmTxReceipt.to === evmTxReceipt.from) {
                 return {
-                    status: Onchain.Cancel,
+                    status: SubmitterError.ReceiptTimeout,
                     description:
                         "The boop was included in the mempool but got stuck. " +
                         "It was replaced with a 0 value transaction and cancelled.",
