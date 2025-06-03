@@ -55,10 +55,19 @@ export class BoopNonceManager {
      */
     hintNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
         const currentNonce = this.#nonces.get(account, nonceTrack)
-        if (currentNonce && nonceValue > currentNonce) {
+        if (!currentNonce || nonceValue > currentNonce) {
             this.#nonces.set(account, nonceTrack, nonceValue)
             setTimeout(() => this.#pruneNonce(account, nonceTrack), env.MAX_SUBMIT_PENDING_TIME)
         }
+    }
+
+    /**
+     * Indicates whether the boop is blocked, i.e. unable to be submitted until we've submitted boops for all nonces
+     * below it. This also returns true if the nonce is currently unknown.
+     */
+    isBlocked(boop: Boop): boolean {
+        const currentNonce = this.#nonces.get(boop.account, boop.nonceTrack)
+        return currentNonce === undefined || currentNonce < boop.nonceValue
     }
 
     /**
@@ -95,8 +104,13 @@ export class BoopNonceManager {
         }
 
         // If an old boop exists for the nonce, signal that it has been replaced.
+        // NOTE: This is here for robustness & future-proofness, but this path should not be reachable,
+        // as we reject boops that we're already processing upstream in `submitInternal`.
         const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        if (previouslyBlocked) previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
+        if (previouslyBlocked) {
+            logger.error("Replacing previously blocked nonce — most likely a bug", account, nonceTrack, nonceValue)
+            previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
+        }
 
         const boopHash = computeHash(boop)
         const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
@@ -164,8 +178,16 @@ export class BoopNonceManager {
     }
 
     async #getLocalNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<NonceValue> {
+        // If we already have a nonce, return it.
+        const localNonce = this.#nonces.get(account, nonceTrack)
+        if (localNonce) return localNonce
+
+        // Otherwise, lookup the onchain nonce behind a mutex (to avoid
+        // a close batch of boops to each trigger their own lookup).
         const mutex = this.#nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
         return await mutex.locked(async () => {
+            // NOTE: This behaves like we want: it won't await if the nonce is already set, and after the onchain is
+            // awaited, it will only be set if the entry wasn't populated in the meantime.
             return await this.#nonces.getOrSetAsync(
                 account,
                 nonceTrack,
