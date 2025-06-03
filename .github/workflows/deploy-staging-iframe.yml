@@ -34,6 +34,7 @@ jobs:
           VITE_FAUCET_ENDPOINT=https://faucet.testnet.happy.tech/faucet
           VITE_SUBMITTER_URL=https://submitter-staging.happy.tech
           VITE_CHAIN_ID=216
+          VITE_USE_STAGING_CONTRACTS=true
           EOF
           make setup
           make iframe.build
