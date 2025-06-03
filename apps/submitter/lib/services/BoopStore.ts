@@ -1,4 +1,4 @@
-import type { Address, Hash } from "@happy.tech/common"
+import { type Address, type Hash, Map2 } from "@happy.tech/common"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import type { Boop } from "../types"
 
@@ -17,14 +17,18 @@ import type { Boop } from "../types"
  */
 export class BoopStore {
     readonly #byHash = new Map<Hash, Boop>()
-    readonly #byNonce = new Map<string, Boop>()
+    readonly #byNonce = new Map2<Address, string, Boop>()
 
     getByHash(boopHash: Hash): Boop | undefined {
         return this.#byHash.get(boopHash)
     }
 
     getByNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): Boop | undefined {
-        return this.#byNonce.get(`${account}/${nonceTrack}/${nonceValue}`)
+        return this.#byNonce.get(account, `${nonceTrack}/${nonceValue}`)
+    }
+
+    getByAccount(account: Address): Boop[] {
+        return this.#byNonce.getAll(account)?.values()?.toArray() ?? []
     }
 
     set(boop: Boop) {
@@ -33,7 +37,7 @@ export class BoopStore {
         // Shallow clone and freeze the boop, preventing accidental mutation of the original boop.
         const ogBoop = Object.freeze({ ...boop })
         this.#byHash.set(hash, ogBoop)
-        this.#byNonce.set(`${boop.account}/${boop.nonceTrack}/${boop.nonceValue}`, ogBoop)
+        this.#byNonce.set(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`, ogBoop)
         return this
     }
 
@@ -42,11 +46,11 @@ export class BoopStore {
     }
 
     hasNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): boolean {
-        return this.#byNonce.has(`${account}/${nonceTrack}/${nonceValue}`)
+        return this.#byNonce.has(account, `${nonceTrack}/${nonceValue}`)
     }
 
     delete(boop: Boop) {
-        this.#byNonce.delete(`${boop.account}/${boop.nonceTrack}/${boop.nonceValue}`)
+        this.#byNonce.delete(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`)
         return this.#byHash.delete(computeHash(boop))
     }
 }

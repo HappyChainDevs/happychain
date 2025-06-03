@@ -1,7 +1,6 @@
 import { type Hash, Map2, Mutex, promiseWithResolvers } from "@happy.tech/common"
 import type { Address } from "viem/accounts"
 import { abis, env } from "#lib/env"
-import type { PendingBoopInfo } from "#lib/handlers/getPending"
 import type { SubmitError } from "#lib/handlers/submit"
 import { type Boop, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
@@ -30,22 +29,9 @@ export class BoopNonceManager {
         this.#pendingBoopsMap = new Map2()
     }
 
-    /**
-     * Returns all blocked (queued) Boops for a given account. These
-     */
-    getPendingBoops(account: Address): PendingBoopInfo[] {
-        const pending = this.#pendingBoopsMap.getAll(account)
-        if (!pending) return []
-        return Array.from(pending.entries()).flatMap(([nonceTrack, txMap]) => {
-            return Array.from(txMap.entries()).flatMap(([nonceValue, tx]) => {
-                return {
-                    nonceTrack,
-                    nonceValue,
-                    boopHash: tx.boopHash,
-                    submitted: false,
-                } satisfies PendingBoopInfo
-            })
-        })
+    /** Returns true if the boop (identifier by account/nonceTrack/nonceValue only) is currently blocked. */
+    has(boop: Boop): boolean {
+        return this.#pendingBoopsMap.get(boop.account, boop.nonceTrack)?.has(boop.nonceValue) ?? false
     }
 
     /**
