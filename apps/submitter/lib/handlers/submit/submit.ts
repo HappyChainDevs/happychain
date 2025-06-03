@@ -22,6 +22,8 @@ import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./ty
 
 export async function submit(input: SubmitInput): Promise<SubmitOutput> {
     const { evmTxHash, receiptPromise, ...output } = await submitInternal({ ...input, earlyExit: true })
+    // Only delete in case of error, otherwise we're still waiting for the receipt.
+    if (output.status !== Onchain.Success) boopStore.delete(input.boop)
     return output
 }
 
@@ -45,42 +47,33 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
         logger.trace("Submitting boop", boopHash)
         let simulation = await simulate({ entryPoint, boop }, true)
-        if (simulation.status !== Onchain.Success) {
-            boopStore.delete(input.boop)
-            return { ...simulation, stage: "simulate" }
-        }
+        if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
 
-        if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation) {
-            boopStore.delete(input.boop)
+        if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
             return {
                 status: Onchain.ValidationReverted,
                 description: "More information needed for the boop to pass validation — most likely a signature.",
                 stage: "submit",
             }
-        }
-        if (simulation.feeTooLowDuringSimulation) {
-            boopStore.delete(input.boop)
+        if (simulation.feeTooLowDuringSimulation)
             return {
                 status: Onchain.GasPriceTooHigh,
                 description: `The onchain gas price is higher than the specified maxFeePerGas (${boop.maxFeePerGas} wei/gas).`,
                 stage: "submit",
             }
-        }
-        if (boop.account === boop.payer) {
-            boopStore.delete(input.boop)
-            // Self-paying boop must specifies its maxFeePerGas and gas limits to be
-            // submitted (but not to be simulated). This will usually be caught above by the
-            // lack of valid signature, but we must guard against signatures over zero values.
-            if (!boop.maxFeePerGas || !boop.gasLimit || !boop.validateGasLimit || !boop.validateGasLimit) {
-                // validatePaymentGasLimit can be 0 — it is not called for self-paying boops.
-                return {
-                    status: Onchain.MissingGasValues,
-                    description:
-                        "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
-                    stage: "submit",
-                }
+
+        // Self-paying boops must specifies their maxFeePerGas and gas limits to be
+        // submitted (but not to be simulated). This will usually be caught above by the
+        // lack of valid signature, but we must guard against signatures over zero values.
+        const selfPaying = boop.account === boop.payer
+        if (selfPaying && (!boop.maxFeePerGas || !boop.gasLimit || !boop.validateGasLimit || !boop.validateGasLimit))
+            // validatePaymentGasLimit can be 0 — it is not called for self-paying boops.
+            return {
+                status: Onchain.MissingGasValues,
+                description:
+                    "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
+                stage: "submit",
             }
-        }
 
         mutateBoopGasFromSimulation(ogBoop, boop, simulation)
 
@@ -94,10 +87,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                     logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
                     const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
                     logger.trace("boop unblocked", boopHash)
-                    if (error) {
-                        boopStore.delete(input.boop)
-                        return error
-                    }
+                    if (error) return error
                     // Update simulation with the original boop so we can get updated gas values.
                     simulation = await simulate({ entryPoint, boop: ogBoop })
                     if (simulation.status !== Onchain.Success) {
@@ -145,7 +135,6 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 const receiptPromise = receiptService.waitForInclusion({ boopHash, boop, evmTxInfo, timeout })
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
-                boopStore.delete(input.boop)
                 return { ...outputForGenericError(error), stage: "submit" }
             }
         })()
@@ -153,7 +142,6 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
         if (earlyExit) return { status: Onchain.Success, boopHash, entryPoint }
         else return await afterSimulationPromise
     } catch (error) {
-        boopStore.delete(input.boop)
         return { ...outputForGenericError(error), stage: "submit" }
     }
 }

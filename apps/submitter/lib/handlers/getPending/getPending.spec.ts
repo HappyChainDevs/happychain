@@ -23,9 +23,7 @@ describe("submitter_pending", () => {
         nonceValue = await getNonce(account, nonceTrack)
     })
 
-    // TODO: Temporarily skipped: pending should return both the "blocked" boops (awaiting submission) and the "pending"
-    //       boops (awaiting receipts). Tracked in HAPPY-573.
-    it.skip("fetches pending boops for a user", async () => {
+    it("fetches pending boops for a user", async () => {
         if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
 
         const count = 10
