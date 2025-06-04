@@ -11,6 +11,7 @@ import {
 import { type Log, type TransactionReceipt, TransactionRejectedRpcError } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
+import { GetState } from "#lib/handlers/getState"
 import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
@@ -94,11 +95,8 @@ export class BoopReceiptService {
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
         // 1. fast‑path → receipt already in DB?
         try {
-            // TODO we should only store receipts, so boop without receipts will not be able to occur anymore
-            const { boop: savedBoop, receipt } = await dbService.findReceiptOrBoop(boopHash)
+            const receipt = await dbService.findReceipt(boopHash)
             if (receipt) return { status: WaitForReceipt.Success, receipt }
-            if (!savedBoop) return { status: WaitForReceipt.UnknownBoop, description: "Unknown boop." }
-            boop ??= savedBoop
         } catch (dbError) {
             logger.error("Error while looking up boop receipt", boopHash, dbError)
             return {
@@ -106,6 +104,9 @@ export class BoopReceiptService {
                 description: `Failed to query database for boop status: ${String(dbError)}`,
             }
         }
+
+        boop ??= boopStore.getByHash(boopHash)
+        if (!boop) return { status: GetState.UnknownBoop, description: "Unknown boop" }
 
         // 2. get or create pending boop info
         // biome-ignore format: terse
