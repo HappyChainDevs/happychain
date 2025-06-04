@@ -1,6 +1,5 @@
-// proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
+// Proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
-
 import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
@@ -23,6 +22,7 @@ import {
     signBoop,
 } from "#lib/utils/test"
 import { client, createSmartAccount } from "#lib/utils/test"
+import { withInterval } from "#lib/utils/test/proxyServer"
 
 const testClient = createTestClient({ ...config, mode: "anvil" })
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -48,30 +48,23 @@ describe("submitter_execute", () => {
     })
 
     describe("repricing", () => {
-        it("reprices", async () => {
-            // This test only works with mining disabled.
-            if (env.AUTOMINE_TESTS) await testClient.setAutomine(false)
-            else testClient.setIntervalMining({ interval: 0 })
-            try {
-                const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
+        // biome-ignore format: keep indentation low
+        it("reprices", withInterval(0, false, async () => {
+            const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
+            expect(spy).toHaveBeenCalledTimes(0)
 
-                expect(spy).toHaveBeenCalledTimes(0)
+            // will wait a 1/4 second past the minimum wait time to ensure the tx is stuck & replaced
+            // before mining the next block
+            setTimeout(() => testClient.mine({ blocks: 1 }), env.STUCK_TX_WAIT_TIME + 250)
 
-                // will wait a 1/4 second past the minimum wait time to ensure the tx is stuck & replaced
-                // before mining the next block
-                setTimeout(() => testClient.mine({ blocks: 1 }), env.STUCK_TX_WAIT_TIME + 250)
+            const result = await client.api.v1.boop.execute
+                .$post({ json: { boop: serializeBigInt(signedTx) } })
+                .then((a) => a.json())
 
-                const result = await client.api.v1.boop.execute
-                    .$post({ json: { boop: serializeBigInt(signedTx) } })
-                    .then((a) => a.json())
-
-                expect(spy).toHaveBeenCalledTimes(1)
-                expect(result.status).toBe(Onchain.Success)
-            } finally {
-                if (env.AUTOMINE_TESTS) await testClient.setAutomine(true)
-                else testClient.setIntervalMining({ interval: 2 })
-            }
-        })
+            // at least once, should be exactly once but not specifying allows experimenting with lower stuck times
+            expect(spy).toHaveBeenCalled()
+            expect(result.status).toBe(Onchain.Success)
+        }))
     })
 
     describe("self-paying", () => {
