@@ -6,8 +6,9 @@
  */
 
 // supply window.Buffer functionality
-// biome-ignore lint/style/useNodejsImportProtocol: it's the npm module polyfill, not the NodeJS import
-import { Buffer } from "buffer"
+// Trailing slash is suggested here https://www.npmjs.com/package/buffer#usage
+// it differentiates between 'node_modules/buffer/' and 'node:buffer'
+import { Buffer } from "buffer/"
 globalThis.Buffer = globalThis.Buffer || Buffer
 
 // web3Auth uses global.XXX but global is not defined in the SharedWorker

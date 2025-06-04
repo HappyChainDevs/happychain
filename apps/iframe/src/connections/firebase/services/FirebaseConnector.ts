@@ -94,6 +94,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     public async disconnect() {
         try {
             await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
+            // just do our best, it may fail
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect()
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
