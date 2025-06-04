@@ -1,6 +1,6 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop } from "#lib/types"
+import type { Boop, BoopGasInfo } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 
 export const zeroGasData = {
@@ -10,7 +10,7 @@ export const zeroGasData = {
     executeGasLimit: 0,
     validateGasLimit: 0,
     validatePaymentGasLimit: 0,
-} as const satisfies Partial<Boop>
+} as const satisfies BoopGasInfo
 
 /**
  * Computes a boop hash, which is compute over a Boop and the chain ID.

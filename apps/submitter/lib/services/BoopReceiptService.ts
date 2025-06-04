@@ -1,4 +1,13 @@
-import { type Address, type Hash, type Hex, delayed, getOrSet, promiseWithResolvers, sleep } from "@happy.tech/common"
+import {
+    type Address,
+    type Hash,
+    type Hex,
+    delayed,
+    getOrSet,
+    ifDef,
+    promiseWithResolvers,
+    sleep,
+} from "@happy.tech/common"
 import { type Log, type TransactionReceipt, TransactionRejectedRpcError } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
@@ -6,7 +15,17 @@ import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { boopStore, computeHash, dbService, findExecutionAccount, simulationCache } from "#lib/services"
-import { type Boop, type BoopLog, type BoopReceipt, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
+import {
+    type Boop,
+    type BoopGasInfo,
+    type BoopLog,
+    type BoopReceipt,
+    type EvmTxInfo,
+    Onchain,
+    type OnchainStatus,
+    SubmitterError,
+    extractFeeInfo,
+} from "#lib/types"
 import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { publicClient, walletClient } from "#lib/utils/clients"
 import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
@@ -17,13 +36,6 @@ import type { BlockService } from "./BlockService"
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
-export type EvmTxInfo = {
-    evmTxHash: Hash
-    nonce: number
-    maxFeePerGas: bigint
-    maxPriorityFeePerGas: bigint
-}
-
 type PendingBoopInfo = {
     count: number
     boop: Boop
@@ -31,8 +43,7 @@ type PendingBoopInfo = {
     entryPoint: Address | undefined
     interval: NodeJS.Timeout | undefined
     latestEvmTx?: EvmTxInfo
-    // TODO replace with map from evmTxHash to boop gas values (or undefined for cancel txs), otherwise we might save the wrong gas values
-    evmTxHashes: Set<Hash>
+    boopGasForEvmTxHash: Map<Hash, BoopGasInfo | undefined>
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
 }
 
@@ -105,7 +116,7 @@ export class BoopReceiptService {
             boopHash,
             entryPoint,
             interval: undefined,
-            evmTxHashes: new Set<Hash>(),
+            boopGasForEvmTxHash: new Map(),
         }) satisfies PendingBoopInfo)
 
         // This gets recursively incremented in case of retries, which is perfectly safe.
@@ -114,7 +125,7 @@ export class BoopReceiptService {
 
         // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
         if (evmTxInfo) {
-            this.#setActiveEvmTx(sub, evmTxInfo)
+            this.#setActiveEvmTx(sub, evmTxInfo, boop)
             // This gets cleared by our tx inclusion listening logic, once the executor wallet gets a transaction
             // with the same nonce included (either this, a retry, or a cancel tx).
             sub.interval ??= setInterval(() => void this.cancelOrReplace(sub), env.STUCK_TX_WAIT_TIME)
@@ -131,17 +142,17 @@ export class BoopReceiptService {
 
         // 5. clean‑up if no one is subscribed anymore
         if (--sub.count === 0) {
-            const hashes = this.#pendingBoopInfos.get(boopHash)?.evmTxHashes
-            for (const hash of hashes ?? []) this.#evmTxHashMap.delete(hash)
+            const evmTxHashes = this.#pendingBoopInfos.get(boopHash)?.boopGasForEvmTxHash?.keys()
+            for (const evmTxHash of evmTxHashes ?? []) this.#evmTxHashMap.delete(evmTxHash)
             this.#pendingBoopInfos.delete(boopHash)
         }
 
         return output
     }
 
-    #setActiveEvmTx(sub: PendingBoopInfo, evmTx: EvmTxInfo): void {
+    #setActiveEvmTx(sub: PendingBoopInfo, evmTx: EvmTxInfo, boop: Boop | undefined): void {
         sub.latestEvmTx = evmTx
-        sub.evmTxHashes.add(evmTx.evmTxHash)
+        sub.boopGasForEvmTxHash.set(evmTx.evmTxHash, ifDef(boop, extractFeeInfo))
         this.#evmTxHashMap.set(evmTx.evmTxHash, sub)
     }
 
@@ -169,7 +180,7 @@ export class BoopReceiptService {
         try {
             // We identify cancel transaction by making them self-sends.
             const evmTxHash = await walletClient.sendTransaction({ ...partialEvmTxInfo, account, to: account.address })
-            this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash })
+            this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
         } catch (error) {
             if (
                 error instanceof TransactionRejectedRpcError &&
@@ -192,7 +203,7 @@ export class BoopReceiptService {
         }
     }
 
-    async #handleTransactionInBlock(txHash: Hash, sub: PendingBoopInfo): Promise<void> {
+    async #handleTransactionInBlock(evmTxHash: Hash, sub: PendingBoopInfo): Promise<void> {
         // Technically, we could resolve the subscription earlier in case of cancellation, as well as delete the boop
         // from the store at that stage. We don't do it, (1) because it makes the code a bit simpler, and (2) because
         // because the negatives are a slightly faster answer and the ability to resubmit the same boop, but since
@@ -201,8 +212,21 @@ export class BoopReceiptService {
         // (*) In theory, there's nothing a boop can do that would cause us specific trouble, and going to
         // cancellation is normally caused by a chain with full blocks. But the makers of this code are not perfect...
         try {
-            const receipt = await publicClient.getTransactionReceipt({ hash: txHash })
-            sub.pwr.resolve(await this.#getReceiptResult(sub.boop, receipt))
+            const receipt = await publicClient.getTransactionReceipt({ hash: evmTxHash })
+
+            // We identify cancel transactions by making them self-sends.
+            if (receipt.to === receipt.from)
+                // Success doesn't matter for cancel transactions, we just care about the nonce bump.
+                return sub.pwr.resolve({
+                    status: SubmitterError.ReceiptTimeout,
+                    description: "The boop was submitted to the mempool but got stuck and was cancelled.",
+                })
+
+            // Reconstruct boop with fee info matching the EVM tx that landed.
+            const gasInfo = sub.boopGasForEvmTxHash.get(evmTxHash)
+            if (!gasInfo) throw Error("BUG: missing boop fee info for non-cancel EVM transaction")
+            const boop = { ...sub.boop, ...gasInfo }
+            sub.pwr.resolve(await this.#getReceiptResult(boop, receipt))
         } catch {
             sub.pwr.resolve({
                 status: SubmitterError.ReceiptTimeout,
@@ -220,30 +244,18 @@ export class BoopReceiptService {
     }
 
     async #getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
-        const boopHash = computeHash(boop)
-        if (evmTxReceipt.status === "success") {
-            if (evmTxReceipt.logs?.length) {
-                return {
-                    status: WaitForReceipt.Success,
-                    receipt: this.#buildReceipt(boop, evmTxReceipt),
-                }
+        if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length)
+            return {
+                status: WaitForReceipt.Success,
+                receipt: this.#buildReceipt(boop, evmTxReceipt),
             }
 
-            // We identify empty cancel transactions by making them self-sends.
-            if (evmTxReceipt.to === evmTxReceipt.from) {
-                return {
-                    status: SubmitterError.ReceiptTimeout,
-                    description:
-                        "The boop was included in the mempool but got stuck. " +
-                        "It was replaced with a 0 value transaction and cancelled.",
-                }
-            }
-        }
         // TODO? Get the revertData from a log and populate here (instead of "0x")
         //       This is quite difficult to do: it would require tracing the evm transaction in its intra-block
         //       context, which isn't really doable with existing RPCs without a ton of extra logic to setup the proper
         //       state overrides (and not even sure then). If we really want to do this we should probably use TEvm.
 
+        const boopHash = computeHash(boop)
         const decoded = decodeRawError("0x")
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
         let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
