@@ -1,5 +1,6 @@
 // proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
+import { withInterval } from "#lib/utils/test/proxyServer"
 
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
@@ -39,9 +40,8 @@ describe("submitter_submit", () => {
         expect((response as { boopHash: string }).boopHash).toBeString()
     })
 
-    it("submits 50 'mint token' tx's quickly and successfully.", async () => {
-        if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
-
+    // biome-ignore format: keep indentation low
+    it("submits 50 'mint token' tx's quickly and successfully.", withInterval(1, true, async () => {
         const count = 50
         // test only works if submitter is configured to allow more than 50
         expect(env.MAX_BLOCKED_PER_TRACK).toBeGreaterThanOrEqual(count)
@@ -89,5 +89,5 @@ describe("submitter_submit", () => {
         expect(submitResults.every((r) => r.status === Onchain.Success)).toBe(true)
         expect(rs.length).toBe(count)
         expect(rs.every((r) => r.status === "success")).toBe(true)
-    })
+    }))
 })

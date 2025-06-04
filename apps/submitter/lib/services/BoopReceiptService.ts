@@ -160,7 +160,10 @@ export class BoopReceiptService {
             const evmTxHash = await walletClient.sendTransaction({ ...partialEvmTxInfo, account, to: account.address })
             this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash, to: tx.to })
         } catch (error) {
-            if (error instanceof TransactionRejectedRpcError && error.message.includes("nonce too low")) {
+            if (
+                error instanceof TransactionRejectedRpcError &&
+                (error.message.includes("nonce too low") || error.message.includes("is lower than the current nonce"))
+            ) {
                 // A tx with the same nonce landed on chain earlier.
                 logger.warn("Nonce too low for cancel tx", sub.boopHash)
                 // Give the actual included tx some time to be processed.

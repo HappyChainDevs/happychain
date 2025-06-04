@@ -6,6 +6,7 @@ import { env } from "#lib/env"
 import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/types"
 import type { Boop } from "#lib/types"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { withInterval } from "#lib/utils/test/proxyServer"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -24,9 +25,8 @@ describe("submitter_pending", () => {
         nonceValue = await getNonce(account, nonceTrack)
     })
 
-    it("fetches pending boops for a user", async () => {
-        if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
-
+    // biome-ignore format: keep indentation low
+    it("fetches pending boops for a user", withInterval(1, true, async () => {
         const count = 10
 
         // test only works if submitter is configured to allow more than 50
@@ -50,11 +50,10 @@ describe("submitter_pending", () => {
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
         expect(pending.pending.length).toBe(0)
-    })
+    }))
 
-    it("nothing pends after execute completes", async () => {
-        if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
-
+    // biome-ignore format: keep indentation low
+    it("nothing pends after execute completes", withInterval(1, true, async () => {
         const count = 10
 
         // test only works if submitter is configured to allow more than 50
@@ -76,9 +75,10 @@ describe("submitter_pending", () => {
             .$get({ param: { account: account } })
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
+        console.log("foobar", pending.pending.length)
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)
         expect(pending.pending[0].boopHash).toBeString()
         expect(BigInt(pending.pending[0].nonceTrack)).toBeGreaterThanOrEqual(0n)
         expect(BigInt(pending.pending[0].nonceValue)).toBeGreaterThanOrEqual(0n)
-    })
+    }))
 })
