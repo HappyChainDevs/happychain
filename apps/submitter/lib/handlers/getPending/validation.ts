@@ -12,7 +12,6 @@ const getPendingParam = type({
     account: Address,
 })
 
-// TODO this needs entryPoint
 const pendingBoopInfo = type({
     boopHash: Hash,
     entryPoint: Address,
