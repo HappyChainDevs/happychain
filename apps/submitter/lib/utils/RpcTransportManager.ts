@@ -1,8 +1,10 @@
 import { sleep } from "@happy.tech/common"
 import { http, webSocket } from "viem"
-import type { Chain, RpcBlock, Transport, TransportConfig } from "viem"
+import type { Chain, RpcBlock } from "viem"
 import { blockLogger } from "#lib/utils/logger"
 
+type ViemWebSocketTransportInstance = ReturnType<ReturnType<typeof webSocket>>
+type ViemHttpTransportInstance = ReturnType<ReturnType<typeof http>>
 interface ViemWebSocketTransportValueWithSubscribe {
     subscribe(args: {
         params: ["newHeads"]
@@ -10,23 +12,22 @@ interface ViemWebSocketTransportValueWithSubscribe {
         onError?: (error: Error) => void
     }): Promise<{ unsubscribe: () => Promise<boolean> }>
 }
-type ViemSubscribableWebSocketTransport = Transport<"webSocket"> & {
-    value: ViemWebSocketTransportValueWithSubscribe | undefined
-    config: TransportConfig<"webSocket">
+
+type InternalSubscribableWebSocketTransport = Omit<ViemWebSocketTransportInstance, "value"> & {
+    value: ViemWebSocketTransportValueWithSubscribe | undefined // Ensure 'value' has our specific subscribe
+    // 'request' and 'config' are inherited from ViemWebSocketTransportInstance
 }
 
-type ViemHttpTransport = Transport<"http"> & {
-    config: TransportConfig<"http">
-}
+type InternalHttpTransport = ViemHttpTransportInstance // This already includes 'request' and 'config'
 
 type OnBlockCallback = (block: RpcBlock) => void
-type OnStreamErrorCallback = (error: unknown, transportUrl?: string) => void
+type OnStreamErrorCallback = (error: Error, transportUrl?: string) => void
 type OnStreamStopCallback = (transportUrl?: string) => void
 
 const WS_INSTANTIATION_RETRY_DELAY_MS = 3000
 const HTTP_INSTANTIATION_RETRY_DELAY_MS = 3000
-const HTTP_POLLING_INTERVAL_MS = 100 // How often to poll for new blocks via HTTP
-const MAX_CONNECTION_ATTEMPTS_PER_URL = 3 // Max attempts for a single URL before cycling
+const HTTP_POLLING_INTERVAL_MS = 100
+const MAX_CONNECTION_ATTEMPTS_PER_URL = 3
 
 export class RpcTransportManager {
     #wsUrls: readonly string[]
@@ -36,7 +37,7 @@ export class RpcTransportManager {
     #currentWsIndex = 0
     #currentHttpIndex = 0
 
-    #activeTransport: ViemSubscribableWebSocketTransport | ViemHttpTransport | null = null
+    #activeTransport: InternalSubscribableWebSocketTransport | InternalHttpTransport | null = null
     #activeTransportUrl: string | null = null
     #activeStreamType: "websocket" | "http" | null = null
 
@@ -62,7 +63,6 @@ export class RpcTransportManager {
         this.#isStopped = false
         blockLogger.info("RpcTransportManager: Attempting to start block stream...")
 
-        // Prioritize WebSocket
         if (this.#wsUrls.length > 0) {
             const wsStarted = await this.#tryStartWebSocketStream(onBlock, onError)
             if (wsStarted) {
@@ -71,7 +71,6 @@ export class RpcTransportManager {
             blockLogger.warn("RpcTransportManager: Failed to start WebSocket stream, attempting HTTP polling.")
         }
 
-        // Fallback to HTTP Polling
         if (this.#httpUrls.length > 0) {
             const httpStarted = await this.#tryStartHttpPollingStream(onBlock, onError)
             if (httpStarted) {
@@ -84,7 +83,6 @@ export class RpcTransportManager {
             "RpcTransportManager: Failed to start block stream. No suitable transports (WS or HTTP) available or all attempts failed.",
         )
         onError(err)
-        // Return a no-op stop function if stream couldn't start
         return {
             stop: async () => {
                 blockLogger.info("RpcTransportManager: stop() called on a stream that failed to start.")
@@ -112,17 +110,17 @@ export class RpcTransportManager {
                     const transportFactory = webSocket(url, {
                         key: instanceKey,
                         name: `RpcManager WS ${this.#currentWsIndex}`,
+                        timeout: 5000, // Example explicit timeout for Viem's transport
                     })
                     const transportInstance = transportFactory({
                         chain: this.#chain,
-                    }) as ViemSubscribableWebSocketTransport
+                    }) as InternalSubscribableWebSocketTransport
 
                     if (transportInstance.value && typeof transportInstance.value.subscribe === "function") {
                         this.#wsSubscription = await transportInstance.value.subscribe({
                             params: ["newHeads"],
                             onData: (data: RpcBlock) => {
                                 if (this.#isStopped) return
-                                // blockLogger.trace(`RpcTransportManager: WS data received from ${url}`, data);
                                 onBlock(data)
                             },
                             onError: (streamError: Error) => {
@@ -131,8 +129,8 @@ export class RpcTransportManager {
                                     `RpcTransportManager: WS subscription error from ${url}: ${streamError.message}`,
                                     streamError,
                                 )
-                                this.#cleanupCurrentStream() // Cleanup before notifying error
-                                onError(streamError, url) // This signals BlockService to potentially retry startBlockStream
+                                this.#cleanupCurrentStream()
+                                onError(streamError, url)
                             },
                         })
                         this.#activeTransport = transportInstance
@@ -145,26 +143,27 @@ export class RpcTransportManager {
                             `RpcTransportManager: Instantiated WS transport for ${url} is not valid (missing .value.subscribe).`,
                         )
                     }
-                } catch (e: unknown) {
+                } catch (e) {
+                    // Catch 'unknown' type
+                    const errorMessage = e instanceof Error ? e.message : String(e)
                     blockLogger.error(
-                        `RpcTransportManager: Error instantiating/subscribing WS transport for ${url}: ${e}`,
+                        `RpcTransportManager: Error instantiating/subscribing WS transport for ${url}: ${errorMessage}`,
                         e,
                     )
                 }
                 if (attempts < MAX_CONNECTION_ATTEMPTS_PER_URL && !this.#isStopped)
                     await sleep(WS_INSTANTIATION_RETRY_DELAY_MS)
             }
-            // Failed all attempts for this URL, cycle to next
             this.#currentWsIndex = (this.#currentWsIndex + 1) % this.#wsUrls.length
         } while (this.#currentWsIndex !== initialWsIndex && !this.#isStopped)
 
-        return false // All WS URLs failed
+        return false
     }
 
     async #tryStartHttpPollingStream(onBlock: OnBlockCallback, onError: OnStreamErrorCallback): Promise<boolean> {
         if (this.#isStopped) return false
         const initialHttpIndex = this.#currentHttpIndex
-        this.#lastPolledBlockNumber = null // Reset for new polling attempt
+        this.#lastPolledBlockNumber = null
 
         do {
             if (this.#httpUrls.length === 0) return false
@@ -182,19 +181,19 @@ export class RpcTransportManager {
                     const transportFactory = http(url, {
                         key: instanceKey,
                         name: `RpcManager HTTP ${this.#currentHttpIndex}`,
+                        timeout: 5000, // Example explicit timeout for Viem's transport
                     })
-                    const transportInstance = transportFactory({ chain: this.#chain }) as ViemHttpTransport
+                    const transportInstance = transportFactory({ chain: this.#chain }) as InternalHttpTransport
 
-                    // Perform a quick test request to validate the HTTP transport
+                    // The 'request' method is directly on the transportInstance for HTTP
                     const testBlock = (await transportInstance.request({ method: "eth_blockNumber" })) as string
-                    if (!testBlock)
+                    if (testBlock === undefined || testBlock === null)
                         throw new Error("HTTP transport validation failed (eth_blockNumber returned null/empty).")
 
                     this.#activeTransport = transportInstance
                     this.#activeTransportUrl = url
                     this.#activeStreamType = "http"
 
-                    // Fetch initial block to set baseline
                     try {
                         const initialRpcBlock = (await this.#activeTransport.request({
                             method: "eth_getBlockByNumber",
@@ -205,18 +204,18 @@ export class RpcTransportManager {
                             blockLogger.info(
                                 `RpcTransportManager: HTTP polling baseline block: #${this.#lastPolledBlockNumber} from ${url}`,
                             )
-                            // Optionally call onBlock for the very first block if desired by BlockService
-                            // onBlock(initialRpcBlock);
                         } else {
                             blockLogger.warn(
                                 `RpcTransportManager: Could not get initial block for HTTP polling from ${url}.`,
                             )
                         }
-                    } catch (initBlockError: unknown) {
+                    } catch (initBlockError) {
+                        // Catch 'unknown'
+                        const errorMessage =
+                            initBlockError instanceof Error ? initBlockError.message : String(initBlockError)
                         blockLogger.warn(
-                            `RpcTransportManager: Error fetching initial block for HTTP polling from ${url}: ${initBlockError}`,
+                            `RpcTransportManager: Error fetching initial block for HTTP polling from ${url}: ${errorMessage}`,
                         )
-                        // Don't fail the stream start for this, polling will try to recover
                     }
 
                     this.#httpPollingIntervalId = setInterval(async () => {
@@ -226,8 +225,7 @@ export class RpcTransportManager {
                             return
                         }
                         try {
-                            // blockLogger.trace(`RpcTransportManager: HTTP polling ${url} for new blocks...`);
-                            const latestBlock = (await this.#activeTransport.request({
+                            const latestBlock = (await (this.#activeTransport as InternalHttpTransport).request({
                                 method: "eth_getBlockByNumber",
                                 params: ["latest", false],
                             })) as RpcBlock
@@ -237,7 +235,6 @@ export class RpcTransportManager {
                                     this.#lastPolledBlockNumber === null ||
                                     latestBlockNumber > this.#lastPolledBlockNumber
                                 ) {
-                                    // blockLogger.trace(`RpcTransportManager: HTTP new block detected #${latestBlockNumber} from ${url}`);
                                     if (
                                         this.#lastPolledBlockNumber !== null &&
                                         latestBlockNumber > this.#lastPolledBlockNumber + 1n
@@ -245,31 +242,31 @@ export class RpcTransportManager {
                                         blockLogger.warn(
                                             `RpcTransportManager: HTTP polling gap detected. From ${this.#lastPolledBlockNumber} to ${latestBlockNumber}. Processing latest only.`,
                                         )
-                                        // TODO: Optionally fetch missing blocks in a range if strict sequential processing is needed.
                                     }
                                     this.#lastPolledBlockNumber = latestBlockNumber
                                     onBlock(latestBlock)
                                 }
                             }
-                        } catch (pollError: unknown) {
+                        } catch (pollError) {
+                            const errorMessage = pollError instanceof Error ? pollError.message : String(pollError)
                             blockLogger.error(
-                                `RpcTransportManager: HTTP polling error from ${url}: ${pollError}`,
+                                `RpcTransportManager: HTTP polling error from ${url}: ${errorMessage}`,
                                 pollError,
                             )
-                            // If polling fails consistently, we might want to trigger the main onError
-                            // This could lead to cycling the HTTP transport.
                             if (this.#httpPollingIntervalId) clearInterval(this.#httpPollingIntervalId)
                             this.#httpPollingIntervalId = null
                             this.#cleanupCurrentStream()
-                            onError(pollError, url) // Signals BlockService to potentially retry startBlockStream
+                            onError(pollError instanceof Error ? pollError : new Error(String(pollError)), url)
                         }
                     }, HTTP_POLLING_INTERVAL_MS)
 
                     blockLogger.info(`RpcTransportManager: Successfully started HTTP polling via: ${url}`)
                     return true
-                } catch (e: unknown) {
+                } catch (e) {
+                    // Catch 'unknown'
+                    const errorMessage = e instanceof Error ? e.message : String(e)
                     blockLogger.error(
-                        `RpcTransportManager: Error instantiating/validating HTTP transport for ${url}: ${e.message}`,
+                        `RpcTransportManager: Error instantiating/validating HTTP transport for ${url}: ${errorMessage}`,
                         e,
                     )
                 }
@@ -279,7 +276,7 @@ export class RpcTransportManager {
             this.#currentHttpIndex = (this.#currentHttpIndex + 1) % this.#httpUrls.length
         } while (this.#currentHttpIndex !== initialHttpIndex && !this.#isStopped)
 
-        return false // All HTTP URLs failed
+        return false
     }
 
     #cleanupCurrentStream(): void {

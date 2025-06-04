@@ -7,7 +7,6 @@ import { RpcTransportManager } from "#lib/utils/RpcTransportManager.ts"
 import { chain, type publicClient } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
-/// The type for a block header, which BlockService will provide to its subscribers
 export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "latest">
 
 // Timeout for detecting a stale block stream if no new blocks are received by BlockService
@@ -108,7 +107,8 @@ export class BlockService {
         this.#resetWatchdog() // We received a block, so reset our own watchdog
 
         try {
-            const header = formatBlock(rpcBlock.result) as BlockHeader
+            const block = rpcBlock.result || rpcBlock // handle both http and websocket responses
+            const header = formatBlock(block) as BlockHeader
             blockLogger.trace(
                 `BlockService: Received new block #${header.number?.toString()} from RpcTransportManager.`,
             )
@@ -120,7 +120,7 @@ export class BlockService {
                 header.number &&
                 this.#currentBlock.number + 1n !== header.number
             ) {
-                // to do, fetch missing blocks
+                // todo: fetch missing blocks
                 blockLogger.warn(
                     `BlockService: Gap detected. New: ${header.number}, Current: ${this.#currentBlock.number}, Prev: ${this.#previousBlock.number}.`,
                 )
@@ -141,9 +141,9 @@ export class BlockService {
         }
     }
 
-    #handleStreamError = (error: Error, transportUrl?: string): void => {
+    #handleStreamError = (error: unknown, transportUrl?: string): void => {
         blockLogger.error(
-            `BlockService: RpcTransportManager reported an error for ${transportUrl || "unknown transport"}: ${error.message}. Watcher loop will attempt to restart stream.`,
+            `BlockService: RpcTransportManager reported an error for ${transportUrl || "unknown transport"}: ${error}. Watcher loop will attempt to restart stream.`,
             error,
         )
         // The current stream is considered dead. #startBlockWatcherLoop will try to re-establish.
