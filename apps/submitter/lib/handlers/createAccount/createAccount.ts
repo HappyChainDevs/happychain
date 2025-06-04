@@ -71,7 +71,7 @@ async function waitForTransactionReceipt(hash: `0x${string}`): Promise<Transacti
 
     const timeout = setTimeout(() => reject(new Error("Account creation timed out")), 8_000)
 
-    const unwatch = BlockService.instance.onBlock(async (block) => {
+    const unwatch = BlockService.instance.onBlock(async (_block) => {
         const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
         if (receipt) resolve(receipt)
     })

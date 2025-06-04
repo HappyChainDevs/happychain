@@ -2,7 +2,7 @@
 import "#lib/utils/test/proxyServer"
 
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
-import type { Address } from "@happy.tech/common"
+import { type Address, sleep } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
@@ -65,7 +65,7 @@ describe("submitter_state", () => {
         // submit transaction, but don't wait for it to complete
         const blockedTx = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
 
-        await new Promise((resolve) => setTimeout(resolve, 100))
+        await sleep(100)
 
         const state = (await client.api.v1.boop.state[":boopHash"]
             .$get({ param: { boopHash } })
