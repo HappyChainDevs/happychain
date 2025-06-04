@@ -30,7 +30,7 @@ export const SBoopLog = type({
 
 export const SBoopReceipt = type({
     boopHash: Hash,
-    boop: SBoop.onUndeclaredKey("ignore"), // ignore the extra boopHash in here for now, TODO actually remove it
+    boop: SBoop,
     status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
     description: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: Address,
