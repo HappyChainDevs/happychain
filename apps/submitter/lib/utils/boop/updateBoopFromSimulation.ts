@@ -1,11 +1,12 @@
 import type { SimulateSuccess } from "#lib/handlers/simulate"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import type { Boop } from "#lib/types"
 
 /**
  * Given a boop and a successful simulation output, returns an updated version of the boop,
  * with the gas limits and gas fees set according to the simulation.
  */
-export function updateBoopFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop {
+function updateBoopFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop {
     return {
         ...boop,
         gasLimit: boop.gasLimit || simulation.gas,
@@ -16,3 +17,7 @@ export function updateBoopFromSimulation(boop: Boop, simulation: SimulateSuccess
         submitterFee: boop.submitterFee || simulation.submitterFee,
     }
 }
+
+const tracedUpdateBoopFromSimulation = traceFunction(updateBoopFromSimulation)
+
+export { tracedUpdateBoopFromSimulation as updateBoopFromSimulation }

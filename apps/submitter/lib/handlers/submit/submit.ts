@@ -11,6 +11,7 @@ import {
     evmNonceManager,
     findExecutionAccount,
 } from "#lib/services"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
@@ -19,7 +20,7 @@ import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
-export async function submit(input: SubmitInput): Promise<SubmitOutput> {
+async function submit(input: SubmitInput): Promise<SubmitOutput> {
     const { evmTxHash, receiptPromise, ...output } = await submitInternal({ ...input, earlyExit: true })
     // Only delete in case of error, otherwise we're still waiting for the receipt.
     if (output.status !== Onchain.Success) boopStore.delete(input.boop)
@@ -228,3 +229,7 @@ function getOriginalBoop({
     boopStore.set(boop, entryPoint ?? deployment.EntryPoint)
     return [boopStore.getByHash(computeHash(boop))!, undefined]
 }
+
+const tracedSubmit = traceFunction(submit)
+
+export { tracedSubmit as submit }

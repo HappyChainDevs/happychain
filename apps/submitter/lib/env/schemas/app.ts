@@ -68,4 +68,9 @@ export const appSchema = z.object({
         .string()
         .default("false")
         .transform((str) => str !== "false" && str !== "0"),
+
+    /**
+     * The endpoint to send traces to.
+     */
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
 })

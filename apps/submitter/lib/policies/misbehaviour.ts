@@ -1,4 +1,5 @@
 import type { SimulateOutput } from "#lib/handlers/simulate/types"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import { type Boop, Onchain } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
@@ -11,7 +12,7 @@ import { logger } from "#lib/utils/logger"
  * template implementation of this function for an indication of what you can consider reacting too.
  */
 // biome-ignore lint/correctness/noUnusedVariables: template
-export function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, simulation?: "simulation"): void {
+function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, simulation?: "simulation"): void {
     // biome-ignore format: indent comments
     switch (output.status) {
 
@@ -58,3 +59,7 @@ export function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, sim
             // sessions (if we decided to add them!) that tend to have a high failure ratio.
     }
 }
+
+const tracedNotePossibleMisbehaviour = traceFunction(notePossibleMisbehaviour)
+
+export { tracedNotePossibleMisbehaviour as notePossibleMisbehaviour }

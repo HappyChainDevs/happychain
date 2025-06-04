@@ -16,6 +16,7 @@ import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { boopStore, computeHash, dbService, findExecutionAccount, simulationCache } from "#lib/services"
+import { TraceMethod } from "#lib/telemetry/traces.ts"
 import {
     type Boop,
     type BoopGasInfo,
@@ -72,6 +73,7 @@ export class BoopReceiptService {
         this.#evmReceiptService = evmReceiptService
     }
 
+    @TraceMethod("BoopReceiptService.waitForInclusion")
     async waitForInclusion({
         boopHash,
         boop,
@@ -111,7 +113,7 @@ export class BoopReceiptService {
         sub.entryPoint ??= entryPoint
 
         // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
-        if (evmTxInfo) this.#setActiveEvmTx(sub, evmTxInfo, boop)
+        if (evmTxInfo) this.setActiveEvmTx(sub, evmTxInfo, boop)
 
         // 4. race the receipt against a timeout
         const output = await Promise.race([
@@ -132,7 +134,8 @@ export class BoopReceiptService {
         return output
     }
 
-    #setActiveEvmTx(sub: PendingBoopInfo, evmTx: EvmTxInfo, boop: Boop | undefined): void {
+    @TraceMethod("BoopReceiptService.setActiveEvmTx")
+    private setActiveEvmTx(sub: PendingBoopInfo, evmTx: EvmTxInfo, boop: Boop | undefined): void {
         sub.latestEvmTx = evmTx
         sub.boopGasForEvmTxHash.set(evmTx.evmTxHash, ifDef(boop, extractFeeInfo))
         this.#evmTxHashMap.set(evmTx.evmTxHash, sub)
@@ -171,7 +174,7 @@ export class BoopReceiptService {
                 to: account.address,
                 gas: 21_000n,
             })
-            this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
+            this.setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
         } catch (error) {
             if (isNonceTooLowError(error)) {
                 // A tx with the same nonce landed on chain earlier.
@@ -207,7 +210,7 @@ export class BoopReceiptService {
                 const gasInfo = sub.boopGasForEvmTxHash.get(receipt.transactionHash)
                 if (!gasInfo) throw Error("BUG: missing boop fee info for non-cancel EVM transaction")
                 const boop = { ...sub.boop, ...gasInfo }
-                sub.pwr.resolve(await this.#getReceiptResult(boop, receipt))
+                sub.pwr.resolve(await this.getReceiptResult(boop, receipt))
             }
         } finally {
             // In principle we don't need the outer `try/finally` statement here
@@ -232,11 +235,12 @@ export class BoopReceiptService {
         // cancellation is normally caused by a chain with full blocks. But the makers of this code are not perfect...
     }
 
-    async #getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
+    @TraceMethod("BoopReceiptService.getReceiptResult")
+    private async getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
         if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length)
             return {
                 status: WaitForReceipt.Success,
-                receipt: this.#buildReceipt(boop, evmTxReceipt),
+                receipt: this.buildReceipt(boop, evmTxReceipt),
             }
 
         // TODO? Get the revertData from a log and populate here (instead of "0x")
@@ -267,10 +271,11 @@ export class BoopReceiptService {
         return output
     }
 
-    #buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): BoopReceipt {
+    @TraceMethod("BoopReceiptService.buildReceipt")
+    private buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): BoopReceipt {
         if (evmTxReceipt.status !== "success") throw new Error("BUG: buildReceipt")
         const boopHash = computeHash(boop)
-        const logs = this.#filterLogs(evmTxReceipt.logs, boopHash)
+        const logs = this.filterLogs(evmTxReceipt.logs, boopHash)
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
 
         let status: OnchainStatus = Onchain.Success
@@ -306,7 +311,8 @@ export class BoopReceiptService {
         return receipt
     }
 
-    #filterLogs(logs: Log[], boopHash: Hash): BoopLog[] {
+    @TraceMethod("BoopReceiptService.filterLogs")
+    private filterLogs(logs: Log[], boopHash: Hash): BoopLog[] {
         let select = false
         const filteredLogs: BoopLog[] = []
         for (const log of logs) {

@@ -1,8 +1,9 @@
 import { outputForGenericError } from "#lib/handlers/errors"
 import { boopStore, dbService, simulationCache } from "#lib/services"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import { GetState, type GetStateInput, type GetStateOutput } from "./types"
 
-export async function getState(input: GetStateInput): Promise<GetStateOutput> {
+async function getState(input: GetStateInput): Promise<GetStateOutput> {
     try {
         const boopHash = input.boopHash
         const receipt = await dbService.findReceipt(boopHash)
@@ -19,3 +20,7 @@ export async function getState(input: GetStateInput): Promise<GetStateOutput> {
         return outputForGenericError(error)
     }
 }
+
+const tracedGetState = traceFunction(getState)
+
+export { tracedGetState as getState }

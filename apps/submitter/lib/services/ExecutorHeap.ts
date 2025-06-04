@@ -1,5 +1,6 @@
 import { type Address, IndexedHeap } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
+import { TraceMethod } from "#lib/telemetry/traces.ts"
 
 interface Executor {
     account: Account
@@ -19,11 +20,13 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     }
 
     /** Adds a new executor to the heap. */
+    @TraceMethod("ExecutorHeap.addAccount")
     public addAccount(account: Account): void {
         super.add({ account, jobCount: 0 })
     }
 
     /** Increments job count for an executor. */
+    @TraceMethod("ExecutorHeap.increment")
     public increment(address: Address): boolean {
         return this.update(address, (e) => {
             e.jobCount++
@@ -31,6 +34,7 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     }
 
     /** Decrements job count for an executor. */
+    @TraceMethod("ExecutorHeap.decrement")
     public decrement(address: Address): boolean {
         return this.update(address, (e) => {
             e.jobCount--
@@ -38,6 +42,7 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     }
 
     /** Returns the executor with the lowest job count. */
+    @TraceMethod("ExecutorHeap.peek")
     public override peek(): Executor {
         return super.peek()!
     }

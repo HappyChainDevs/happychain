@@ -1,5 +1,6 @@
 import type { Hash } from "@happy.tech/common"
 import { env } from "#lib/env"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "./computeBoopHash"
 
@@ -10,10 +11,14 @@ import { computeBoopHash } from "./computeBoopHash"
  * boop. If you need to edit these other fields (e.g. in tests), then use {@link computeBoopHash} instead!
  */
 const hashMap = new WeakMap<Boop, Hash>()
-export function computeHash(boop: Boop): Hash {
+function computeHash(boop: Boop): Hash {
     const cached = hashMap.get(boop)
     if (cached) return cached
     const boopHash = computeBoopHash(env.CHAIN_ID, boop)
     hashMap.set(boop, boopHash)
     return boopHash
 }
+
+const tracedComputeHash = traceFunction(computeHash)
+
+export { tracedComputeHash as computeHash }

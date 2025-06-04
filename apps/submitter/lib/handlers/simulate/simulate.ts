@@ -5,6 +5,7 @@ import { outputForExecuteError, outputForGenericError, outputForRevertError } fr
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { getSubmitterFee, validateSubmitterFee } from "#lib/policies/submitterFee"
 import { computeHash, simulationCache } from "#lib/services"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
@@ -13,7 +14,7 @@ import { logger } from "#lib/utils/logger"
 import { getRevertError } from "#lib/utils/parsing"
 import type { SimulateInput, SimulateOutput, SimulateSuccess } from "./types"
 
-export async function simulate(
+async function simulate(
     { entryPoint = deployment.EntryPoint, boop }: SimulateInput,
     forSubmit = false,
 ): Promise<SimulateOutput> {
@@ -155,3 +156,7 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
             throw new Error(`implementation error: unknown call status: ${callStatus}`)
     }
 }
+
+const tracedSimulate = traceFunction(simulate)
+
+export { tracedSimulate as simulate }
