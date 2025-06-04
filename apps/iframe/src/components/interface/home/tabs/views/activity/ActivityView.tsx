@@ -1,6 +1,6 @@
 import { ClockIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
-import { BoopStatus, boopsAtom } from "#src/state/boopHistory"
+import { historyAtom } from "#src/state/boopHistory"
 import { userAtom } from "#src/state/user"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import { BoopEntry } from "./BoopEntry"
@@ -15,7 +15,7 @@ import BoopEntrySkeleton from "./BoopEntrySkeleton"
  */
 export const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const boops = useAtomValue(boopsAtom)
+    const boops = useAtomValue(historyAtom)
 
     if (!user) return <UserNotFoundWarning />
 
@@ -33,10 +33,10 @@ export const ActivityView = () => {
     return (
         <div className="grid gap-4">
             {boops.map((boop) =>
-                boop.status === BoopStatus.Pending ? (
-                    <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
+                boop.status ? (
+                    <BoopEntry key={`boop_confirmed_${boop.boopHash}`} entry={boop} />
                 ) : (
-                    <BoopEntry key={`boop_confirmed_${boop.boopHash}`} boop={boop} />
+                    <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
                 ),
             )}
         </div>

@@ -9,13 +9,13 @@ import {
 } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { formatEther, formatUnits } from "viem"
-import { BoopStatus, type StoredBoop } from "#src/state/boopHistory"
+import type { HistoryEntry } from "#src/state/boopHistory"
 import { currentChainAtom } from "#src/state/chains"
 import { OperationType, useClassifyActivity } from "./useClassifyActivity"
 
 const ACTIVITY_HEADLINE = {
     [OperationType.NativeTransfer]: {
-        label: "Send HAPPY",
+        label: "Sent HAPPY",
         icon: ArrowUpIcon,
     },
     [OperationType.ERC20Transfer]: {
@@ -41,15 +41,14 @@ const ACTIVITY_HEADLINE = {
 }
 
 interface BoopEntryProps {
-    boop: StoredBoop
+    entry: HistoryEntry
 }
 
-export const BoopEntry = ({ boop }: BoopEntryProps) => {
-    const { details, type } = useClassifyActivity(boop)
-
+export const BoopEntry = ({ entry }: BoopEntryProps) => {
+    const { details, type } = useClassifyActivity(entry)
     const currentChain = useAtomValue(currentChainAtom)
-    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
-    const { value, boopHash, status } = boop
+    const blockExplorerUrl = currentChain.blockExplorerUrls?.[0] ?? ""
+    const { value, boopHash } = entry
     const Icon = ACTIVITY_HEADLINE[type].icon
     const shortHash = shortenAddress(boopHash)
 
@@ -57,7 +56,7 @@ export const BoopEntry = ({ boop }: BoopEntryProps) => {
         <article className="focus-within:bg-primary/10 hover:bg-primary/5 p-2 rounded-md grid gap-1 relative">
             <div className="flex items-baseline text-xs gap-3">
                 <div
-                    className={`${status === BoopStatus.Success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
+                    className={`${entry.status === Onchain.Success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
                 >
                     <Icon weight="bold" size="0.95em" />
                 </div>
@@ -77,6 +76,7 @@ export const BoopEntry = ({ boop }: BoopEntryProps) => {
                     <span className="text-xs block font-semibold">HAPPY</span>
                 </p>
             )}
+            {/* NOTE: Currently unreachable, cf. `useClassifyActivity` */}
             {Boolean(
                 type === OperationType.ERC20Transfer && details?.amount && details?.decimals && details?.symbol,
             ) && (
@@ -87,9 +87,9 @@ export const BoopEntry = ({ boop }: BoopEntryProps) => {
                     <span className="text-xs block font-semibold">{details?.symbol}</span>
                 </p>
             )}
-            {boop.boopReceipt?.status === Onchain.Success && (
+            {entry.receipt && (
                 <a
-                    href={`${blockExplorerUrl}/tx/${boop.boopReceipt.receipt.evmTxHash}`}
+                    href={`${blockExplorerUrl}/tx/${entry.receipt.evmTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="View on explorer"

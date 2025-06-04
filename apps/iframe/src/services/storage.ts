@@ -1,7 +1,7 @@
 import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
 import type { Address, Hex } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
-import type { StoredBoop } from "#src/state/boopHistory"
+import type { HistoryEntry } from "#src/state/boopHistory"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -21,7 +21,7 @@ type StorageSchema = {
     // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
-    [StorageKey.Boops]: Record<Address, Array<StoredBoop>> | undefined
+    [StorageKey.Boops]: Record<Address, Array<HistoryEntry>> | undefined
 }
 
 export const storage = createStorage<StorageSchema>({

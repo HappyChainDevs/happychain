@@ -1,6 +1,6 @@
 import { Tabs } from "@ark-ui/react/tabs"
 import { useAtomValue } from "jotai"
-import { BoopStatus, boopsAtom } from "#src/state/boopHistory"
+import { historyAtom } from "#src/state/boopHistory"
 import { ContentType } from "#src/state/interfaceState"
 import { Tab, TabContent } from "./home/tabs/Tabs"
 import FaucetView from "./home/tabs/views/Faucet"
@@ -9,8 +9,8 @@ import ActivityView from "./home/tabs/views/activity/ActivityView"
 import TokenView from "./home/tabs/views/tokens/TokenView"
 
 export const WalletContentInfo = () => {
-    const boopsList = useAtomValue(boopsAtom)
-    const isPending = boopsList.some((boop) => boop.status === BoopStatus.Pending)
+    const boopsList = useAtomValue(historyAtom)
+    const isPending = boopsList.some((boop) => !boop.status)
 
     return (
         <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
