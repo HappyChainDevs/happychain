@@ -3,6 +3,7 @@ import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
+import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/types"
 import type { Boop } from "#lib/types"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
@@ -39,16 +40,42 @@ describe("submitter_pending", () => {
             }),
         )
 
-        // TODO retry with execute and make sure it doesn't work
-        // wait for all to be submitted, but not executed, with a 2s block time they should all pend
+        // wait for execution, so nothing should pend
+        await Promise.all(
+            transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
+        )
+
+        const pending = (await client.api.v1.boop.pending[":account"]
+            .$get({ param: { account: account } })
+            .then((a) => a.json())) as GetPendingSuccess
+        expect(pending.status).toBe(GetPending.Success)
+        expect(pending.pending.length).toBe(0)
+    })
+
+    it("nothing pends after execute completes", async () => {
+        if (env.AUTOMINE_TESTS) return console.log("Skipping test because automine is enabled")
+
+        const count = 10
+
+        // test only works if submitter is configured to allow more than 50
+        expect(env.MAX_BLOCKED_PER_TRACK).toBeGreaterThanOrEqual(count)
+        expect(env.MAX_TOTAL_BLOCKED).toBeGreaterThanOrEqual(count)
+
+        const transactions = await Promise.all(
+            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
+                const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
+                return await sign(dummyBoop)
+            }),
+        )
+
         await Promise.all(
             transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
         const pending = (await client.api.v1.boop.pending[":account"]
             .$get({ param: { account: account } })
-            .then((a) => a.json())) as any
-        expect(pending.error).toBeUndefined()
+            .then((a) => a.json())) as GetPendingSuccess
+        expect(pending.status).toBe(GetPending.Success)
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)
         expect(pending.pending[0].boopHash).toBeString()
         expect(BigInt(pending.pending[0].nonceTrack)).toBeGreaterThanOrEqual(0n)
