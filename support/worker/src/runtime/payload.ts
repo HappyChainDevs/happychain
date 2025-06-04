@@ -11,9 +11,10 @@ type BroadcastPayload = { command: "broadcast"; data: unknown }
 type RpcResponsePayload = { command: "rpcResponse"; data: RpcPayload }
 type RpcRequestPayload = { command: "rpcRequest"; data: RpcPayload }
 type ConsolePayload = { command: "console"; data: unknown[]; key: string }
-type PingPayload = { command: "ping" }
+type PingPayload = { ts: number; command: "ping" }
+type PongPayload = { ts: number; command: "pong" }
 
-export type ServerPayload = BroadcastPayload | DispatchPayload | RpcResponsePayload | ConsolePayload
+export type ServerPayload = BroadcastPayload | DispatchPayload | RpcResponsePayload | ConsolePayload | PongPayload
 export type ClientPayload = DispatchPayload | RpcRequestPayload | PingPayload
 
 export function makeRpcRequestPayload(id: string, name: string, args: unknown, isError = false): RpcRequestPayload {
@@ -63,6 +64,7 @@ export function makeConsolePayload(key: string, data: unknown[]): ConsolePayload
 
 export function makePingPayload(): PingPayload {
     return {
+        ts: Date.now(),
         command: "ping",
     }
 }
@@ -79,6 +81,7 @@ export function parseClientPayload(payload?: ClientPayload): ClientPayload | und
 }
 export function parseServerPayload(payload?: ServerPayload): ServerPayload | undefined {
     switch (payload?.command) {
+        case "pong":
         case "rpcResponse":
         case "broadcast":
         case "dispatch":

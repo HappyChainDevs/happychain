@@ -85,7 +85,7 @@ export default defineConfig(({ command, mode }) => {
  */
 function sharedWorkerChunkStrategy() {
     return (id: string) => {
-        if (id.includes("web3auth.polyfill") || id.includes("@web3auth") || id.includes("@toruslabs")) {
+        if (id.includes("polyfill") || id.includes("@web3auth") || id.includes("@toruslabs")) {
             return "worker-web3auth-chunk"
         }
         if (id.includes("worker/dist/runtime")) {

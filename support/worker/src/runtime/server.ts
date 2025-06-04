@@ -72,9 +72,7 @@ export class SharedWorkerServer implements ServerInterface {
 
         // Indexed based function recovery so that when the code is minified, both sides of the RPC
         // service still match
-        for (const fn of filteredFns) {
-            this._functions.set(`__FUNC_${idx++}__`, fn)
-        }
+        for (const fn of filteredFns) this._functions.set(`__FUNC_${idx++}__`, fn)
 
         this.heartbeat()
         this.connect()
@@ -88,9 +86,7 @@ export class SharedWorkerServer implements ServerInterface {
         setInterval(() => {
             const now = Date.now()
             for (const [port, date] of this._ports) {
-                if (now - date >= 2000) {
-                    this._ports.delete(port)
-                }
+                if (now - date >= 2000) this._ports.delete(port)
             }
         }, 1000)
     }
@@ -153,7 +149,8 @@ export class SharedWorkerServer implements ServerInterface {
                     break
                 }
                 case "ping": {
-                    this._ports.set(port, Date.now())
+                    this._ports.set(port, payload.ts)
+                    port.postMessage({ ts: payload.ts, command: "pong" })
                     break
                 }
                 default: {

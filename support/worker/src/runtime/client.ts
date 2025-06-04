@@ -33,15 +33,33 @@ export class SharedWorkerClient {
     // biome-ignore lint/suspicious/noExplicitAny: its a generic callback in use, type not needed here
     private messageCallbacks: MessageCallback<any>[] = []
 
-    constructor(worker: WorkerUnion) {
+    constructor(
+        worker: WorkerUnion,
+        private options: { name: string },
+    ) {
         this.port = "port" in worker ? worker.port : worker
         this.heartbeat()
         this.port.onmessage = this.handleMessage.bind(this)
     }
 
+    private pingCounter = 0
+    // if dead pings exceed 60 (30 seconds at 500ms pings), assume the worker is dead
+    private get isAssumedDead() {
+        return this.pingCounter > 60
+    }
+
     private heartbeat() {
         // 'keep-alive' ping so the worker knows we are still connected
-        setInterval(() => this.port.postMessage(makePingPayload()), 500)
+        setInterval(() => {
+            const payload = makePingPayload()
+            const wasPreviouslyDead = this.isAssumedDead
+            this.pingCounter++
+            this.port.postMessage(payload)
+
+            if (!wasPreviouslyDead && this.isAssumedDead) {
+                console.warn(`SharedWorkerClient: [${this.options.name}] Appears offline or inaccessible.`)
+            }
+        }, 500)
     }
 
     private handleMessage = (event: MessageEvent) => {
@@ -52,6 +70,22 @@ export class SharedWorkerClient {
         }
 
         switch (payload.command) {
+            case "pong": {
+                // if we receive a pong, worker is alive and well, we can clear the map
+                // (likely the map only contains the last ping, but it could be more
+                // if there was a temporary disruption) Under normal conditions,
+                // this should take 0 or 1 ms. if the wait time has exceeded 1000ms,
+                // something may be wrong, and we will log the warning.
+                // Date.now() - payload.ts is effectively the round trip time of the ping/pong
+                const possibleDelay = Date.now() - payload.ts > 1000
+                if (!this.isAssumedDead && possibleDelay) {
+                    console.warn(
+                        `SharedWorkerClient: [${this.options.name}] pong received after ${Date.now() - payload.ts} delay`,
+                    )
+                }
+                this.pingCounter = 0
+                break
+            }
             case "rpcResponse": {
                 const callback = this.callbacks.get(payload.data.id)
                 if (!callback) return
@@ -95,16 +129,29 @@ export class SharedWorkerClient {
      */
     __defineFunction(name: string) {
         const rpcFunc = async <T>(...args: T[]) => {
+            // we can throw here. if the the heartbeat ping/pong interval ever succeeds,
+            // this will become false again, but in the meantime, faster feedback to the user
+            // is a better experience
+            if (this.isAssumedDead) {
+                throw new Error(`SharedWorkerClient: [${this.options.name}] appears dead or inaccessible`)
+            }
+
             const id = crypto.randomUUID()
             const payload = makeRpcRequestPayload(id, name, args)
             try {
                 return await new Promise((res, rej) => {
+                    const start = Date.now()
+                    const timeoutCheck = setInterval(() => {
+                        if (!this.isAssumedDead) return
+                        const duration = (Date.now() - start) / 1000
+                        clearInterval(timeoutCheck)
+                        return rej(
+                            `SharedWorkerClient: [${this.options.name}] RPC call timed out after ${duration} seconds`,
+                        )
+                    }, 2_000)
                     this.callbacks.set(id, (result) => {
-                        if (result.isError) {
-                            return rej(result.args)
-                        }
-
-                        return res(result.args)
+                        clearInterval(timeoutCheck)
+                        return result.isError ? rej(result.args) : res(result.args)
                     })
                     this.port.postMessage(payload)
                 })

@@ -24,7 +24,7 @@ export function clientCodeGen(code: string, id: string) {
         + 'import SharedWorker from "@okikio/sharedworker"\n'
         + `import { SharedWorkerClient } from "${pkg.name}/runtime"\n`
         + `const __worker__ = new SharedWorker(new URL(${stringId}, import.meta.url), ${options})\n`
-        + "const __client__ = new SharedWorkerClient(__worker__)\n"
+        + `const __client__ = new SharedWorkerClient(__worker__, ${options})\n`
         + "export const dispatch = __client__.dispatch.bind(__client__)\n"
         + "export const addMessageListener = __client__.addMessageListener.bind(__client__)\n"
         + `// ${pkg.name} ends\n`
