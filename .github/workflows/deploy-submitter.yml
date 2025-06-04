@@ -59,7 +59,7 @@ jobs:
             DATABASE_URL=/home/submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=production
-            RPC_URL=http://localhost:8545
+            RPC_URLS=ws://localhost:8546,http://localhost:8545
             EOF
               cd /home/submitter/build
               bun migrate.es.js
