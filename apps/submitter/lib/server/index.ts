@@ -11,11 +11,11 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { env, isProduction } from "#lib/env"
 import { resyncAllAccounts } from "#lib/services"
+import { traceMiddleware } from "#lib/telemetry/traces"
 import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
 import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
-import { traceMiddleware } from "#lib/telemetry/traces"
 
 await resyncAllAccounts()
 

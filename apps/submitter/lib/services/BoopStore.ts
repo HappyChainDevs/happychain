@@ -1,4 +1,5 @@
 import { type Address, type Hash, Map2 } from "@happy.tech/common"
+import { TraceMethod } from "#lib/telemetry/traces.ts"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import type { Boop } from "../types"
 
@@ -20,18 +21,22 @@ export class BoopStore {
     readonly #byNonce = new Map2<Address, string, Boop>()
     readonly #entryPoints = new Map<Hash, Address>()
 
+    @TraceMethod("BoopStore.getByHash")
     getByHash(boopHash: Hash): Boop | undefined {
         return this.#byHash.get(boopHash)
     }
 
+    @TraceMethod("BoopStore.getByNonce")
     getByNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): Boop | undefined {
         return this.#byNonce.get(account, `${nonceTrack}/${nonceValue}`)
     }
 
+    @TraceMethod("BoopStore.getByAccount")
     getByAccount(account: Address): Boop[] {
         return this.#byNonce.getAll(account)?.values()?.toArray() ?? []
     }
 
+    @TraceMethod("BoopStore.set")
     set(boop: Boop, entryPoint: Address) {
         // Enforce hash caching before copying and freezing.
         const boopHash = computeHash(boop)
@@ -43,18 +48,22 @@ export class BoopStore {
         return this
     }
 
+    @TraceMethod("BoopStore.getEntryPoint")
     getEntryPoint(boopHash: Hash): Address | undefined {
         return this.#entryPoints.get(boopHash)
     }
 
+    @TraceMethod("BoopStore.hasHash")
     hasHash(boopHash: Hash): boolean {
         return this.#byHash.has(boopHash)
     }
 
+    @TraceMethod("BoopStore.hasNonce")
     hasNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): boolean {
         return this.#byNonce.has(account, `${nonceTrack}/${nonceValue}`)
     }
 
+    @TraceMethod("BoopStore.delete")
     delete(boop: Boop) {
         const boopHash = computeHash(boop)
         this.#byNonce.delete(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`)

@@ -1,5 +1,6 @@
 import type { Hash } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
+import { TraceMethod } from "#lib/telemetry/traces.ts"
 import { ExecutorHeap } from "./ExecutorHeap"
 
 interface Expiry {
@@ -32,6 +33,7 @@ export class ExecutorCacheService {
     /**
      * Useful for debugging.
      */
+    @TraceMethod("ExecutorCacheService.stats")
     stats() {
         return this.heap.values.map((h) => ({ address: h.account.address, count: h.jobCount }))
     }
@@ -39,6 +41,8 @@ export class ExecutorCacheService {
     /**
      * Registers a new Executor wallet onto the heap
      */
+
+    @TraceMethod("ExecutorCacheService.registerExecutor")
     registerExecutor(executorAccount: Account): void {
         this.heap.addAccount(executorAccount)
     }
@@ -49,6 +53,7 @@ export class ExecutorCacheService {
      * an executor it will return it, but first cancel the previous ttl, and create a new ttl
      * starting now, resulting in a rolling ttl per-hash
      */
+    @TraceMethod("ExecutorCacheService.get")
     get(boopHash: Hash, account: string, nonceTrack: bigint): Account {
         const key = `${account}-${nonceTrack}`
         const expiry = this.expiryMap.get(key)
@@ -62,6 +67,7 @@ export class ExecutorCacheService {
         return executor
     }
 
+    @TraceMethod("ExecutorCacheService.createExpiry")
     private createExpiry(boopHash: Hash, key: string): Account {
         // get the least used account
         const executor = this.heap.peek()
@@ -88,6 +94,7 @@ export class ExecutorCacheService {
         return executor.account
     }
 
+    @TraceMethod("ExecutorCacheService.resetExpiry")
     private resetExpiry(boopHash: Hash, key: string, expiry: Expiry): Account {
         // Check if the hash exists and reset its associated timeout
         if (expiry.hashExpirations.has(boopHash)) {

@@ -1,8 +1,9 @@
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 import { Resource } from "@opentelemetry/resources"
 import { NodeSDK } from "@opentelemetry/sdk-node"
-import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-node"
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions"
 import pkg from "../../package.json" assert { type: "json" }
+import { env } from "../env"
 
 const resource = Resource.default().merge(
     new Resource({
@@ -11,13 +12,15 @@ const resource = Resource.default().merge(
     }),
 )
 
-export function initializeTelemetry(): void {
-    const traceExporter = new ConsoleSpanExporter()
+const traceExporter = env.OTEL_EXPORTER_OTLP_ENDPOINT
+    ? new OTLPTraceExporter({
+          url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      })
+    : undefined
 
-    const sdk = new NodeSDK({
-        resource,
-        traceExporter,
-    })
+const sdk = new NodeSDK({
+    resource,
+    traceExporter,
+})
 
-    sdk.start()
-}
+sdk.start()

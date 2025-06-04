@@ -1,11 +1,12 @@
 import type { Hex } from "@happy.tech/common"
 import { bytesToAddress, bytesToBigInt, bytesToNumber, getBytes, getDynamicLengthBytes } from "@happy.tech/common"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import type { Boop } from "#lib/types"
 
 /**
  * Decodes a {@link Hex} encoded {@link Boop}.
  */
-export function decodeBoop(encoded: Hex): Boop {
+function decodeBoop(encoded: Hex): Boop {
     const encodedBytes = encoded.replace(/^0x/, "")
 
     // Read static fields (204 bytes total)
@@ -45,3 +46,7 @@ export function decodeBoop(encoded: Hex): Boop {
         extraData: `0x${extraData}`,
     }
 }
+
+const tracedDecodeBoop = traceFunction(decodeBoop)
+
+export { tracedDecodeBoop as decodeBoop }

@@ -4,17 +4,17 @@ import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { evmReceiptService } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import { config, publicClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
 import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
 import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
-import { traceFunction } from "#lib/telemetry/traces.ts"
 
 const walletClient = createWalletClient({ ...config, account: accountDeployer })
 
-async function _createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
+async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
         const predictedAddress = computeHappyAccountAddress(salt, owner)
         logger.trace("Predicted account address for owner", predictedAddress, owner, salt)
@@ -78,4 +78,6 @@ async function _createAccount({ salt, owner }: CreateAccountInput): Promise<Crea
     }
 }
 
-export const createAccount = traceFunction(_createAccount)
+const tracedCreateAccount = traceFunction(createAccount)
+
+export { tracedCreateAccount as createAccount }

@@ -3,6 +3,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { jsonRpc } from "viem/nonce"
 import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 import type { Boop } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
@@ -16,7 +17,7 @@ const executorService = new ExecutorCacheService(executorAccounts)
 
 export const defaultAccount: Account = executorAccounts[0]
 
-export function findExecutionAccount(tx?: Boop): Account {
+function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
 
     const hash = computeHash(tx)
@@ -38,3 +39,7 @@ function getAccountDeployer(): Account {
 }
 
 export const accountDeployer: Account = getAccountDeployer()
+
+const tracedFindExecutionAccount = traceFunction(findExecutionAccount)
+
+export { tracedFindExecutionAccount as findExecutionAccount }

@@ -2,6 +2,7 @@ import { type Hash, bigIntReplacer, bigIntReviver } from "@happy.tech/common"
 import type { Kysely } from "kysely"
 import type { DB } from "#lib/database/generated"
 import { computeHash } from "#lib/services"
+import { TraceMethod } from "#lib/telemetry/traces.ts"
 import type { BoopReceipt } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 
@@ -9,6 +10,7 @@ export class DatabaseService {
     constructor(private db: Kysely<DB>) {}
 
     // @throws SQLiteError
+    @TraceMethod("DatabaseService.findReceipt")
     async findReceipt(boopHash: Hash): Promise<BoopReceipt | undefined> {
         try {
             const storedBoop = await this.db
@@ -34,6 +36,7 @@ export class DatabaseService {
     }
 
     // @throws SQLiteError
+    @TraceMethod("DatabaseService.saveReceipt")
     async saveReceipt(receipt: BoopReceipt): Promise<void> {
         logger.trace("Saving receipt to db", receipt.boopHash)
         const { boop, logs, entryPoint, ...rest } = receipt
