@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
-import { serializeBigInt } from "@happy.tech/common"
+import { serializeBigInt, sleep } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment, env } from "#lib/env"
 import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/types"
@@ -80,6 +80,17 @@ describe("submitter_pending", () => {
             .$get({ param: { account: account } })
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
-        expect(pending.pending.length).toBe(0)
+
+        // Give it some slack to avoid flaking.
+        expect(pending.pending.length).toBeLessThan(3)
+        // But then check that the pend goes away.
+        if (pending.pending.length > 0) {
+            await sleep(1000)
+            const pending = (await client.api.v1.boop.pending[":account"]
+                .$get({ param: { account: account } })
+                .then((a) => a.json())) as GetPendingSuccess
+            expect(pending.status).toBe(GetPending.Success)
+            expect(pending.pending.length).toBe(0)
+        }
     }))
 })

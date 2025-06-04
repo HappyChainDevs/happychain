@@ -17,9 +17,7 @@ import type { BlockService } from "./BlockService"
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
-// TODO move this? or re-export from services
 export type EvmTxInfo = {
-    to: Address // TODO replace with EntryPoint
     evmTxHash: Hash
     nonce: number
     maxFeePerGas: bigint
@@ -30,6 +28,7 @@ type PendingBoopInfo = {
     count: number
     boop: Boop
     boopHash: Hash
+    entryPoint: Address | undefined
     interval: NodeJS.Timeout | undefined
     latestEvmTx?: EvmTxInfo
     // TODO replace with map from evmTxHash to boop gas values (or undefined for cancel txs), otherwise we might save the wrong gas values
@@ -37,12 +36,21 @@ type PendingBoopInfo = {
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
 }
 
-export type WaitForInclusionArgs = {
-    boopHash: Hash
-    boop?: Boop
-    timeout?: number
-    evmTxInfo?: EvmTxInfo
-}
+export type WaitForInclusionArgs =
+    | {
+          boopHash: Hash
+          entryPoint?: undefined
+          boop?: undefined
+          timeout?: undefined
+          evmTxInfo?: undefined
+      }
+    | {
+          boopHash: Hash
+          entryPoint: Address
+          boop: Boop
+          timeout?: number
+          evmTxInfo: EvmTxInfo
+      }
 
 export class BoopReceiptService {
     #pendingBoopInfos = new Map</* boopHash: */ Hash, PendingBoopInfo>()
@@ -69,6 +77,7 @@ export class BoopReceiptService {
     async waitForInclusion({
         boopHash,
         boop,
+        entryPoint,
         evmTxInfo,
         timeout = env.RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
@@ -94,12 +103,14 @@ export class BoopReceiptService {
             count: 0,
             boop,
             boopHash,
+            entryPoint,
             interval: undefined,
             evmTxHashes: new Set<Hash>(),
         }) satisfies PendingBoopInfo)
 
         // This gets recursively incremented in case of retries, which is perfectly safe.
         sub.count += 1
+        sub.entryPoint ??= entryPoint
 
         // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
         if (evmTxInfo) {
@@ -140,7 +151,7 @@ export class BoopReceiptService {
 
         // 1. Retry the transaction once. This won't recursively retry because the interval is unique for the boopHash.
         receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
-        const { status } = await submitInternal({ boop: sub.boop, entryPoint: tx.to!, replacedTx: tx })
+        const { status } = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
         if (status === Onchain.Success) return
 
         // 2. Retry failed, switch to cancellation.
@@ -150,7 +161,7 @@ export class BoopReceiptService {
         const fetchedMaxFeePerGas = block.baseFeePerGas! + tx.maxPriorityFeePerGas
         const maxPriorityFeePerGas = getMaxPriorityFeePerGas(tx)
         const maxFeePerGas = getMaxFeePerGas(fetchedMaxFeePerGas, tx)
-        const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash" | "to"> = {
+        const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
             nonce: tx.nonce,
             maxFeePerGas,
             maxPriorityFeePerGas,
@@ -158,7 +169,7 @@ export class BoopReceiptService {
         try {
             // We identify cancel transaction by making them self-sends.
             const evmTxHash = await walletClient.sendTransaction({ ...partialEvmTxInfo, account, to: account.address })
-            this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash, to: tx.to })
+            this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash })
         } catch (error) {
             if (
                 error instanceof TransactionRejectedRpcError &&
@@ -236,7 +247,7 @@ export class BoopReceiptService {
         const decoded = decodeRawError("0x")
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
         let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
-        const simulation = await simulationCache.findSimulation(entryPoint, boopHash)
+        const simulation = await simulationCache.get(boopHash)
         if (
             // detect out-of-gas
             output.status === Onchain.UnexpectedReverted &&

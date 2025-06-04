@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test"
+import { sleep } from "@happy.tech/common"
 import { type Account, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { ExecutorCacheService } from "./ExecutorCacheService"
 
@@ -41,7 +42,7 @@ describe("ExecutorCacheService", () => {
         const second = accounts[1].address
         expect(executorService.get("0x1", testUserAccount.address, 1n).address).toBe(first)
         expect(executorService.get("0x2", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 100)) // allows the timeout to expire
+        await sleep(100) // allows the timeout to expire
         expect(executorService.get("0x3", testUserAccount.address, 3n).address).toBe(first)
         expect(executorService.get("0x4", testUserAccount.address, 4n).address).toBe(second)
     })
@@ -51,15 +52,15 @@ describe("ExecutorCacheService", () => {
         const second = accounts[1].address
         expect(executorService.get("0x1", testUserAccount.address, 1n).address).toBe(first)
         expect(executorService.get("0x2", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x3", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x4", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x5", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x6", testUserAccount.address, 2n).address).toBe(second)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
 
         // new entry (3n), first has expired, second has not
         expect(executorService.get("0x7", testUserAccount.address, 2n).address).toBe(second)
@@ -77,14 +78,14 @@ describe("ExecutorCacheService", () => {
             { address: second, count: 1 },
             { address: first, count: 1 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x2", testUserAccount.address, 2n).address).toBe(second)
         expect(executorService.get("0x2", testUserAccount.address, 3n).address).toBe(first)
         expect(executorService.stats()).toStrictEqual([
             { address: first, count: 2 },
             { address: second, count: 2 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x3", testUserAccount.address, 2n).address).toBe(second)
         expect(executorService.get("0x3", testUserAccount.address, 3n).address).toBe(first)
         expect(executorService.get("0x3", testUserAccount.address, 4n).address).toBe(first)
@@ -92,24 +93,24 @@ describe("ExecutorCacheService", () => {
             { address: second, count: 2 },
             { address: first, count: 3 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x4", testUserAccount.address, 4n).address).toBe(first)
         expect(executorService.stats()).toStrictEqual([
             { address: second, count: 1 },
             { address: first, count: 3 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.get("0x5", testUserAccount.address, 4n).address).toBe(first)
         expect(executorService.stats()).toStrictEqual([
             { address: second, count: 0 },
             { address: first, count: 2 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.stats()).toStrictEqual([
             { address: second, count: 0 },
             { address: first, count: 1 },
         ])
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await sleep(50)
         expect(executorService.stats()).toStrictEqual([
             { address: second, count: 0 },
             { address: first, count: 0 },

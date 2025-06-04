@@ -29,7 +29,8 @@ interface IAccount {
      * it should still consume at least as much gas as it would if the validation was successful.
      *
      * This function is called directly by {core/EntryPoint.submit} and should revert with
-     * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint.
+     * {interfaces/EventsAndErrors.NotFromEntryPoint} if not called from an authorized entrypoint. The
+     * account must only accept boops from a single entrypoint, as the entrypoint manages the nonces.
      *
      * This function is otherwise not allowed to revert. The EntryPoint is able to cope with that
      * scenario, but submitters will mark the account as broken or malicious in that case.

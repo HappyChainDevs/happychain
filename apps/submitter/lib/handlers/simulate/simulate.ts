@@ -74,7 +74,7 @@ export async function simulate(
                 }
         }
 
-        await simulationCache.insertSimulation({ entryPoint, boop }, output)
+        await simulationCache.set(boopHash, output)
         logger.trace("Finished simulation with output", boopHash, output)
         return output
     } catch (error) {

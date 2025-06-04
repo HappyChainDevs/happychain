@@ -4,7 +4,7 @@ import type { WaitForReceiptInput, WaitForReceiptOutput } from "./types"
 
 export async function waitForReceipt(input: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
     try {
-        return await receiptService.waitForInclusion(input)
+        return await receiptService.waitForInclusion({ boopHash: input.boopHash })
     } catch (error) {
         return outputForGenericError(error)
     }

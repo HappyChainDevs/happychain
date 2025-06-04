@@ -4,6 +4,7 @@ import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import {
+    type EvmTxInfo,
     boopNonceManager,
     boopStore,
     computeHash,
@@ -12,7 +13,6 @@ import {
     findExecutionAccount,
     receiptService,
 } from "#lib/services"
-import type { EvmTxInfo } from "#lib/services/BoopReceiptService"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { walletClient } from "#lib/utils/clients"
@@ -103,7 +103,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 const account = findExecutionAccount(boop)
                 logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
-                const evmTxInfoPartial: Omit<EvmTxInfo, "evmTxHash" | "to"> = {
+                const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
                     nonce:
                         replacedTx?.nonce ??
                         (await evmNonceManager.consume({
@@ -123,7 +123,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                     abi: abis.EntryPoint,
                     functionName: "submit",
                     gas: BigInt(simulation.gas),
-                    ...evmTxInfoPartial,
+                    ...partialEvmTxInfo,
                 })
 
                 logger.trace("Successfully submitted", boopHash, evmTxHash)
@@ -131,8 +131,9 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
                 // We need to monitor the receipt to detect if we're stuck, and to be able to construct the receipt
                 // (requires knowing the txHash).
-                const evmTxInfo = { ...evmTxInfoPartial, to: entryPoint, evmTxHash }
-                const receiptPromise = receiptService.waitForInclusion({ boopHash, boop, evmTxInfo, timeout })
+                const evmTxInfo = { ...partialEvmTxInfo, to: entryPoint, evmTxHash }
+                const args = { boopHash, boop, entryPoint, evmTxInfo, timeout }
+                const receiptPromise = receiptService.waitForInclusion(args)
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
                 return { ...outputForGenericError(error), stage: "submit" }
