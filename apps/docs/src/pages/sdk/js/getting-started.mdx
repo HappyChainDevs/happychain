@@ -67,6 +67,11 @@ The most common examples are below, but it should be fully compatible with most 
 
 :::code-group
 
+```ts [Vanilla] twoslash
+import { happyProvider } from "@happy.tech/core"
+happyProvider.request({ method: "eth_requestAccounts" }) // [!code focus]
+```
+
 ```ts [Viem] twoslash
 import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/core"
 
