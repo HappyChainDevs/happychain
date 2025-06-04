@@ -42,6 +42,7 @@ export type GetPendingSuccess = {
 /** Information about a pending boop. */
 export type PendingBoopInfo = {
     boopHash: Hash
+    entryPoint: Address
     nonceTrack: UInt256
     nonceValue: UInt256
     /** Whether the boop has been submitted to the blockchain yet. */

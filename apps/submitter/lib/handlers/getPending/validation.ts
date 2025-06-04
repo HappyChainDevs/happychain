@@ -15,6 +15,7 @@ const getPendingParam = type({
 // TODO this needs entryPoint
 const pendingBoopInfo = type({
     boopHash: Hash,
+    entryPoint: Address,
     nonceTrack: UInt256,
     nonceValue: UInt256,
     submitted: "boolean",

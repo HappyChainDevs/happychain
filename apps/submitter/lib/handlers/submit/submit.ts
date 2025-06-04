@@ -42,7 +42,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
     const boopHash = computeHash(boop)
     try {
-        const [ogBoop, ogBoopError] = getOriginalBoop(boop, replacedTx)
+        const [ogBoop, ogBoopError] = getOriginalBoop(input)
         if (ogBoopError) return ogBoopError
 
         logger.trace("Submitting boop", boopHash)
@@ -146,7 +146,11 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
     }
 }
 
-function getOriginalBoop(boop: Boop, replacedTx?: EvmTxInfo): [Boop, undefined] | [undefined, SubmitError] {
+function getOriginalBoop({
+    boop,
+    entryPoint,
+    replacedTx,
+}: SubmitInternalInput): [Boop, undefined] | [undefined, SubmitError] {
     const ogBoop = boopStore.getByHash(computeHash(boop))
 
     if (replacedTx) {
@@ -163,7 +167,7 @@ function getOriginalBoop(boop: Boop, replacedTx?: EvmTxInfo): [Boop, undefined] 
 
     if (!ogBoop) {
         // This is the first time we see the boop, save it, then return the frozen version from the store.
-        boopStore.set(boop)
+        boopStore.set(boop, entryPoint ?? deployment.EntryPoint)
         return [boopStore.getByHash(computeHash(boop))!, undefined]
     }
 
