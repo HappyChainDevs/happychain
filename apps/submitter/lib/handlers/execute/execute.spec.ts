@@ -299,8 +299,8 @@ describe("submitter_execute", () => {
         it("executes 50 'mint token' tx's quickly and successfully.", async () => {
             const count = 50
             // test only works if submitter is configured to allow more than 50
-            expect(env.MAX_PENDING_PER_TRACK).toBeGreaterThanOrEqual(count)
-            expect(env.MAX_TOTAL_PENDING).toBeGreaterThanOrEqual(count)
+            expect(env.MAX_BLOCKED_PER_TRACK).toBeGreaterThanOrEqual(count)
+            expect(env.MAX_TOTAL_BLOCKED).toBeGreaterThanOrEqual(count)
 
             const transactions = await Promise.all(
                 Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
