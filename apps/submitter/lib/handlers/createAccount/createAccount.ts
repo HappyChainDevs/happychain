@@ -10,10 +10,11 @@ import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
 import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
 import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
+import { traceFunction } from "#lib/telemetry/traces.ts"
 
 const walletClient = createWalletClient({ ...config, account: accountDeployer })
 
-export async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
+async function _createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
         const predictedAddress = computeHappyAccountAddress(salt, owner)
         logger.trace("Predicted account address for owner", predictedAddress, owner, salt)
@@ -76,3 +77,5 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
         return { ...outputForGenericError(error), owner, salt }
     }
 }
+
+export const createAccount = traceFunction(_createAccount)
