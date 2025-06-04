@@ -67,6 +67,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             return await sendToPublicClient(app, request.payload)
         }
 
+        case "wallet_sendTransaction":
         case "eth_sendTransaction": {
             checkUser(user)
             const tx = checkedTx(request.payload.params[0])
