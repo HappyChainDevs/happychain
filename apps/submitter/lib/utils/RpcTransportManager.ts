@@ -110,7 +110,6 @@ export class RpcTransportManager {
                     const transportFactory = webSocket(url, {
                         key: instanceKey,
                         name: `RpcManager WS ${this.#currentWsIndex}`,
-                        timeout: 5000, // Example explicit timeout for Viem's transport
                     })
                     const transportInstance = transportFactory({
                         chain: this.#chain,
@@ -181,14 +180,8 @@ export class RpcTransportManager {
                     const transportFactory = http(url, {
                         key: instanceKey,
                         name: `RpcManager HTTP ${this.#currentHttpIndex}`,
-                        timeout: 5000, // Example explicit timeout for Viem's transport
                     })
                     const transportInstance = transportFactory({ chain: this.#chain }) as InternalHttpTransport
-
-                    // The 'request' method is directly on the transportInstance for HTTP
-                    const testBlock = (await transportInstance.request({ method: "eth_blockNumber" })) as string
-                    if (testBlock === undefined || testBlock === null)
-                        throw new Error("HTTP transport validation failed (eth_blockNumber returned null/empty).")
 
                     this.#activeTransport = transportInstance
                     this.#activeTransportUrl = url
