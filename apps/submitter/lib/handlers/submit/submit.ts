@@ -7,7 +7,6 @@ import {
     boopNonceManager,
     boopStore,
     computeHash,
-    dbService,
     evmNonceManager,
     findExecutionAccount,
     receiptService,
@@ -76,10 +75,6 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
         mutateBoopGasFromSimulation(ogBoop, boop, simulation)
 
-        // We'll save again if we re-simulate, but it's important to do this before returning on the early exit path
-        // so that we can service incoming waitForReceipt requests.
-        await dbService.saveBoop(entryPoint, boop)
-
         const afterSimulationPromise = (async (): Promise<SubmitInternalOutput> => {
             try {
                 if (simulation.futureNonceDuringSimulation && !replacedTx && boopNonceManager.isBlocked(boop)) {
@@ -94,7 +89,6 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                         return { ...simulation, stage: "simulate" }
                     }
                     mutateBoopGasFromSimulation(ogBoop, boop, simulation)
-                    await dbService.saveBoop(entryPoint, boop)
                 } else {
                     boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue)
                 }
