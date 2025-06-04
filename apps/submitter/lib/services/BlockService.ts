@@ -69,14 +69,15 @@ export class BlockService {
         blockLogger.trace("New subscription registered for block updates.")
         this.onBlockCallbacks.add(callback)
 
-        if (this.#currentBlock) {
-            blockLogger.trace("Invoking callback immediately with current block for new subscriber.")
-            Promise.resolve()
-                .then(() => callback(this.#currentBlock!))
-                .catch((e) => {
-                    blockLogger.error("Error in immediate onBlock callback invocation", e)
-                })
-        }
+        // potential fastlane for the current block- do we need/want this?
+        // if (this.#currentBlock) {
+        //     blockLogger.trace(`Invoking callback immediately with current block (${this.#currentBlock.number})for new subscriber.`)
+        //     Promise.resolve()
+        //         .then(() => callback(this.#currentBlock!))
+        //         .catch((e) => {
+        //             blockLogger.error("Error in immediate onBlock callback invocation", e)
+        //         })
+        // }
 
         return () => {
             blockLogger.trace("Unsubscribed from block updates.")
