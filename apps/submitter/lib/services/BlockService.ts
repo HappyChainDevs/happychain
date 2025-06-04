@@ -1,24 +1,61 @@
 import { promiseWithResolvers, sleep } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
-import type { OnBlockParameter, WatchBlocksReturnType, WebSocketTransport } from "viem"
-import { publicClient, webSocketTransports } from "#lib/utils/clients"
+import type { OnBlockParameter, Transport, TransportConfig } from "viem"
+import type { RpcBlock } from "viem"
+import { env } from "#lib/env"
+import { formatBlock } from "viem/utils"
+import { WebSocketTransportManager } from "#lib/utils/WebSocketTransportManager" 
+import { chain, type publicClient } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
 export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "latest">
+interface ViemWebSocketTransportValue {
+    subscribe(args: {
+        params: ["newHeads"]
+        onData: (data: RpcBlock) => void
+        onError?: (error: Error) => void
+    }): Promise<{ unsubscribe: () => Promise<boolean> }>
+}
+
+
+type SpecificSubscribeTransport = Transport<"webSocket"> & {
+    value: ViemWebSocketTransportValue | undefined // value can be undefined if connection fails
+    config: TransportConfig<"webSocket">
+}
+
+// Timeout for detecting a stale subscription if no new blocks are received.
+const STALE_SUBSCRIPTION_TIMEOUT_MS = 60_000 // 60 seconds
+// Pause duration if the transport manager cannot provide a transport (e.g., all URLs failed)
+const NO_TRANSPORT_PAUSE_MS = 60_000
+
 export class BlockService {
     #currentBlock?: BlockHeader
     #previousBlock?: BlockHeader
 
+    #activeSubscription: { unsubscribe: () => Promise<boolean> } | null = null
+    #watchdogTimeout: NodeJS.Timeout | null = null
+
+    #transportManager: WebSocketTransportManager
+    #selectedTransportInstance: SpecificSubscribeTransport | null = null
+
     async getCurrentBlock(): Promise<BlockHeader> {
         if (this.#currentBlock) return this.#currentBlock
-        await waitForCondition(() => this.#currentBlock !== undefined)
-        if (!this.#currentBlock) throw new Error("Current block is not set, this should never happen")
+        await waitForCondition(() => this.#currentBlock !== undefined, 100, 30_000)
+        if (!this.#currentBlock)
+            throw new Error("Current block is not set after waiting. Watcher might be unhealthy or no blocks produced.")
         return this.#currentBlock
     }
 
     onBlockCallbacks: Set<(block: BlockHeader) => void> = new Set()
 
     private constructor() {
+        const wsUrls = env.RPC_WS_URLS && Array.isArray(env.RPC_WS_URLS) ? env.RPC_WS_URLS : []
+        if (wsUrls.length === 0) {
+            blockLogger.warn(
+                "BlockService: No WebSocket URLs found in env.RPC_WS_URLS. Real-time block watching via direct transport will be disabled.",
+            )
+        }
+        this.#transportManager = new WebSocketTransportManager(wsUrls, chain)
         void this.#startBlockWatcher()
     }
 
@@ -29,113 +66,227 @@ export class BlockService {
     }
 
     onBlock(callback: (block: BlockHeader) => void): () => void {
-        blockLogger.trace("Subscribed to new blocks")
+        blockLogger.trace("New subscription registered for block updates.")
         this.onBlockCallbacks.add(callback)
 
-        // TODO: do we want this? - If we already have a current block, call the callback immediately
-        // if (this.#currentBlock) callback(this.#currentBlock)
+        if (this.#currentBlock) {
+            blockLogger.trace("Invoking callback immediately with current block for new subscriber.")
+            Promise.resolve()
+                .then(() => callback(this.#currentBlock!))
+                .catch((e) => {
+                    blockLogger.error("Error in immediate onBlock callback invocation", e)
+                })
+        }
+
         return () => {
-            blockLogger.trace("Unsubscribed from new blocks")
+            blockLogger.trace("Unsubscribed from block updates.")
             this.onBlockCallbacks.delete(callback)
         }
     }
 
-    async #startBlockWatcher(): Promise<void> {
-        const initialRetryDelay = 1000 // ms
-        const maxRetryDelay = 30_000 // ms
-        const maxRetries = 5
-        let currentRetry = 0
-        console.log("Starting block watcher with maxRetries", maxRetries)
+    #getTransportUrlForLogging(transport: SpecificSubscribeTransport | null): string {
+        if (transport?.config) {
+            if (typeof transport.config.name === "string" && transport.config.name.length > 0) {
+                return transport.config.name
+            }
+            if (typeof transport.config.key === "string" && transport.config.key.length > 0) {
+                return transport.config.key
+            }
+        }
+        return "unknown transport"
+    }
 
-        // we actually exit loop in catch clause, if ever
-        while (currentRetry < maxRetries) {
-            const { promise, reject } = promiseWithResolvers<void>()
-            const unwatch: WatchBlocksReturnType | null = null
+    #resetWatchdog(rejectPromiseOnTimeout: (reason?: any) => void): void {
+        if (this.#watchdogTimeout) {
+            clearTimeout(this.#watchdogTimeout)
+        }
+        this.#watchdogTimeout = setTimeout(() => {
+            const transportUrl = this.#getTransportUrlForLogging(this.#selectedTransportInstance)
+            blockLogger.warn(
+                `Block watcher watchdog: No block received from ${transportUrl} for ${STALE_SUBSCRIPTION_TIMEOUT_MS / 1000}s. Assuming stale subscription.`,
+            )
+            rejectPromiseOnTimeout(new Error(`Watchdog: Stale subscription on ${transportUrl}.`))
+        }, STALE_SUBSCRIPTION_TIMEOUT_MS)
+    }
+
+    #clearWatchdog(): void {
+        if (this.#watchdogTimeout) {
+            clearTimeout(this.#watchdogTimeout)
+            this.#watchdogTimeout = null
+        }
+    }
+
+    async #cleanupSubscription(): Promise<void> {
+        blockLogger.trace("Cleaning up existing block subscription...")
+        this.#clearWatchdog()
+
+        if (this.#activeSubscription) {
             try {
-                const transportCandidate = publicClient.transport.transports[0]?.value
-                console.log("Using transportCandidate:", transportCandidate)
-                if (
-                    transportCandidate &&
-                    "subscribe" in transportCandidate &&
-                    typeof (transportCandidate as any).subscribe === "function"
-                ) {
-                    type ViemWebSocketTransportLike = {
-                        getSocket(): Promise<WebSocket>
-                        getRpcClient(): Promise<any>
-                        subscribe: (args: {
-                            params: string[]
-                            onData: (data: any) => void
-                            onError?: (error: any) => void
-                        }) => Promise<() => Promise<void>>
-                    }
+                const transportUrl = this.#getTransportUrlForLogging(this.#selectedTransportInstance)
+                blockLogger.info(`Attempting to unsubscribe from newHeads via ${transportUrl}.`)
+                const unsubscribed = await this.#activeSubscription.unsubscribe()
+                if (unsubscribed) {
+                    blockLogger.info(`Successfully unsubscribed from newHeads via ${transportUrl}.`)
+                } else {
+                    blockLogger.warn(`Failed to unsubscribe from newHeads via ${transportUrl} or already unsubscribed.`)
+                }
+            } catch (e) {
+                blockLogger.error("Error unsubscribing from newHeads via transport", e)
+            }
+            this.#activeSubscription = null
+        }
+        this.#selectedTransportInstance = null
+        blockLogger.trace("Subscription cleanup finished.")
+    }
 
-                    const webSocketTransport = transportCandidate as unknown as ViemWebSocketTransportLike
+    async #startBlockWatcher(): Promise<void> {
+        const initialRetryDelay = 1000
+        const maxRetryDelay = 30_000
+        const maxRetriesPerTransportInstance = 3
 
-                    blockLogger.trace("Attempting direct subscription via transport:", webSocketTransport)
-                    const unsubscribeFnPromise = webSocketTransport.subscribe({
+        while (true) {
+            const genericTransport = await this.#transportManager.getTransport()
+
+            if (!genericTransport) {
+                blockLogger.error("BlockService: Transport manager could not provide a WebSocket transport. Pausing.")
+                await this.#cleanupSubscription()
+                await sleep(NO_TRANSPORT_PAUSE_MS)
+                continue
+            }
+
+            this.#selectedTransportInstance = genericTransport as SpecificSubscribeTransport
+
+            // make ts happy with the type
+            if (
+                !this.#selectedTransportInstance.value ||
+                typeof this.#selectedTransportInstance.value.subscribe !== "function"
+            ) {
+                blockLogger.error(
+                    `BlockService: Selected transport instance from manager (key: ${this.#selectedTransportInstance.config.key}) is missing 'value.subscribe'. Cycling.`,
+                )
+                await this.#cleanupSubscription()
+                const nextGenericTransport = await this.#transportManager.cycleToNextTransport()
+                if (!nextGenericTransport) {
+                    blockLogger.warn(
+                        "BlockService: Transport manager could not provide a new transport after cycling. Outer loop will pause and retry.",
+                    )
+                } // else the next iteration will pick it up
+                continue
+            }
+
+            const currentTransportUrl = this.#getTransportUrlForLogging(this.#selectedTransportInstance)
+            blockLogger.info(`BlockService attempting to use WebSocket transport: ${currentTransportUrl}`)
+
+            let retriesOnCurrentInstance = 0
+            while (retriesOnCurrentInstance < maxRetriesPerTransportInstance) {
+                const { promise, reject } = promiseWithResolvers<void>()
+                try {
+                    blockLogger.info(
+                        `Attempt ${retriesOnCurrentInstance + 1}/${maxRetriesPerTransportInstance} to subscribe via ${currentTransportUrl}.`,
+                    )
+
+                    const subscription = await this.#selectedTransportInstance.value.subscribe({
                         params: ["newHeads"],
-                        // Use an arrow function for onData to preserve 'this' context
-                        onData: async (data: any) => {
-                            blockLogger.trace("Received new block data via direct subscription", data)
+                        onData: (data: any) => {
+                            try {
+                                this.#resetWatchdog(reject)
+                                const header = formatBlock(data.result) as BlockHeader
+                                blockLogger.trace(
+                                    `Received new block #${header.number?.toString()} via ${currentTransportUrl} `,
+                                )
+                                console.log(header)
 
-                            if (data.subscription && data.result) {
-                                const header = data.result as BlockHeader
+                                retriesOnCurrentInstance = 0
 
                                 if (
                                     this.#currentBlock &&
                                     this.#previousBlock &&
-                                    this.#currentBlock.number !== this.#previousBlock.number + 1n
+                                    this.#currentBlock.number &&
+                                    header.number &&
+                                    this.#currentBlock.number + 1n !== header.number
                                 ) {
                                     blockLogger.warn(
-                                        `Detected a gap in block numbers: currentBlock=${this.#currentBlock.number}, previousBlock=${this.#previousBlock.number}. Skipping block ${header.number}.`,
+                                        `Gap in block numbers on ${currentTransportUrl}: new=${header.number}, current=${this.#currentBlock.number}, prev=${this.#previousBlock.number}.`,
                                     )
-                                    // TODO: handle this! (manually fetch missed blocks, calling callbacks on each sequentially?)
                                 }
                                 this.#previousBlock = this.#currentBlock
-                                this.#currentBlock = header // Assign the new header
-
-                                this.onBlockCallbacks.forEach(async (callbackFn) => {
+                                this.#currentBlock = header
+                                this.onBlockCallbacks.forEach(async (cb) => {
                                     try {
-                                        await callbackFn(header)
+                                        blockLogger.trace(`Invoking onBlock callback for block #${header.number}.`)
+                                        await cb(header)
                                     } catch (e) {
                                         blockLogger.error("Error in onBlockCallback", e)
                                     }
                                 })
+                            } catch (e) {
+                                blockLogger.error(`Error processing data from ${currentTransportUrl}:`, e)
                             }
                         },
-
-                        onError: (error: any) => {
-                            blockLogger.error("Error in direct WebSocket subscription", error)
-                            reject(error) // This will trigger the catch block and retry logic
+                        onError: (error: Error) => {
+                            blockLogger.error(`Subscription error from ${currentTransportUrl}:`, error)
+                            reject(error)
                         },
                     })
-                    // unwatch = await unsubscribeFnPromise; // Note: this unwatch is different from watchBlocks's unwatch
-                } else {
+
+                    this.#activeSubscription = { unsubscribe: subscription.unsubscribe }
+                    blockLogger.info(`Successfully subscribed to newHeads via ${currentTransportUrl}.`)
+                    this.#resetWatchdog(reject)
+
+                    await promise
                     blockLogger.warn(
-                        "The first transport in the fallback array is not a subscribable WebSocket transport. " +
-                            "Falling back to default behavior or erroring. " +
-                            "Current transport value:",
-                        transportCandidate,
+                        `Subscription promise resolved unexpectedly for ${currentTransportUrl}. Re-establishing.`,
                     )
-                    // To ensure retry logic is triggered if this path is an error:
-                    throw new Error("Failed to find a subscribable WebSocket transport for direct subscription.")
+                    reject(new Error("Subscription promise resolved unexpectedly"))
+                } catch (error: any) {
+                    blockLogger.error(
+                        `Failed attempt ${retriesOnCurrentInstance + 1} for ${currentTransportUrl}: ${error.message}`,
+                    )
+                    await this.#cleanupSubscription()
+
+                    retriesOnCurrentInstance++
+                    if (retriesOnCurrentInstance < maxRetriesPerTransportInstance) {
+                        const delay = Math.min(initialRetryDelay * 2 ** (retriesOnCurrentInstance - 1), maxRetryDelay)
+                        blockLogger.warn(`Retrying connection to ${currentTransportUrl} in ${delay / 1000}s.`)
+                        await sleep(delay)
+
+                        const newGenericTransport = await this.#transportManager.getTransport()
+                        if (!newGenericTransport) {
+                            blockLogger.error(
+                                "BlockService: Lost transport from manager during retry. Will try to get a new one in outer loop.",
+                            )
+                            this.#selectedTransportInstance = null
+                            break
+                        }
+                        this.#selectedTransportInstance = newGenericTransport as SpecificSubscribeTransport
+                        if (
+                            !this.#selectedTransportInstance.value ||
+                            typeof this.#selectedTransportInstance.value.subscribe !== "function"
+                        ) {
+                            blockLogger.error(
+                                `BlockService: Re-acquired transport (key: ${this.#selectedTransportInstance.config.key}) is missing 'value.subscribe'. Breaking inner retry loop.`,
+                            )
+                            this.#selectedTransportInstance = null
+                            break
+                        }
+                    } else {
+                        blockLogger.error(
+                            `All ${maxRetriesPerTransportInstance} attempts failed for ${currentTransportUrl}. Requesting manager to cycle.`,
+                        )
+                        const nextGenericTransport = await this.#transportManager.cycleToNextTransport()
+                        // No need to assign to this.#selectedTransportInstance here,
+                        // the outer loop will call getTransport() which handles assignment.
+                        if (!nextGenericTransport) {
+                            blockLogger.warn(
+                                "BlockService: Transport manager could not provide a new transport after cycling. Outer loop will pause and retry.",
+                            )
+                        }
+                        break
+                    }
                 }
-                blockLogger.trace("Block watcher started successfully.")
-                await promise // block forever unless an error occurs
-            } catch (e) {
-                // TODO Can we make this more robust with a fallback to another RPC?
-                //      We have Viem fallback enabled, but how does it work with watchblocks and websocket?
-                // if (unwatch) unwatch()
-                // else blockLogger.error("Error starting block watcher", e)
-                if (currentRetry === maxRetries)
-                    throw new Error(`Unable to restart block watch after ${maxRetries} attempts`)
-                currentRetry++
-                const delay = Math.min(initialRetryDelay * 2 ** (currentRetry - 1), maxRetryDelay) // exponential backoff
-                blockLogger.warn(
-                    `Retrying block watcher in ${delay / 1000} seconds (Attempt ${currentRetry}/${maxRetries})`,
-                )
-                await sleep(delay)
             }
+
+            await this.#cleanupSubscription()
         }
     }
 }
