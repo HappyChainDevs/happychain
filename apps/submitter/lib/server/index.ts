@@ -15,11 +15,13 @@ import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
 import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
+import { traceMiddleware } from "#lib/telemetry/traces"
 
 await resyncAllAccounts()
 
 // Create the app but don't configure routes yet - we'll do that after resync
 const app = new Hono()
+    .use(traceMiddleware)
     .use(
         "*",
         cors({
