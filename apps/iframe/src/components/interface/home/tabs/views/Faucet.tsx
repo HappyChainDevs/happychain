@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
+import { cx } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import { useCallback, useRef, useState } from "react"
 import { getBalanceQueryKey } from "wagmi/query"
@@ -15,7 +16,7 @@ const FaucetView = () => {
     const queryClient = useQueryClient()
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
     const [message, setMessage] = useState("")
-    const turnstileRef = useRef<HTMLDivElement | null>(null)
+    const turnstileRef = useRef<HTMLDivElement>(null)
 
     const { loading: turnstileLoading, token: getToken } = useTurnstile({
         lazy: true,
@@ -67,13 +68,13 @@ const FaucetView = () => {
                 </Button>
                 {status !== "idle" && (
                     <p
-                        className={`mt-2 rounded px-2 py-1 w-full break-words whitespace-normal overflow-hidden text-xs ${
-                            status === "success"
-                                ? "bg-green-100 text-green-800"
-                                : status === "error"
-                                  ? "bg-red-100 text-red-800"
-                                  : ""
-                        }`}
+                        className={cx(
+                            "mt-2 rounded px-2 py-1 w-full break-words whitespace-normal overflow-hidden text-xs",
+                            {
+                                "bg-success/50 text-success": status === "success",
+                                "bg-error/50 text-error": status === "error",
+                            },
+                        )}
                     >
                         {message}
                     </p>

@@ -19,6 +19,7 @@ export const WalletContentInfo = () => {
                     <Tab title={ContentType.TOKENS} />
                     {/*<Tab title={ContentType.GAMES} />*/}
                     <Tab title={ContentType.ACTIVITY} isDataLoading={isPending} />
+                    <Tab title={ContentType.FAUCET} />
                     <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
                 </Tabs.List>
             </div>
