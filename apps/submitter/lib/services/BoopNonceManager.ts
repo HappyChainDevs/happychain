@@ -9,7 +9,7 @@ import { computeHash } from "../utils/boop/computeHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
-type PendingBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
+type BlockedBoop = { boopHash: Hash; resolve: (value: undefined | SubmitError) => void }
 
 // TODO the nonce manager should also key on the entryPoint
 
@@ -17,21 +17,21 @@ export class BoopNonceManager {
     #usedCapacity: bigint
     readonly #nonceMutexes: Map2<Address, NonceTrack, Mutex>
     readonly #nonces: Map2<Address, NonceTrack, NonceValue>
-    readonly #pendingBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, PendingBoop>>
+    readonly #blockedBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, BlockedBoop>>
 
-    // Invariant: `#nonces.get(account, nonceTrack)` and `#pendingBoopsMaps.get(account, nonceTrack)`
+    // Invariant: `#nonces.get(account, nonceTrack)` and `#blockedBoopsMaps.get(account, nonceTrack)`
     // are both undefined or defined at the same time.
 
     constructor() {
         this.#usedCapacity = 0n
         this.#nonceMutexes = new Map2()
         this.#nonces = new Map2()
-        this.#pendingBoopsMap = new Map2()
+        this.#blockedBoopsMap = new Map2()
     }
 
     /** Returns true if the boop (identifier by account/nonceTrack/nonceValue only) is currently blocked. */
     has(boop: Boop): boolean {
-        return this.#pendingBoopsMap.get(boop.account, boop.nonceTrack)?.has(boop.nonceValue) ?? false
+        return this.#blockedBoopsMap.get(boop.account, boop.nonceTrack)?.has(boop.nonceValue) ?? false
     }
 
     /**
@@ -43,7 +43,7 @@ export class BoopNonceManager {
         const currentNonce = this.#nonces.get(account, nonceTrack)
         if (!currentNonce || nonceValue > currentNonce) {
             this.#nonces.set(account, nonceTrack, nonceValue)
-            setTimeout(() => this.#pruneNonce(account, nonceTrack), env.MAX_SUBMIT_PENDING_TIME)
+            setTimeout(() => this.#pruneNonce(account, nonceTrack), env.MAX_BLOCKED_TIME)
         }
     }
 
@@ -61,10 +61,10 @@ export class BoopNonceManager {
      * boops for the pair). If a nonceValue is provided, unconditionally removes the boop blocked on it.
      */
     #pruneNonce(account: Address, nonceTrack: NonceTrack, nonceValue?: NonceValue) {
-        const track = this.#pendingBoopsMap.get(account, nonceTrack)
+        const track = this.#blockedBoopsMap.get(account, nonceTrack)
         if (track && nonceValue) track.delete(nonceValue)
         if (track?.size === 0) {
-            this.#pendingBoopsMap.delete(account, nonceTrack)
+            this.#blockedBoopsMap.delete(account, nonceTrack)
             this.#nonces.delete(account, nonceTrack)
             this.#nonceMutexes.delete(account, nonceTrack)
         }
@@ -74,25 +74,25 @@ export class BoopNonceManager {
         const { account, nonceTrack, nonceValue } = boop
         const localNonce = await this.#getLocalNonce(entryPoint, account, nonceTrack)
 
-        // Not pending anymore, proceed immediately.
+        // Not blocked anymore, proceed immediately.
         if (nonceValue === localNonce) return
 
         // Check if we can wait for the nonce.
-        const trackSize = this.#pendingBoopsMap.get(boop.account, boop.nonceTrack)?.size ?? 0
-        if (trackSize >= env.MAX_PENDING_PER_TRACK) {
+        const trackSize = this.#blockedBoopsMap.get(boop.account, boop.nonceTrack)?.size ?? 0
+        if (trackSize >= env.MAX_BLOCKED_PER_TRACK) {
             return this.#makeSubmitError(SubmitterError.BufferExceeded)
         }
-        if (this.#usedCapacity >= env.MAX_TOTAL_PENDING) {
+        if (this.#usedCapacity >= env.MAX_TOTAL_BLOCKED) {
             return this.#makeSubmitError(SubmitterError.OverCapacity)
         }
-        if (nonceValue >= localNonce + BigInt(env.MAX_PENDING_PER_TRACK)) {
+        if (nonceValue >= localNonce + BigInt(env.MAX_BLOCKED_PER_TRACK)) {
             return this.#makeSubmitError(SubmitterError.NonceTooFarAhead)
         }
 
         // If an old boop exists for the nonce, signal that it has been replaced.
         // NOTE: This is here for robustness & future-proofness, but this path should not be reachable,
         // as we reject boops that we're already processing upstream in `submitInternal`.
-        const previouslyBlocked = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
+        const previouslyBlocked = this.#blockedBoopsMap.get(account, nonceTrack)?.get(nonceValue)
         if (previouslyBlocked) {
             logger.error("Replacing previously blocked nonce — most likely a bug", account, nonceTrack, nonceValue)
             previouslyBlocked.resolve(this.#makeSubmitError(SubmitterError.BoopReplaced))
@@ -101,12 +101,12 @@ export class BoopNonceManager {
         const boopHash = computeHash(boop)
         const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
         const timeout = setTimeout(() => {
-            logger.trace("Timed out while waiting to process pending boop", boopHash)
+            logger.trace("Timed out while waiting to process blocked boop", boopHash)
             this.#pruneNonce(account, nonceTrack, nonceValue)
             resolve(this.#makeSubmitError(SubmitterError.SubmitTimeout))
-        }, env.MAX_SUBMIT_PENDING_TIME)
+        }, env.MAX_BLOCKED_TIME)
 
-        this.#pendingBoopsMap
+        this.#blockedBoopsMap
             .getOrSet(account, nonceTrack, () => new Map())
             .set(nonceValue, {
                 boopHash,
@@ -147,7 +147,7 @@ export class BoopNonceManager {
     }
 
     /**
-     * Increments the local nonce for the account and nonceTrack, unblocking a pending boop if necessary.
+     * Increments the local nonce for the account and nonceTrack, unblocking a blocked boop if necessary.
      */
     public incrementLocalNonce(boop: Boop): void {
         const { account, nonceTrack, nonceValue } = boop
@@ -158,9 +158,9 @@ export class BoopNonceManager {
 
     #setLocalNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
         this.#nonces.set(account, nonceTrack, nonceValue)
-        const pendingBoop = this.#pendingBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        if (!pendingBoop) return
-        pendingBoop.resolve(undefined)
+        const blockedBoop = this.#blockedBoopsMap.get(account, nonceTrack)?.get(nonceValue)
+        if (!blockedBoop) return
+        blockedBoop.resolve(undefined)
     }
 
     async #getLocalNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<NonceValue> {
@@ -196,13 +196,13 @@ export class BoopNonceManager {
      * to invalidate all blocked boops in the process). Called whenever we detect a nonce too low during simulation.
      */
     async resyncNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<void> {
-        // No boop pending on the track, so no local nonce managed, no point to resync.
-        if (!this.#pendingBoopsMap.get(account, nonceTrack)) return
+        // No boop blocked on the track, so no local nonce managed, no point to resync.
+        if (!this.#blockedBoopsMap.get(account, nonceTrack)) return
 
         const onchainNonce = await this.#getOnchainNonce(entryPoint, account, nonceTrack)
         // Recheck after await.
-        const pendingMap = this.#pendingBoopsMap.get(account, nonceTrack)
-        if (!pendingMap) return
+        const blockedMap = this.#blockedBoopsMap.get(account, nonceTrack)
+        if (!blockedMap) return
 
         const localNonce = this.#nonces.get(account, nonceTrack)
         if (!localNonce) throw Error("BUG: resyncNonce") // cf. invariant
@@ -210,12 +210,12 @@ export class BoopNonceManager {
             logger.trace("Onchain nonce is ahead of local nonce — resyncing.", account, nonceTrack)
             this.#setLocalNonce(account, nonceTrack, onchainNonce)
             // biome-ignore format: keep on one line
-            const pending = pendingMap.entries().toArray().sort(([nonceA], [nonceB]) => Number(nonceA - nonceB)) ?? []
-            for (const [nonceValue, pendingBoop] of pending) {
-                // Only consider pending nonces smaller than the new nonce — the `]localNonce, onchainNonce[` range.
+            const blocked = blockedMap.entries().toArray().sort(([nonceA], [nonceB]) => Number(nonceA - nonceB)) ?? []
+            for (const [nonceValue, blockedBoop] of blocked) {
+                // Only consider blocked nonces smaller than the new nonce — the `]localNonce, onchainNonce[` range.
                 if (nonceValue <= localNonce) continue
                 if (nonceValue >= onchainNonce) break
-                pendingBoop.resolve(this.#makeSubmitError(SubmitterError.ExternalSubmit))
+                blockedBoop.resolve(this.#makeSubmitError(SubmitterError.ExternalSubmit))
                 this.#pruneNonce(account, nonceTrack, nonceValue)
             }
         }

@@ -18,19 +18,19 @@ export const limitsSchema = z.object({
      * Maximum number of boops that be queued up for a specific (account, nonceTrack) pair while waiting for boops
      * with lower nonces to be submitted. Defaults to 50.
      */
-    MAX_PENDING_PER_TRACK: z.coerce.number().positive().default(50),
+    MAX_BLOCKED_PER_TRACK: z.coerce.number().positive().default(50),
 
     /**
      * Maximum number of boops that be queued up in the submitter accross all accounts
      * while waiting for boops with lower nonces to be submitted. Defaults to 10_000.
      */
-    MAX_TOTAL_PENDING: z.coerce.number().positive().default(10_000),
+    MAX_TOTAL_BLOCKED: z.coerce.number().positive().default(10_000),
 
     /**
-     * The maximum amount of time in milliseconds a transaction can remain pending before before being submitted
-     * (i.e. waiting for previous transactions to be submitted or a nonce gap to close). Defaults to 30 seconds.
+     * The maximum amount of time in milliseconds a transaction can remain blocked before being submitted (i.e.
+     * waiting for previous transactions to be submitted or a nonce gap to close). Defaults to 30 seconds.
      */
-    MAX_SUBMIT_PENDING_TIME: z.coerce.number().positive().default(30_000),
+    MAX_BLOCKED_TIME: z.coerce.number().positive().default(30_000),
 
     /**
      * The amount of simulation results cached in memory. This is used to supply a useful
@@ -46,8 +46,8 @@ export const limitsSchema = z.object({
     SIMULATION_CACHE_TTL: z.coerce.number().positive().default(30_000),
 
     /**
-     * The amount of time to wait before a submitted transaction is considered stuck
-     * and a replacement transaction is sent. Defaults to 3 seconds.
+     * The amount of time to wait before a submitted EVM transaction (carrying a boop or cancelling a previous
+     * transaction) is considered stuck and a replacement transaction is sent. Defaults to 3 seconds.
      */
     STUCK_TX_WAIT_TIME: z.coerce.number().positive().default(3_000),
 })
