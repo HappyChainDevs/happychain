@@ -77,7 +77,7 @@ async function waitForTransactionReceipt(hash: `0x${string}`): Promise<Transacti
     })
 
     try {
-        // We must fire once incase it's already been included.
+        // We must fire once in case it's already been included.
         const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
         if (receipt) resolve(receipt)
     } catch (err) {
