@@ -10,6 +10,7 @@ Logger.instance.setLogLevel(defaultLogLevel)
 export const logger = Logger.create("Submitter")
 export const blockLogger = Logger.create("BlockService")
 export const receiptLogger = Logger.create("BoopReceiptService")
+export const resyncLogger = Logger.create("ResyncService")
 export const proxyLogger = Logger.create("proxyServer")
 
 // Don't trace unless enabled by dev, as this fills the logs quick.

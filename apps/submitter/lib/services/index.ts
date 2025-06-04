@@ -9,12 +9,14 @@ import { BoopNonceManager } from "./BoopNonceManager"
 import { BoopReceiptService } from "./BoopReceiptService"
 import { BoopStore } from "./BoopStore"
 import { DatabaseService } from "./DatabaseService"
+import { ResyncService } from "./ResyncService"
 
 //=== Services ==================================================================================
 
 export const dbService = new DatabaseService(db)
 
 export const boopNonceManager = new BoopNonceManager()
+export const resyncService = new ResyncService(boopNonceManager)
 export const boopStore = new BoopStore()
 export const simulationCache = new LruCache<Hash, SimulateOutput>({
     max: env.SIMULATION_CACHE_SIZE,

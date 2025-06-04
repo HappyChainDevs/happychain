@@ -105,4 +105,12 @@ export const gasSchema = z.object({
      * Our last measurement (07 Jun 2025) is 246493 gas used.
      */
     ACCOUNT_CREATION_GAS_LIMIT: z.coerce.bigint().positive().default(300_000n),
+
+    /**
+     * Maximum priority fee (in gwei) to be used for resync operations when
+     * canceling transactions on submitter startup.
+     *
+     * Default to 10 gwei.
+     */
+    MAX_RESYNC_PRIORITY_FEE_GWEI: z.coerce.string().default("10"),
 })
