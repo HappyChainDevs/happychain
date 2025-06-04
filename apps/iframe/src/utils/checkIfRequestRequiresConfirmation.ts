@@ -27,7 +27,7 @@ export function checkIfRequestRequiresConfirmation(
 
     switch (payload.method) {
         // Users don't need to approve permissions that have already been granted.
-
+        case "wallet_sendTransaction":
         case "eth_sendTransaction":
             return !hasPermissions(app, {
                 [Permissions.SessionKey]: { target: payload.params[0].to },

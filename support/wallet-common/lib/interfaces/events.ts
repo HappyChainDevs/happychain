@@ -225,6 +225,7 @@ export type ProviderMsgsFromWallet = {
 
 type RequestExtraDataTypeMap = {
     eth_sendTransaction: SimulateSuccess
+    wallet_sendTransaction: SimulateSuccess
 }
 
 /**

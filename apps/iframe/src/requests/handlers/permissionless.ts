@@ -33,6 +33,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             return getCurrentChain().chainId
         }
 
+        case "wallet_sendTransaction":
         case "eth_sendTransaction": {
             // A permissionless transaction is always a session key transaction!
             const tx = checkedTx(request.payload.params[0])

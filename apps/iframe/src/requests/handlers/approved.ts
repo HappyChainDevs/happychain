@@ -24,6 +24,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
     }
 
     switch (request.payload.method) {
+        case "wallet_sendTransaction":
         case "eth_sendTransaction": {
             const tx = checkedTx(request.payload.params[0])
             return await sendBoop({

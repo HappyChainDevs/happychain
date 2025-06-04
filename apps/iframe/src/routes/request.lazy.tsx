@@ -121,6 +121,7 @@ function Request() {
     switch (req.method as keyof typeof requestLabels) {
         case "personal_sign":
             return <PersonalSign {...props} />
+        case "wallet_sendTransaction":
         case "eth_sendTransaction":
             return <EthSendTransaction {...props} />
         case "wallet_switchEthereumChain":

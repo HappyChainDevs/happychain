@@ -31,7 +31,7 @@ export const EthSendTransaction = ({
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"eth_sendTransaction">) => {
+}: RequestConfirmationProps<"eth_sendTransaction" | "wallet_sendTransaction">) => {
     const tx = params[0]
 
     const user = useAtomValue(userAtom)

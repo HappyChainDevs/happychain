@@ -113,6 +113,7 @@ const unsafeList = new Set([
     // send transactions
     "eth_sendRawTransaction",
     "eth_sendTransaction",
+    "wallet_sendTransaction",
     // cryptography
     "eth_decrypt",
     "eth_getEncryptionPublicKey",
