@@ -8,7 +8,7 @@ import type {
     SimulateOutput,
     SimulateSuccess,
 } from "@happy.tech/boop-sdk"
-import { Map2, Mutex, parseBigInt } from "@happy.tech/common"
+import { Map2, Mutex, getProp, parseBigInt, stringify } from "@happy.tech/common"
 import type { Address, Hash, Hex } from "@happy.tech/common"
 import {
     EIP1474InternalError,
@@ -16,7 +16,7 @@ import {
     EIP1474LimitExceeded,
     EIP1474ResourceNotfound,
     EIP1474TransactionRejected,
-    type HappyRpcError,
+    HappyRpcError,
     RevertRpcError,
 } from "@happy.tech/wallet-common"
 import { parseSignature, zeroAddress } from "viem"
@@ -25,7 +25,7 @@ import { entryPoint } from "#src/constants/contracts"
 import { type BoopCacheEntry, boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { getBoopClient } from "#src/state/boopClient"
-import { type ErrorType, addPendingBoop, markBoopAsFailure, markBoopAsSuccess } from "#src/state/boopHistory"
+import { addPendingBoop, markBoopAsFailed, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { reqLogger } from "#src/utils/logger"
 import { createValidatorExtraData } from "./sessionKeys"
@@ -93,7 +93,6 @@ export async function sendBoop(
     retry = 0, // TODO: set to 1?
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
-    const value = tx.value ? BigInt(tx.value) : 0n
 
     try {
         const boopClient = getBoopClient()
@@ -118,31 +117,25 @@ export async function sendBoop(
         boopCache.putBoop(boopHash, boop)
 
         const signedBoop: Boop = { ...boop, validatorData: await signer(boopHash) }
-        addPendingBoop({ boopHash, value, nonceTrack: signedBoop.nonceTrack, nonceValue: signedBoop.nonceValue })
+        addPendingBoop(boopHash, signedBoop)
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
         if (output.status !== Onchain.Success) throw translateBoopError(output)
-        markBoopAsSuccess(output)
+        markBoopAsSuccess(boopHash, output.receipt)
         return output.receipt.boopHash
-    } catch (error) {
-        reqLogger.info(`boop submission failed — ${retry} attempts left`, error)
+    } catch (err) {
+        reqLogger.info(`boop submission failed — ${retry} attempts left`, err)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
-        if (boopHash) markBoopAsFailure(boopHash, serializeError(error))
-        throw error
-    }
-}
-
-function serializeError(err: unknown): ErrorType | undefined {
-    if (!err) return
-    if (typeof err !== "object") return
-    if (!("message" in err) || !err.message) return
-
-    return {
-        message: err.message.toString(),
-        code:
-            "code" in err && ["number", "string"].includes(typeof err.code) ? (err.code as number | string) : undefined,
+        if (boopHash) {
+            // If the error is a translated boop error, extract its status & description.
+            const isHappyRpcError = err instanceof HappyRpcError
+            const status = (isHappyRpcError && getProp(err.cause, "status", "string")) || "nonBoopError"
+            const error = (isHappyRpcError && getProp(err.cause, "description", "string")) || stringify(err)
+            markBoopAsFailed(boopHash, status, error)
+        }
+        throw err
     }
 }
 
