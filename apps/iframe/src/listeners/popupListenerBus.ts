@@ -18,12 +18,12 @@ window.addEventListener("message", (msg) => {
     switch (msg.data.type) {
         case Msgs.PopupApprove: {
             handleApprovedRequest(msg.data.payload)
-            msg.source?.postMessage("request-close")
+            msg.source?.postMessage("request-end")
             return
         }
         case Msgs.PopupReject: {
             handleRejectedRequest(msg.data.payload)
-            msg.source?.postMessage("request-close")
+            msg.source?.postMessage("request-end")
             return
         }
     }

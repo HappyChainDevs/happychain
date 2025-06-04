@@ -2,14 +2,20 @@ import { DisclosureSection } from "./common/DisclosureSection"
 import { FormattedDetailsLine, Layout, SectionBlock, SubsectionBlock, SubsectionContent } from "./common/Layout"
 
 interface UnknownRequestProps<T = unknown> {
+    requestCount: number
     method: string
     params: T
     reject: () => void
 }
 
-export const UnknownRequest = ({ method, params, reject }: UnknownRequestProps) => {
+export const UnknownRequest = ({ requestCount, method, params, reject }: UnknownRequestProps) => {
     return (
-        <Layout headline={method} description="" actions={{ reject: { children: "Go back", onClick: reject } }}>
+        <Layout
+            requestCount={requestCount}
+            headline={method}
+            description=""
+            actions={{ reject: { children: "Go back", onClick: reject } }}
+        >
             <SectionBlock>
                 <SubsectionBlock variant="error">
                     <SubsectionContent>

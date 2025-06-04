@@ -1,11 +1,10 @@
 import { HappyMethodNames, decodeUrlSafeBase64 } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, Msgs, type PopupMsgs, serializeRpcError } from "@happy.tech/wallet-common"
-import { createLazyFileRoute } from "@tanstack/react-router"
+import { createLazyFileRoute, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
 import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
-import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
 import { PersonalSign } from "../components/requests/PersonalSign"
@@ -14,11 +13,6 @@ import { WalletRequestPermissions } from "../components/requests/WalletRequestPe
 import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
 import { WalletWatchAsset } from "../components/requests/WalletWatchAsset"
 import type { requestLabels } from "../constants/requestLabels"
-
-window.addEventListener("message", (msg) => {
-    if (msg.origin !== window.location.origin) return
-    if (msg.data === "request-close") window.close()
-})
 
 export const Route = createLazyFileRoute("/request")({
     component: Request,
@@ -43,9 +37,48 @@ function makeMessage(type: string, payload: PopupMsgs[Msgs.PopupApprove | Msgs.P
 }
 
 function Request() {
-    const [isLoading, setIsLoading] = useState(false)
     const { args, key, windowId, iframeIndex } = Route.useSearch()
     const req = decodeUrlSafeBase64(args)
+    const navigate = useNavigate()
+    const [queue, setQueue] = useState<string[]>([])
+
+    const closeOrNext = useCallback(
+        (msg: MessageEvent) => {
+            if (msg.origin !== window.location.origin) return
+            if (msg.data === "request-end") {
+                if (!queue.length) {
+                    window.close()
+                } else {
+                    const next = queue[0]
+                    setQueue((q) => q.slice(1))
+                    navigate({ to: next, replace: true })
+                }
+            }
+        },
+        [queue, navigate],
+    )
+
+    useEffect(() => {
+        window.addEventListener("message", closeOrNext)
+        return () => window.removeEventListener("message", closeOrNext)
+    }, [closeOrNext])
+
+    useEffect(() => {
+        const cb = (msg: MessageEvent) => {
+            try {
+                const parsed = JSON.parse(msg.data)
+                if (
+                    parsed.event === "request-queue" &&
+                    typeof parsed.queue === "string" &&
+                    parsed.queue.startsWith(window.location.origin)
+                ) {
+                    setQueue((q) => q.concat(parsed.queue.replace(window.location.origin, "")))
+                }
+            } catch {}
+        }
+        window.addEventListener("message", cb)
+        return () => window.removeEventListener("message", cb)
+    }, [])
 
     const unloadHandler = useCallback(() => {
         const frame = getFrameByIndex(iframeIndex)
@@ -67,14 +100,18 @@ function Request() {
     }, [unloadHandler])
 
     const reject = useCallback(() => {
-        window.close()
-    }, [])
+        if (!queue.length) {
+            window.close()
+        } else {
+            const next = queue[0]
+            setQueue((q) => q.slice(1))
+            navigate({ to: next, replace: true })
+        }
+    }, [queue, navigate])
 
     const accept = useCallback(
         (payload: PopupMsgs[Msgs.PopupApprove]["payload"]) => {
             window.removeEventListener("beforeunload", unloadHandler)
-
-            setIsLoading(true)
 
             const frame = getFrameByIndex(iframeIndex)
 
@@ -103,15 +140,8 @@ function Request() {
         )
     }
 
-    if (isLoading) {
-        return (
-            <div className="flex h-dvh w-full items-center justify-center">
-                <DotLinearWaveLoader />
-            </div>
-        )
-    }
-
     const props = {
+        requestCount: queue.length,
         method: req.method,
         params: req.params,
         reject,

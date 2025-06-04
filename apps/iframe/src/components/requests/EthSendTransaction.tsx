@@ -27,6 +27,7 @@ const MIN_DISPLAY_WEI = 100_000_000_000_000n // 0.0001 HAPPY
 const MIN_DISPLAY_STR = "0.0001"
 
 export const EthSendTransaction = ({
+    requestCount,
     method,
     params,
     reject,
@@ -102,6 +103,7 @@ export const EthSendTransaction = ({
     return (
         <>
             <Layout
+                requestCount={requestCount}
                 headline="Confirm transaction"
                 actions={{
                     accept: {

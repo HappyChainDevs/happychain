@@ -9,6 +9,7 @@ import { userAtom } from "#src/state/user"
 import { getAppURL } from "#src/utils/appURL"
 
 interface LayoutProps extends PropsWithChildren {
+    requestCount: number
     labelHeader?: React.ReactNode
     headline?: React.ReactNode
     description?: React.ReactNode
@@ -18,7 +19,14 @@ interface LayoutProps extends PropsWithChildren {
     }
 }
 
-export const Layout = ({ labelHeader, headline, description, actions: { accept, reject }, children }: LayoutProps) => {
+export const Layout = ({
+    requestCount,
+    labelHeader,
+    headline,
+    description,
+    actions: { accept, reject },
+    children,
+}: LayoutProps) => {
     const user = useAtomValue(userAtom)
     const appURL = getAppURL()
     return (
@@ -26,6 +34,7 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
             <header className="w-full fixed z-10 bg-base-300 border-b border-neutral/10 dark:border-neutral/50 p-2 text-center font-bold text-xs">
                 <div className="mx-auto w-full max-w-prose">
                     <h1>{labelHeader ?? appURL}</h1>
+                    {requestCount ? <div>Pending: {requestCount}</div> : null}
                 </div>
             </header>
             <div className="pt-16">

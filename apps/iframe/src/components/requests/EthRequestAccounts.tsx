@@ -3,6 +3,7 @@ import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const EthRequestAccounts = ({
+    requestCount,
     method,
     params,
     reject,
@@ -12,6 +13,7 @@ export const EthRequestAccounts = ({
 
     return (
         <Layout
+            requestCount={requestCount}
             headline={
                 <>
                     <span className="text-primary">{appURL}</span>

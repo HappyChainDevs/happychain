@@ -10,13 +10,20 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-export const PersonalSign = ({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) => {
+export const PersonalSign = ({
+    requestCount,
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"personal_sign">) => {
     const formattedSignPayload = useMemo(() => {
         return hexToString(params[0])
     }, [params])
 
     return (
         <Layout
+            requestCount={requestCount}
             headline="Sign message"
             description={
                 <p className="mb-4">

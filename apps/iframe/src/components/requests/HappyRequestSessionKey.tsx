@@ -13,6 +13,7 @@ import {
 import type { RequestConfirmationProps } from "./props"
 
 export const HappyRequestSessionKey = ({
+    requestCount,
     method,
     params,
     reject,
@@ -23,6 +24,7 @@ export const HappyRequestSessionKey = ({
 
     return (
         <Layout
+            requestCount={requestCount}
             headline={<>Enable automatic approvals</>}
             description={
                 <div className="mb-4">

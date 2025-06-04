@@ -13,6 +13,7 @@ import {
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletRequestPermissions = ({
+    requestCount,
     method,
     params,
     reject,
@@ -22,10 +23,19 @@ export const WalletRequestPermissions = ({
     const requestingMultiplePermissions = params.length > 1
 
     if (!requestingMultiplePermissions && "eth_accounts" in params[0])
-        return <EthRequestAccounts method={method} params={params} reject={reject} accept={accept} />
+        return (
+            <EthRequestAccounts
+                requestCount={requestCount}
+                method={method}
+                params={params}
+                reject={reject}
+                accept={accept}
+            />
+        )
 
     return (
         <Layout
+            requestCount={requestCount}
             headline={<>Grant new permission{requestingMultiplePermissions ? "s" : ""}</>}
             description={
                 <div className="mb-4">

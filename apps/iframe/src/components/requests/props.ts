@@ -10,6 +10,7 @@ export interface RequestConfirmationProps<
     TMethod extends keyof typeof requestLabels,
     TRequest extends Request<TMethod> = Request<TMethod>,
 > {
+    requestCount: number
     method: TRequest["method"]
     params: TRequest["params"]
     reject: () => void

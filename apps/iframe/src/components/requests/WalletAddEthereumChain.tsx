@@ -11,6 +11,7 @@ import {
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletAddEthereumChain = ({
+    requestCount,
     method,
     params,
     reject,
@@ -19,6 +20,7 @@ export const WalletAddEthereumChain = ({
     const [chain, setChain] = useState(params[0])
     return (
         <Layout
+            requestCount={requestCount}
             labelHeader="Add custom chain"
             headline="Add new chain"
             actions={{

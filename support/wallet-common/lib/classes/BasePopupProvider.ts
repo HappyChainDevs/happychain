@@ -61,6 +61,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
     private timer: Timer | null = null
 
+    private requestQueue: string[] = []
+    private popupWindow: Window | undefined
+
     protected constructor(private windowId: UUID) {
         super()
         // must be initialized here for tree-shaking
@@ -108,7 +111,13 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
         const { resolve, reject, popup } = req
         this.inFlightRequests.delete(data.key)
-        popup?.close()
+
+        if (popup && this.requestQueue.length === 1) {
+            this.requestQueue.shift()
+            popup?.close()
+        } else if (popup) {
+            this.requestQueue.shift()
+        }
 
         if (data.error) reject(parseRpcError(data.error))
         else resolve(data.payload)
@@ -175,9 +184,18 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         }
         const searchParams = new URLSearchParams(opts).toString()
 
-        const popup = window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
+        const fullPath = `${url}?${searchParams}`
+
+        this.requestQueue.push(fullPath)
+        if (this.popupWindow && !this.popupWindow.closed) {
+            this.popupWindow.postMessage(JSON.stringify({ event: "request-queue", queue: fullPath }), "*")
+            return this.popupWindow
+        }
+
+        const popup = window.open(this.requestQueue[0], "_blank", POPUP_FEATURES)
         if (!popup) this.onPopupBlocked()
-        return popup ?? undefined
+        this.popupWindow = popup ?? undefined
+        return this.popupWindow
     }
 
     /**

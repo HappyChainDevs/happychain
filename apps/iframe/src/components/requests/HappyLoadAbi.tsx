@@ -13,7 +13,9 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
+
 export const HappyLoadAbi = ({
+    requestCount,
     method,
     params,
     reject,
@@ -28,6 +30,7 @@ export const HappyLoadAbi = ({
 
     return (
         <Layout
+            requestCount={requestCount}
             headline={<>Import contract interface</>}
             description={
                 <>

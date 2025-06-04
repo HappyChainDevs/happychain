@@ -5,6 +5,7 @@ import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletSwitchEthereumChain = ({
+    requestCount,
     method,
     params,
     reject,
@@ -18,6 +19,7 @@ export const WalletSwitchEthereumChain = ({
     // biome-ignore format: save space
     if (import.meta.env.PROD)
         return <RequestDisabled
+                requestCount={requestCount}
                 headline={headline}
                 description="The Happy Wallet is an HappyChain exclusive 🤠"
                 reject={reject}
@@ -25,6 +27,7 @@ export const WalletSwitchEthereumChain = ({
 
     return (
         <Layout
+            requestCount={requestCount}
             headline={headline}
             description={
                 !chain ? (

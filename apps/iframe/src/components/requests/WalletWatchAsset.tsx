@@ -10,10 +10,17 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConfirmationProps<"wallet_watchAsset">) => {
+export const WalletWatchAsset = ({
+    requestCount,
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"wallet_watchAsset">) => {
     const { type, options } = params
     return (
         <Layout
+            requestCount={requestCount}
             headline={`Add $${options.symbol} to your watch list`}
             description={
                 options.image && (
