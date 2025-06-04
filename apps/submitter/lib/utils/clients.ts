@@ -3,6 +3,7 @@ import {
     type PublicClient as BasePublicClient,
     type WalletClient as BaseWalletClient,
     type Chain,
+    type WebSocketTransport,
     webSocket,
 } from "viem"
 import { http, createPublicClient, createWalletClient, fallback } from "viem"
@@ -56,24 +57,25 @@ function getChain(): Chain {
 
 export const chain: Chain = getChain()
 
+export const webSocketTransports: WebSocketTransport[] = [
+    ...(env.USE_WEBSOCKET ? (chain.rpcUrls.default.webSocket ?? []) : []).map((url) => webSocket(url)),
+]
+console.log("WebSocket RPCs:", webSocketTransports)
+export const httpTransports = chain.rpcUrls.default.http.map((url) => http(url))
+console.log("HTTP RPCs:", httpTransports)
+
 export const config = {
     chain,
     batch: {
         multicall: true,
     },
-    transport: fallback(
-        [
-            ...(env.USE_WEBSOCKET ? (chain.rpcUrls.default.webSocket ?? []) : []).map((url) => webSocket(url)),
-            ...chain.rpcUrls.default.http.map((url) => http(url)),
-        ],
-        {
-            shouldThrow: (err: Error) => {
-                if (err.message.includes("execution reverted")) return true
-                logger.warn("RPC failed, falling back to next RPC:", err.message)
-                return false // dont throw but proceed to the next RPC
-            },
+    transport: fallback([...webSocketTransports, ...httpTransports], {
+        shouldThrow: (err: Error) => {
+            if (err.message.includes("execution reverted")) return true
+            logger.warn("RPC failed, falling back to next RPC:", err.message)
+            return false // dont throw but proceed to the next RPC
         },
-    ),
+    }),
 } as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
