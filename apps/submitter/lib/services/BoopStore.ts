@@ -18,6 +18,7 @@ import type { Boop } from "../types"
 export class BoopStore {
     readonly #byHash = new Map<Hash, Boop>()
     readonly #byNonce = new Map2<Address, string, Boop>()
+    readonly #entryPoints = new Map<Hash, Address>()
 
     getByHash(boopHash: Hash): Boop | undefined {
         return this.#byHash.get(boopHash)
@@ -31,14 +32,19 @@ export class BoopStore {
         return this.#byNonce.getAll(account)?.values()?.toArray() ?? []
     }
 
-    set(boop: Boop) {
+    set(boop: Boop, entryPoint: Address) {
         // Enforce hash caching before copying and freezing.
-        const hash = computeHash(boop)
+        const boopHash = computeHash(boop)
         // Shallow clone and freeze the boop, preventing accidental mutation of the original boop.
         const ogBoop = Object.freeze({ ...boop })
-        this.#byHash.set(hash, ogBoop)
+        this.#byHash.set(boopHash, ogBoop)
         this.#byNonce.set(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`, ogBoop)
+        this.#entryPoints.set(boopHash, entryPoint)
         return this
+    }
+
+    getEntryPoint(boopHash: Hash): Address | undefined {
+        return this.#entryPoints.get(boopHash)
     }
 
     hasHash(boopHash: Hash): boolean {
@@ -50,7 +56,9 @@ export class BoopStore {
     }
 
     delete(boop: Boop) {
+        const boopHash = computeHash(boop)
         this.#byNonce.delete(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`)
-        return this.#byHash.delete(computeHash(boop))
+        this.#entryPoints.delete(boopHash)
+        return this.#byHash.delete(boopHash)
     }
 }
