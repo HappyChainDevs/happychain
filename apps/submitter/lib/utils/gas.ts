@@ -1,4 +1,4 @@
-import type { EvmTxInfo } from "#lib/services/BoopReceiptService"
+import type { EvmTxInfo } from "#lib/types"
 
 // Needs to be >= 10 to be considered for replacement EVM tx to be considered.
 const feeBumpPercent = 15n

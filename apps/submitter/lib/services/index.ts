@@ -20,6 +20,6 @@ export const simulationCache = new LruCache<Hash, SimulateOutput>({
     maxAge: env.SIMULATION_CACHE_TTL,
 })
 
-export type { EvmTxInfo, WaitForInclusionArgs } from "./BoopReceiptService"
+export type { WaitForInclusionArgs } from "./BoopReceiptService"
 export { computeHash } from "../utils/boop/computeHash"
 export { findExecutionAccount, evmNonceManager } from "./evmAccounts"

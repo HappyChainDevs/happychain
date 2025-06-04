@@ -4,7 +4,6 @@ import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import {
-    type EvmTxInfo,
     boopNonceManager,
     boopStore,
     computeHash,
@@ -13,7 +12,7 @@ import {
     findExecutionAccount,
     receiptService,
 } from "#lib/services"
-import { type Boop, Onchain, SubmitterError } from "#lib/types"
+import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { walletClient } from "#lib/utils/clients"
 import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
@@ -115,7 +114,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                     maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
                 }
 
-                // TODO make sure this does no extra needless simulations
+                // TODO: implement own nonce manager, Viem's one sucks and always incurs a eth_getTransactionCount
                 const evmTxHash = await walletClient.writeContract({
                     account,
                     address: entryPoint,
