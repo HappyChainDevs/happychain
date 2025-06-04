@@ -62,23 +62,45 @@ latency: ## Benchmark latency
 
 args ?= --bail
 
-test: ## Run the submitter tests — runs Anvil and deploys contracts if not already running. Pass args in $args.
-	@if lsof -ti :$(ANVIL_PORT) > /dev/null 2>&1; then \
-  		$(call setup-test-env) \
-  		bun test $(args); \
-	else \
-		make test-run-anvil; \
-	fi;
-.PHONY: test
-
-test-run-anvil:
-	@trap 'make kill-anvil' EXIT; \
+define test-run-anvil-shared
+	trap 'make kill-anvil' EXIT; \
 	trap 'exit' INT TERM HUP; \
-	$(call setup-test-env) \
 	make start-anvil; \
 	until cast chain-id; do sleep 1; done; \
 	make deploy-contracts --silent; \
 	bun test $(args);
+endef
+
+define test-shared
+	$(call setup-test-env)
+	@if lsof -ti :$(ANVIL_PORT) > /dev/null 2>&1; then \
+  		bun test $(args); \
+	else \
+		$(call test-run-anvil-shared) \
+	fi;
+endef
+
+define set_automine
+	$(eval export AUTOMINE_TESTS=$(1))
+endef
+
+test: ## Run the submitter tests — runs Anvil and deploys contracts if not already running. Pass args in $args.
+	$(call test-shared)
+.PHONY: test
+
+test-fast:
+	$(call set_automine,true)
+	$(call test-shared)
+.PHONY: test-fast
+
+test-slow:
+	$(call set_automine,false)
+	$(call test-shared)
+.PHONY: test-slow
+
+test-run-anvil:
+	$(call setup-test-env)
+	@$(call test-run-anvil-shared)
 .PHONY: test-run-anvil
 
 test.watch: ## Run the submitter tests in Watch mode
