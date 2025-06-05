@@ -15,7 +15,6 @@ const getPendingParam = type({
 const pendingBoopInfo = type({
     boopHash: Hash,
     entryPoint: Address,
-    // These are serialized BigInt values (strings) in the validation schema
     nonceTrack: UInt256,
     nonceValue: UInt256,
     submitted: type.boolean,
@@ -25,14 +24,14 @@ const getPendingSuccess = type({
     status: type.unit(GetPending.Success),
     account: Address,
     pending: pendingBoopInfo.array(),
-    "description?": type.never,
+    description: type.never.optional(),
 })
 
 const getPendingError = type({
-    status: type.valueOf(SubmitterError).configure({ example: SubmitterError.RpcError }),
-    description: type.string,
-    "account?": type.never,
-    "pending?": type.never,
+    status: type.valueOf(SubmitterError),
+    description: type.string.configure({ example: "Failed to retrieve pending boops" }),
+    account: type.never.optional(),
+    pending: type.never.optional(),
 })
 
 export const getPendingDescription = describeRoute({

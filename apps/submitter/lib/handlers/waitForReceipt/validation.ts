@@ -9,7 +9,7 @@ import type * as types from "./types"
 
 const waitForReceiptQuery = type({
     "+": "reject",
-    timeout: type("number.integer | string.integer.parse") //
+    timeout: type("number.integer | string.integer.parse")
         .pipe(type("0 <= number <= 30000"))
         .configure({ example: 500 })
         .optional(),
@@ -29,18 +29,15 @@ const waitForReceiptInput = type(
 const waitForReceiptSuccess = type({
     status: type.unit(WaitForReceipt.Success),
     receipt: SBoopReceipt,
-    "revertData?": "never",
-    "description?": "never",
+    revertData: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const waitForReceiptError = type({
-    status: type
-        .valueOf(WaitForReceipt)
-        .exclude(type.unit(WaitForReceipt.Success))
-        .configure({ example: WaitForReceipt.UnknownBoop }),
+    status: type.valueOf(WaitForReceipt).exclude(type.unit(WaitForReceipt.Success)),
     revertData: Bytes.optional(),
-    description: "string",
-    "receipt?": "never",
+    description: type.string.configure({ example: "Failed to retrieve receipt" }),
+    receipt: type.never.optional(),
 })
 
 export const waitForReceiptDescription = describeRoute({
