@@ -29,15 +29,12 @@ const waitForReceiptInput = type(
 const waitForReceiptSuccess = type({
     status: type.unit(WaitForReceipt.Success),
     receipt: SBoopReceipt,
-    revertData: type.never.optional(),
-    description: type.never.optional(),
 })
 
 const waitForReceiptError = type({
     status: type.valueOf(WaitForReceipt).exclude(type.unit(WaitForReceipt.Success)),
     revertData: Bytes.optional(),
     description: type.string.configure({ example: "Failed to retrieve boop receipt" }),
-    receipt: type.never.optional(),
 })
 
 export const waitForReceiptDescription = describeRoute({

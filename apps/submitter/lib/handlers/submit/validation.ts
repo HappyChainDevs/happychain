@@ -17,8 +17,6 @@ const submitSuccess = type({
     status: type.unit(Submit.Success),
     boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
     entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
-    revertData: type.never.optional(),
-    description: type.never.optional(),
 })
 
 const submitError = type({
@@ -28,8 +26,6 @@ const submitError = type({
         example: "0x1234567890123456789012345678901234567890123456789012345678901234",
     }).optional(),
     description: type("string").configure({ example: "Invalid boop" }),
-    boopHash: type.never.optional(),
-    entryPoint: type.never.optional(),
 })
 
 export const submitDescription = describeRoute({

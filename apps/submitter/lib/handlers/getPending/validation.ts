@@ -24,14 +24,11 @@ const getPendingSuccess = type({
     status: type.unit(GetPending.Success),
     account: Address,
     pending: pendingBoopInfo.array(),
-    description: type.never.optional(),
 })
 
 const getPendingError = type({
     status: type.valueOf(SubmitterError),
     description: type.string.configure({ example: "Failed to retrieve pending boops for the specified account" }),
-    account: type.never.optional(),
-    pending: type.never.optional(),
 })
 
 export const getPendingDescription = describeRoute({

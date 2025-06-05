@@ -34,6 +34,7 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await simulate(input)
+            // validateOutput(output, simulateOutputValidation, "simulate response")
             const [body, code] = makeResponse(output)
             validateOutput(body, simulateOutputValidation, "simulate response")
             return c.json(body, code)
