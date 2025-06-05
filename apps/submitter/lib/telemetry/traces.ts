@@ -91,12 +91,11 @@ export function traceFunction<F extends (...args: any[]) => ReturnType<F>>(fn: F
  * @param spanName - Optional custom name for the span. If not provided, the method name is used.
  */
 export function TraceMethod(spanName?: string) {
-    return (_target: unknown, propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor => {
+    return (_target: unknown, propertyKey: string, descriptor: PropertyDescriptor): void => {
         const originalMethod = descriptor.value
         descriptor.value = function (...args: unknown[]) {
             return createTracedFunction(originalMethod, spanName || propertyKey, this)(...args)
         }
-        return descriptor
     }
 }
 
