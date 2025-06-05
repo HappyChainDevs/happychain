@@ -3,19 +3,19 @@ import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
 export type AppURL = HTTPString & { _brand: "AppHTTPString" }
 
 /** The full url of the app that the wallet is embedded in. */
-const _appURL = location.ancestorOrigins?.[0] ?? document.referrer
+const _appURL = import.meta.hot?.data._appURL ?? location.ancestorOrigins?.[0] ?? document.referrer
 
 /** the origin of the app that the wallet is embedded in, or empty if not embedded */
-const _appOrigin = _appURL ? new URL(_appURL).origin : ""
+const _appOrigin = import.meta.hot?.data._appOrigin ?? (_appURL ? new URL(_appURL).origin : "")
 
 /** The url of the App the wallet is embedded in, or empty if not embedded. */
-const appURL = _appOrigin && _appOrigin !== location.origin ? _appOrigin : ""
+const appURL = import.meta.hot?.data.appURL ?? (_appOrigin && _appOrigin !== location.origin ? _appOrigin : "")
 
 /** ID passed to the iframe by the parent window (app). */
-export const _parentID = new URLSearchParams(window.location.search).get("windowId")
+export const _parentID = import.meta.hot?.data._parentID ?? new URLSearchParams(window.location.search).get("windowId")
 
 /** ID generated for this wallet (tied to a specific app). */
-const _walletID = createUUID()
+const _walletID = import.meta.hot?.data._walletID ?? createUUID()
 
 if (!isWallet(getAppURL()) && !_parentID) {
     console.warn("Embedded Wallet initialized without windowId")
@@ -82,4 +82,14 @@ export function appForSourceID(sourceID: UUID): AppURL | undefined {
     if (sourceID === _parentID) return getAppURL()
     if (sourceID === _walletID) return getWalletURL()
     return undefined
+}
+
+/** Persist constants across hot-reloads */
+if (import.meta.hot) {
+    import.meta.hot.data._parentID = _parentID
+    import.meta.hot.data._appURL = _appURL
+    import.meta.hot.data._appOrigin = _appOrigin
+    import.meta.hot.data.appURL = appURL
+    import.meta.hot.data._walletID = _walletID
+    import.meta.hot.accept()
 }
