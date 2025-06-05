@@ -578,10 +578,10 @@ select-staging-contracts:
 
 # Sets the allowed hosts for Vite.
 select-allowed-hosts:
-	$(call update_env,apps/iframe/.env,VITE_ALLOWED_HOSTS,$(urls))
-	$(call update_env,demos/js/.env,VITE_ALLOWED_HOSTS,$(urls))
-	$(call update_env,demos/react/.env,VITE_ALLOWED_HOSTS,$(urls))
-	$(call update_env,demos/vue/.env,VITE_ALLOWED_HOSTS,$(urls))
+	$(call update_env,apps/iframe/.env,ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/js/.env,ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/react/.env,ALLOWED_HOSTS,$(urls))
+	$(call update_env,demos/vue/.env,ALLOWED_HOSTS,$(urls))
 .PHONY: select-allowed-hosts
 
 select-submitter-local:

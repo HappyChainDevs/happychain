@@ -8,7 +8,7 @@ import { defineConfig, loadEnv } from "vite"
 // Comma-separated list of hosts (IP addresses or domains) which are allowed to access this service. (Optional)
 // If empty, everyone is allowed.
 // This can be used to safely expose a local service to the internet, our main use case being testing on mobile devices.
-const allowedHosts = import.meta.env?.VITE_ALLOWED_HOSTS?.split(", ").map((a: string) => a.trim())
+const allowedHosts = import.meta.env?.ALLOWED_HOSTS?.split(", ").map((a: string) => a.trim())
 if (allowedHosts?.length) console.log("\nVite Allowing access from hosts:", allowedHosts)
 const serverHostConfig = allowedHosts?.length ? { host: true, allowedHosts: allowedHosts } : {}
 
