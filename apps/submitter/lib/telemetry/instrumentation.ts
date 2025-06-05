@@ -1,4 +1,4 @@
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http/build/esnext';
 import { Resource } from "@opentelemetry/resources"
 import { NodeSDK } from "@opentelemetry/sdk-node"
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions"
