@@ -17,17 +17,17 @@ const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.Alrea
 const createAccountSuccess = type({
     owner: Address,
     salt: Bytes32,
-    status: successStatus.configure({ example: CreateAccount.Success }),
+    status: successStatus,
     address: Address,
-    "description?": type.never,
+    description: type.never.optional(),
 })
 
 const createAccountError = type({
     owner: Address,
     salt: Bytes32,
-    status: type.valueOf(CreateAccount).exclude(successStatus).configure({ example: CreateAccount.Failed }),
+    status: type.valueOf(CreateAccount).exclude(successStatus),
     description: type.string.configure({ example: "Invalid account data" }),
-    "address?": type.never,
+    address: type.never.optional(),
 })
 
 export const createAccountDescription = describeRoute({

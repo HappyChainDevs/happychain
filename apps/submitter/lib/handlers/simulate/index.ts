@@ -4,5 +4,4 @@ export {
     simulateBodyValidation,
     simulateDescription,
     simulateOutputValidation,
-    simulateSuccessValidation, // temp: To test success output
 } from "./validation"

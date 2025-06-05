@@ -2,7 +2,6 @@ import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Onchain } from "#lib/types"
 import { AddressIn, Bytes, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopIn, SBoopReceipt } from "#lib/utils/validation/boop"
 import { Execute } from "./types"
@@ -12,33 +11,30 @@ const executeInput = type({
     "+": "reject",
     entryPoint: AddressIn.optional(),
     boop: SBoopIn,
-    "timeout?": type.number.configure({ example: 60 }),
+    timeout: type.number.configure({ example: 60 }).optional(),
 })
 
 const executeSuccess = type({
-    status: type.unit(Execute.Success).configure({ example: Execute.Success }),
+    status: type.unit(Execute.Success),
     receipt: SBoopReceipt,
-    "stage?": type.never,
-    "revertData?": type.never,
-    "description?": type.never,
+    stage: type.never.optional(),
+    revertData: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const executeError = type({
-    status: type
-        .valueOf(Execute)
-        .exclude(type.unit(Execute.Success))
-        .configure({ example: Onchain.ValidationRejected }),
-    stage: type.enumerated("simulate", "submit", "execute").configure({ example: "simulate" }),
-    revertData: Bytes.configure({ example: "0x1234567890123456789012345678901234567890" }).optional(),
+    status: type.valueOf(Execute).exclude(type.unit(Execute.Success)),
+    stage: type.enumerated("simulate", "submit", "execute"),
+    revertData: Bytes.optional(),
     description: type.string.configure({ example: "Invalid boop" }),
-    "receipt?": type.never,
+    receipt: type.never.optional(),
 })
 
 export const executeDescription = describeRoute({
     description: "Execute the supplied boop",
     requestBody: {
         required: true,
-        description: "Account data to create",
+        description: "Boop data to execute",
         content: {
             "application/json": {
                 schema: {},

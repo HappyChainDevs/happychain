@@ -16,27 +16,24 @@ const getStateParam = type({
 const getStateReceipt = type({
     status: type.unit(GetState.Receipt),
     receipt: SBoopReceipt,
-    "simulation?": type.never,
-    "description?": type.never,
+    simulation: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const getStateSimulated = type({
     status: type.unit(GetState.Simulated),
     simulation: simulateOutputValidation,
-    "receipt?": type.never,
-    "description?": type.never,
+    receipt: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const getStateSuccess = type(getStateReceipt, "|", getStateSimulated)
 
 const getStateError = type({
-    status: type
-        .valueOf(GetState)
-        .exclude(type.enumerated(GetState.Receipt, GetState.Simulated))
-        .configure({ example: GetState.ClientError }),
-    description: type.string,
-    "receipt?": type.never,
-    "simulation?": type.never,
+    status: type.valueOf(GetState).exclude(type.enumerated(GetState.Receipt, GetState.Simulated)),
+    description: type.string.configure({ example: "Failed to retrieve boop state" }),
+    receipt: type.never.optional(),
+    simulation: type.never.optional(),
 })
 
 export const getStateDescription = describeRoute({

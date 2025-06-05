@@ -68,22 +68,30 @@ function gte<T extends bigint | number>(
 // =====================================================================================================================
 // VALIDATION-ONLY TYPES (for OpenAPI specs)
 
-export const Bytes = type("/^0x[0-9a-fA-F]*/") as Type<Hex>
+export const Bytes = (type("/^0x[0-9a-fA-F]*/") as Type<Hex>).configure({
+    example: "0x1234567890123456789012345678901234567890123456789012345678901234",
+})
 
-export const Bytes32 = type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>
+export const Bytes32 = (type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>).configure({
+    example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+})
 
 export const Hash = Bytes32
 
-export const Address = type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>
+export const Address = (type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>).configure({
+    example: "0xf4822fc7cb2ec69a5f9d4b5d4a59b949effa8311",
+})
 
-export const BigIntType = type("/^-?[0-9]+$/") as Type<string>
+export const BigIntType = (type("/^-?[0-9]+$/") as Type<string>).configure({
+    example: "1234567890123456789012345678901234567890",
+})
 
 // Only allow positive integers using a predicate function
 export const UInt256 = BigIntType
 
 export const Int256 = BigIntType
 
-export const UInt32 = type.number
+export const UInt32 = type.number.configure({ example: 400_000 })
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)

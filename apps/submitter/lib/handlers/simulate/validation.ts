@@ -22,30 +22,39 @@ const entryPointOutput = type({
     validityUnknownDuringSimulation: type.boolean,
     paymentValidityUnknownDuringSimulation: type.boolean,
     futureNonceDuringSimulation: type.boolean,
-    callStatus: type.valueOf(CallStatus).configure({ example: CallStatus.SUCCEEDED }),
+    callStatus: type.valueOf(CallStatus),
     revertData: BytesIn,
 })
 
 const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
-    status: type.unit(Simulate.Success).configure({ example: Simulate.Success }),
+    status: type.unit(Simulate.Success),
     maxFeePerGas: UInt256,
     submitterFee: UInt256,
     feeTooLowDuringSimulation: "boolean",
-    "revertData?": type.never,
-    "description?": type.never,
+    revertData: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
     revertData: BytesIn.optional(),
     description: type.string.configure({ example: "Invalid boop" }),
-    "maxFeePerGas?": type.never,
-    "submitterFee?": type.never,
-    "feeTooLowDuringSimulation?": type.never,
+    maxFeePerGas: type.never.optional(),
+    submitterFee: type.never.optional(),
+    feeTooLowDuringSimulation: type.never.optional(),
 })
 
 export const simulateDescription = describeRoute({
     description: "Simulates the supplied boop",
+    requestBody: {
+        required: true,
+        description: "Boop data to simulate",
+        content: {
+            "application/json": {
+                schema: {},
+            },
+        },
+    },
     responses: {
         200: {
             description: "Simulation successful",
@@ -60,7 +69,6 @@ export const simulateDescription = describeRoute({
 
 export const simulateBodyValidation = arktypeValidator("json", simulateInput)
 export const simulateOutputValidation = type(simulateSuccess, "|", simulateError)
-export const simulateSuccessValidation = simulateSuccess // temp: To test success output
 
 type SimulateInput = typeof simulateInput.infer
 type SimulateSuccess = typeof simulateSuccess.infer

@@ -17,23 +17,22 @@ const submitSuccess = type({
     status: type.unit(Submit.Success),
     boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
     entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
-    "revertData?": type.never,
-    "description?": type.never,
+    revertData: type.never.optional(),
+    description: type.never.optional(),
 })
 
 const submitError = type({
-    status: type.valueOf(Submit).exclude(type.unit(Submit.Success)).configure({ example: Submit.CallReverted }),
-    stage: type.enumerated("simulate", "submit").configure({ example: "simulate" }),
+    status: type.valueOf(Submit).exclude(type.unit(Submit.Success)),
+    stage: type.enumerated("simulate", "submit"),
     revertData: Bytes.configure({
         example: "0x1234567890123456789012345678901234567890123456789012345678901234",
     }).optional(),
     description: type("string").configure({ example: "Invalid boop" }),
-    "boopHash?": type.never,
-    "entryPoint?": type.never,
+    boopHash: type.never.optional(),
+    entryPoint: type.never.optional(),
 })
 
 export const submitDescription = describeRoute({
-    validateResponse: false,
     description: "Submits the supplied boop to the chain",
     requestBody: {
         required: true,
