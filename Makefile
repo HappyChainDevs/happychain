@@ -80,7 +80,7 @@ define with_optional_iframe
 	$(eval DEMO_PATH := $(strip $(2)))
 	$(eval DEMO_CMD := $(strip $(3)))
 
-	@if lsof -t -i :5160 &> /dev/null; then \
+	@if lsof -t -iTCP:5160 -sTCP:LISTEN &> /dev/null; then \
 		$(MULTIRUN) --names $(DEMO_NAME) "cd $(DEMO_PATH) && make $(DEMO_CMD)";\
 	else \
 		$(MULTIRUN) --names "iframe,$(DEMO_NAME)" "cd apps/iframe && make $(DEMO_CMD)" "cd $(DEMO_PATH) && make $(DEMO_CMD)";\

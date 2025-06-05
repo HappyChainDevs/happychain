@@ -74,7 +74,7 @@ endef
 
 define test-shared
 	$(call setup-test-env)
-	@if lsof -ti :$(ANVIL_PORT) > /dev/null 2>&1; then \
+	@if lsof -t -iTCP:$(ANVIL_PORT) -sTCP:LISTEN > /dev/null 2>&1; then \
   		bun test $(args); \
 	else \
 		$(call test-run-anvil-shared) \
