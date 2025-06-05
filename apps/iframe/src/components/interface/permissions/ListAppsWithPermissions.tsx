@@ -13,10 +13,10 @@ const ListItem = ({ appURL }: ListItemProps) => {
 
     return (
         <li className="p-2 min-h-10 flex hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center text-sm">
-            <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
+            <span className="inline-flex gap-2 w-full max-w-prose mx-auto items-center">
                 <img
                     alt={appURL}
-                    className="text-transparent rounded-full h-[1.3rem] w-[1.5rem]"
+                    className="text-transparent rounded-full size-[1.5rem]"
                     loading="lazy"
                     width="20"
                     height="20"

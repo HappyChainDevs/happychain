@@ -26,7 +26,7 @@ const GlobalHeader = () => {
             </span>
 
             {/* wallet options */}
-            <div className="flex flex-row gap-1 items-center absolute end-3 text-xl">
+            <div className="flex flex-row gap-2 items-center absolute end-3 text-xl">
                 <TriggerSecondaryActionsMenu />
 
                 <button
