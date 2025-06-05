@@ -11,7 +11,7 @@ import {
     evmNonceManager,
     findExecutionAccount,
 } from "#lib/services"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"

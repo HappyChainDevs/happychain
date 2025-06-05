@@ -1,6 +1,6 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop, BoopGasInfo } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 

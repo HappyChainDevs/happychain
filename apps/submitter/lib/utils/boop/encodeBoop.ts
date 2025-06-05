@@ -1,6 +1,6 @@
 import type { Hex } from "@happy.tech/common"
 import { toBytes, toDynamicLengthBytes } from "@happy.tech/common"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop } from "#lib/types"
 
 /**

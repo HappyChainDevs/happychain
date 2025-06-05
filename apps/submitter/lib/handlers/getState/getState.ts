@@ -1,6 +1,6 @@
 import { outputForGenericError } from "#lib/handlers/errors"
 import { boopStore, dbService, simulationCache } from "#lib/services"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import { GetState, type GetStateInput, type GetStateOutput } from "./types"
 
 async function getState(input: GetStateInput): Promise<GetStateOutput> {

@@ -1,5 +1,5 @@
 import type { SimulateOutput } from "#lib/handlers/simulate/types"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, Onchain } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"

@@ -16,7 +16,7 @@ import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { boopStore, computeHash, dbService, findExecutionAccount, simulationCache } from "#lib/services"
-import { TraceMethod } from "#lib/telemetry/traces.ts"
+import { TraceMethod } from "#lib/telemetry/traces"
 import {
     type Boop,
     type BoopGasInfo,

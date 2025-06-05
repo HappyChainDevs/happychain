@@ -113,8 +113,6 @@ export class Logger {
         return this._instance
     }
 
-    private tracer?: Tracer
-
     public static create(
         tag: LogTag,
         logLevel?: LogLevel,
@@ -125,10 +123,6 @@ export class Logger {
         logger.showTimestamp = timestamp
         logger.enableTags(tag)
         logger.setLogLevel(logLevel ?? Logger.instance.minLevel)
-
-        if (tracer) {
-            logger.setTracer(tracer)
-        }
 
         return new Proxy(logger, {
             get(target, prop, receiver) {
@@ -151,15 +145,6 @@ export class Logger {
      */
     public setLogLevel(level: LogLevel): void {
         this.minLevel = level
-    }
-
-    /**
-     * Sets the OpenTelemetry tracer to use for logging.
-     *
-     * @param tracer The tracer to use for logging.
-     */
-    public setTracer(tracer: Tracer): void {
-        this.tracer = tracer
     }
 
     /**
@@ -225,13 +210,11 @@ export class Logger {
         if (this.shouldLog(level, tags)) {
             console.log(this.getPrelude(level, tags), ...args)
             const activeSpan = trace.getActiveSpan()
-            if (activeSpan) {
-                activeSpan.addEvent("logger", {
-                    level: level.toString(),
-                    tags: tags.join(","),
-                    message: args.map((arg) => String(arg)).join(" "),
-                })
-            }
+            activeSpan?.addEvent("logger", {
+                level: level.toString(),
+                tags: tags.join(","),
+                message: args.map((arg) => String(arg)).join(" "),
+            })
         }
     }
 
