@@ -31,6 +31,7 @@ export const historyAtom = atom(
         if (!user) return
         // Limit size of history to 50 entries.
         const updatedHistory = history.toSorted(compareEntries).slice(0, 50)
+        console.log(updatedHistory)
         set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: updatedHistory }))
     },
 )
@@ -59,8 +60,8 @@ export function addPendingBoop(boopHash: Hash, boop: Boop): void {
      */
     function getCreatedAt() {
         const now = Date.now()
-        const higherNonces = history.filter((b) => b.nonceTrack === boop.nonceTrack && b.nonceValue > boop.nonceValue)
-        return Math.min(now, ...higherNonces.map((b) => b.createdAt))
+        const higherNonces = history.filter((e) => e.nonceTrack === boop.nonceTrack && e.nonceValue > boop.nonceValue)
+        return Math.min(now, ...higherNonces.map((e) => e.createdAt))
     }
 
     const history = store.get(historyAtom)
@@ -121,7 +122,7 @@ function compareEntries(a: HistoryEntry, b: HistoryEntry): number {
     if (!a.status || !b.status) {
         if (!a.status && b.status) return -1 // a is pending, b is not → a first
         if (a.status && !b.status) return 1 /// b is pending, b is not → b first
-        // both pending the regular comparison logic applies between them
+        // both are pending, the regular comparison logic applies between them
     }
 
     // 2. Sort by timestamp

@@ -31,7 +31,6 @@ export const ActivityView = () => {
             </div>
         )
     }
-    const settledHistory = history.filter((boop) => !!boop.status)
 
     return (
         <div className="grid gap-4">
@@ -43,7 +42,8 @@ export const ActivityView = () => {
                 ),
             )}
 
-            {settledHistory.length >= 50 && (
+            {/* In theory, can't be > 50, but it never hurts to be safe. */}
+            {history.length >= 50 && (
                 <div className="flex flex-row items-center justify-center text-xs gap-1">
                     <RowsIcon size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
                     <a
