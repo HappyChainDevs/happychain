@@ -28,6 +28,10 @@ function Embed() {
     const navigate = useNavigate()
     const [secondaryMenuVisibility, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const [, setDialogLogoutVisibility] = useAtom(dialogLogOutConfirmationVisibilityAtom)
+
+    // This is a hackfix to avoid an issue where the tab section remains scrollable when the secondary menu
+    // is visible, making it possible to scroll from the tab menu "into" the tab section. That issue also
+    // prevented the secondary menu cog icon from being clicked when the tab section was scrolled down.
     const scrollableSectionRef = useScrollToTop(secondaryMenuVisibility)
 
     useEffect(() => {
