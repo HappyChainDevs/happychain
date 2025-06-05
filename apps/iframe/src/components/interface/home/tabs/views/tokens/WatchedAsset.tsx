@@ -86,7 +86,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0 space-x-1">
                 <BalanceDisplay isLoading={isLoading} balance={truncatedBalance} />
-                <RemoveTokenMenu tokenAddress={tokenAddress as Address} userAddress={userAddress} />
+                <RemoveTokenMenu user={userAddress} token={tokenAddress as Address} />
             </div>
         </div>
     )
