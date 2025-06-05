@@ -1,11 +1,11 @@
 import { promiseWithResolvers, sleep } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
-import type { Block, PublicClient, WatchBlocksReturnType } from "viem"
+import type { OnBlockParameter, PublicClient, WatchBlocksReturnType } from "viem"
 import { http, createPublicClient, fallback } from "viem"
 import { chain, config, publicClient } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
-export type BlockHeader = Block<typeof publicClient.chain, false, "latest">
+export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "latest">
 
 export class BlockService {
     #currentBlock?: BlockHeader
@@ -46,37 +46,15 @@ export class BlockService {
         return BlockService.#instance
     }
 
-    /**
-     * Subscribes a callback function to new block events.
-     * @param callback The function to call with each new block header.
-     * @returns A function to unsubscribe the callback.
-     */
     onBlock(callback: (block: BlockHeader) => void): () => void {
         blockLogger.trace("New subscription to block updates.")
         this.onBlockCallbacks.add(callback)
-
-        // Optional: Immediately provide the current block to the new subscriber if available.
-        // if (this.#currentBlock) {
-        //     try {
-        //         // Run in a microtask to avoid blocking the subscription call
-        //         Promise.resolve().then(() => callback(this.#currentBlock!)).catch(e => {
-        //             blockLogger.error("Error in immediate onBlock callback for new subscriber", e);
-        //         });
-        //     } catch (e) { // Should not happen with Promise.resolve().then()
-        //         blockLogger.error("Unexpected error during immediate callback invocation", e);
-        //     }
-        // }
-
         return () => {
             blockLogger.trace("Unsubscribed from block updates.")
             this.onBlockCallbacks.delete(callback)
         }
     }
 
-    /**
-     * Executes all registered onBlock callbacks for a given block.
-     * Callbacks are executed in parallel, but this method waits for all to settle.
-     */
     async #executeOnBlockCallbacks(block: BlockHeader): Promise<void> {
         if (this.onBlockCallbacks.size === 0) return // No subscribers
 
@@ -98,9 +76,6 @@ export class BlockService {
         await Promise.all(callbackPromises)
     }
 
-    /**
-     * Fetches and processes blocks in a given range that might have been missed.
-     */
     async #fetchAndProcessMissedBlocks(fromBlockNumber: bigint, toBlockNumber: bigint): Promise<void> {
         blockLogger.info(`Attempting to fetch and process missed blocks from ${fromBlockNumber} to ${toBlockNumber}.`)
         for (let blockNum = fromBlockNumber; blockNum <= toBlockNumber; blockNum++) {
@@ -138,10 +113,6 @@ export class BlockService {
         }
     }
 
-    /**
-     * Starts and manages the block watcher, including retry logic and fallback to HTTP.
-     * This method is intended to run indefinitely.
-     */
     async #startBlockWatcher(): Promise<void> {
         const initialRetryDelay = 1000 // ms
         const maxRetryDelay = 30_000 // ms
@@ -167,8 +138,6 @@ export class BlockService {
                     emitOnBegin: true,
                     emitMissed: true,
                     onBlock: async (blockFromViem) => {
-                        // Cast Viem's block to our internal BlockHeader type. This is the workaround
-                        // for TypeScript's misinterpretation of BlockHeader's structure.
                         const newlyArrivedHeader = blockFromViem as unknown as BlockHeader
 
                         if (!newlyArrivedHeader || !newlyArrivedHeader.number || !newlyArrivedHeader.hash) {
@@ -199,21 +168,13 @@ export class BlockService {
                         }
 
                         // Gap Detection & Manual Filling (supplements Viem's emitMissed:true)
-                        // absolutely ridiculous type inference issue with BlockHeader
-                        if (
-                            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                            BigInt(newlyArrivedHeader.number as any) >
-                            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                            BigInt(lastInternallyProcessedBlock.number as any) + 1n
-                        ) {
+                        if (newlyArrivedHeader.number > lastInternallyProcessedBlock.number + 1n) {
                             blockLogger.warn(
                                 `Gap detected. Last processed block: ${lastInternallyProcessedBlock.number}, newly arrived block: ${newlyArrivedHeader.number}. Attempting to fill.`,
                             )
                             await this.#fetchAndProcessMissedBlocks(
-                                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                                BigInt(lastInternallyProcessedBlock.number as any) + 1n,
-                                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                                BigInt(newlyArrivedHeader.number as any) - 1n,
+                                lastInternallyProcessedBlock.number + 1n,
+                                newlyArrivedHeader.number - 1n,
                             )
                             // After #fetchAndProcessMissedBlocks, this.#currentBlock is the last successfully filled missed block,
                             // or it remains `lastInternallyProcessedBlock` if filling failed or no blocks were filled.
