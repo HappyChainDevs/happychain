@@ -1,4 +1,4 @@
-import { type Hex, parseBigInt } from "@happy.tech/common"
+import type { Hex } from "@happy.tech/common"
 import { type Traversal, type Type, type } from "arktype"
 import { resolver } from "hono-openapi/arktype"
 import type { OpenAPIV3 } from "openapi-types"
@@ -85,20 +85,20 @@ export const AddressIn = Address.pipe(padHex(40)).pipe(checksum)
 
 // biome-ignore format: pretty
 export const UInt256In = UInt256
-    .pipe((it, ctx) => parseBigInt(it) ?? ctx.error("not a positive integer"))
+    .pipe((it) => BigInt(it)!) // Can't fail because of regex validation
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
 // biome-ignore format: pretty
 export const Int256In = Int256
-    .pipe((it, ctx) => parseBigInt(it) ?? ctx.error("not an integer"))
+    .pipe((it) => BigInt(it)!) // Can't fail because of regex validation
     .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
 // biome-ignore format: pretty
 export const UInt32In = UInt32
-    .pipe(it => it) // pipe before narrow makes it possible to prune narrows with <type>.in
+    .pipe(it => it) // Identity pipe before narrow: to make it possible to prune narrows with <type>.in
     .narrow(gte(0))
     .narrow(lt(1n << 32n, "2^32"))
     .configure({ example: 400_000 })
