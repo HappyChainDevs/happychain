@@ -1,6 +1,7 @@
-import type { Hex } from "@happy.tech/common"
+import { type Hex, parseBigInt } from "@happy.tech/common"
 import { type Traversal, type Type, type } from "arktype"
 import { resolver } from "hono-openapi/arktype"
+import type { OpenAPIV3 } from "openapi-types"
 import { checksum } from "ox/Address"
 
 // =====================================================================================================================
@@ -21,30 +22,8 @@ export function openApiContent(schema: Type<unknown>) {
     return { "application/json": { schema: resolver(schema) } }
 }
 
-/**
- * Parse a string to a bigint, with strict validation.
- * Expected format: Plain number strings without 'n' suffix (e.g., "123", "-456", "0")
- *
- * @param input A string representation of a BigInt value
- * @returns The parsed bigint value
- * @throws Error if parsing fails or input format is invalid
- */
-function parseBigIntInternal(input: string | undefined): bigint {
-    if (!input) {
-        throw new Error("BigInt input must not be empty")
-    }
-
-    if (!/^-?[0-9]+$/.test(input)) {
-        throw new Error(`BigInt input must be numeric: ${input}`)
-    }
-
-    try {
-        return BigInt(input)
-    } catch (error) {
-        throw new Error(
-            `Failed to parse BigInt value: ${input}. ${error instanceof Error ? error.message : "Unknown error"}`,
-        )
-    }
+export function openApiContentBody(schema: Type<unknown>) {
+    return { "application/json": { schema: schema.toJsonSchema() as OpenAPIV3.SchemaObject } }
 }
 
 function padHex(count: number): (hex: Hex) => Hex {
@@ -68,65 +47,58 @@ function gte<T extends bigint | number>(
 // =====================================================================================================================
 // VALIDATION-ONLY TYPES (for OpenAPI specs)
 
-export const Bytes = (type("/^0x[0-9a-fA-F]*/") as Type<Hex>).configure({
+export const Bytes = type("/^0x[0-9a-fA-F]*/").configure({
     example: "0x1234567890123456789012345678901234567890123456789012345678901234",
-})
+}) as Type<Hex>
 
-export const Bytes32 = (type("/^0x[0-9a-fA-F]{0,64}$/") as Type<Hex>).configure({
+export const Bytes32 = type("/^0x[0-9a-fA-F]{0,64}$/").configure({
     example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-})
+}) as Type<Hex>
 
 export const Hash = Bytes32
 
-export const Address = (type("/^0x[0-9a-fA-F]{0,40}$/") as Type<Hex>).configure({
+export const Address = type("/^0x[0-9a-fA-F]{0,40}$/").configure({
     example: "0xf4822fc7cb2ec69a5f9d4b5d4a59b949effa8311",
-})
+}) as Type<Hex>
 
-export const BigIntType = (type("/^-?[0-9]+$/") as Type<string>).configure({
-    example: "1234567890123456789012345678901234567890",
-})
+export const BigIntString = type("/^-?[0-9]+$/").configure({ example: "10_100_200_300_400_500_600" })
+
+export const PositiveBigIntString = type("/^[0-9]+$/").configure({ example: "10_100_200_300_400_500_600" })
 
 // Only allow positive integers using a predicate function
-export const UInt256 = BigIntType
+export const UInt256 = PositiveBigIntString
 
-export const Int256 = BigIntType
+export const Int256 = BigIntString
 
 export const UInt32 = type.number.configure({ example: 400_000 })
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)
 
-export const BytesIn = Bytes.configure({ example: "0xdeadbeefdeadbeef" })
+export const BytesIn = Bytes
 
-export const Bytes32In = Bytes32.pipe(padHex(64)).configure({
-    example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-})
+export const Bytes32In = Bytes32.pipe(padHex(64))
 
 export const HashIn = Bytes32In
 
-export const AddressIn = Address.pipe(padHex(40))
-    .pipe(checksum)
-    .configure({ example: "0xf4822fc7cb2ec69a5f9d4b5d4a59b949effa8311" })
+export const AddressIn = Address.pipe(padHex(40)).pipe(checksum)
 
-export const UInt256In = UInt256.pipe(
-    (input, ctx) =>
-        parseBigIntInternal(input) ?? ctx.error("a decimal string or number representing a 256-bit unsigned integer"),
-)
-    .narrow(gte(0n))
+// biome-ignore format: pretty
+export const UInt256In = UInt256
+    .pipe((it, ctx) => parseBigInt(it) ?? ctx.error("not a positive integer"))
     .narrow(lt(1n << 256n, "2^256"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const Int256In = Int256.pipe(
-    (input, ctx) =>
-        parseBigIntInternal(input) ?? ctx.error("a decimal string or number representing a 256-bit signed integer"),
-)
+// biome-ignore format: pretty
+export const Int256In = Int256
+    .pipe((it, ctx) => parseBigInt(it) ?? ctx.error("not an integer"))
     .narrow(gte(-1n << 255n, "-2^255"))
     .narrow(lt(1n << 255n, "2^255"))
     .configure({ example: 10_100_200_300_400_500_600n })
 
-export const UInt32In = UInt32.pipe(
-    (input, ctx) => Number(input) ?? ctx.error("a decimal string or number representing a 32-bit unsigned integer"),
-)
+// biome-ignore format: pretty
+export const UInt32In = UInt32
+    .pipe(it => it) // pipe before narrow makes it possible to prune narrows with <type>.in
     .narrow(gte(0))
     .narrow(lt(1n << 32n, "2^32"))
     .configure({ example: 400_000 })
