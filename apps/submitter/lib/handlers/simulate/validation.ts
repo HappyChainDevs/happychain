@@ -45,7 +45,7 @@ const simulateError = type({
 })
 
 export const simulateDescription = describeRoute({
-    description: "Simulates the supplied boop",
+    description: "Simulates the boop execution without committing to the blockchain",
     requestBody: {
         required: true,
         description: "Boop data to simulate",
@@ -57,11 +57,11 @@ export const simulateDescription = describeRoute({
     },
     responses: {
         200: {
-            description: "Simulation successful",
+            description: "Boop simulation completed successfully",
             content: openApiContent(simulateSuccess),
         },
         other: {
-            description: "Simulation failed",
+            description: "Boop simulation failed",
             content: openApiContent(simulateError),
         },
     },

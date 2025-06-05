@@ -29,13 +29,13 @@ const getPendingSuccess = type({
 
 const getPendingError = type({
     status: type.valueOf(SubmitterError),
-    description: type.string.configure({ example: "Failed to retrieve pending boops" }),
+    description: type.string.configure({ example: "Failed to retrieve pending boops for the specified account" }),
     account: type.never.optional(),
     pending: type.never.optional(),
 })
 
 export const getPendingDescription = describeRoute({
-    description: "Retrieve pending (not yet included onchain) boops for account",
+    description: "Retrieve pending boops (not yet included on-chain) for the specified account",
     responses: {
         200: {
             description: "Successfully retrieved pending boops",

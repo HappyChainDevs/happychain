@@ -36,19 +36,19 @@ const waitForReceiptSuccess = type({
 const waitForReceiptError = type({
     status: type.valueOf(WaitForReceipt).exclude(type.unit(WaitForReceipt.Success)),
     revertData: Bytes.optional(),
-    description: type.string.configure({ example: "Failed to retrieve receipt" }),
+    description: type.string.configure({ example: "Failed to retrieve boop receipt" }),
     receipt: type.never.optional(),
 })
 
 export const waitForReceiptDescription = describeRoute({
-    description: "Retrieve the receipt for the supplied boop hash, waiting if necessary",
+    description: "Retrieve the boop receipt for the specified boop hash, waiting if necessary",
     responses: {
         200: {
-            description: "Successfully retrieed the receipt",
+            description: "Successfully retrieved the boop receipt",
             content: openApiContent(waitForReceiptSuccess),
         },
         other: {
-            description: "Failed to retrieve the receipt",
+            description: "Failed to retrieve the boop receipt",
             content: openApiContent(waitForReceiptError),
         },
     },
