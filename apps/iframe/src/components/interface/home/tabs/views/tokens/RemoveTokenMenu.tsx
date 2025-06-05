@@ -1,6 +1,6 @@
 import { Menu } from "@ark-ui/react/menu"
+import type { Address } from "@happy.tech/common"
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react"
-import type { Address } from "viem"
 import { recipeContent } from "#src/components/primitives/popover/variants"
 import { removeWatchedAsset } from "#src/state/watchedAssets"
 
@@ -9,15 +9,11 @@ enum TokenMenuActions {
 }
 
 interface RemoveTokensMenuProps {
-    tokenAddress: Address
-    userAddress: Address
+    user: Address
+    token: Address
 }
 
-const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) => {
-    const handleRemoveClick = () => {
-        removeWatchedAsset(tokenAddress, userAddress)
-    }
-
+const RemoveTokenMenu = ({ user, token }: RemoveTokensMenuProps) => {
     return (
         <Menu.Root aria-label="Asset Options Menu" lazyMount={true} unmountOnExit={true}>
             <Menu.Trigger>
@@ -33,9 +29,9 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
                 >
                     <Menu.Item
                         asChild
-                        className="text-white cursor-pointer p-2 bg-base-content/80 rounded-lg"
+                        className="text-primary dark:text-content cursor-pointer p-2 bg-primary/20 hover:bg-primary/30 dark:bg-primary/10 dark:hover:bg-primary/20 rounded-md"
                         value={TokenMenuActions.StopTracking}
-                        onClick={handleRemoveClick}
+                        onClick={() => removeWatchedAsset(user, token)}
                     >
                         <span className="text-primary/60">{TokenMenuActions.StopTracking}</span>
                     </Menu.Item>

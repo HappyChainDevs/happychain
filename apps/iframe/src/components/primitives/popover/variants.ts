@@ -29,7 +29,7 @@ const recipeContent = cva(
     [
         "min-h-fit size-full", //
         "inset-0 relative",
-        "data-[state=open]:flex flex-col",
+        "data-[state=open]:flex flex-col rounded-md",
     ],
     {
         variants: {
