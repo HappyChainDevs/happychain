@@ -12,6 +12,6 @@ export default new Hono().post("/create", createAccountDescription, createAccoun
     const input = c.req.valid("json")
     const output = await createAccount(input)
     const [body, code] = makeResponse(output)
-    validateOutput(body, createAccountOutputValidation)
+    validateOutput(body, createAccountOutputValidation, "createAccount response")
     return c.json(body, code)
 })
