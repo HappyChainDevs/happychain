@@ -19,7 +19,6 @@ const createAccountSuccess = type({
     salt: Bytes32,
     status: successStatus,
     address: Address,
-    description: type.never.optional(),
 })
 
 const createAccountError = type({
@@ -27,7 +26,6 @@ const createAccountError = type({
     salt: Bytes32,
     status: type.valueOf(CreateAccount).exclude(successStatus),
     description: type.string.configure({ example: "Account creation failed due to invalid account data" }),
-    address: type.never.optional(),
 })
 
 export const createAccountDescription = describeRoute({

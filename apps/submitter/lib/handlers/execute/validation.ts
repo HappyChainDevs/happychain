@@ -17,9 +17,6 @@ const executeInput = type({
 const executeSuccess = type({
     status: type.unit(Execute.Success),
     receipt: SBoopReceipt,
-    stage: type.never.optional(),
-    revertData: type.never.optional(),
-    description: type.never.optional(),
 })
 
 const executeError = type({
@@ -27,7 +24,6 @@ const executeError = type({
     stage: type.enumerated("simulate", "submit", "execute"),
     revertData: Bytes.optional(),
     description: type.string.configure({ example: "Invalid boop" }),
-    receipt: type.never.optional(),
 })
 
 export const executeDescription = describeRoute({
