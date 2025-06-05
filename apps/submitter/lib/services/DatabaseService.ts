@@ -2,7 +2,7 @@ import { type Hash, bigIntReplacer, bigIntReviver } from "@happy.tech/common"
 import type { Kysely } from "kysely"
 import type { DB } from "#lib/database/generated"
 import { computeHash } from "#lib/services"
-import { TraceMethod } from "#lib/telemetry/traces.ts"
+import { TraceMethod } from "#lib/telemetry/traces"
 import type { BoopReceipt } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 

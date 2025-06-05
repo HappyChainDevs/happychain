@@ -5,7 +5,7 @@ import { outputForExecuteError, outputForGenericError, outputForRevertError } fr
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import { getSubmitterFee, validateSubmitterFee } from "#lib/policies/submitterFee"
 import { computeHash, simulationCache } from "#lib/services"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"

@@ -1,5 +1,5 @@
 import type { SimulateSuccess } from "#lib/handlers/simulate"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop } from "#lib/types"
 
 /**

@@ -12,9 +12,9 @@ const resource = Resource.default().merge(
     }),
 )
 
-const traceExporter = env.OTEL_EXPORTER_OTLP_ENDPOINT
+const traceExporter = env.TRACES_ENDPOINT
     ? new OTLPTraceExporter({
-          url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+          url: env.TRACES_ENDPOINT,
       })
     : undefined
 

@@ -1,6 +1,6 @@
 import type { Hash } from "@happy.tech/common"
 import { env } from "#lib/env"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "./computeBoopHash"
 

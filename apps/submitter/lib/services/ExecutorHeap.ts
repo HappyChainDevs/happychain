@@ -1,6 +1,6 @@
 import { type Address, IndexedHeap } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
-import { TraceMethod } from "#lib/telemetry/traces.ts"
+import { TraceMethod } from "#lib/telemetry/traces"
 
 interface Executor {
     account: Account

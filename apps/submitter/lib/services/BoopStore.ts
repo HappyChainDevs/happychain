@@ -1,5 +1,5 @@
 import { type Address, type Hash, Map2 } from "@happy.tech/common"
-import { TraceMethod } from "#lib/telemetry/traces.ts"
+import { TraceMethod } from "#lib/telemetry/traces"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import type { Boop } from "../types"
 

@@ -1,6 +1,6 @@
 import { outputForGenericError } from "#lib/handlers/errors"
 import { boopNonceManager, boopStore, computeHash } from "#lib/services"
-import { traceFunction } from "#lib/telemetry/traces.ts"
+import { traceFunction } from "#lib/telemetry/traces"
 import { GetPending, type GetPendingInput, type GetPendingOutput, type PendingBoopInfo } from "./types"
 
 async function getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {

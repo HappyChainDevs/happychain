@@ -2,7 +2,7 @@ import { type Hash, Map2, Mutex, promiseWithResolvers } from "@happy.tech/common
 import type { Address } from "viem/accounts"
 import { abis, env } from "#lib/env"
 import type { SubmitError } from "#lib/handlers/submit"
-import { TraceMethod } from "#lib/telemetry/traces.ts"
+import { TraceMethod } from "#lib/telemetry/traces"
 import { type Boop, SubmitterError, type SubmitterErrorStatus } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"

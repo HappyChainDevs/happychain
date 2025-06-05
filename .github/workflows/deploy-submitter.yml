@@ -60,6 +60,7 @@ jobs:
             CHAIN_ID=216
             NODE_ENV=production
             RPC_URLS=ws://localhost:8546,http://localhost:8545
+            TRACES_ENDPOINT=http://localhost:4318/v1/traces
             EOF
               cd /home/submitter/build
               bun migrate.es.js
