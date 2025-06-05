@@ -1,4 +1,4 @@
-import type { AssertCompatible } from "@happy.tech/common"
+import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
@@ -6,7 +6,6 @@ import type * as types from "#lib/handlers/getState/types"
 import { simulateOutputValidation } from "#lib/handlers/simulate/validation"
 import { HashIn, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopReceipt } from "#lib/utils/validation/boop"
-import type { SerializedObject } from "#lib/utils/validation/helpers.ts"
 import { GetState } from "./types"
 
 const getStateParam = type({
@@ -64,7 +63,7 @@ type GetStateError = typeof getStateError.infer
 type GetStateOutput = typeof getStateOutputValidation.infer
 
 type _a1 = AssertCompatible<GetStateInput, types.GetStateInput>
-type _a2 = AssertCompatible<GetStateReceipt, SerializedObject<types.GetStateReceipt>>
-type _a3 = AssertCompatible<GetStateSimulated, SerializedObject<types.GetStateSimulated>>
-type _a4 = AssertCompatible<GetStateError, types.GetStateError> // No BigInt fields, so no SerializedObject needed
-type _a5 = AssertCompatible<GetStateOutput, SerializedObject<types.GetStateOutput>>
+type _a2 = AssertCompatible<GetStateReceipt, BigIntSerialized<types.GetStateReceipt>>
+type _a3 = AssertCompatible<GetStateSimulated, BigIntSerialized<types.GetStateSimulated>>
+type _a4 = AssertCompatible<GetStateError, types.GetStateError> // No BigInt fields, so no BigIntSerialized needed
+type _a5 = AssertCompatible<GetStateOutput, BigIntSerialized<types.GetStateOutput>>

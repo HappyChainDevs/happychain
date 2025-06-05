@@ -1,11 +1,10 @@
-import type { AssertCompatible } from "@happy.tech/common"
+import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { CallStatus } from "#lib/types"
 import { AddressIn, BytesIn, UInt32In, UInt256, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopIn } from "#lib/utils/validation/boop"
-import type { SerializedObject } from "#lib/utils/validation/helpers"
 import type * as types from "./types"
 import { Simulate } from "./types"
 
@@ -69,6 +68,6 @@ type SimulateError = typeof simulateError.infer
 type SimulateOutput = typeof simulateOutputValidation.infer
 
 type _a1 = AssertCompatible<SimulateInput, types.SimulateInput>
-type _a2 = AssertCompatible<SimulateSuccess, SerializedObject<types.SimulateSuccess>>
+type _a2 = AssertCompatible<SimulateSuccess, BigIntSerialized<types.SimulateSuccess>>
 type _a3 = AssertCompatible<SimulateError, types.SimulateError>
-type _a4 = AssertCompatible<SimulateOutput, SerializedObject<types.SimulateOutput>>
+type _a4 = AssertCompatible<SimulateOutput, BigIntSerialized<types.SimulateOutput>>

@@ -1,10 +1,9 @@
-import type { AssertCompatible } from "@happy.tech/common"
+import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopReceipt } from "#lib/utils/validation/boop"
-import type { SerializedObject } from "#lib/utils/validation/helpers.ts"
 import { WaitForReceipt } from "./types"
 import type * as types from "./types"
 
@@ -68,6 +67,6 @@ type WaitForReceiptError = typeof waitForReceiptError.infer
 type WaitForReceiptOutput = typeof waitForReceiptOutputValidation.infer
 
 type _a1 = AssertCompatible<WaitForReceiptInput, types.WaitForReceiptInput>
-type _a2 = AssertCompatible<WaitForReceiptSuccess, SerializedObject<types.WaitForReceiptSuccess>>
+type _a2 = AssertCompatible<WaitForReceiptSuccess, BigIntSerialized<types.WaitForReceiptSuccess>>
 type _a3 = AssertCompatible<WaitForReceiptError, types.WaitForReceiptError>
-type _a4 = AssertCompatible<WaitForReceiptOutput, SerializedObject<types.WaitForReceiptOutput>>
+type _a4 = AssertCompatible<WaitForReceiptOutput, BigIntSerialized<types.WaitForReceiptOutput>>
