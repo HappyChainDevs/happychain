@@ -1,5 +1,6 @@
 import daisyui from "daisyui"
 import type { Config } from "tailwindcss"
+import defaultTheme from "tailwindcss/defaultTheme"
 import plugin from "tailwindcss/plugin"
 
 export default {
@@ -11,6 +12,9 @@ export default {
             lg: { raw: "(min-height: 72px) and (min-width: 210px)" },
         },
         extend: {
+            fontFamily: {
+                sans: ["Inter", ...defaultTheme.fontFamily.sans],
+            },
             keyframes: {
                 hideScrollbar: {
                     from: { overflow: "hidden" },
