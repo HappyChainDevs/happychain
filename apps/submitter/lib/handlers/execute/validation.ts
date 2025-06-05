@@ -1,11 +1,10 @@
-import type { AssertCompatible } from "@happy.tech/common"
+import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { Onchain } from "#lib/types"
 import { AddressIn, Bytes, openApiContent } from "#lib/utils/validation/ark"
 import { SBoopIn, SBoopReceipt } from "#lib/utils/validation/boop"
-import type { SerializedObject } from "#lib/utils/validation/helpers"
 import { Execute } from "./types"
 import type * as types from "./types"
 
@@ -67,6 +66,6 @@ type ExecuteError = typeof executeError.infer
 type ExecuteOutput = typeof executeOutputValidation.infer
 
 type _a1 = AssertCompatible<ExecuteInput, types.ExecuteInput>
-type _a2 = AssertCompatible<ExecuteSuccess, SerializedObject<types.ExecuteSuccess>>
+type _a2 = AssertCompatible<ExecuteSuccess, BigIntSerialized<types.ExecuteSuccess>>
 type _a3 = AssertCompatible<ExecuteError, types.ExecuteError>
-type _a4 = AssertCompatible<ExecuteOutput, SerializedObject<types.ExecuteOutput>>
+type _a4 = AssertCompatible<ExecuteOutput, BigIntSerialized<types.ExecuteOutput>>
