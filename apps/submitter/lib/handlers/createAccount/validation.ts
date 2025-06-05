@@ -26,7 +26,7 @@ const createAccountError = type({
     owner: Address,
     salt: Bytes32,
     status: type.valueOf(CreateAccount).exclude(successStatus),
-    description: type.string.configure({ example: "Invalid account data" }),
+    description: type.string.configure({ example: "Account creation failed due to invalid account data" }),
     address: type.never.optional(),
 })
 
@@ -34,7 +34,7 @@ export const createAccountDescription = describeRoute({
     description: "Creates a new account or returns an existing account address for the given owner",
     requestBody: {
         required: true,
-        description: "Account data to create",
+        description: "Owner address and salt to create or retrieve an account",
         content: {
             "application/json": {
                 schema: {},
@@ -43,7 +43,7 @@ export const createAccountDescription = describeRoute({
     },
     responses: {
         200: {
-            description: "The account already existed",
+            description: "Account address successfully retrieved for existing account",
             content: openApiContent(createAccountSuccess),
         },
         201: {
@@ -51,7 +51,7 @@ export const createAccountDescription = describeRoute({
             content: openApiContent(createAccountSuccess),
         },
         other: {
-            description: "Could not create the account",
+            description: "Account creation failed",
             content: openApiContent(createAccountError),
         },
     },

@@ -45,11 +45,11 @@ export const submitDescription = describeRoute({
     },
     responses: {
         200: {
-            description: "Boop successfully submitted",
+            description: "Boop successfully submitted to the chain",
             content: openApiContent(submitSuccess),
         },
         other: {
-            description: "Failed to submit the boop",
+            description: "Boop submission failed",
             content: openApiContent(submitError),
         },
     },

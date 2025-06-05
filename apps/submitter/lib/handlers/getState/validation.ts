@@ -37,14 +37,14 @@ const getStateError = type({
 })
 
 export const getStateDescription = describeRoute({
-    description: "Retrieve boop state (simulation results or receipt)",
+    description: "Retrieve the boop state (simulation results or receipt)",
     responses: {
         200: {
-            description: "Successfully retrieved boop state",
+            description: "Successfully retrieved the boop state",
             content: openApiContent(getStateSuccess),
         },
         other: {
-            description: "Failed to retrieve boop state",
+            description: "Failed to retrieve the boop state",
             content: openApiContent(getStateError),
         },
     },
@@ -62,5 +62,5 @@ type GetStateOutput = typeof getStateOutputValidation.infer
 type _a1 = AssertCompatible<GetStateInput, types.GetStateInput>
 type _a2 = AssertCompatible<GetStateReceipt, BigIntSerialized<types.GetStateReceipt>>
 type _a3 = AssertCompatible<GetStateSimulated, BigIntSerialized<types.GetStateSimulated>>
-type _a4 = AssertCompatible<GetStateError, types.GetStateError> // No BigInt fields, so no BigIntSerialized needed
+type _a4 = AssertCompatible<GetStateError, types.GetStateError>
 type _a5 = AssertCompatible<GetStateOutput, BigIntSerialized<types.GetStateOutput>>
