@@ -1,4 +1,4 @@
-import { type Hex, parseBigInt, serializeBigInt } from "@happy.tech/common"
+import { type Hex, parseBigInt } from "@happy.tech/common"
 import { ArkErrors } from "arktype"
 import { isProduction } from "#lib/env"
 
@@ -13,27 +13,5 @@ export function validateOutput<T>(response: T, validator: (_: T) => ArkErrors | 
     // we must use structuredClone here as arktype validators mutate the input object
     // and our boops are (mostly) immutable. changes to most fields would effect the computed hash
     const result = validator(structuredClone(response))
-    if (result instanceof ArkErrors) result.throw()
-}
-
-/**
- * Serializes BigInt values in the response and then validates it against the schema.
- * This is a convenience function that combines serializeBigInt and validateOutput.
- *
- * @param response The response object to validate
- * @param validator The validation schema
- */
-export function validateSerializedOutput<T>(
-    response: T,
-    validator: (serialized: unknown) => ArkErrors | unknown,
-): void {
-    // Skip output validation in prod for performance & reliability.
-    if (isProduction) return
-
-    // Serialize BigInt values to strings
-    const serialized = serializeBigInt(response)
-
-    // Validate the serialized output
-    const result = validator(serialized)
     if (result instanceof ArkErrors) result.throw()
 }

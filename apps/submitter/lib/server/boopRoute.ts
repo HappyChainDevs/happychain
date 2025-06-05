@@ -16,7 +16,7 @@ import {
 } from "#lib/handlers/getState"
 import { simulate, simulateBodyValidation, simulateDescription, simulateOutputValidation } from "#lib/handlers/simulate"
 import { makeResponse } from "#lib/server/makeResponse"
-import { validateSerializedOutput } from "#lib/utils/validation/helpers"
+import { validateOutput } from "#lib/utils/validation/helpers"
 import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "../handlers/submit"
 import {
     waitForReceipt,
@@ -34,8 +34,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await simulate(input)
-            validateSerializedOutput(output, simulateOutputValidation)
             const [body, code] = makeResponse(output)
+            validateOutput(body, simulateOutputValidation)
             return c.json(body, code)
         },
     )
@@ -46,8 +46,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await submit(input)
-            validateSerializedOutput(output, submitOutputValidation)
             const [body, code] = makeResponse(output)
+            validateOutput(body, submitOutputValidation)
             return c.json(body, code)
         },
     )
@@ -58,8 +58,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await execute(input)
-            validateSerializedOutput(output, executeOutputValidation)
             const [body, code] = makeResponse(output)
+            validateOutput(body, executeOutputValidation)
             return c.json(body, code)
         },
     )
@@ -70,8 +70,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getState(input)
-            validateSerializedOutput(output, getStateOutputValidation)
             const [body, code] = makeResponse(output)
+            validateOutput(body, getStateOutputValidation)
             return c.json(body, code)
         },
     )
@@ -84,8 +84,8 @@ export default new Hono()
             const param = c.req.valid("param")
             const query = c.req.valid("query")
             const output = await waitForReceipt({ ...param, ...query })
-            validateSerializedOutput(output, waitForReceiptOutputValidation)
             const [body, code] = makeResponse(output)
+            validateOutput(body, waitForReceiptOutputValidation)
             return c.json(body, code)
         },
     )
@@ -96,8 +96,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getPending(input)
-            validateSerializedOutput(output, getPendingOutputValidation)
             const [response, code] = makeResponse(output)
+            validateOutput(response, getPendingOutputValidation)
             return c.json(response, code)
         },
     )
