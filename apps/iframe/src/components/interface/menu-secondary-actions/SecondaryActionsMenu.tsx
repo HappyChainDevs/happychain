@@ -20,7 +20,7 @@ const TriggerSecondaryActionsMenu = () => {
                 setVisibility(!isVisible)
             }}
         >
-            {isVisible ? <CaretUpIcon size="1.15em" /> : <CaretDownIcon size="1.15em" />}
+            {isVisible ? <CaretUpIcon size="1em" /> : <CaretDownIcon size="1em" />}
         </button>
     )
 }
