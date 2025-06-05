@@ -36,7 +36,7 @@ describe("submitter_receipt", () => {
         await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
 
         const state = (await client.api.v1.boop.receipt[":boopHash"]
-            .$get({ param: { boopHash }, query: { timeout: "0" } })
+            .$get({ param: { boopHash }, query: { timeout: 0 } })
             .then((a) => a.json())) as WaitForReceiptSuccess
 
         expect(state.status).toBe(WaitForReceipt.Success)
@@ -52,10 +52,10 @@ describe("submitter_receipt", () => {
 
         const [_stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.boop.receipt[":boopHash"]
-                .$get({ param: { boopHash }, query: { timeout: "100" } }) // return near immediately
+                .$get({ param: { boopHash }, query: { timeout: 100 } }) // return near immediately
                 .then((a) => a.json() as any as WaitForReceiptError),
             client.api.v1.boop.receipt[":boopHash"]
-                .$get({ param: { boopHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
+                .$get({ param: { boopHash }, query: { timeout: 2100 } }) // wait 2 seconds to get next block
                 .then((a) => a.json() as any as WaitForReceiptSuccess),
         ])
 
@@ -67,7 +67,7 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
         const result = await client.api.v1.boop.receipt[":boopHash"].$get({
             param: { boopHash },
-            query: { timeout: "2000" },
+            query: { timeout: 2000 },
         })
         const output = (await result.json()) as WaitForReceiptError
         expect(result.status).toBe(404)

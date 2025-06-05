@@ -1,18 +1,19 @@
-import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
+import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
+import { Bytes, Hash, openApiParameters, openApiResponseContent } from "#lib/utils/validation/ark"
 import { SBoopReceipt } from "#lib/utils/validation/boop"
 import { WaitForReceipt } from "./types"
 import type * as types from "./types"
 
 const waitForReceiptQuery = type({
     "+": "reject",
-    timeout: type("number.integer | string.integer.parse")
-        .pipe(type("0 <= number <= 30000"))
-        .configure({ example: 500 })
-        .optional(),
+    // Can't use .optional() here because it doesn't return a `Type` so can't be before the pipe,
+    // and putting it after the pipe causes it to get stipped on `waitForReceiptQuery.in`.
+    "timeout?": type("0 <= number <= 30000 | /^[0-9]+$/")
+        .pipe(Number, type("0 <= number <= 30000"))
+        .configure({ example: 500 }),
 })
 
 const waitForReceiptParam = type({
@@ -38,15 +39,16 @@ const waitForReceiptError = type({
 })
 
 export const waitForReceiptDescription = describeRoute({
-    description: "Retrieve the boop receipt for the specified boop hash, waiting if necessary",
+    description: "Retrieves the receipt for the specified boop hash, waiting if necessary",
+    parameters: openApiParameters({ path: waitForReceiptParam.in, query: waitForReceiptQuery.in }),
     responses: {
         200: {
             description: "Successfully retrieved the boop receipt",
-            content: openApiContent(waitForReceiptSuccess),
+            content: openApiResponseContent(waitForReceiptSuccess),
         },
         other: {
             description: "Failed to retrieve the boop receipt",
-            content: openApiContent(waitForReceiptError),
+            content: openApiResponseContent(waitForReceiptError),
         },
     },
 })
@@ -61,6 +63,6 @@ type WaitForReceiptError = typeof waitForReceiptError.infer
 type WaitForReceiptOutput = typeof waitForReceiptOutputValidation.infer
 
 type _a1 = AssertCompatible<WaitForReceiptInput, types.WaitForReceiptInput>
-type _a2 = AssertCompatible<WaitForReceiptSuccess, BigIntSerialized<types.WaitForReceiptSuccess>>
+type _a2 = AssertCompatible<WaitForReceiptSuccess, types.WaitForReceiptSuccess>
 type _a3 = AssertCompatible<WaitForReceiptError, types.WaitForReceiptError>
-type _a4 = AssertCompatible<WaitForReceiptOutput, BigIntSerialized<types.WaitForReceiptOutput>>
+type _a4 = AssertCompatible<WaitForReceiptOutput, types.WaitForReceiptOutput>

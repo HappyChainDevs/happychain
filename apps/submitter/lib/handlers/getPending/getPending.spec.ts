@@ -48,7 +48,6 @@ describe("submitter_pending", () => {
             .$get({ param: { account: account } })
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
-        console.log("foobar", pending.pending.length)
         expect(pending.pending.length).toBeGreaterThanOrEqual(5)
         expect(pending.pending[0].boopHash).toBeString()
         expect(pending.pending[0].entryPoint).toBe(deployment.EntryPoint)

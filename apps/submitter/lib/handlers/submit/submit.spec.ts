@@ -62,7 +62,7 @@ describe("submitter_submit", () => {
                 if (a.status !== Onchain.Success) return { status: a.status }
                 return client.api.v1.boop.receipt[":boopHash"].$get({
                     param: { boopHash: a.boopHash },
-                    query: { timeout: "10000" },
+                    query: { timeout: 10_000 },
                 })
             }),
         )
