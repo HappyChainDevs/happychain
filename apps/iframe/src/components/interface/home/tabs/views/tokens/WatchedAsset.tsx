@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import type { WatchAssetParameters } from "viem"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 import { walletOpenSignalAtom } from "#src/state/interfaceState.ts"
-import BalanceDisplay from "./BalanceDisplay"
+import { BalanceDisplay } from "./BalanceDisplay"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
 interface WatchedAssetProps {
@@ -20,7 +20,7 @@ interface WatchedAssetProps {
  * User has the option to stop watching an asset, which updates
  * the local storage entry.
  */
-const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
+export const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const userAddress = user.address
     const tokenAddress = asset.options.address
 
@@ -91,5 +91,3 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         </div>
     )
 }
-
-export default WatchedAsset

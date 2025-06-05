@@ -7,7 +7,7 @@ interface AddressInfoProps {
     address: Address
 }
 
-const AddressInfo = ({ address }: AddressInfoProps) => {
+export const AddressInfo = ({ address }: AddressInfoProps) => {
     const clipboard = useClipboard({ value: address })
     return (
         <div className="relative">
@@ -38,5 +38,3 @@ const AddressInfo = ({ address }: AddressInfoProps) => {
         </div>
     )
 }
-
-export default AddressInfo

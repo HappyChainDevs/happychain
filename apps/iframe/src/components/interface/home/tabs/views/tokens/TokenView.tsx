@@ -2,14 +2,14 @@ import { CoinsIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
 import { watchedAssetsAtom } from "#src/state/watchedAssets"
-import UserNotFoundWarning from "../UserNotFoundWarning"
+import { UserNotFoundWarning } from "../UserNotFoundWarning"
 import { TriggerImportTokensDialog } from "./ImportTokensDialog"
-import WatchedAsset from "./WatchedAsset"
+import { WatchedAsset } from "./WatchedAsset"
 
 /**
  * Displays all watched assets registered by the connected user.
  */
-const TokenView = () => {
+export const TokenView = () => {
     const user = useAtomValue(userAtom)
     const watchedAssets = useAtomValue(watchedAssetsAtom)
 
@@ -36,5 +36,3 @@ const TokenView = () => {
         </ul>
     )
 }
-
-export default TokenView

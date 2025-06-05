@@ -3,9 +3,9 @@ import { useAtomValue } from "jotai"
 import { historyAtom } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { userAtom } from "#src/state/user"
-import UserNotFoundWarning from "../UserNotFoundWarning"
+import { UserNotFoundWarning } from "../UserNotFoundWarning"
 import { BoopEntry } from "./BoopEntry"
-import BoopEntrySkeleton from "./BoopEntrySkeleton"
+import { BoopEntrySkeleton } from "./BoopEntrySkeleton"
 
 /**
  * Displays the user's transaction (boop) history. We show a spinner for pending transactions. At most 50
@@ -58,5 +58,3 @@ export const ActivityView = () => {
         </div>
     )
 }
-
-export default ActivityView

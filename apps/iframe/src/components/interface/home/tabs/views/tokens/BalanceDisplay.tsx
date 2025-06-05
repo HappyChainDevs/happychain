@@ -13,7 +13,8 @@ interface BalanceDisplayProps {
  * @param isLoading - Whether the balance data is currently being fetched
  * @param truncatedBalance - Formatted balance string truncated to 4 decimal places, undefined if not available
  */
-const BalanceDisplay = ({ isLoading, balance }: BalanceDisplayProps) => {
+
+export const BalanceDisplay = ({ isLoading, balance }: BalanceDisplayProps) => {
     if (isLoading && balance !== undefined) {
         return <SpinnerIcon className="animate-spin" size="1.25em" />
     }
@@ -28,5 +29,3 @@ const BalanceDisplay = ({ isLoading, balance }: BalanceDisplayProps) => {
         </span>
     )
 }
-
-export default BalanceDisplay

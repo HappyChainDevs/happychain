@@ -9,9 +9,9 @@ import { getPaymaster, getPaymasterName } from "#src/constants/contracts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop"
 import { userAtom } from "#src/state/user"
 
-import FieldLoader from "../loaders/FieldLoader"
-import ArgsList from "./common/ArgsList"
-import DisclosureSection from "./common/DisclosureSection"
+import { FieldLoader } from "../loaders/FieldLoader"
+import { ArgsList } from "./common/ArgsList"
+import { DisclosureSection } from "./common/DisclosureSection"
 import {
     FormattedDetailsLine,
     Layout,

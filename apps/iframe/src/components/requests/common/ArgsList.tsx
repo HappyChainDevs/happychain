@@ -5,7 +5,7 @@ interface ArgsListProps {
     fnInputs: readonly AbiParameter[]
 }
 
-const ArgsList = ({ args = [], fnInputs }: ArgsListProps) => {
+export const ArgsList = ({ args = [], fnInputs }: ArgsListProps) => {
     return (
         <ul className="flex flex-col gap-2 w-full mt-2 px-2 py-1">
             {args.map((arg, idx) => {
@@ -35,5 +35,3 @@ const ArgsList = ({ args = [], fnInputs }: ArgsListProps) => {
         </ul>
     )
 }
-
-export default ArgsList

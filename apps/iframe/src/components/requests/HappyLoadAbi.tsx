@@ -2,7 +2,7 @@ import type { HappyMethodNames } from "@happy.tech/common"
 import { formatAbiItem } from "abitype"
 import { useSmartContract } from "#src/hooks/useBlockExplorer"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
-import FieldLoader from "../loaders/FieldLoader"
+import { FieldLoader } from "../loaders/FieldLoader"
 import {
     FormattedDetailsLine,
     Layout,

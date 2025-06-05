@@ -6,7 +6,7 @@ import {
     recipeDisclosureDetails,
     recipeDisclosureSummary,
 } from "#src/components/primitives/disclosure/variants"
-import ArgsList from "./ArgsList"
+import { ArgsList } from "./ArgsList"
 
 interface DecodedDataProps {
     data: {
@@ -15,7 +15,7 @@ interface DecodedDataProps {
     }
 }
 
-const DecodedData = ({ data }: DecodedDataProps) => {
+export const DecodedData = ({ data }: DecodedDataProps) => {
     const { args = [], abiFuncDef } = data
 
     return (
@@ -46,5 +46,3 @@ const DecodedData = ({ data }: DecodedDataProps) => {
         </details>
     )
 }
-
-export default DecodedData
