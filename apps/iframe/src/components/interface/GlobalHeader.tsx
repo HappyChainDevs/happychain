@@ -1,17 +1,14 @@
 import { Msgs } from "@happy.tech/wallet-common"
-import { ArrowLeftIcon, ArrowsInSimpleIcon, GearSixIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, ArrowsInSimpleIcon } from "@phosphor-icons/react"
 import { Link, useLocation } from "@tanstack/react-router"
-import { useAtom } from "jotai"
 import { appMessageBus } from "#src/services/eventBus"
-import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
+import { TriggerSecondaryActionsMenu } from "./menu-secondary-actions/SecondaryActionsMenu"
 
 function signalClosed() {
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
 }
 export const GlobalHeader = () => {
     const location = useLocation()
-    const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
-    const optionsLabel = isVisible ? "Close options menu" : "Open options menu"
 
     return (
         <div className="relative max-w-prose mx-auto items-center w-full py-3 hidden lg:flex">
@@ -28,20 +25,10 @@ export const GlobalHeader = () => {
                 🤠 HappyChain
             </span>
 
+            {/* wallet options */}
             <div className="flex flex-row gap-1 items-center absolute end-3 text-xl">
-                <button
-                    title={optionsLabel}
-                    type="button"
-                    aria-label={optionsLabel}
-                    className="dark:opacity-60"
-                    onClick={() => {
-                        // Don't toggle visibility: the menu will close if clicking the gear while the menu is open
-                        // via the menu's own `onInteractOutsideHandler`.
-                        if (!isVisible) setVisibility(true)
-                    }}
-                >
-                    <GearSixIcon weight="bold" />
-                </button>
+                <TriggerSecondaryActionsMenu />
+
                 <button
                     title="Hide wallet"
                     type="button"
