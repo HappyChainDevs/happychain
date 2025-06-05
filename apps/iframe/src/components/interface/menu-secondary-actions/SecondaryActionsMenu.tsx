@@ -15,7 +15,8 @@ const TriggerSecondaryActionsMenu = () => {
             type="button"
             title={isVisible ? "Close this menu" : "Open this menu"}
             aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
-            onClick={() => {
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.stopPropagation()
                 setVisibility(!isVisible)
             }}
         >
