@@ -3,7 +3,7 @@ import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { CallStatus } from "#lib/types"
-import { AddressIn, BytesIn, UInt32In, UInt256, openApiContent } from "#lib/utils/validation/ark"
+import { AddressIn, Bytes, UInt32, UInt256, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
 import { SBoopIn } from "#lib/utils/validation/boop"
 import type { SerializedObject } from "#lib/utils/validation/helpers"
 import type * as types from "./types"
@@ -16,15 +16,15 @@ const simulateInput = type({
 })
 
 const entryPointOutput = type({
-    gas: UInt32In,
-    validateGas: UInt32In,
-    validatePaymentGas: UInt32In,
-    executeGas: UInt32In,
-    validityUnknownDuringSimulation: type.boolean,
-    paymentValidityUnknownDuringSimulation: type.boolean,
-    futureNonceDuringSimulation: type.boolean,
+    gas: UInt32,
+    validateGas: UInt32,
+    validatePaymentGas: UInt32,
+    executeGas: UInt32,
+    validityUnknownDuringSimulation: "boolean",
+    paymentValidityUnknownDuringSimulation: "boolean",
+    futureNonceDuringSimulation: "boolean",
     callStatus: type.valueOf(CallStatus).configure({ example: CallStatus.SUCCEEDED }),
-    revertData: BytesIn,
+    revertData: Bytes,
 })
 
 const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
@@ -32,21 +32,26 @@ const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
     maxFeePerGas: UInt256,
     submitterFee: UInt256,
     feeTooLowDuringSimulation: "boolean",
-    "revertData?": type.never,
-    "description?": type.never,
+    revertData: "never?",
+    description: "never?",
 })
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
-    revertData: BytesIn.optional(),
-    description: type.string.configure({ example: "Invalid boop" }),
-    "maxFeePerGas?": type.never,
-    "submitterFee?": type.never,
-    "feeTooLowDuringSimulation?": type.never,
+    revertData: Bytes.optional(),
+    description: type.string.configure({ example: "Unknown boop" }),
+    maxFeePerGas: "never?",
+    submitterFee: "never?",
+    feeTooLowDuringSimulation: "never?",
 })
 
 export const simulateDescription = describeRoute({
     description: "Simulates the supplied boop",
+    requestBody: {
+        required: true,
+        description: "Boop to simulate and optional EntryPoint contract address",
+        content: openApiContentBody(simulateInput.in),
+    },
     responses: {
         200: {
             description: "Simulation successful",
@@ -61,7 +66,7 @@ export const simulateDescription = describeRoute({
 
 export const simulateBodyValidation = arktypeValidator("json", simulateInput)
 export const simulateOutputValidation = type(simulateSuccess, "|", simulateError)
-export const simulateSuccessValidation = simulateSuccess // temp: To test success output
+export const simulateSuccessValidation = simulateSuccess // TODO temp: To test success output
 
 type SimulateInput = typeof simulateInput.infer
 type SimulateSuccess = typeof simulateSuccess.infer

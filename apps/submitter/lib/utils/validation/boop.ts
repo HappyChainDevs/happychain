@@ -1,20 +1,7 @@
 import type { AssertCompatible } from "@happy.tech/common"
 import { type } from "arktype"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
-import {
-    Address,
-    AddressIn,
-    Bytes,
-    BytesIn,
-    Hash,
-    HashIn,
-    Int256,
-    Int256In,
-    UInt32,
-    UInt32In,
-    UInt256,
-    UInt256In,
-} from "./ark"
+import { Address, AddressIn, Bytes, Hash, HashIn, Int256, Int256In, UInt32, UInt32In, UInt256, UInt256In } from "./ark"
 import type { SerializedObject } from "./helpers"
 
 // =====================================================================================================================
@@ -33,9 +20,9 @@ export const SBoopIn = type({
     validateGasLimit: UInt32In.default(0),
     validatePaymentGasLimit: UInt32In.default(0),
     executeGasLimit: UInt32In.default(0),
-    callData: BytesIn.default("0x"),
-    validatorData: BytesIn.default("0x"),
-    extraData: BytesIn.default("0x"),
+    callData: Bytes.default("0x"),
+    validatorData: Bytes.default("0x"),
+    extraData: Bytes.default("0x"),
 })
 
 export const SBoop = type({
@@ -59,8 +46,8 @@ export const SBoop = type({
 
 export const SBoopLog = type({
     address: AddressIn,
-    topics: BytesIn.array(),
-    data: BytesIn,
+    topics: Bytes.array(),
+    data: Bytes,
 })
 
 export const SBoopReceipt = type({
@@ -85,7 +72,7 @@ export const SBoopReceiptIn = type({
     description: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: AddressIn,
     logs: SBoopLog.array(),
-    revertData: BytesIn,
+    revertData: Bytes,
     evmTxHash: HashIn,
     blockHash: HashIn,
     blockNumber: UInt256In,

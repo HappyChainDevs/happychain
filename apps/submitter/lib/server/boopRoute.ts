@@ -26,19 +26,19 @@ import {
     waitForReceiptQueryValidation,
 } from "../handlers/waitForReceipt"
 
-export default new Hono()
-    .post(
-        "/simulate", //
-        simulateDescription,
-        simulateBodyValidation,
-        async (c) => {
-            const input = c.req.valid("json")
-            const output = await simulate(input)
-            validateSerializedOutput(output, simulateOutputValidation)
-            const [body, code] = makeResponse(output)
-            return c.json(body, code)
-        },
-    )
+export default new Hono().post(
+    "/simulate", //
+    simulateDescription,
+    simulateBodyValidation,
+    async (c) => {
+        const input = c.req.valid("json")
+        const output = await simulate(input)
+        validateSerializedOutput(output, simulateOutputValidation)
+        const [body, code] = makeResponse(output)
+        return c.json(body, code)
+    },
+)
+/*
     .post(
         "/submit", //
         submitDescription,
@@ -101,3 +101,5 @@ export default new Hono()
             return c.json(response, code)
         },
     )
+
+     */

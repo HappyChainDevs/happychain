@@ -2,7 +2,7 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, AddressIn, Bytes32, Bytes32In, openApiContent } from "#lib/utils/validation/ark"
+import { Address, AddressIn, Bytes32, Bytes32In, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
 import { CreateAccount } from "./types"
 import type * as types from "./types"
 
@@ -17,29 +17,25 @@ const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.Alrea
 const createAccountSuccess = type({
     owner: Address,
     salt: Bytes32,
-    status: successStatus.configure({ example: CreateAccount.Success }),
+    status: successStatus,
     address: Address,
-    "description?": type.never,
+    description: "never?",
 })
 
 const createAccountError = type({
     owner: Address,
     salt: Bytes32,
-    status: type.valueOf(CreateAccount).exclude(successStatus).configure({ example: CreateAccount.Failed }),
+    status: type.valueOf(CreateAccount).exclude(successStatus),
     description: type.string.configure({ example: "Invalid account data" }),
-    "address?": type.never,
+    address: "never?",
 })
 
 export const createAccountDescription = describeRoute({
     description: "Creates a new account or returns an existing account address for the given owner",
     requestBody: {
         required: true,
-        description: "Account data to create",
-        content: {
-            "application/json": {
-                schema: {},
-            },
-        },
+        description: "Owner and salt for the account to create",
+        content: openApiContentBody(createAccountInput.in),
     },
     responses: {
         200: {

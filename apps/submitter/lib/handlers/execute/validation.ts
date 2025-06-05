@@ -13,7 +13,7 @@ const executeInput = type({
     "+": "reject",
     entryPoint: AddressIn.optional(),
     boop: SBoopIn,
-    "timeout?": type.number.configure({ example: 60 }),
+    "timeout?": type.number.configure({ example: 10_000 }),
 })
 
 const executeSuccess = type({
