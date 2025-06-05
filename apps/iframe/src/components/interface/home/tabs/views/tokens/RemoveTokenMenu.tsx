@@ -29,7 +29,7 @@ const RemoveTokenMenu = ({ user, token }: RemoveTokensMenuProps) => {
                 >
                     <Menu.Item
                         asChild
-                        className="text-primary dark:text-content cursor-pointer p-2 bg-primary/20 hover:bg-primary/30 dark:bg-primary/10 dark:hover:bg-primary/20 rounded-md"
+                        className="text-primary dark:text-content cursor-pointer bg-primary/20 hover:bg-primary/30 dark:bg-primary/10 dark:hover:bg-primary/20 rounded-md p-1.5"
                         value={TokenMenuActions.StopTracking}
                         onClick={() => removeWatchedAsset(user, token)}
                     >

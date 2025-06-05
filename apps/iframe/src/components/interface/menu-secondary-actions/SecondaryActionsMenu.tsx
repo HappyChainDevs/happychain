@@ -1,5 +1,5 @@
 import { Menu } from "@ark-ui/react/menu"
-import { CaretRightIcon, GearSixIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, CaretRightIcon, GearSixIcon, QueueIcon, SignOutIcon } from "@phosphor-icons/react"
 import { Link, useRouter } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
@@ -101,20 +101,29 @@ const SecondaryActionsMenu = () => {
                         }),
                     )}
                 >
-                    <div className="overflow-y-auto flex flex-col">
+                    <div className="overflow-y-auto flex flex-col px-2">
                         <Menu.Item asChild value={MenuActions.Permissions}>
                             <Link preload="intent" to="/embed/permissions">
                                 <span className="w-full max-w-prose mx-auto justify-between items-center inline-flex">
-                                    <span>Permissions</span>
+                                    <span className="flex items-center gap-2">
+                                        <QueueIcon size="1em" />
+                                        <span>Permissions</span>
+                                    </span>
                                     <CaretRightIcon size="1em" />
                                 </span>
                             </Link>
                         </Menu.Item>
                         <Menu.Item value={MenuActions.LogOut}>
-                            <span className="w-full max-w-prose mx-auto inline-flex">Logout</span>
+                            <span className="w-full max-w-prose mx-auto inline-flex items-center gap-2">
+                                <SignOutIcon size="1em" />
+                                <span>Logout</span>
+                            </span>
                         </Menu.Item>
                         <Menu.Item value={MenuActions.Back}>
-                            <span className="w-full max-w-prose mx-auto inline-flex">Go back</span>
+                            <span className="w-full max-w-prose mx-auto inline-flex items-center gap-2">
+                                <ArrowLeftIcon size="1em" />
+                                <span>Go back</span>
+                            </span>
                         </Menu.Item>
                     </div>
                 </Menu.Content>

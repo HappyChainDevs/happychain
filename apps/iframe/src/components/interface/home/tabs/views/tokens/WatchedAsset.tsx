@@ -69,25 +69,22 @@ export const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     return (
         <div
             key={`watched-asset-${tokenAddress}`}
-            className="rounded-xl inline-flex justify-between w-full min-h-10 max-w-full group overflow-x-hidden items-center gap-2 text-sm font-medium"
+            className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 min-h-10 p-2 text-sm font-medium"
         >
-            <div className="flex flex-row w-1/2 gap-1 items-center min-w-0 max-w-[50%]">
-                <img
-                    alt={tokenAddress}
-                    className="text-transparent rounded-full flex-shrink-0 size-4"
-                    loading="lazy"
-                    onError={() => setIsImageSourceBroken(true)}
-                    src={imageSource}
-                />
-                <span className="font-semibold text-sm whitespace-nowrap" title={asset.options.symbol}>
-                    {tokenSymbol}
-                </span>
-            </div>
+            <img
+                alt={tokenAddress}
+                className="text-transparent rounded-full flex-shrink-0 size-4"
+                loading="lazy"
+                onError={() => setIsImageSourceBroken(true)}
+                src={imageSource}
+            />
 
-            <div className="flex flex-row items-center w-1/2 justify-end min-w-0 space-x-1">
-                <BalanceDisplay isLoading={isLoading} balance={truncatedBalance} />
-                <RemoveTokenMenu user={userAddress} token={tokenAddress as Address} />
-            </div>
+            <span className="font-semibold text-sm truncate" title={asset.options.symbol}>
+                {tokenSymbol}
+            </span>
+
+            <BalanceDisplay isLoading={isLoading} balance={truncatedBalance} />
+            <RemoveTokenMenu user={userAddress} token={tokenAddress as Address} />
         </div>
     )
 }
