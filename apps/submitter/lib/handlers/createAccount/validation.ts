@@ -2,7 +2,7 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, AddressIn, Bytes32, Bytes32In, openApiContent } from "#lib/utils/validation/ark"
+import { Address, AddressIn, Bytes32, Bytes32In, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
 import { CreateAccount } from "./types"
 import type * as types from "./types"
 
@@ -35,11 +35,7 @@ export const createAccountDescription = describeRoute({
     requestBody: {
         required: true,
         description: "Owner address and salt to create or retrieve an account",
-        content: {
-            "application/json": {
-                schema: {},
-            },
-        },
+        content: openApiContentBody(createAccountInput.in),
     },
     responses: {
         200: {

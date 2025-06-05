@@ -3,7 +3,15 @@ import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { CallStatus } from "#lib/types"
-import { AddressIn, BytesIn, UInt32In, UInt256, openApiContent } from "#lib/utils/validation/ark"
+import {
+    AddressIn,
+    Bytes,
+    BytesIn,
+    UInt32,
+    UInt256,
+    openApiContent,
+    openApiContentBody,
+} from "#lib/utils/validation/ark"
 import { SBoopIn } from "#lib/utils/validation/boop"
 import type * as types from "./types"
 import { Simulate } from "./types"
@@ -15,15 +23,15 @@ const simulateInput = type({
 })
 
 const entryPointOutput = type({
-    gas: UInt32In,
-    validateGas: UInt32In,
-    validatePaymentGas: UInt32In,
-    executeGas: UInt32In,
+    gas: UInt32,
+    validateGas: UInt32,
+    validatePaymentGas: UInt32,
+    executeGas: UInt32,
     validityUnknownDuringSimulation: type.boolean,
     paymentValidityUnknownDuringSimulation: type.boolean,
     futureNonceDuringSimulation: type.boolean,
     callStatus: type.valueOf(CallStatus),
-    revertData: BytesIn,
+    revertData: Bytes,
 })
 
 const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
@@ -49,11 +57,7 @@ export const simulateDescription = describeRoute({
     requestBody: {
         required: true,
         description: "Boop data to simulate",
-        content: {
-            "application/json": {
-                schema: {},
-            },
-        },
+        content: openApiContentBody(simulateInput.in),
     },
     responses: {
         200: {

@@ -2,7 +2,7 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, AddressIn, Bytes, Hash, openApiContent } from "#lib/utils/validation/ark"
+import { Address, AddressIn, Bytes, Hash, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
 import { SBoopIn } from "#lib/utils/validation/boop"
 import type * as types from "./types"
 import { Submit } from "./types"
@@ -37,11 +37,7 @@ export const submitDescription = describeRoute({
     requestBody: {
         required: true,
         description: "Boop data to submit to the chain",
-        content: {
-            "application/json": {
-                schema: {},
-            },
-        },
+        content: openApiContentBody(submitInput.in),
     },
     responses: {
         200: {

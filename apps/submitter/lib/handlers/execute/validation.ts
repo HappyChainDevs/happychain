@@ -2,7 +2,7 @@ import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { AddressIn, Bytes, openApiContent } from "#lib/utils/validation/ark"
+import { AddressIn, Bytes, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
 import { SBoopIn, SBoopReceipt } from "#lib/utils/validation/boop"
 import { Execute } from "./types"
 import type * as types from "./types"
@@ -11,7 +11,7 @@ const executeInput = type({
     "+": "reject",
     entryPoint: AddressIn.optional(),
     boop: SBoopIn,
-    timeout: type.number.configure({ example: 60 }).optional(),
+    timeout: type.number.configure({ example: 10_000 }).optional(),
 })
 
 const executeSuccess = type({
@@ -35,11 +35,7 @@ export const executeDescription = describeRoute({
     requestBody: {
         required: true,
         description: "Boop data to execute",
-        content: {
-            "application/json": {
-                schema: {},
-            },
-        },
+        content: openApiContentBody(executeInput.in),
     },
     responses: {
         200: {
