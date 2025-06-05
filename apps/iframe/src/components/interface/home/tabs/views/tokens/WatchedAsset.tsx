@@ -39,15 +39,24 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         if (!balanceData?.value) return undefined
 
         return new Intl.NumberFormat(navigator.language, {
-            minimumFractionDigits: 4,
+            minimumFractionDigits: 2,
             maximumFractionDigits: 4,
-        }).format(Number(balanceData.value))
+        }).format(Number(balanceData.formatted))
     }, [balanceData])
 
+    // refetch on wallet open
     useEffect(() => {
         if (!walletOpenSignal) return
+        // NOTE: This is potentially racy with other users of the wallet open signal, but since fetching has high
+        // latency for all current uses, should be fine, for now.
         void refetch().then(() => setWalletOpenSignal(false))
     }, [refetch, walletOpenSignal, setWalletOpenSignal])
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: refetch on mount
+    useEffect(() => {
+        if (isLoading) return
+        void refetch()
+    }, [])
 
     const imageSource =
         asset.options.image && !isImageSourceBroken

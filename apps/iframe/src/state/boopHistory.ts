@@ -31,7 +31,6 @@ export const historyAtom = atom(
         if (!user) return
         // Limit size of history to 50 entries.
         const updatedHistory = history.toSorted(compareEntries).slice(0, 50)
-        console.log(updatedHistory)
         set(historyRecordAtom, (stored) => ({ ...stored, [user.address]: updatedHistory }))
     },
 )
