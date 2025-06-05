@@ -260,7 +260,7 @@ anvil-background: ## Runs anvil at in the background at $ANVIL_PORT, logging to 
 .PHONY: anvil-background
 
 kill-anvil: ## Kill an existing Anvil process running at $ANVIL_PORT
-	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
+	@lsof -t -iTCP:$(ANVIL_PORT) -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
 .PHONY: kill-anvil
 
 ####################################################################################################
