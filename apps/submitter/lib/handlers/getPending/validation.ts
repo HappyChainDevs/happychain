@@ -1,15 +1,15 @@
-import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
+import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { SubmitterError } from "#lib/types"
-import { Address, AddressIn, Hash, UInt256, openApiContent } from "#lib/utils/validation/ark"
+import { Address, Hash, UInt256, openApiParameters, openApiResponseContent } from "#lib/utils/validation/ark"
 import type * as types from "./types"
 import { GetPending } from "./types"
 
 const getPendingParam = type({
     "+": "reject",
-    account: AddressIn,
+    account: Address,
 })
 
 const pendingBoopInfo = type({
@@ -17,7 +17,7 @@ const pendingBoopInfo = type({
     entryPoint: Address,
     nonceTrack: UInt256,
     nonceValue: UInt256,
-    submitted: type.boolean,
+    submitted: "boolean",
 })
 
 const getPendingSuccess = type({
@@ -32,15 +32,16 @@ const getPendingError = type({
 })
 
 export const getPendingDescription = describeRoute({
-    description: "Retrieve pending boops (not yet included on-chain) for the specified account",
+    description: "Retrieve pending boops (not yet included onchain) for the specified account",
+    parameters: openApiParameters({ path: getPendingParam.in }),
     responses: {
         200: {
             description: "Successfully retrieved pending boops",
-            content: openApiContent(getPendingSuccess),
+            content: openApiResponseContent(getPendingSuccess),
         },
         other: {
             description: "Failed to retrieve pending boops",
-            content: openApiContent(getPendingError),
+            content: openApiResponseContent(getPendingError),
         },
     },
 })
@@ -55,7 +56,7 @@ type GetPendingError = typeof getPendingError.infer
 type GetPendingOutput = typeof getPendingOutputValidation.infer
 
 type _a1 = AssertCompatible<GetPendingInput, types.GetPendingInput>
-type _a2 = AssertCompatible<PendingBoopInfoSchema, BigIntSerialized<types.PendingBoopInfo>>
-type _a3 = AssertCompatible<GetPendingSuccess, BigIntSerialized<types.GetPendingSuccess>>
+type _a2 = AssertCompatible<PendingBoopInfoSchema, types.PendingBoopInfo>
+type _a3 = AssertCompatible<GetPendingSuccess, types.GetPendingSuccess>
 type _a4 = AssertCompatible<GetPendingError, types.GetPendingError>
-type _a5 = AssertCompatible<GetPendingOutput, BigIntSerialized<types.GetPendingOutput>>
+type _a5 = AssertCompatible<GetPendingOutput, types.GetPendingOutput>

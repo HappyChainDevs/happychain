@@ -165,7 +165,7 @@ export class BoopClient {
      */
     async waitForReceipt(data: WaitForReceiptInput): Promise<WaitForReceiptOutput> {
         const { boopHash, timeout } = data
-        const response = await this.#client.get(`/api/v1/boop/receipt/${boopHash}`, { timeout: timeout })
+        const response = await this.#client.get(`/api/v1/boop/receipt/${boopHash}`, { timeout })
         return this.#getReceiptOutput(response)
     }
 

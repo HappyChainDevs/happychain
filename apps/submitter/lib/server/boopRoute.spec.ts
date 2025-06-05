@@ -52,7 +52,7 @@ describe("routes: api/submitter", () => {
             const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
             const result = await client.api.v1.boop.receipt[":boopHash"].$get({
                 param: { boopHash },
-                query: { timeout: "2000" },
+                query: { timeout: 2000 },
             })
             expect(result.status).toBe(200)
         })

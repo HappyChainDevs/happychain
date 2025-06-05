@@ -2,47 +2,46 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, AddressIn, Bytes, Hash, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
-import { SBoopIn } from "#lib/utils/validation/boop"
+import { Address, Bytes, Hash, openApiBodyContent, openApiResponseContent } from "#lib/utils/validation/ark"
+import { SBoop } from "#lib/utils/validation/boop"
 import type * as types from "./types"
 import { Submit } from "./types"
 
 const submitInput = type({
     "+": "reject",
-    entryPoint: AddressIn.optional(),
-    boop: SBoopIn,
+    entryPoint: Address.optional(),
+    boop: SBoop,
 })
 
 const submitSuccess = type({
     status: type.unit(Submit.Success),
-    boopHash: Hash.configure({ example: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" }),
-    entryPoint: Address.configure({ example: "0x1234567890123456789012345678901234567890" }),
+    boopHash: Hash,
+    entryPoint: Address,
 })
 
 const submitError = type({
     status: type.valueOf(Submit).exclude(type.unit(Submit.Success)),
     stage: type.enumerated("simulate", "submit"),
-    revertData: Bytes.configure({
-        example: "0x1234567890123456789012345678901234567890123456789012345678901234",
-    }).optional(),
-    description: type("string").configure({ example: "Invalid boop" }),
+    revertData: Bytes.optional(),
+    // cf. simulateError.description
+    description: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
 })
 
 export const submitDescription = describeRoute({
     description: "Submits the supplied boop to the chain",
     requestBody: {
         required: true,
-        description: "Boop data to submit to the chain",
-        content: openApiContentBody(submitInput.in),
+        description: "Boop to submit and optional EntryPoint contract to submit it to",
+        content: openApiBodyContent(submitInput.in),
     },
     responses: {
         200: {
             description: "Boop successfully submitted to the chain",
-            content: openApiContent(submitSuccess),
+            content: openApiResponseContent(submitSuccess),
         },
         other: {
             description: "Boop submission failed",
-            content: openApiContent(submitError),
+            content: openApiResponseContent(submitError),
         },
     },
 })

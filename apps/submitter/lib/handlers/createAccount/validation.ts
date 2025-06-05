@@ -2,30 +2,33 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
-import { Address, AddressIn, Bytes32, Bytes32In, openApiContent, openApiContentBody } from "#lib/utils/validation/ark"
+import { Address, Bytes32, openApiBodyContent, openApiResponseContent } from "#lib/utils/validation/ark"
 import { CreateAccount } from "./types"
 import type * as types from "./types"
 
 export const createAccountInput = type({
     "+": "reject",
-    owner: AddressIn,
-    salt: Bytes32In,
+    owner: Address,
+    salt: Bytes32.configure({ example: "0x42" }),
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
 
 const createAccountSuccess = type({
     owner: Address,
-    salt: Bytes32,
+    salt: Bytes32.configure({ example: "0x42" }),
     status: successStatus,
-    address: Address,
+    address: Address.configure({ example: "0x48dbB3eCe3786747F49998b2fA83390563660771" }), // use different address
 })
+
+const createAccountCreated = type(createAccountSuccess, "&", type({ status: type.unit(CreateAccount.Success) }))
+const createAccountExisting = type(createAccountSuccess, "&", type({ status: type.unit(CreateAccount.AlreadyCreated) }))
 
 const createAccountError = type({
     owner: Address,
-    salt: Bytes32,
+    salt: Bytes32.configure({ example: "0x42" }),
     status: type.valueOf(CreateAccount).exclude(successStatus),
-    description: type.string.configure({ example: "Account creation failed due to invalid account data" }),
+    description: type.string.configure({ example: "Account creation failed onchain" }),
 })
 
 export const createAccountDescription = describeRoute({
@@ -33,20 +36,20 @@ export const createAccountDescription = describeRoute({
     requestBody: {
         required: true,
         description: "Owner address and salt to create or retrieve an account",
-        content: openApiContentBody(createAccountInput.in),
+        content: openApiBodyContent(createAccountInput.in),
     },
     responses: {
         200: {
             description: "Account address successfully retrieved for existing account",
-            content: openApiContent(createAccountSuccess),
+            content: openApiResponseContent(createAccountExisting),
         },
         201: {
             description: "Successfully created the account",
-            content: openApiContent(createAccountSuccess),
+            content: openApiResponseContent(createAccountCreated),
         },
         other: {
             description: "Account creation failed",
-            content: openApiContent(createAccountError),
+            content: openApiResponseContent(createAccountError),
         },
     },
 })

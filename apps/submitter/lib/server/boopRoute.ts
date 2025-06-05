@@ -15,16 +15,16 @@ import {
     getStateParamValidation,
 } from "#lib/handlers/getState"
 import { simulate, simulateBodyValidation, simulateDescription, simulateOutputValidation } from "#lib/handlers/simulate"
-import { makeResponse } from "#lib/server/makeResponse"
-import { validateOutput } from "#lib/utils/validation/helpers"
-import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "../handlers/submit"
+import { submit, submitBodyValidation, submitDescription, submitOutputValidation } from "#lib/handlers/submit"
 import {
     waitForReceipt,
     waitForReceiptDescription,
     waitForReceiptOutputValidation,
     waitForReceiptParamValidation,
     waitForReceiptQueryValidation,
-} from "../handlers/waitForReceipt"
+} from "#lib/handlers/waitForReceipt"
+import { makeResponse } from "#lib/server/makeResponse"
+import { validateOutput } from "#lib/utils/validation/helpers"
 
 export default new Hono()
     .post(
@@ -96,8 +96,8 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("param")
             const output = await getPending(input)
-            const [response, code] = makeResponse(output)
-            validateOutput(response, getPendingOutputValidation, "getPending response")
-            return c.json(response, code)
+            const [body, code] = makeResponse(output)
+            validateOutput(body, getPendingOutputValidation, "getPending response")
+            return c.json(body, code)
         },
     )

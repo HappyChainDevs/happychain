@@ -1,25 +1,17 @@
-import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
+import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
 import { CallStatus } from "#lib/types"
-import {
-    AddressIn,
-    Bytes,
-    BytesIn,
-    UInt32,
-    UInt256,
-    openApiContent,
-    openApiContentBody,
-} from "#lib/utils/validation/ark"
-import { SBoopIn } from "#lib/utils/validation/boop"
+import { Address, Bytes, UInt32, UInt256, openApiBodyContent, openApiResponseContent } from "#lib/utils/validation/ark"
+import { SBoop } from "#lib/utils/validation/boop"
 import type * as types from "./types"
 import { Simulate } from "./types"
 
 const simulateInput = type({
     "+": "reject",
-    entryPoint: AddressIn.optional(),
-    boop: SBoopIn,
+    entryPoint: Address.optional(),
+    boop: SBoop,
 })
 
 const entryPointOutput = type({
@@ -27,9 +19,9 @@ const entryPointOutput = type({
     validateGas: UInt32,
     validatePaymentGas: UInt32,
     executeGas: UInt32,
-    validityUnknownDuringSimulation: type.boolean,
-    paymentValidityUnknownDuringSimulation: type.boolean,
-    futureNonceDuringSimulation: type.boolean,
+    validityUnknownDuringSimulation: "boolean",
+    paymentValidityUnknownDuringSimulation: "boolean",
+    futureNonceDuringSimulation: "boolean",
     callStatus: type.valueOf(CallStatus),
     revertData: Bytes,
 })
@@ -43,28 +35,28 @@ const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
 
 const simulateError = type({
     status: type.valueOf(Simulate).exclude(type.unit(Simulate.Success)),
-    revertData: BytesIn.optional(),
-    description: type.string.configure({ example: "Invalid boop" }),
-    maxFeePerGas: type.never.optional(),
-    submitterFee: type.never.optional(),
-    feeTooLowDuringSimulation: type.never.optional(),
+    revertData: Bytes.optional(),
+    // Pick this example in particular because we can't select the example for `status` without making
+    // the OpenAPI playground display weird (shows all options as named "example") — it will pick
+    // the first value in lexicographic order as example, which happens to be Onchain.CallReverted.
+    description: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
 })
 
 export const simulateDescription = describeRoute({
-    description: "Simulates the boop execution without committing to the blockchain",
+    description: "Simulates the boop execution without submitting it to the blockchain",
     requestBody: {
         required: true,
-        description: "Boop data to simulate",
-        content: openApiContentBody(simulateInput.in),
+        description: "Boop to simulate and optional EntryPoint to simulate it with",
+        content: openApiBodyContent(simulateInput.in),
     },
     responses: {
         200: {
             description: "Boop simulation completed successfully",
-            content: openApiContent(simulateSuccess),
+            content: openApiResponseContent(simulateSuccess),
         },
         other: {
             description: "Boop simulation failed",
-            content: openApiContent(simulateError),
+            content: openApiResponseContent(simulateError),
         },
     },
 })
@@ -78,6 +70,6 @@ type SimulateError = typeof simulateError.infer
 type SimulateOutput = typeof simulateOutputValidation.infer
 
 type _a1 = AssertCompatible<SimulateInput, types.SimulateInput>
-type _a2 = AssertCompatible<SimulateSuccess, BigIntSerialized<types.SimulateSuccess>>
+type _a2 = AssertCompatible<SimulateSuccess, types.SimulateSuccess>
 type _a3 = AssertCompatible<SimulateError, types.SimulateError>
-type _a4 = AssertCompatible<SimulateOutput, BigIntSerialized<types.SimulateOutput>>
+type _a4 = AssertCompatible<SimulateOutput, types.SimulateOutput>
