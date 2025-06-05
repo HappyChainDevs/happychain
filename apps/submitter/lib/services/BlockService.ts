@@ -2,33 +2,28 @@ import { promiseWithResolvers, sleep } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
 import type { OnBlockParameter, PublicClient, WatchBlocksReturnType } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
-import { chain, type publicClient } from "#lib/utils/clients"
+import { chain } from "#lib/utils/clients" // Assuming these are correctly imported
 import { blockLogger } from "#lib/utils/logger"
 
-export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "latest">
+export type BlockHeader = OnBlockParameter<typeof chain, false, "latest">
 
 export class BlockService {
     #currentBlock?: BlockHeader
     #previousBlock?: BlockHeader
     #publicClient: PublicClient
     #currentRpcUrlIndex = 0
+    #retriesForCurrentClient = 0
 
     async getCurrentBlock(): Promise<BlockHeader> {
         if (this.#currentBlock) return this.#currentBlock
 
-        // Wait for the block watcher to set the current block for the first time.
-        // This might need a timeout or a more robust way to handle watcher startup failures.
         await waitForCondition(() => this.#currentBlock !== undefined)
 
         if (!this.#currentBlock) {
-            // This state implies the watcher didn't set a block, even after waiting.
-            // This could happen if #startBlockWatcher loop exits due to an unrecoverable error before first block.
             blockLogger.error(
-                "Current block is not set after waiting. The block watcher may have failed to initialize or start processing blocks.",
+                "Current block is not set after waiting. The block watcher may have failed to initialize.",
             )
-            throw new Error(
-                "Current block is not available; the block watcher might have encountered a permanent failure during startup.",
-            )
+            throw new Error("Current block is not available; the block watcher might have failed during startup.")
         }
         return this.#currentBlock
     }
@@ -63,13 +58,12 @@ export class BlockService {
             throw new Error("No RPC URLs available in the chain configuration.")
         }
         const url = urls[this.#currentRpcUrlIndex]
-        this.#currentRpcUrlIndex = (this.#currentRpcUrlIndex + 1) % urls.length // Cycle through the URLs
+        this.#currentRpcUrlIndex = (this.#currentRpcUrlIndex + 1) % urls.length
         return url
     }
 
     #getNewPublicClient(): PublicClient {
         const url = this.#getNextRpcUrl()
-        console.log("next url is ", url)
 
         const isWs = url.startsWith("ws")
         const isHttp = url.startsWith("http")
@@ -82,8 +76,6 @@ export class BlockService {
 
         const transport = isWs ? webSocket(url) : http(url)
 
-        // does a health check before returning help?
-
         return createPublicClient({
             chain,
             name: url,
@@ -92,22 +84,20 @@ export class BlockService {
     }
 
     async #executeOnBlockCallbacks(block: BlockHeader): Promise<void> {
-        if (this.onBlockCallbacks.size === 0) return // No subscribers
+        if (this.onBlockCallbacks.size === 0) return
 
         blockLogger.trace(
             `Executing ${this.onBlockCallbacks.size} callbacks for block ${block.number} (hash: ${block.hash})`,
         )
-        const callbackPromises: Promise<void>[] = []
-        this.onBlockCallbacks.forEach((cb) => {
-            const promise = (async () => {
+        const callbackPromises = Array.from(this.onBlockCallbacks).map((cb) =>
+            (async () => {
                 try {
                     await cb(block)
                 } catch (e) {
                     blockLogger.error(`Error in onBlockCallback for block ${block.number} (hash: ${block.hash})`, e)
                 }
-            })()
-            callbackPromises.push(promise)
-        })
+            })(),
+        )
         await Promise.all(callbackPromises)
     }
 
@@ -118,26 +108,16 @@ export class BlockService {
                 blockLogger.trace(`Fetching missed block: ${blockNum}`)
                 const missedBlockData = await this.#publicClient.getBlock({
                     blockNumber: blockNum,
-                    includeTransactions: false, // Consistent with BlockHeader's includeTransactions: false
+                    includeTransactions: false,
                 })
 
                 if (!missedBlockData) {
                     blockLogger.error(
-                        `Failed to fetch missed block ${blockNum}. It might have been reorged out or an RPC error occurred. Stopping fill for this gap.`,
+                        `Failed to fetch missed block ${blockNum}. It might have been reorged out. Stopping fill for this gap.`,
                     )
                     break
                 }
-
-                // Cast here due to TypeScript's misinterpretation of BlockHeader structure for certain fields.
-                const missedBlock = missedBlockData as unknown as BlockHeader
-
-                this.#previousBlock = this.#currentBlock
-                this.#currentBlock = missedBlock // Update internal state to this missed block
-
-                blockLogger.info(
-                    `Processing fetched missed block: ${this.#currentBlock.number} (hash: ${this.#currentBlock.hash})`,
-                )
-                await this.#executeOnBlockCallbacks(this.#currentBlock)
+                await this.#processNewHead(missedBlockData as BlockHeader)
             } catch (error) {
                 blockLogger.error(
                     `Error fetching or processing missed block ${blockNum}. Stopping fill for this gap.`,
@@ -149,20 +129,19 @@ export class BlockService {
     }
 
     async #startBlockWatcher(): Promise<void> {
-        const initialRetryDelay = 1000 // ms
-        const maxRetryDelay = 30_000 // ms
+        const initialRetryDelay = 1000
+        const maxRetryDelay = 30_000
         const maxRetriesPerClientConfig = 5
 
-        let retriesForCurrentClient = 0
-
         while (true) {
-            // Loop indefinitely for retries and client switches
             const { promise, reject } = promiseWithResolvers<void>()
             let unwatch: WatchBlocksReturnType | null = null
 
             try {
                 blockLogger.info(
-                    `Starting block watcher with ${this.#publicClient.transport.name} (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig}). Transport: ${this.#publicClient.transport.type}`,
+                    `Starting block watcher with ${this.#publicClient.transport.name} (Attempt ${
+                        this.#retriesForCurrentClient + 1
+                    }/${maxRetriesPerClientConfig}).`,
                 )
 
                 unwatch = this.#publicClient.watchBlocks({
@@ -170,129 +149,105 @@ export class BlockService {
                     includeTransactions: false,
                     emitOnBegin: true,
                     emitMissed: true,
-                    onBlock: async (blockFromViem) => {
-                        const newlyArrivedHeader = blockFromViem as BlockHeader
-
-                        if (!newlyArrivedHeader || !newlyArrivedHeader.number || !newlyArrivedHeader.hash) {
-                            blockLogger.error(
-                                `Received an invalid block from the watcher: ${JSON.stringify(newlyArrivedHeader)}`,
-                            )
-                            return // Skip processing invalid blocks
-                        }
-
-                        if (retriesForCurrentClient > 0) {
-                            // client healthy, reset tries
-                            blockLogger.info(
-                                `Block watcher successfully retrieved block ${newlyArrivedHeader.number} with ${this.#publicClient.name}. Resetting its retry count.`,
-                            )
-                            retriesForCurrentClient = 0
-                        }
-
-                        const lastInternallyProcessedBlock: BlockHeader = this.#currentBlock!
-
-                        // Handle the very first block received by this service instance
-                        if (!lastInternallyProcessedBlock) {
-                            this.#currentBlock = newlyArrivedHeader
-                            this.#previousBlock = undefined // Explicitly undefined for the first block
-                            blockLogger.info(
-                                `Processing initial block from watcher: ${this.#currentBlock.number} (hash: ${this.#currentBlock.hash})`,
-                            )
-                            await this.#executeOnBlockCallbacks(this.#currentBlock)
-                            return // Initial block processed
-                        }
-
-                        // Gap Detection & Manual Filling (supplements Viem's emitMissed:true)
-                        if (newlyArrivedHeader.number > lastInternallyProcessedBlock.number + 1n) {
-                            blockLogger.warn(
-                                `Gap detected. Last processed block: ${lastInternallyProcessedBlock.number}, newly arrived block: ${newlyArrivedHeader.number}. Attempting to fill.`,
-                            )
-                            await this.#fetchAndProcessMissedBlocks(
-                                lastInternallyProcessedBlock.number + 1n,
-                                newlyArrivedHeader.number - 1n,
-                            )
-                            // After #fetchAndProcessMissedBlocks, this.#currentBlock is the last successfully filled missed block,
-                            // or it remains `lastInternallyProcessedBlock` if filling failed or no blocks were filled.
-                        }
-                        // Reorg / Stale / Duplicate Detection.
-                        // Compare newlyArrivedHeader with the current state (this.#currentBlock), which might have been updated by gap filling.
-                        else if (this.#currentBlock && newlyArrivedHeader.number < this.#currentBlock.number) {
-                            blockLogger.warn(
-                                `Received block ${newlyArrivedHeader.number} (hash: ${newlyArrivedHeader.hash}) which is OLDER than current internal block ${this.#currentBlock.number} (hash: ${this.#currentBlock.hash}). Significant reorg detected. Processing new chain head.`,
-                            )
-                        } else if (this.#currentBlock && newlyArrivedHeader.number === this.#currentBlock.number) {
-                            if (newlyArrivedHeader.hash !== this.#currentBlock.hash) {
-                                blockLogger.warn(
-                                    `Received block ${newlyArrivedHeader.number} with DIFFERENT HASH (new watcher: ${newlyArrivedHeader.hash}, internal current: ${this.#currentBlock.hash}). Probable 1-block reorg. Processing new chain head.`,
-                                )
-                            } else {
-                                blockLogger.info(
-                                    `Received block ${newlyArrivedHeader.number} (hash: ${newlyArrivedHeader.hash}) which is a DUPLICATE of the current internal block. Skipping redundant callback execution.`,
-                                )
-                                return // Do not re-process the exact same block
-                            }
-                        }
-
-                        // Process the newlyArrivedHeader (which is the current head from the watcher)
-                        // this.#currentBlock at this stage is the latest block for which callbacks were *previously* run
-                        // (either a filled missed block or the one before newlyArrivedHeader if no gap/reorg).
-                        this.#previousBlock = this.#currentBlock
-                        this.#currentBlock = newlyArrivedHeader
-
-                        blockLogger.info(
-                            `Processing block from watcher: ${this.#currentBlock.number} (hash: ${this.#currentBlock.hash})`,
-                        )
-                        await this.#executeOnBlockCallbacks(this.#currentBlock)
-                    },
+                    onBlock: this.#handleNewBlock.bind(this),
                     onError: (e) => {
                         blockLogger.error(
                             `Error in block watcher's onError callback with ${this.#publicClient.name}`,
                             e,
                         )
-                        reject(e) // Trigger the main catch block for retry/fallback
+                        reject(e)
                     },
                 })
-                blockLogger.trace(`Block watcher started successfully with ${this.#publicClient.name}.`)
-                await promise // Block here until an error occurs or unwatch is called.
+                await promise
             } catch (e) {
-                if (unwatch) {
-                    unwatch()
-                    unwatch = null
-                }
+                unwatch?.()
+
                 blockLogger.error(`Block watcher main loop caught an error with ${this.#publicClient.name}:`, e)
 
-                retriesForCurrentClient++
+                this.#retriesForCurrentClient++
 
-                // lets try get a new public client
-                if (retriesForCurrentClient >= maxRetriesPerClientConfig) {
+                if (this.#retriesForCurrentClient >= maxRetriesPerClientConfig) {
                     blockLogger.warn(
-                        `Max retries (${maxRetriesPerClientConfig}) reached with the ${this.#publicClient.name}. Attempting to switch to HTTP-only client.`,
+                        `Max retries (${maxRetriesPerClientConfig}) reached for ${
+                            this.#publicClient.name
+                        }. Switching to a new client.`,
                     )
                     try {
                         this.#publicClient = this.#getNewPublicClient()
-                        blockLogger.info(
-                            "Successfully switched to new public client. Resetting retries for new configuration.",
-                        )
-                        retriesForCurrentClient = 0
+                        this.#retriesForCurrentClient = 0
                     } catch (creationError) {
                         blockLogger.error(
                             "Fatal: Failed to create new public client. Block watcher cannot recover.",
                             creationError,
                         )
-                        throw new Error(
-                            `Failed to create new public client: ${creationError instanceof Error ? creationError.message : String(creationError)}`,
-                        )
+                        throw creationError
                     }
                 }
 
                 const delay = Math.min(
-                    initialRetryDelay * 2 ** (retriesForCurrentClient > 0 ? retriesForCurrentClient - 1 : 0),
+                    initialRetryDelay *
+                        2 ** (this.#retriesForCurrentClient > 0 ? this.#retriesForCurrentClient - 1 : 0),
                     maxRetryDelay,
                 )
-                blockLogger.warn(
-                    `Retrying block watcher with ${this.#publicClient.name} in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for this client type)`,
-                )
+                blockLogger.warn(`Retrying block watcher with ${this.#publicClient.name} in ${delay / 1000} seconds.`)
                 await sleep(delay)
             }
         }
+    }
+
+    /**
+     * Processes a single block received from the watcher, handling validation,
+     * initial block setup, gaps, reorgs, and duplicates.
+     */
+    async #handleNewBlock(blockFromViem: OnBlockParameter<typeof chain, false, "latest">): Promise<void> {
+        const newlyArrivedHeader = blockFromViem as BlockHeader
+        if (!newlyArrivedHeader?.number || !newlyArrivedHeader.hash) {
+            blockLogger.error("Received an invalid block structure from the watcher", newlyArrivedHeader)
+            return
+        }
+
+        if (this.#retriesForCurrentClient > 0) {
+            blockLogger.info(
+                `Successfully retrieved block ${newlyArrivedHeader.number} with ${this.#publicClient.name}. Resetting retry count.`,
+            )
+            this.#retriesForCurrentClient = 0
+        }
+
+        if (!this.#currentBlock) {
+            await this.#processInitialBlock(newlyArrivedHeader)
+            return
+        }
+
+        if (newlyArrivedHeader.hash === this.#currentBlock.hash) {
+            blockLogger.trace(`Received duplicate block ${newlyArrivedHeader.number}. Skipping.`)
+            return
+        }
+
+        if (newlyArrivedHeader.number > this.#currentBlock.number + 1n) {
+            blockLogger.warn(
+                `Gap detected. Last: ${this.#currentBlock.number}, New: ${newlyArrivedHeader.number}. Attempting to fill.`,
+            )
+            await this.#fetchAndProcessMissedBlocks(this.#currentBlock.number + 1n, newlyArrivedHeader.number - 1n)
+        } else if (newlyArrivedHeader.number <= this.#currentBlock.number) {
+            blockLogger.warn(
+                `Reorg detected. Last processed: ${this.#currentBlock.number} (${this.#currentBlock.hash}), new head: ${newlyArrivedHeader.number} (${newlyArrivedHeader.hash}).`,
+            )
+        }
+
+        await this.#processNewHead(newlyArrivedHeader)
+    }
+
+    async #processInitialBlock(block: BlockHeader): Promise<void> {
+        this.#currentBlock = block
+        this.#previousBlock = undefined
+        blockLogger.info(`Processing initial block: ${block.number} (hash: ${block.hash})`)
+        await this.#executeOnBlockCallbacks(block)
+    }
+
+    async #processNewHead(block: BlockHeader): Promise<void> {
+        this.#previousBlock = this.#currentBlock
+        this.#currentBlock = block
+        blockLogger.info(`Processing new head: ${this.#currentBlock.number} (hash: ${this.#currentBlock.hash})`)
+        await this.#executeOnBlockCallbacks(this.#currentBlock)
     }
 }
