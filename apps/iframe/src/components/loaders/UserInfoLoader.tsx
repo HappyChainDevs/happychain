@@ -1,4 +1,4 @@
-const UserInfoLoader = () => {
+export const UserInfoLoader = () => {
     return (
         <div className="flex flex-row items-center space-x-4 animate-pulse">
             <div className="size-10 bg-neutral/20 dark:bg-neutral/40 rounded-full" />
@@ -9,5 +9,3 @@ const UserInfoLoader = () => {
         </div>
     )
 }
-
-export default UserInfoLoader

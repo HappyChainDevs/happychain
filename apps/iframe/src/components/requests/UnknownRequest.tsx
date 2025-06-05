@@ -1,4 +1,4 @@
-import DisclosureSection from "./common/DisclosureSection"
+import { DisclosureSection } from "./common/DisclosureSection"
 import { FormattedDetailsLine, Layout, SectionBlock, SubsectionBlock, SubsectionContent } from "./common/Layout"
 
 interface UnknownRequestProps<T = unknown> {

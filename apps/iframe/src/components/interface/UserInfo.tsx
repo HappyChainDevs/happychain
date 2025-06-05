@@ -3,10 +3,10 @@ import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
 import { useActiveConnectionProvider } from "../../connections/initialize"
 import { userAtom } from "../../state/user"
-import UserInfoLoader from "../loaders/UserInfoLoader"
-import AddressInfo from "./AddressInfo"
+import { UserInfoLoader } from "../loaders/UserInfoLoader"
+import { AddressInfo } from "./AddressInfo"
 
-const UserInfo = () => {
+export const UserInfo = () => {
     const user = useAtomValue(userAtom)
     const activeProvider = useActiveConnectionProvider()
 
@@ -60,5 +60,3 @@ const UserInfo = () => {
         </>
     )
 }
-
-export default UserInfo

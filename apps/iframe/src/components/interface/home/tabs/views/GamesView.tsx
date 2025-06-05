@@ -1,7 +1,7 @@
 import { appList } from "#src/utils/lists"
 
 /** Displays recently played games that the user logged into. */
-const GamesView = () => {
+export const GamesView = () => {
     return (
         <>
             {appList?.length > 0 ? (
@@ -18,5 +18,3 @@ const GamesView = () => {
         </>
     )
 }
-
-export default GamesView

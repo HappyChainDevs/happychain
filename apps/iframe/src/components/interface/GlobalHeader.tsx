@@ -8,7 +8,7 @@ import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 function signalClosed() {
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
 }
-const GlobalHeader = () => {
+export const GlobalHeader = () => {
     const location = useLocation()
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const optionsLabel = isVisible ? "Close options menu" : "Open options menu"
@@ -55,5 +55,3 @@ const GlobalHeader = () => {
         </div>
     )
 }
-
-export default GlobalHeader

@@ -6,12 +6,12 @@ import { getBalanceQueryKey } from "wagmi/query"
 import { Button } from "#src/components/primitives/button/Button"
 import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
-import UserNotFoundWarning from "./UserNotFoundWarning"
+import { UserNotFoundWarning } from "./UserNotFoundWarning"
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
 const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!
 
-const FaucetView = () => {
+export const FaucetView = () => {
     const user = useAtomValue(userAtom)
     const queryClient = useQueryClient()
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -85,5 +85,3 @@ const FaucetView = () => {
         </div>
     )
 }
-
-export default FaucetView

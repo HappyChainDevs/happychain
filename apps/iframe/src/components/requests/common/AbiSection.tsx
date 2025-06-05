@@ -5,7 +5,7 @@ interface AbiSectionProps {
     abiSection: Abi
 }
 
-const AbiSection = ({ label, abiSection }: AbiSectionProps) => {
+export const AbiSection = ({ label, abiSection }: AbiSectionProps) => {
     return (
         <section className="grid gap-1 relative">
             <h2 className="text-xs opacity-70 dark:opacity-50">{label}</h2>
@@ -19,5 +19,3 @@ const AbiSection = ({ label, abiSection }: AbiSectionProps) => {
         </section>
     )
 }
-
-export default AbiSection

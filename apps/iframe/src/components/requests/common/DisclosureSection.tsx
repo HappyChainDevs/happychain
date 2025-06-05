@@ -20,7 +20,7 @@ interface DisclosureSectionProps extends PropsWithChildren {
  * message, and customizable content - for pertinent extra details in request popups.
  * It wraps content in a styled <details> block with toggle support.
  */
-const DisclosureSection = ({
+export const DisclosureSection = ({
     title,
     showWarning = false,
     warningText,
@@ -54,5 +54,3 @@ const DisclosureSection = ({
         </SectionBlock>
     )
 }
-
-export default DisclosureSection

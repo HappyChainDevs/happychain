@@ -10,7 +10,7 @@ interface BoopEntrySkeletonProps {
  * Placeholder component to show loading status of a
  * transaction being confirmed in a block.
  */
-const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
+export const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
     const hash = shortenAddress(boopHash)
 
     return (
@@ -25,5 +25,3 @@ const BoopEntrySkeleton = ({ boopHash }: BoopEntrySkeletonProps) => {
         </article>
     )
 }
-
-export default BoopEntrySkeleton
