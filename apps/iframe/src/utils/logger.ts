@@ -1,4 +1,5 @@
-import { Logger, logLevel } from "@happy.tech/common"
+// biome-ignore lint/correctness/noUnusedImports: LogLevel is left in for docs link
+import { LogLevel, Logger, logLevel } from "@happy.tech/common"
 
 /**
  * Default at which all logger's log level are set by default if not changed programmatically.

@@ -223,7 +223,6 @@ export class BlockService {
 
                 if (this.#attempt > 1) {
                     // We want first retry (attempt = 1) to be instant.
-                    // Note that `this.#attempt` is guaranteed >= 1 here.
                     const delay = Math.min(baseDelay * 2 ** (this.#attempt - 2), maxDelay)
                     blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#client.name}`)
                     await sleep(delay)

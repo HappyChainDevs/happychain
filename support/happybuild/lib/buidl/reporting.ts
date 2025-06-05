@@ -1,5 +1,5 @@
+import { colors } from "@happy.tech/common"
 import byteSize from "byte-size"
-import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { Context } from "../build"
@@ -28,7 +28,7 @@ export async function reporting(configs: Config[], ctx: Context) {
         const bundleFileSize = byteSize(bundleFile.size, { units: "metric" }).toString()
         sizeSummary = ` (JS Bundle Size: ${bundleFileSize})`
     }
-    const timeSummary = chalk.green(`${Math.ceil(performance.now() - ctx.start)}ms`)
+    const timeSummary = colors.green(`${Math.ceil(performance.now() - ctx.start)}ms`)
     spinner.success(`${pkg.name} — Finished in ${timeSummary} 🎉${sizeSummary}`)
 
     if (reportTime) {
@@ -40,25 +40,21 @@ export async function reporting(configs: Config[], ctx: Context) {
         const report = generateSizeReport(sizeData)
         console.table(report)
         console.log(
-            `\n${chalk.green(pkg.name)} Tarball Size: ${chalk.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`,
+            `\n${colors.green(pkg.name)} Tarball Size: ${colors.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`,
         )
     }
 }
 
 function generateSizeReport(sizes: PkgSizeData) {
-    const _file = chalk.blue("file")
-    const _size = chalk.blue("size")
-    const _gzip = chalk.blue("gzip")
-    const _brotli = chalk.blue("brotli")
     return sizes.files.map((file) => {
         const size = byteSize(file.size, { units: "metric" })
         const gzip = byteSize(file.sizeGzip, { units: "metric" })
         const brotli = byteSize(file.sizeBrotli, { units: "metric" })
         return {
-            [_file]: chalk.green.bold(file.path),
-            [_size]: chalk.yellow(size),
-            [_gzip]: chalk.yellow(gzip),
-            [_brotli]: chalk.yellow(brotli),
+            [colors.blue("file")]: colors.green(file.path),
+            [colors.blue("size")]: colors.yellow(size),
+            [colors.blue("gzip")]: colors.yellow(gzip),
+            [colors.blue("brotli")]: colors.yellow(brotli),
         }
     })
 }
@@ -70,11 +66,11 @@ function generateTimeReport(buildTimes: Map<string, Record<string, string>>) {
         // biome-ignore format: terse
         return Object.assign({}, ...configs.map((cfg) => {
             const timing = buildTimes.get(cfg)?.[step]
-            return timing ? { [chalk.green.bold(cfg)]: timing } : {}
+            return timing ? { [colors.green(cfg)]: timing } : {}
         }))
     }
 
-    const step = chalk.blue("Step")
+    const step = colors.blue("Step")
 
     return [
         { [step]: "Typescript", ...getTimings("tsc") },

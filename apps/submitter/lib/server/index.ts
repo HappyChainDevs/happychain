@@ -9,7 +9,6 @@ import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
 import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
-import { ZodError } from "zod"
 import { env, isProduction } from "#lib/env"
 import { resyncAllAccounts } from "#lib/services"
 import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
@@ -72,12 +71,6 @@ app.get(
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError(async (err, c) => {
-    // re-format input validation errors
-    if (err instanceof HTTPException && err.cause instanceof ZodError) {
-        const error = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
-        return c.json({ error, requestId: c.get("requestId"), url: c.req.url }, 400)
-    }
-
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)
 
     // standard hono exceptions
