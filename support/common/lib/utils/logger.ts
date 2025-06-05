@@ -1,4 +1,4 @@
-import { blue, cyan, green, red, white, yellow } from "./colors"
+import { colors, noColors } from "./colors"
 
 /**
  * Defines the allowed log levels.
@@ -37,6 +37,13 @@ export type TaggedLogger = {
     [K in keyof Logger]: Logger[K] extends (tag: LogTag, ...args: infer P) => infer R ? (...args: P) => R : Logger[K]
 }
 
+export interface LoggerOptions {
+    /** Whether to use colors in the log messages. Defaults to true. Note: in CI, colors are never used */
+    colors?: boolean
+    /** Whether to show the timestamp in the log messages. Defaults to true */
+    timestamp?: boolean
+}
+
 /**
  * Singleton Logger
  *
@@ -65,6 +72,24 @@ export class Logger {
     }
 
     /**
+     * To show or not show the timestamp in the log messages.
+     * Defaults to true.
+     */
+    private showTimestamp = true
+
+    /**
+     * Whether to use colors in the log messages.
+     */
+    private useColors = true
+
+    /**
+     * Dynamically returns the colors object based on whether colors are enabled.
+     */
+    private get colors() {
+        return this.useColors ? colors : noColors
+    }
+
+    /**
      * Set of enabled tags for filtering log messages.
      */
     private enabledTags: Set<LogTag> = new Set()
@@ -86,8 +111,14 @@ export class Logger {
         return this._instance
     }
 
-    public static create(tag: LogTag, logLevel?: LogLevel): TaggedLogger {
+    public static create(
+        tag: LogTag,
+        logLevel?: LogLevel,
+        { colors = true, timestamp = true }: LoggerOptions = {},
+    ): TaggedLogger {
         const logger = new Logger()
+        logger.useColors = colors
+        logger.showTimestamp = timestamp
         logger.enableTags(tag)
         logger.setLogLevel(logLevel ?? Logger.instance.minLevel)
         return new Proxy(logger, {
@@ -148,6 +179,22 @@ export class Logger {
     }
 
     /**
+     * Generates the log prelude indicating the log level, timestamp, and tags.
+     *
+     * @param level The log level of the message.
+     * @param inputTags The tags associated with the message.
+     * @returns string
+     */
+    private getPrelude(level: LogLevel, tags: LogTag[]): string {
+        const levelStr = this.#formatLevel(level).padEnd(this.useColors ? 14 : 5, " ")
+        const tagsStr = this.colors.blue(`${tags.join(", ")}`)
+
+        return this.showTimestamp
+            ? `[${levelStr}] ${this.colors.cyan(new Date().toISOString())} [${tagsStr}]`
+            : `[${levelStr}] [${tagsStr}]`
+    }
+
+    /**
      * Generic log function that logs a message at the specified log level.
      *
      * @param level The log level of the message.
@@ -156,14 +203,9 @@ export class Logger {
      */
     public log(level: LogLevel, tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
         const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
+
         if (this.shouldLog(level, tags)) {
-            const levelStr = this.#formatLevel(level)
-            console.log(
-                `[${levelStr.padEnd(14, " ")}]`,
-                cyan(new Date().toISOString()),
-                `[${blue(`${tags.join(", ")}`)}]`,
-                ...args,
-            )
+            console.log(this.getPrelude(level, tags), ...args)
         }
     }
 
@@ -172,13 +214,13 @@ export class Logger {
             case LogLevel.OFF:
                 return "OFF"
             case LogLevel.ERROR:
-                return red("ERROR")
+                return this.colors.red("ERROR")
             case LogLevel.WARN:
-                return yellow("WARN")
+                return this.colors.yellow("WARN")
             case LogLevel.INFO:
-                return green("INFO")
+                return this.colors.green("INFO")
             case LogLevel.TRACE:
-                return white("TRACE")
+                return this.colors.white("TRACE")
             default:
                 return "UNKNOWN"
         }
