@@ -8,10 +8,8 @@ import { BoopEntry } from "./BoopEntry"
 import BoopEntrySkeleton from "./BoopEntrySkeleton"
 
 /**
- * Displays HappyUser's recent 4337 transaction history.
- * For transactions that haven't been confirmed yet, a skeleton is rendered.
- * At most 50 of the most recent userOps are displayed, after that we ask the
- * user to check the explorer for their entire userOp history.
+ * Displays the user's transaction (boop) history. We show a spinner for pending transactions. At most 50
+ * transactions are saved in the history and displayed, if we're at the max, we show an explorer link for more.
  */
 export const ActivityView = () => {
     const user = useAtomValue(userAtom)
