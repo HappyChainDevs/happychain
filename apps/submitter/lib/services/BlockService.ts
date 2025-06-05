@@ -1,8 +1,8 @@
 import { promiseWithResolvers, sleep } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
 import type { OnBlockParameter, PublicClient, WatchBlocksReturnType } from "viem"
-import { http, createPublicClient, fallback } from "viem"
-import { chain, config, publicClient } from "#lib/utils/clients"
+import { http, createPublicClient, webSocket } from "viem"
+import { chain, type publicClient } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
 export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "latest">
@@ -10,9 +10,8 @@ export type BlockHeader = OnBlockParameter<typeof publicClient.chain, false, "la
 export class BlockService {
     #currentBlock?: BlockHeader
     #previousBlock?: BlockHeader
-    // #publicClient is initialized with the imported (likely WebSocket or fallback) client.
-    // It can be reassigned to an HTTP-only client upon repeated watchBlocks failures.
-    #publicClient: PublicClient = publicClient
+    #publicClient: PublicClient
+    #currentRpcUrlIndex = 0
 
     async getCurrentBlock(): Promise<BlockHeader> {
         if (this.#currentBlock) return this.#currentBlock
@@ -37,6 +36,7 @@ export class BlockService {
     onBlockCallbacks: Set<(block: BlockHeader) => void> = new Set()
 
     private constructor() {
+        this.#publicClient = this.#getNewPublicClient()
         void this.#startBlockWatcher()
     }
 
@@ -55,6 +55,42 @@ export class BlockService {
         }
     }
 
+    #getNextRpcUrl(): string {
+        const httpUrls = chain.rpcUrls.default.http || []
+        const webSocketUrls = chain.rpcUrls.default.webSocket || []
+        const urls = [...httpUrls, ...webSocketUrls]
+        if (urls.length === 0) {
+            throw new Error("No RPC URLs available in the chain configuration.")
+        }
+        const url = urls[this.#currentRpcUrlIndex]
+        this.#currentRpcUrlIndex = (this.#currentRpcUrlIndex + 1) % urls.length // Cycle through the URLs
+        return url
+    }
+
+    #getNewPublicClient(): PublicClient {
+        const url = this.#getNextRpcUrl()
+        console.log("next url is ", url)
+
+        const isWs = url.startsWith("ws")
+        const isHttp = url.startsWith("http")
+
+        if (!isWs && !isHttp) {
+            throw new Error(`Invalid URL for public client: ${url}. Must start with http(s):// or ws(s)://`)
+        }
+
+        blockLogger.trace(`Creating public client with ${isWs ? "WebSocket" : "HTTP"} transport: ${url}`)
+
+        const transport = isWs ? webSocket(url) : http(url)
+
+        // does a health check before returning help?
+
+        return createPublicClient({
+            chain,
+            name: url,
+            transport,
+        })
+    }
+
     async #executeOnBlockCallbacks(block: BlockHeader): Promise<void> {
         if (this.onBlockCallbacks.size === 0) return // No subscribers
 
@@ -63,7 +99,6 @@ export class BlockService {
         )
         const callbackPromises: Promise<void>[] = []
         this.onBlockCallbacks.forEach((cb) => {
-            // Renamed parameter for clarity
             const promise = (async () => {
                 try {
                     await cb(block)
@@ -119,17 +154,15 @@ export class BlockService {
         const maxRetriesPerClientConfig = 5
 
         let retriesForCurrentClient = 0
-        let switchedToHttp = false
 
         while (true) {
             // Loop indefinitely for retries and client switches
             const { promise, reject } = promiseWithResolvers<void>()
             let unwatch: WatchBlocksReturnType | null = null
-            const clientDescription = switchedToHttp ? "HTTP-only client" : "Primary client"
 
             try {
                 blockLogger.info(
-                    `Starting block watcher with ${clientDescription} (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig}). Transport: ${this.#publicClient.transport.type}`,
+                    `Starting block watcher with ${this.#publicClient.transport.name} (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig}). Transport: ${this.#publicClient.transport.type}`,
                 )
 
                 unwatch = this.#publicClient.watchBlocks({
@@ -138,7 +171,7 @@ export class BlockService {
                     emitOnBegin: true,
                     emitMissed: true,
                     onBlock: async (blockFromViem) => {
-                        const newlyArrivedHeader = blockFromViem as unknown as BlockHeader
+                        const newlyArrivedHeader = blockFromViem as BlockHeader
 
                         if (!newlyArrivedHeader || !newlyArrivedHeader.number || !newlyArrivedHeader.hash) {
                             blockLogger.error(
@@ -147,9 +180,10 @@ export class BlockService {
                             return // Skip processing invalid blocks
                         }
 
-                        if (retriesForCurrentClient > 0 || (switchedToHttp && retriesForCurrentClient === 0)) {
+                        if (retriesForCurrentClient > 0) {
+                            // client healthy, reset tries
                             blockLogger.info(
-                                `Block watcher successfully retrieved block ${newlyArrivedHeader.number} with ${clientDescription}. Resetting its retry count.`,
+                                `Block watcher successfully retrieved block ${newlyArrivedHeader.number} with ${this.#publicClient.name}. Resetting its retry count.`,
                             )
                             retriesForCurrentClient = 0
                         }
@@ -210,61 +244,42 @@ export class BlockService {
                         await this.#executeOnBlockCallbacks(this.#currentBlock)
                     },
                     onError: (e) => {
-                        blockLogger.error(`Error in block watcher's onError callback with ${clientDescription}`, e)
+                        blockLogger.error(
+                            `Error in block watcher's onError callback with ${this.#publicClient.name}`,
+                            e,
+                        )
                         reject(e) // Trigger the main catch block for retry/fallback
                     },
                 })
-                blockLogger.trace(`Block watcher started successfully with ${clientDescription}.`)
+                blockLogger.trace(`Block watcher started successfully with ${this.#publicClient.name}.`)
                 await promise // Block here until an error occurs or unwatch is called.
             } catch (e) {
                 if (unwatch) {
                     unwatch()
                     unwatch = null
                 }
-                blockLogger.error(`Block watcher main loop caught an error with ${clientDescription}:`, e)
+                blockLogger.error(`Block watcher main loop caught an error with ${this.#publicClient.name}:`, e)
 
                 retriesForCurrentClient++
 
+                // lets try get a new public client
                 if (retriesForCurrentClient >= maxRetriesPerClientConfig) {
-                    if (!switchedToHttp) {
-                        blockLogger.warn(
-                            `Max retries (${maxRetriesPerClientConfig}) reached with the ${clientDescription}. Attempting to switch to HTTP-only client.`,
+                    blockLogger.warn(
+                        `Max retries (${maxRetriesPerClientConfig}) reached with the ${this.#publicClient.name}. Attempting to switch to HTTP-only client.`,
+                    )
+                    try {
+                        this.#publicClient = this.#getNewPublicClient()
+                        blockLogger.info(
+                            "Successfully switched to new public client. Resetting retries for new configuration.",
                         )
-                        try {
-                            const httpUrls = chain.rpcUrls.default.http
-                            if (!httpUrls || httpUrls.length === 0) {
-                                blockLogger.error(
-                                    "Fatal: No HTTP RPC URLs configured in 'chain' object for fallback. Cannot switch to HTTP-only client.",
-                                )
-                                throw new Error("No HTTP RPC URLs configured for fallback client.")
-                            }
-                            const httpOnlyClientConfig = {
-                                ...config,
-                                chain: chain,
-                                transport: fallback(httpUrls.map((url) => http(url))), // HTTP transport with fallback
-                            }
-                            this.#publicClient = createPublicClient(httpOnlyClientConfig)
-
-                            blockLogger.info(
-                                "Successfully switched to HTTP-only public client. Resetting retries for new configuration.",
-                            )
-                            switchedToHttp = true
-                            retriesForCurrentClient = 0
-                        } catch (creationError) {
-                            blockLogger.error(
-                                "Fatal: Failed to create HTTP-only public client. Block watcher cannot recover.",
-                                creationError,
-                            )
-                            throw new Error(
-                                `Failed to create HTTP-only public client: ${creationError instanceof Error ? creationError.message : String(creationError)}`,
-                            )
-                        }
-                    } else {
+                        retriesForCurrentClient = 0
+                    } catch (creationError) {
                         blockLogger.error(
-                            `Max retries (${maxRetriesPerClientConfig}) reached with HTTP-only client. Block watcher failed permanently.`,
+                            "Fatal: Failed to create new public client. Block watcher cannot recover.",
+                            creationError,
                         )
                         throw new Error(
-                            "Block watcher failed permanently after exhausting retries with both primary and HTTP-only clients.",
+                            `Failed to create new public client: ${creationError instanceof Error ? creationError.message : String(creationError)}`,
                         )
                     }
                 }
@@ -274,7 +289,7 @@ export class BlockService {
                     maxRetryDelay,
                 )
                 blockLogger.warn(
-                    `Retrying block watcher with ${switchedToHttp ? "HTTP-only client" : "Primary client"} in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for this client type)`,
+                    `Retrying block watcher with ${this.#publicClient.name} in ${delay / 1000} seconds (Attempt ${retriesForCurrentClient + 1}/${maxRetriesPerClientConfig} for this client type)`,
                 )
                 await sleep(delay)
             }
