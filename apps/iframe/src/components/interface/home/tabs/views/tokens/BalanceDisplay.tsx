@@ -14,7 +14,7 @@ interface BalanceDisplayProps {
  * @param truncatedBalance - Formatted balance string truncated to 4 decimal places, undefined if not available
  */
 const BalanceDisplay = ({ isLoading, balance }: BalanceDisplayProps) => {
-    if (isLoading && !balance) {
+    if (isLoading && balance !== undefined) {
         return <SpinnerIcon className="animate-spin" size="1.25em" />
     }
 
