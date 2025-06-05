@@ -1,4 +1,4 @@
-import type { AssertCompatible } from "@happy.tech/common"
+import type { AssertCompatible, BigIntSerialized } from "@happy.tech/common"
 import { type } from "arktype"
 import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
 import {
@@ -15,7 +15,6 @@ import {
     UInt256,
     UInt256In,
 } from "./ark"
-import type { SerializedObject } from "./helpers"
 
 // =====================================================================================================================
 // TYPES WITH TRANSFORMATIONS (for input validation)
@@ -92,11 +91,7 @@ export const SBoopReceiptIn = type({
     gasPrice: UInt256In,
 })
 
-// Use SerializedObject to handle the string vs bigint type differences
-// SBoopIn transforms strings to bigint, so it should match the actual Boop type
 type _a1 = AssertCompatible<typeof SBoopIn.infer, Boop>
-// For output validation schemas, use SerializedObject since they contain serialized BigInt values
-type _a2 = AssertCompatible<typeof SBoopLog.infer, SerializedObject<BoopLog>>
-type _a3 = AssertCompatible<typeof SBoopReceipt.infer, SerializedObject<BoopReceipt>>
-// SBoopReceiptIn transforms strings to bigint, so it should match the actual BoopReceipt type
+type _a2 = AssertCompatible<typeof SBoopLog.infer, BigIntSerialized<BoopLog>>
+type _a3 = AssertCompatible<typeof SBoopReceipt.infer, BigIntSerialized<BoopReceipt>>
 type _a4 = AssertCompatible<typeof SBoopReceiptIn.infer, BoopReceipt>
