@@ -64,7 +64,10 @@ export const ImportTokensDialog = () => {
     // 1. Address is invalid OR
     // 2. We don't have either contract data or user input for both symbol and decimals
     const submitButtonDisabledCondition =
-        !isValidAddress || (symbol === undefined && customTokenSymbol === "") || decimals === undefined
+        !isValidAddress ||
+        (symbol === undefined && customTokenSymbol === "") ||
+        decimals === undefined ||
+        status === "pending"
 
     // Input field change handlers
     const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,14 +191,13 @@ export const ImportTokensDialog = () => {
                                 symbolInputInvalidCondition ||
                                 status === "pending"
                             }
-                            disabled
                         >
                             <FormField.Label>Token symbol</FormField.Label>
                             <FormField.Input
                                 name="symbol"
                                 value={customTokenSymbol}
                                 onChange={handleCustomSymbolInputChange}
-                                className="select-none pointer-events-none"
+                                className="select-none pointer-events-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus:shadow-none caret-transparent cursor-default"
                             />
                             <FormField.ErrorText>
                                 {/* Spacing */}
@@ -209,7 +211,7 @@ export const ImportTokensDialog = () => {
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
-                        <FormField.Root required readOnly disabled>
+                        <FormField.Root required readOnly>
                             <FormField.Label className="text-md text-base-content disabled:opacity-50">
                                 Token decimals
                             </FormField.Label>
@@ -217,7 +219,7 @@ export const ImportTokensDialog = () => {
                                 value={decimals || ""}
                                 name="decimals"
                                 type="number"
-                                className="select-none pointer-events-none"
+                                className="select-none pointer-events-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus:shadow-none caret-transparent cursor-default"
                             />
                             <FormField.ErrorText>
                                 {/* Spacing */}
@@ -229,7 +231,7 @@ export const ImportTokensDialog = () => {
                             intent="primary"
                             className="text-neutral-content justify-center"
                             isLoading={status === "pending"}
-                            disabled={submitButtonDisabledCondition || status === "pending"}
+                            disabled={submitButtonDisabledCondition}
                         >
                             Submit
                         </Button>
