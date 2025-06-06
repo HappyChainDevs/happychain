@@ -199,6 +199,9 @@ function getOriginalBoop({
 }: SubmitInternalInput): [Boop, undefined] | [undefined, SubmitError] {
     const ogBoop = boopStore.getByHash(computeHash(boop))
 
+    // Check if a boop with the same account/nonceTrack/nonceValue is already being processed
+    const isNonceBeingProcessed = boopStore.hasNonce(boop.account, boop.nonceTrack, boop.nonceValue)
+
     if (replacedTx) {
         if (ogBoop) return [ogBoop, undefined]
         // If we have a replacement TX, but no original boop, something went terribly wrong.
@@ -209,6 +212,18 @@ function getOriginalBoop({
             description: "Replaced EVM transaction without original boop in cache.",
             stage: "submit",
         }]
+    }
+
+    if (isNonceBeingProcessed && !ogBoop) {
+        // A different boop with the same account/nonceTrack/nonceValue is already being processed
+        return [
+            undefined,
+            {
+                status: SubmitterError.AlreadyProcessing,
+                description: "Already processing a boop with the same account and nonce.",
+                stage: "submit",
+            },
+        ]
     }
 
     if (!ogBoop) {
