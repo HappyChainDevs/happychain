@@ -3,6 +3,7 @@ import { type Hash, Mutex, type RejectType, promiseWithResolvers, sleep } from "
 import { waitForCondition } from "@happy.tech/wallet-common"
 import { type OnBlockParameter, type PublicClient, type RpcBlock, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
+import { env } from "#lib/env"
 import { LruCache } from "#lib/utils/LruCache.ts"
 import { chain, rpcUrls } from "#lib/utils/clients" // Assuming these are correctly imported
 import { blockLogger } from "#lib/utils/logger"
@@ -22,11 +23,11 @@ export class BlockService {
     /** Zero-index attempt number for the current client. */
     #attempt = 0
 
-    /** Index of the current rpc URL in {@link rpcUrls} */
-    #rpcUrlIndex = -1
+    /** Current RPC URL (a value from {@link rpcUrls}) */
+    #rpcUrl = ""
 
-    /** Number of RPCs we attempted to hit up we successfully fetched the last block while monitoring. */
-    #rpcAttemptedSinceLastBlock = 0
+    /** Set of RPCs that failed in the last minute, we will prioritize selecting a RPC not in this set if possible. */
+    #recentlyFailedRpcs = new Set<string>()
 
     /**
      * Maps block numbers to their hashes, which can be used to discriminate between
@@ -74,50 +75,112 @@ export class BlockService {
     // RPC SELECTION
 
     /**
-     * Sets {@link this.#publicClient} to the next public client. We try to hit up all RPCs with a short timeout
-     * and select the first one in the {@link rpcUrls} list that gives an answer. The current RPC is excluded from
-     * the search. If no RPCs answer, we select the next one in the list (with wraparound) and pray for the best.
+     * Select a new RPC service and sets {@link this.#client} to a client for it.
+     *
+     * Sketch of the process:
+     * - Ping all RPCs for latest block to determine who is alive.
+     * - If none are, halt the process (the idea being to trigger an auto restart)
+     * - If the returned blocks are not current, we wait until block production resumes.
+     * - We select the most prioritary RPC that
+     * Each time this is called, we ping all RPCs to determine who is alive. If none are, we halt the process hoping
+     * that a service restart might improve things. Next
      */
-    async #nextPublicClient(): Promise<PublicClient> {
-        if (this.#rpcAttemptedSinceLastBlock++ === rpcUrls.length) {
-            // We've cycled through all the RPCs without a successful block
-            // fetch. Halt and catch fire, maybe a service restart will help.
-            blockLogger.error("Cycled through all RPCs without a successful block fetch. Halting process.")
+    async #nextRPC(): Promise<void> {
+        function createClient(url: string, timeout = 10_000): PublicClient {
+            const isWs = url.startsWith("ws")
+            const transport = isWs ? webSocket(url, { timeout }) : http(url, { timeout })
+            return createPublicClient({ chain, name: url, transport })
+        }
+
+        /** Get latest block from all RPCs. */
+        async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<Block>[]> {
+            const promises = rpcUrls.map((url) => createClient(url, timeout).getBlock({ includeTransactions: false }))
+            return Promise.allSettled(promises)
+        }
+
+        /** Can be applied to {@link pingRpcsForBlock} result to select successful calls. */
+        function isSuccess(result: PromiseSettledResult<Block>): result is PromiseFulfilledResult<Block> {
+            return result.status === "fulfilled"
+        }
+
+        if (this.#rpcUrl) {
+            this.#recentlyFailedRpcs.add(this.#rpcUrl)
+            // Don't need to clear. The worse that can happen is it will be removed a bit early
+            // if re-added after the failed set was cleared following a block production stall.
+            // Extremely rare scenario that doesn't break anything. Not worth the extra bookkeeping.
+            setTimeout(() => this.#recentlyFailedRpcs.delete(this.#rpcUrl), 60_000)
+        }
+
+        // Request a block from all RPCs with a short timeout.
+        let rpcResults = await pingRpcsForBlock(500)
+        let anyAlive = rpcResults.some(isSuccess)
+
+        if (!anyAlive) {
+            // Nothing alive, retry with standard timeout.
+            rpcResults = await pingRpcsForBlock(env.RPC_REQUEST_TIMEOUT)
+            anyAlive = rpcResults.some(isSuccess)
+        }
+
+        if (!anyAlive) {
+            // Everything's dead. Halt and catch fire, maybe a service restart will help.
+            blockLogger.error("All RPCs are down. Halting process.")
             // TODO alerting
             exit(1)
         }
 
-        // Request a block from all RPCs with a short timeout.
-        const rpcResults = await Promise.allSettled(
-            rpcUrls.map((url, i) =>
-                i === this.#rpcUrlIndex
-                    ? Promise.reject()
-                    : this.#createPublicClient(url, 500).getBlock({ includeTransactions: false }),
-            ),
-        )
-        const index = rpcResults.findIndex((it) => it.status === "fulfilled")
-        if (index >= 0) this.#rpcUrlIndex = index
-        else this.#rpcUrlIndex = (this.#rpcUrlIndex + 1) % rpcUrls.length
+        if (!rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))) {
+            blockLogger.error("Block production has halted, waiting for it to resume.")
+            // TODO alerting
+            const { promise, resolve } = promiseWithResolvers()
+            let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
+            const pollingTimer = setInterval(async () => {
+                rpcResults = await pingRpcsForBlock(env.RPC_REQUEST_TIMEOUT)
+                // The block amongst the result with the higher number.
+                let localMax = { number: 0n, hash: "0x" as Hash }
+                for (const r of rpcResults) {
+                    if (!isSuccess(r)) continue
+                    if (r.value.number > current.number /* we're moving again! */) {
+                        clearInterval(pollingTimer)
+                        return resolve(null)
+                    } else if (r.value.number > localMax.number) {
+                        localMax = r.value
+                    }
+                }
+                if (localMax.number && this.#blockHistory.get(localMax.number) !== localMax.hash) {
+                    // A re-org might have occured — reset block number and check for forward movement from there.
+                    current = localMax
+                }
+            }, 1000)
+            await promise
+            if (current !== this.#current) {
+                // A re-org occurred, emit the new base.
+                this.#handleNewBlock(formatBlock(current as unknown as RpcBlock) as Block)
+            }
+            // The issue was a block production stall — it should be safe to retry the previous RPCs.
+            this.#recentlyFailedRpcs.clear()
+        }
 
-        // `rpcUrls` is guaranteed non empty, and urls always start with "http" or "ws"
-        const url = rpcUrls[this.#rpcUrlIndex]
-        blockLogger.trace("Creating public client", url)
-        return this.#createPublicClient(url)
-    }
+        // Get most prioritary alive RPC, excluding recently failed ones.
+        let index = rpcResults.findIndex((it, i) => isSuccess(it) && !this.#recentlyFailedRpcs.has(rpcUrls[i]))
+        if (index < 0) blockLogger.error("Every alive RPC has failed within the last minute, but some RPCs are live.")
+        index = rpcResults.findIndex(isSuccess) // we know this must be > 0
 
-    #createPublicClient(url: string, timeout = 10_000): PublicClient {
-        const isWs = url.startsWith("ws")
-        const transport = isWs ? webSocket(url, { timeout }) : http(url, { timeout })
-        return createPublicClient({ chain, name: url, transport })
+        this.#rpcUrl = rpcUrls[index]
+        this.#client = createClient(this.#rpcUrl)
+        this.#attempt = 0
     }
 
     // =================================================================================================================
     // BLOCK MONITORING
 
     async #startBlockWatcher(): Promise<void> {
+        // Generic logic — first retry is instant, then `initialRetryDelay` with exponential backoff up
+        // to `maxRetryDelay` with a max of `maxAttempts` attempts.
+        // However, default values only retries once without delay, otherwise we'd rather move on to another RPC than
+        // waste time waiting.
         const initialRetryDelay = 1000
         const maxRetryDelay = 8_000
-        const maxAttempts = 4 // per client
+        const maxAttempts = 2 // per client
         const pollingInterval = 200
         let skipToNextClient = false
 
@@ -126,23 +189,25 @@ export class BlockService {
             // 1. Initialize next client if needed, or wait until next attempt.
             init: try {
                 if (!this.#client /* very first init */ || skipToNextClient) {
-                    this.#client = await this.#nextPublicClient()
+                    await this.#nextRPC()
                     break init
                 }
 
                 if (this.#attempt >= maxAttempts) {
                     blockLogger.warn(`Max retries (${maxAttempts}) reached for ${this.#client.name}.`)
-                    this.#client = await this.#nextPublicClient()
-                    this.#attempt = 0
+                    await this.#nextRPC()
                     break init
                 }
 
-                const delay = Math.min(initialRetryDelay * 2 ** this.#attempt, maxRetryDelay)
-                blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#client.name}`)
-                await sleep(delay)
-                //
+                if (this.#attempt > 1) {
+                    // We want first retry (attempt = 1) to be instant.
+                    // Note that `this.#attempt` is guaranteed >= 1 here.
+                    const delay = Math.min(initialRetryDelay * 2 ** (this.#attempt - 2), maxRetryDelay)
+                    blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#client.name}`)
+                    await sleep(delay)
+                }
             } catch (e) {
-                blockLogger.error(`Failed to create new public client for ${rpcUrls[this.#rpcUrlIndex]}}`, e)
+                blockLogger.error(`Failed to create new public client for ${this.#rpcUrl}`, e)
                 skipToNextClient = true
                 continue
             }
@@ -157,7 +222,6 @@ export class BlockService {
             let pollingTimer: Timer | undefined = undefined
             try {
                 this.#startBlockTimeout()
-                void this.#handleNewBlock(await this.#client.getBlock())
 
                 if (this.#client.transport.type === "webSocket") {
                     ;({ unsubscribe } = await this.#client.transport.subscribe({
@@ -172,10 +236,11 @@ export class BlockService {
                     }, pollingInterval)
                 }
 
-                // The above is equivalent to the below Viem watchBlock invocation. However, our version
-                // does not incur an extra useless eth_getBlock call when subscribing via WebSocket.
-                // Additionally, we duplicate a lot of the bookkeeping logic to be able to support cycling
-                // between RPCs in case of failure, so we might as well avoid having two layers doing this.
+                // The above is equivalent to the below Viem watchBlock invocation (minus emitOnBegin
+                // for the very first subscription). However, our version does not incur an extra
+                // useless eth_getBlock call when subscribing via WebSocket. Additionally, we
+                // duplicate a lot of the bookkeeping logic to be able to support cycling between
+                // RPCs in case of failure, so we might as well avoid having two layers doing this.
 
                 // unwatch = this.#client.watchBlocks({
                 //     pollingInterval,
@@ -244,13 +309,13 @@ export class BlockService {
                     // do, but the submitter won't really suffer from this (unless the RPC is downright
                     // malicious, but there are a lot of other problems with that). So we do nothing.
                     // TODO alerting
-                }
-                if (cachedHash !== block.hash) {
+                } else if (cachedHash !== block.hash) {
                     blockLogger.error("Detected re-org.", blockInfo, `Replacing: ${block.number} / ${cachedHash}`)
                     // Do nothing, subscribers should deal with this if they need to.
+                    // TODO alerting
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
-                    // We don't clear the timeout as we're not making progress.
+                    // We don't clear the block timeout as we're not making progress.
                     return
                 }
             }
@@ -261,7 +326,6 @@ export class BlockService {
         if (this.#attempt > 0) {
             blockLogger.info(`Retrieved block ${block.number} with ${this.#client.name}. Resetting attempt count.`)
             this.#attempt = 0
-            this.#rpcAttemptedSinceLastBlock = 0
         }
 
         // Update block information and run callbacks.
