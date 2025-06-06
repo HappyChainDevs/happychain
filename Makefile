@@ -558,17 +558,17 @@ select-chain:
 	$(call update_env,packages/boop-sdk/.env,CHAIN_ID,$(chain))
 .PHONY: select-chain
 
-select-http-rpc:
-	$(call update_env,apps/submitter/.env,RPC_HTTP_URLS,$(url))
+select-rpc-url:
+	$(call update_env,apps/submitter/.env,RPC_URLS,$(url))
 	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
 	$(call update_env,apps/iframe/.env,HAPPY_RPC_OVERRIDE,$(url))
 	$(call update_env,packages/core/.env,HAPPY_RPC_OVERRIDE,$(url))
-.PHONY: select-http-rpc
+.PHONY: select-rpc-url
 
-select-ws-rpc:
-	$(call update_env,apps/submitter/.env,RPC_WS_URLS,$(url))
-.PHONY: select-ws-rpc
+select-rpc-urls:
+	$(call update_env,apps/submitter/.env,RPC_URLS,$(urls))
+.PHONY: select-rpc-urls
 
 select-staging-contracts:
 	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,$(use))
@@ -613,15 +613,15 @@ select-iframe-prod:
 
 select-chain-local:
 	make select-chain chain=31337
-	make select-http-rpc url=http://localhost:8545
-	make select-ws-rpc url=ws://localhost:8545
+	make select-rpc-url url=http://localhost:8545
+	make select-rpc-urls urls=ws://localhost:8545,http://localhost:8545
 	make select-staging-contracts use=false
 .PHONY: select-chain-local
 
 define select-chain-testnet
 	make select-chain chain=216
-	make select-http-rpc url=https://rpc.testnet.happy.tech/http
-	make select-ws-rpc url=wss://rpc.testnet.happy.tech/ws
+	make select-rpc-url url=https://rpc.testnet.happy.tech/http
+	make select-rpc-urls urls=wss://rpc.testnet.happy.tech/ws,https://rpc.testnet.happy.tech/http
 endef
 
 select-chain-staging:
