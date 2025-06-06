@@ -59,6 +59,9 @@
             "complexity": {
                 "noForEach": "off",
                 "noUselessSwitchCase": "off"
+            },
+            "suspicious": {
+                "noConfusingLabels": "off"
             }
         }
     },
