@@ -9,6 +9,7 @@ import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { receiptService } from "#lib/services"
+import { BlockService } from "#lib/services/BlockService.ts"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { config } from "#lib/utils/clients"
@@ -50,6 +51,7 @@ describe("submitter_execute", () => {
     describe("repricing", () => {
         // biome-ignore format: keep indentation low
         it("reprices", withInterval(0, false, async () => {
+            clearTimeout((BlockService.instance as any).blockTimeout)
             const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
             expect(spy).toHaveBeenCalledTimes(0)
 
