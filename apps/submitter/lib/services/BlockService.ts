@@ -5,7 +5,7 @@ import { type OnBlockParameter, type PublicClient, type RpcBlock, formatBlock } 
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
 import { LruCache } from "#lib/utils/LruCache.ts"
-import { chain, rpcUrls } from "#lib/utils/clients" // Assuming these are correctly imported
+import { chain, rpcUrls } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
 const BLOCK_TIME = 2000
@@ -263,6 +263,7 @@ export class BlockService {
     }
 
     #startBlockTimeout() {
+        clearTimeout(this.blockTimeout)
         this.blockTimeout = setTimeout(() => {
             this.#skipToNextClient("Timed out while waiting for block")
         }, BLOCK_TIME + 1000)
@@ -294,7 +295,7 @@ export class BlockService {
                 clearTimeout(this.blockTimeout)
                 // If we can't fill the gap, skip this block and move onto the next RPC.
                 if (allowBackfill && !(await this.#backfill(curNum + 1n, block.number - 1n))) {
-                    this.#skipToNextClient("Couldn't fill nonce gap.")
+                    this.#skipToNextClient("Couldn't fill block gap.")
                     return
                 }
             }
@@ -320,8 +321,6 @@ export class BlockService {
                 }
             }
         }
-
-        clearTimeout(this.blockTimeout)
 
         if (this.#attempt > 0) {
             blockLogger.info(`Retrieved block ${block.number} with ${this.#client.name}. Resetting attempt count.`)
