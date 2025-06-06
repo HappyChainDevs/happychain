@@ -20,14 +20,12 @@ export const deploymentsSchema = z.object({
         .transform((str) => str !== "false" && str !== "0"),
 
     /**
-     * The (HTTP) RPC url to use for the chain. Defaults to a well-known RPC if {@link
-     * CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
+     * Optional comma-separated list of RPC URLS in order of priority. HTTP and WebSock URLS can be mixed.
+     * This is required if the chain is not supported by default (HappyChain Sepolia or Anvil devnet).
      *
-     * This is required if the chain is not supported by default.
-     *
-     * If you use this for a supported chain, you might want to set {@link USE_WEBSOCKET} to false.
+     * Defaults to well-known RPCs if {@link CHAIN_ID} is known (devnet = 31337 or HappyChainSepolia = 216).
      */
-    RPC_HTTP_URLS: z
+    RPC_URLS: z
         .string()
         .optional()
         .transform((url) => {
@@ -35,33 +33,10 @@ export const deploymentsSchema = z.object({
             return z.array(z.string().url()).parse(
                 url
                     .split(",")
-                    .map((a: string) => a.trim())
+                    .map((a) => a.trim())
                     .filter(Boolean),
             ) as readonly string[]
         }),
-
-    /**
-     * The (WebSocket) RPC url to use for the chain. Defaults to a well-known RPC if
-     * {@link CHAIN_ID} is known (for now only 31337 (devnet) and 216 (HappyChain Sepolia)).
-     */
-    RPC_WS_URLS: z
-        .string()
-        .optional()
-        .transform((url) => {
-            if (!url) return undefined
-            return z.array(z.string().url()).parse(
-                url
-                    .split(",")
-                    .map((a: string) => a.trim())
-                    .filter(Boolean),
-            ) as readonly string[]
-        }),
-
-    /**
-     * Set this to false to not use WebSocket. This is mostly useful when you use {@link RPC_HTTP_URLS} in
-     * conjunction with a supported chain and don't want the default WebSocket RPC to be used in priority.
-     */
-    USE_WEBSOCKET: z.coerce.boolean().optional().default(true),
 
     /**
      * The address of the EntryPoint contract to submit boops to.
