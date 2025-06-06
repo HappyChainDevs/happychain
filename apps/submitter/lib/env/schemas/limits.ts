@@ -50,4 +50,9 @@ export const limitsSchema = z.object({
      * transaction) is considered stuck and a replacement transaction is sent. Defaults to 3 seconds.
      */
     STUCK_TX_WAIT_TIME: z.coerce.number().positive().default(3_000),
+
+    /**
+     * The default timeout passed to the Viem client for RPC requests.
+     */
+    RPC_REQUEST_TIMEOUT: z.coerce.number().positive().default(3_000),
 })
