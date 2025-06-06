@@ -1,6 +1,6 @@
 import { Menu } from "@ark-ui/react/menu"
-import { CaretDownIcon, CaretRightIcon, CaretUpIcon } from "@phosphor-icons/react"
-import { Link } from "@tanstack/react-router"
+import { CaretRightIcon, GearSixIcon } from "@phosphor-icons/react"
+import { Link, useRouter } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
@@ -8,6 +8,21 @@ import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } f
 
 const TriggerSecondaryActionsMenu = () => {
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
+    const router = useRouter()
+
+    const handleAction = (e: React.PointerEvent<HTMLButtonElement>) => {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const isOnHome = router.state.location.pathname === "/embed"
+        if (!isOnHome) {
+            // Navigate to embed if not already there
+            router.navigate({ to: "/embed" })
+        } else {
+            // Only toggle visibility if already on embed
+            setVisibility((prev) => !prev)
+        }
+    }
 
     return (
         <button
@@ -15,12 +30,9 @@ const TriggerSecondaryActionsMenu = () => {
             type="button"
             title={isVisible ? "Close this menu" : "Open this menu"}
             aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.stopPropagation()
-                setVisibility(!isVisible)
-            }}
+            onPointerDown={handleAction}
         >
-            {isVisible ? <CaretUpIcon size="1em" /> : <CaretDownIcon size="1em" />}
+            <GearSixIcon size="1em" weight={isVisible ? "fill" : "regular"} />
         </button>
     )
 }
