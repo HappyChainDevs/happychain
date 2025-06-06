@@ -12,6 +12,6 @@ async function waitForReceipt(input: WaitForReceiptInput): Promise<WaitForReceip
     }
 }
 
-const tracedWaitForReceipt = traceFunction(waitForReceipt)
+const tracedWaitForReceipt = traceFunction(waitForReceipt, "waitForReceipt")
 
 export { tracedWaitForReceipt as waitForReceipt }

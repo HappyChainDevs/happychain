@@ -19,6 +19,6 @@ function computeHash(boop: Boop): Hash {
     return boopHash
 }
 
-const tracedComputeHash = traceFunction(computeHash)
+const tracedComputeHash = traceFunction(computeHash, "computeHash")
 
 export { tracedComputeHash as computeHash }

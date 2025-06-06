@@ -35,6 +35,6 @@ function computeBoopHash(chainId: bigint | number, boop: Boop): Hash {
     return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(boopToHash), BigInt(chainId)]))
 }
 
-const tracedComputeBoopHash = traceFunction(computeBoopHash)
+const tracedComputeBoopHash = traceFunction(computeBoopHash, "computeBoopHash")
 
 export { tracedComputeBoopHash as computeBoopHash }

@@ -1,3 +1,5 @@
+import type { Hash } from "@happy.tech/common"
+import { trace } from "@opentelemetry/api"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { boopNonceManager, boopStore, computeHash } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
@@ -5,10 +7,12 @@ import { GetPending, type GetPendingInput, type GetPendingOutput, type PendingBo
 
 async function getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {
     try {
+        const boopHashes: Hash[] = []
         const pending = boopStore
             .getByAccount(account)
             .map((boop) => {
                 const boopHash = computeHash(boop)
+                boopHashes.push(boopHash)
                 return {
                     boopHash,
                     entryPoint: boopStore.getEntryPoint(boopHash)!,
@@ -21,12 +25,15 @@ async function getPending({ account }: GetPendingInput): Promise<GetPendingOutpu
             .sort((a, b) => {
                 return Math.sign(Number(a.nonceTrack - b.nonceTrack)) || Math.sign(Number(a.nonceValue - b.nonceValue))
             })
+
+        const activeSpan = trace.getActiveSpan()
+        activeSpan?.setAttribute("boopHashes", boopHashes)
         return { status: GetPending.Success, account, pending }
     } catch (error) {
         return outputForGenericError(error)
     }
 }
 
-const tracedGetPending = traceFunction(getPending)
+const tracedGetPending = traceFunction(getPending, "getPending")
 
 export { tracedGetPending as getPending }

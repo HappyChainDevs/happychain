@@ -1,4 +1,5 @@
 import type { Hash } from "@happy.tech/common"
+import { trace } from "@opentelemetry/api"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { simulate } from "#lib/handlers/simulate"
@@ -37,11 +38,13 @@ type SubmitInternalOutput =
     | (SubmitSuccess & { evmTxHash?: Hash; receiptPromise?: Promise<WaitForReceiptOutput> })
     | (SubmitError & { evmTxHash?: undefined; receiptPromise?: undefined })
 
-export async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
+async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
     const { entryPoint = deployment.EntryPoint, timeout, earlyExit, replacedTx } = input
     let boop = input.boop
 
     const boopHash = computeHash(boop)
+    const activeSpan = trace.getActiveSpan()
+    activeSpan?.setAttribute("boopHash", boopHash)
     try {
         const [ogBoop, ogBoopError] = getOriginalBoop(input)
         if (ogBoopError) return ogBoopError
@@ -230,6 +233,8 @@ function getOriginalBoop({
     return [boopStore.getByHash(computeHash(boop))!, undefined]
 }
 
-const tracedSubmit = traceFunction(submit)
+const tracedSubmit = traceFunction(submit, "submit")
+const tracedSubmitInternal = traceFunction(submitInternal, "submitInternal")
+const tracedGetOriginalBoop = traceFunction(getOriginalBoop, "getOriginalBoop")
 
-export { tracedSubmit as submit }
+export { tracedSubmit as submit, tracedSubmitInternal as submitInternal, tracedGetOriginalBoop as getOriginalBoop }

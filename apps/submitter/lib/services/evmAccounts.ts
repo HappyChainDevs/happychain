@@ -40,6 +40,6 @@ function getAccountDeployer(): Account {
 
 export const accountDeployer: Account = getAccountDeployer()
 
-const tracedFindExecutionAccount = traceFunction(findExecutionAccount)
+const tracedFindExecutionAccount = traceFunction(findExecutionAccount, "findExecutionAccount")
 
 export { tracedFindExecutionAccount as findExecutionAccount }

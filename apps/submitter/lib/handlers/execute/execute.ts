@@ -1,3 +1,4 @@
+import { trace } from "@opentelemetry/api"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt } from "#lib/handlers/waitForReceipt"
@@ -14,6 +15,8 @@ async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
     // be deleted by the BoopReceiptService when we get the receipt or successfully cancel the boop.
     try {
         const boopHash = computeHash(input.boop)
+        const activeSpan = trace.getActiveSpan()
+        activeSpan?.setAttribute("boopHash", boopHash)
         logger.trace("Executing boop", boopHash)
         const { evmTxHash, receiptPromise, ...submission } = await submitInternal(input)
         if (submission.status !== Onchain.Success) {
@@ -30,6 +33,6 @@ async function execute(input: ExecuteInput): Promise<ExecuteOutput> {
     }
 }
 
-const tracedExecute = traceFunction(execute)
+const tracedExecute = traceFunction(execute, "execute")
 
 export { tracedExecute as execute }
