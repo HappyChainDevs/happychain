@@ -50,10 +50,14 @@ let routesEnabled = false
 const initializeServer = async () => {
     if (!routesEnabled) {
         try {
-            // Run the resync routine to catch any in-flight transactions
-            logger.info("Running resync routine on submitter startup...")
-            await resyncService.resyncOnStartup()
-            logger.info("Resync routine completed successfully, enabling routes")
+            // Run the resync routine to catch any in-flight transactions, but not in test environment
+            if (env.NODE_ENV !== "test") {
+                logger.info("Running resync routine on submitter startup...")
+                await resyncService.resyncOnStartup()
+                logger.info("Resync routine completed successfully, enabling routes")
+            } else {
+                logger.info("Skipping resync routine in test environment")
+            }
 
             // Now enable the routes
             app.route("/api/v1/accounts", accountsApi)
@@ -71,7 +75,7 @@ const initializeServer = async () => {
 }
 
 // Initialize the server immediately in production/staging, otherwise initialize on first request
-if (["production", "staging", "development"].includes(env.NODE_ENV)) {
+if (["production", "staging", "development", "test"].includes(env.NODE_ENV)) {
     initializeServer().catch((error) => {
         logger.error("Failed to initialize server", error)
         process.exit(1)

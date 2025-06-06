@@ -60,9 +60,9 @@ latency: ## Benchmark latency
 	bun ./bin/benchmarkLatency.ts;
 .PHONY: latency
 
-validate-simulate: ## Validate simulate output
-	bun ./bin/testSimulateValidation.ts
-.PHONY: validate-simulate
+test-resync: ## Test resync service
+	bun ./bin/testResyncService.ts;
+.PHONY: test-resync
 
 args ?= --bail
 
