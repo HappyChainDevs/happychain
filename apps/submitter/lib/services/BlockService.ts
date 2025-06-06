@@ -290,6 +290,7 @@ export class BlockService {
         // the submitter uses this for, we don't care, the boops will be long timed out.
         if (to - from > MAX_BACKFILL) from = to - MAX_BACKFILL
 
+        // Use a Mutex to avoid backfilling the same range many times.
         return this.#backfillMutex.locked(async () => {
             // It's possible all or part of the range was backfilled while we were waiting.
             if (this.#current?.number ?? 0n > from) from = this.#current!.number

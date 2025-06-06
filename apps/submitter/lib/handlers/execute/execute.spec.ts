@@ -52,7 +52,7 @@ describe("submitter_execute", () => {
         // biome-ignore format: keep indentation low
         it("reprices", withInterval(0, false, async () => {
             clearTimeout((BlockService.instance as any).blockTimeout)
-            const spy = spyOn<any, string>(receiptService, "cancelOrReplace")
+            const spy = spyOn<any, string>(receiptService, "replaceOrCancel")
             expect(spy).toHaveBeenCalledTimes(0)
 
             // will wait a 1/4 second past the minimum wait time to ensure the tx is stuck & replaced
