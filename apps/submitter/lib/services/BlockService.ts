@@ -224,12 +224,18 @@ export class BlockService {
                 this.#startBlockTimeout()
 
                 if (this.#client.transport.type === "webSocket") {
-                    ;({ unsubscribe } = await this.#client.transport.subscribe({
+                    let unsub: (() => void) | null = null
+                    ;({ unsubscribe: unsub } = await this.#client.transport.subscribe({
                         params: ["newHeads"],
                         onData: async (data: { result: Partial<RpcBlock> }) =>
                             void this.#handleNewBlock(formatBlock(data.result) as Block),
                         onError: reject,
                     }))
+                    unsubscribe = () => {
+                        console.log("unsubscribe called explicitly")
+                        console.trace()
+                        unsub!()
+                    }
                 } else {
                     pollingTimer = setInterval(async () => {
                         void this.#handleNewBlock(await this.#client.getBlock())

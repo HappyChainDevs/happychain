@@ -13,7 +13,7 @@ export const receiptLogger = Logger.create("BoopReceiptService")
 export const proxyLogger = Logger.create("proxyServer")
 
 // Don't trace unless enabled by dev, as this fills the logs quick.
-blockLogger.setLogLevel(Math.min(LogLevel.INFO, defaultLogLevel))
+// blockLogger.setLogLevel(Math.min(LogLevel.INFO, defaultLogLevel))
 
 export const logJSONResponseMiddleware = createMiddleware(async (c, next) => {
     await next()
