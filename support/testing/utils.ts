@@ -5,6 +5,7 @@ import {
     type HappyUser,
     type ProviderEventPayload,
     WalletType,
+    shortenAddress,
 } from "@happy.tech/wallet-common"
 import { getAddress } from "viem"
 
@@ -34,7 +35,7 @@ export function generateTestUser(): HappyUser {
         // social details
         uid: address,
         email: "fake@example.com",
-        name: `${address.slice(0, 6)}...${address.slice(-4)}`,
+        name: shortenAddress(address, 4),
         ens: "",
         avatar: `https://avatar.vercel.sh/${address}?size=120`,
         // web3 details
