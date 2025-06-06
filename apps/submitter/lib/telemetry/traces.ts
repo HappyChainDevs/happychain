@@ -1,6 +1,7 @@
 import { bigIntReplacer, unknownToError } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import { createMiddleware } from "hono/factory"
+import { tracer } from "./instrumentation"
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 function createTracedFunction<F extends (...args: any[]) => any>(
@@ -9,7 +10,6 @@ function createTracedFunction<F extends (...args: any[]) => any>(
     thisArg?: unknown,
 ): F {
     return function (this: unknown, ...args: Parameters<F>): ReturnType<F> {
-        const tracer = trace.getTracer("submitter")
         const span = tracer.startSpan(spanName)
 
         // IMPORTANT: The callback must not be async to preserve the original method's synchronicity.
@@ -100,7 +100,6 @@ export function TraceMethod(spanName?: string) {
 }
 
 export const traceMiddleware = createMiddleware(async (c, next) => {
-    const tracer = trace.getTracer("submitter")
     const span = tracer.startSpan(`${c.req.method} ${c.req.path}`)
 
     return context.with(trace.setSpan(context.active(), span), async () => {
