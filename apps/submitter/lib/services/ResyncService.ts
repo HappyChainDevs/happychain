@@ -51,10 +51,18 @@ export class ResyncService {
                 return
             }
 
-            // Process in-flight transactions
+            // Fill in the nonce gap by sending cancel transactions for all missing nonces in parallel
+            const cancelPromises: Promise<string | undefined>[] = []
             for (let nonce = latestNonce; nonce < pendingNonce; nonce++) {
-                resyncLogger.info(`Resync - Sending cancel transaction for nonce ${nonce}`)
-                await this.sendCancelTransaction(sender, senderAddress, nonce)
+                resyncLogger.info(`Resync - Queueing cancel transaction for nonce ${nonce}`)
+                cancelPromises.push(this.sendCancelTransaction(sender, senderAddress, nonce))
+            }
+
+            // Wait for all cancel transactions to be sent (but not necessarily mined)
+            if (cancelPromises.length > 0) {
+                resyncLogger.info(`Resync - Sending ${cancelPromises.length} cancel transactions in parallel`)
+                await Promise.all(cancelPromises)
+                resyncLogger.info("Resync - All cancel transactions have been sent")
             }
 
             resyncLogger.info("Resync routine completed successfully")
