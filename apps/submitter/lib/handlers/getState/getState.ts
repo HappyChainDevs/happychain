@@ -1,3 +1,4 @@
+import { trace } from "@opentelemetry/api"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { boopStore, dbService, simulationCache } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
@@ -6,6 +7,8 @@ import { GetState, type GetStateInput, type GetStateOutput } from "./types"
 async function getState(input: GetStateInput): Promise<GetStateOutput> {
     try {
         const boopHash = input.boopHash
+        const activeSpan = trace.getActiveSpan()
+        activeSpan?.setAttribute("boopHash", boopHash)
         const receipt = await dbService.findReceipt(boopHash)
         if (receipt) return { status: GetState.Receipt, receipt }
         const simulation = await simulationCache.get(boopHash)
@@ -21,6 +24,6 @@ async function getState(input: GetStateInput): Promise<GetStateOutput> {
     }
 }
 
-const tracedGetState = traceFunction(getState)
+const tracedGetState = traceFunction(getState, "getState")
 
 export { tracedGetState as getState }

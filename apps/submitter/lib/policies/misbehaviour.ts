@@ -60,6 +60,6 @@ function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, simulation
     }
 }
 
-const tracedNotePossibleMisbehaviour = traceFunction(notePossibleMisbehaviour)
+const tracedNotePossibleMisbehaviour = traceFunction(notePossibleMisbehaviour, "notePossibleMisbehaviour")
 
 export { tracedNotePossibleMisbehaviour as notePossibleMisbehaviour }

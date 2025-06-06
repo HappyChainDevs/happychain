@@ -1,6 +1,5 @@
-import { type Tracer, trace } from "@opentelemetry/api"
+import { trace } from "@opentelemetry/api"
 import { colors, noColors } from "./colors"
-import { blue, cyan, green, red, white, yellow } from "./colors"
 
 /**
  * Defines the allowed log levels.

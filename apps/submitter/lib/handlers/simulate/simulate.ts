@@ -1,3 +1,4 @@
+import { trace } from "@opentelemetry/api"
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { abis, deployment, env } from "#lib/env"
@@ -22,6 +23,8 @@ async function simulate(
     const encodedBoop = encodeBoop(boop)
     const selfPaying = boop.account === boop.payer
 
+    const activeSpan = trace.getActiveSpan()
+    activeSpan?.setAttribute("boopHash", boopHash)
     logger.trace("Simulating boop", boopHash, boop)
 
     // === Validate input gas values ===
@@ -157,6 +160,6 @@ function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {
     }
 }
 
-const tracedSimulate = traceFunction(simulate)
+const tracedSimulate = traceFunction(simulate, "simulate")
 
 export { tracedSimulate as simulate }

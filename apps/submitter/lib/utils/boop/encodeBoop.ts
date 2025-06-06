@@ -48,6 +48,6 @@ function encodeBoop(boop: Boop): Hex {
     return `0x${encodedHex}`
 }
 
-const tracedEncodeBoop = traceFunction(encodeBoop)
+const tracedEncodeBoop = traceFunction(encodeBoop, "encodeBoop")
 
 export { tracedEncodeBoop as encodeBoop }

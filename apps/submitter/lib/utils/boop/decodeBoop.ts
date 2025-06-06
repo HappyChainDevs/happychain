@@ -47,6 +47,6 @@ function decodeBoop(encoded: Hex): Boop {
     }
 }
 
-const tracedDecodeBoop = traceFunction(decodeBoop)
+const tracedDecodeBoop = traceFunction(decodeBoop, "decodeBoop")
 
 export { tracedDecodeBoop as decodeBoop }

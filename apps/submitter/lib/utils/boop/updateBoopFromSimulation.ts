@@ -18,6 +18,6 @@ function updateBoopFromSimulation(boop: Boop, simulation: SimulateSuccess): Boop
     }
 }
 
-const tracedUpdateBoopFromSimulation = traceFunction(updateBoopFromSimulation)
+const tracedUpdateBoopFromSimulation = traceFunction(updateBoopFromSimulation, "updateBoopFromSimulation")
 
 export { tracedUpdateBoopFromSimulation as updateBoopFromSimulation }
