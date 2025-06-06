@@ -48,7 +48,7 @@ const HelperText = forwardRef<HTMLSpanElement, HelperTextProps>(({ className = "
 
 interface ErrorTextProps extends FieldErrorTextProps {}
 const ErrorText = forwardRef<HTMLSpanElement, ErrorTextProps>(({ className = "", children, ...props }, ref) => (
-    <span className="flex">
+    <span className="flex select-none">
         <ArkField.ErrorText
             ref={ref}
             className={cx("text-start text-error/80 text-[0.70rem] text-xs", className)}
