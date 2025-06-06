@@ -17,8 +17,7 @@ export ANVIL_BLOCK_TIME ?= $(if $(findstring true,$(AUTOMINE_TESTS)),0,2)
 # Note: Stuck tx time set to 1000ms when automining, as 500ms sometimes flakes.
 define setup-test-env
 	$(eval export CHAIN_ID=31337) \
-	$(eval export RPC_HTTP_URLS=http://localhost:8546) \
-	$(eval export RPC_WS_URLS=ws://localhost:8546) \
+	$(eval export RPC_URLS=ws://localhost:8546,http://localhost:8546) \
   	$(eval export NODE_ENV=test) \
   	$(eval export DATABASE_URL=tests.sqlite) \
 	$(eval export STUCK_TX_WAIT_TIME=$(if $(findstring true,$(AUTOMINE_TESTS)),1000,3000)) \
