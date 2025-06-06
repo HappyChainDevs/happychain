@@ -38,19 +38,29 @@ export const { chain, rpcUrls } = (() => {
     return { chain, rpcUrls }
 })()
 
+function transport(url: string) {
+    const config = { timeout: env.RPC_REQUEST_TIMEOUT }
+    return url.startsWith("http") ? http(url, config) : webSocket(url, config)
+}
+
 export const config = {
     chain,
     batch: { multicall: true },
-    transport: fallback(
-        rpcUrls.map((url) => (url.startsWith("http") ? http(url) : webSocket(url))),
-        {
-            shouldThrow: (err: Error) => {
-                if (err.message.includes("execution reverted")) return true
-                logger.warn("RPC failed, falling back to next RPC:", err.message)
-                return false // dont throw but proceed to the next RPC
-            },
+    transport: fallback(rpcUrls.map(transport), {
+        shouldThrow: (err: Error) => {
+            // The two cases below indicate a properly functioning RPC reporting something wrong with the tx.
+            // There are properly other cases like that we haven't run into. It's okay, we're just going to be
+            // less efficient by doing needless retries.
+
+            if (err.message.includes("execution reverted")) return true
+
+            // This gets handled in the receipt service.
+            if (isNonceTooLowError(err)) return true
+
+            logger.warn("RPC failed, falling back to next RPC:", err.message)
+            return false // dont throw but proceed to the next RPC
         },
-    ),
+    }),
 } as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
@@ -58,3 +68,10 @@ export const publicClient: PublicClient = createPublicClient(config)
 
 export type WalletClient = BaseWalletClient<typeof config.transport, typeof config.chain, undefined>
 export const walletClient: WalletClient = createWalletClient(config)
+
+export function isNonceTooLowError(error: unknown) {
+    return (
+        error instanceof Error &&
+        (error.message.includes("nonce too low") || error.message.includes("is lower than the current nonce"))
+    )
+}

@@ -25,7 +25,6 @@ export async function simulate(
     if (invalidGasOutput) return invalidGasOutput
 
     try {
-        logger.trace("Submitting eth_call", boopHash)
         const simulatePromise = publicClient.simulateContract({
             address: entryPoint,
             args: [encodedBoop],
