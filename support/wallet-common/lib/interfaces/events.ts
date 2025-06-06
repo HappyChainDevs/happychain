@@ -116,6 +116,10 @@ export enum Msgs {
 
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
+
+    /** Signals the user needs to be sent to the popup */
+    RequestCurrentUser = "popup:request-current-user",
+    RespondCurrentUser = "popup:respond-current-user",
 }
 
 // =================================================================================================
@@ -255,4 +259,5 @@ export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP119
 export type PopupMsgs = {
     [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.PopupReject]: ProviderEventError<SerializedRpcError>
+    [Msgs.RequestCurrentUser]: ProviderEventPayload<null>
 }

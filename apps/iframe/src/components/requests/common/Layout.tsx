@@ -45,15 +45,19 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
                                 )}
                             </div>
 
-                            <div className="grid">
-                                <span className="font-bold">
-                                    {user?.address.slice(0, 8)}...{user?.address.slice(-8)}
-                                </span>
-
-                                {user?.email && (
-                                    <span className="opacity-75 dark:text-neutral-content/80 font-medium">
-                                        {user.email}
+                            <div className="flex flex-col justify-center gap-1">
+                                {user?.address ? (
+                                    <span className="font-bold">
+                                        {user.address.slice(0, 8)}...{user.address.slice(-8)}
                                     </span>
+                                ) : (
+                                    <span className="font-bold bg-neutral/25 rounded w-36 animate-pulse h-3" />
+                                )}
+
+                                {user?.email ? (
+                                    <span className="font-medium">{user.email}</span>
+                                ) : (
+                                    <span className="font-bold bg-neutral/15 rounded w-32 h-3 animate-pulse" />
                                 )}
                             </div>
                         </div>
