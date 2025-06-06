@@ -1,10 +1,12 @@
 import { HappyMethodNames, decodeUrlSafeBase64 } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, Msgs, type PopupMsgs, serializeRpcError } from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey"
 import { UnknownRequest } from "#src/components/requests/UnknownRequest.tsx"
+import { getUser, setUser, userAtom } from "#src/state/user"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -18,6 +20,16 @@ import type { requestLabels } from "../constants/requestLabels"
 window.addEventListener("message", (msg) => {
     if (msg.origin !== window.location.origin) return
     if (msg.data === "request-close") window.close()
+    try {
+        const { payload, type } = msg.data
+        if (type === Msgs.RespondCurrentUser) {
+            const user = getUser()
+            // Only set the received user if local storage is empty
+            // this can occur due to browser environments restricting
+            // via state partitioning.
+            if (!user && payload) setUser(payload)
+        }
+    } catch {}
 })
 
 export const Route = createLazyFileRoute("/request")({
@@ -34,7 +46,10 @@ function getFrameByIndex(index: number) {
     throw new Error("Failed to validate frame index")
 }
 
-function makeMessage(type: string, payload: PopupMsgs[Msgs.PopupApprove | Msgs.PopupReject]) {
+function makeMessage<T extends Msgs.PopupApprove | Msgs.PopupReject | Msgs.RequestCurrentUser>(
+    type: T,
+    payload: PopupMsgs[T],
+) {
     return {
         scope: "server:popup",
         type,
@@ -46,19 +61,23 @@ function Request() {
     const [isLoading, setIsLoading] = useState(false)
     const { args, key, windowId, iframeIndex } = Route.useSearch()
     const req = decodeUrlSafeBase64(args)
+    const user = useAtomValue(userAtom)
+
+    useEffect(() => {
+        // if the user is set, we don't need to do anything
+        if (user) return
+        console.warn("User is missing, fetching from iframe")
+        const frame = getFrameByIndex(iframeIndex)
+        void frame.postMessage(
+            makeMessage(Msgs.RequestCurrentUser, { error: null, windowId, key, payload: null }),
+            targetOrigin,
+        )
+    }, [user, windowId, key, iframeIndex])
 
     const unloadHandler = useCallback(() => {
         const frame = getFrameByIndex(iframeIndex)
-
-        void frame.postMessage(
-            makeMessage(Msgs.PopupReject, {
-                error: serializeRpcError(new EIP1193UserRejectedRequestError()),
-                windowId,
-                key,
-                payload: null,
-            }),
-            targetOrigin,
-        )
+        const error = serializeRpcError(new EIP1193UserRejectedRequestError())
+        void frame.postMessage(makeMessage(Msgs.PopupReject, { error, windowId, key, payload: null }), targetOrigin)
     }, [windowId, key, iframeIndex])
 
     useEffect(() => {
@@ -73,18 +92,10 @@ function Request() {
     const accept = useCallback(
         (payload: PopupMsgs[Msgs.PopupApprove]["payload"]) => {
             window.removeEventListener("beforeunload", unloadHandler)
-
             setIsLoading(true)
-
             const frame = getFrameByIndex(iframeIndex)
-
             void frame.postMessage(
-                makeMessage(Msgs.PopupApprove, {
-                    error: null,
-                    windowId,
-                    key,
-                    payload: payload,
-                }),
+                makeMessage(Msgs.PopupApprove, { error: null, windowId, key, payload: payload }),
                 targetOrigin,
             )
         },

@@ -14,7 +14,7 @@ import {
 import { checksum } from "ox/Address"
 import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex } from "viem"
 import { getAuthState } from "#src/state/authState"
-import { getUser } from "#src/state/user.ts"
+import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 

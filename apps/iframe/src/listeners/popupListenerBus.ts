@@ -1,4 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
+import { getUser } from "#src/state/user"
 import { handleApprovedRequest, handleRejectedRequest } from "../requests"
 
 /**
@@ -16,6 +17,13 @@ window.addEventListener("message", (msg) => {
     if (msg.data.scope !== "server:popup") return
 
     switch (msg.data.type) {
+        case Msgs.RequestCurrentUser: {
+            msg.source?.postMessage({
+                type: Msgs.RespondCurrentUser,
+                payload: getUser(),
+            })
+            return
+        }
         case Msgs.PopupApprove: {
             handleApprovedRequest(msg.data.payload)
             msg.source?.postMessage("request-close")
