@@ -1,4 +1,11 @@
-import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
+import {
+    type RejectType,
+    type ResolveType,
+    type UUID,
+    createUUID,
+    encodeUrlSafeBase64,
+    promiseWithResolvers,
+} from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { LoginRequiredError, parseRpcError, standardizeRpcError } from "../errors"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
@@ -161,7 +168,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         const opts = {
             windowId: windowId,
             key: key,
-            args: btoa(JSON.stringify(args)),
+            args: encodeUrlSafeBase64(args),
             // Get on iframe-side, read from iframe URL app-side.
             chainId: this.getChainId() || new URL(DOMframe.src).searchParams.get("chainId") || "",
             iframeIndex: iframeIndex.toString(),

@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames, decodeUrlSafeBase64 } from "@happy.tech/common"
 import { EIP1193UserRejectedRequestError, Msgs, type PopupMsgs, serializeRpcError } from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
@@ -45,7 +45,7 @@ function makeMessage(type: string, payload: PopupMsgs[Msgs.PopupApprove | Msgs.P
 function Request() {
     const [isLoading, setIsLoading] = useState(false)
     const { args, key, windowId, iframeIndex } = Route.useSearch()
-    const req = JSON.parse(atob(args))
+    const req = decodeUrlSafeBase64(args)
 
     const unloadHandler = useCallback(() => {
         const frame = getFrameByIndex(iframeIndex)
