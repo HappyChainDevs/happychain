@@ -100,102 +100,100 @@ export const EthSendTransaction = ({
 
     const requestDisabledDescription = getDescription()
     return (
-        <>
-            <Layout
-                headline="Confirm transaction"
-                actions={{
-                    accept: {
-                        children: isConfirmActionDisabled ? "Preparing..." : "Confirm",
-                        "aria-disabled": isConfirmActionDisabled || isRequestDisabled,
-                        onClick: () => {
-                            if (isConfirmActionDisabled || isRequestDisabled) return
-                            accept({ method, params: [tx], extraData: simulation })
-                        },
+        <Layout
+            headline="Confirm transaction"
+            actions={{
+                accept: {
+                    children: isConfirmActionDisabled ? "Preparing..." : "Confirm",
+                    "aria-disabled": isConfirmActionDisabled || isRequestDisabled,
+                    onClick: () => {
+                        if (isConfirmActionDisabled || isRequestDisabled) return
+                        accept({ method, params: [tx], extraData: simulation })
                     },
-                    reject: {
-                        children: "Go back",
-                        onClick: reject,
-                    },
-                }}
-            >
-                <SectionBlock>
-                    <SubsectionBlock>
-                        {txTo && (
-                            <SubsectionContent>
-                                <SubsectionTitle>Receiver address</SubsectionTitle>
-                                <FormattedDetailsLine>
-                                    <LinkToAddress address={txTo} />
-                                </FormattedDetailsLine>
-                            </SubsectionContent>
-                        )}
-
-                        {txValue > 0n && (
-                            <SubsectionContent>
-                                <SubsectionTitle>Sending amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formatEther(txValue)} HAPPY</FormattedDetailsLine>
-                            </SubsectionContent>
-                        )}
-                    </SubsectionBlock>
-                </SectionBlock>
-                <SectionBlock>
-                    {isRequestDisabled ? (
-                        <SubsectionBlock variant="error">
-                            <SubsectionContent>
-                                <p>{requestDisabledDescription}</p>
-                            </SubsectionContent>
-                        </SubsectionBlock>
-                    ) : (
-                        <SubsectionBlock>
-                            <SubsectionContent>
-                                <SubsectionTitle>Cost</SubsectionTitle>
-                                <FormattedDetailsLine>
-                                    {isSimulatePending ? (
-                                        <FieldLoader />
-                                    ) : (
-                                        `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
-                                    )}{" "}
-                                </FormattedDetailsLine>
-                                {!isSelfPaying && (
-                                    <span className="text-accent text-xs">
-                                        Sponsored by{" "}
-                                        <LinkToAddress address={paymasterInUse}>
-                                            {getPaymasterName(paymasterInUse)}
-                                        </LinkToAddress>
-                                    </span>
-                                )}
-                            </SubsectionContent>
-                        </SubsectionBlock>
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <SectionBlock>
+                <SubsectionBlock>
+                    {txTo && (
+                        <SubsectionContent>
+                            <SubsectionTitle>Receiver address</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                <LinkToAddress address={txTo} />
+                            </FormattedDetailsLine>
+                        </SubsectionContent>
                     )}
-                </SectionBlock>
 
-                {decodedData && (
-                    <DisclosureSection
-                        title="Decoded Function Data"
-                        showWarning
-                        warningText={"This ABI is not verified."}
-                        isOpen={true}
-                    >
-                        <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
-                            <span className="opacity-75 text-xs">Function Name:</span>
-                            <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
-                                {decodedData.abiFuncDef.name}
-                            </span>
-                        </div>
-
-                        {decodedData.args?.length && (
-                            <div className="w-full">
-                                <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
-                            </div>
-                        )}
-                    </DisclosureSection>
+                    {txValue > 0n && (
+                        <SubsectionContent>
+                            <SubsectionTitle>Sending amount</SubsectionTitle>
+                            <FormattedDetailsLine>{formatEther(txValue)} HAPPY</FormattedDetailsLine>
+                        </SubsectionContent>
+                    )}
+                </SubsectionBlock>
+            </SectionBlock>
+            <SectionBlock>
+                {isRequestDisabled ? (
+                    <SubsectionBlock variant="error">
+                        <SubsectionContent>
+                            <p>{requestDisabledDescription}</p>
+                        </SubsectionContent>
+                    </SubsectionBlock>
+                ) : (
+                    <SubsectionBlock>
+                        <SubsectionContent>
+                            <SubsectionTitle>Cost</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                {isSimulatePending ? (
+                                    <FieldLoader />
+                                ) : (
+                                    `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
+                                )}{" "}
+                            </FormattedDetailsLine>
+                            {!isSelfPaying && (
+                                <span className="text-accent text-xs">
+                                    Sponsored by{" "}
+                                    <LinkToAddress address={paymasterInUse}>
+                                        {getPaymasterName(paymasterInUse)}
+                                    </LinkToAddress>
+                                </span>
+                            )}
+                        </SubsectionContent>
+                    </SubsectionBlock>
                 )}
+            </SectionBlock>
 
-                <DisclosureSection title="Raw Request">
-                    <div className="grid gap-4 p-2">
-                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+            {decodedData && (
+                <DisclosureSection
+                    title="Decoded Function Data"
+                    showWarning
+                    warningText={"This ABI is not verified."}
+                    isOpen={true}
+                >
+                    <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
+                        <span className="opacity-75 text-xs">Function Name:</span>
+                        <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
+                            {decodedData.abiFuncDef.name}
+                        </span>
                     </div>
+
+                    {decodedData.args?.length && (
+                        <div className="w-full">
+                            <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
+                        </div>
+                    )}
                 </DisclosureSection>
-            </Layout>
-        </>
+            )}
+
+            <DisclosureSection title="Raw Request">
+                <div className="grid gap-4 p-2">
+                    <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                </div>
+            </DisclosureSection>
+        </Layout>
     )
 }

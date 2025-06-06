@@ -45,11 +45,9 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
                                 )}
                             </div>
 
-                            <div className="flex flex-col justify-center gap-1">
+                            <div className="flex flex-col justify-center">
                                 {user?.address ? (
-                                    <span className="font-bold">
-                                        {user.address.slice(0, 8)}...{user.address.slice(-8)}
-                                    </span>
+                                    <span className="font-bold">{shortenAddress(user.address, 8)}</span>
                                 ) : (
                                     <span className="font-bold bg-neutral/25 rounded w-36 animate-pulse h-3" />
                                 )}
@@ -57,7 +55,7 @@ export const Layout = ({ labelHeader, headline, description, actions: { accept, 
                                 {user?.email ? (
                                     <span className="font-medium">{user.email}</span>
                                 ) : (
-                                    <span className="font-bold bg-neutral/15 rounded w-32 h-3 animate-pulse" />
+                                    <span className="font-bold bg-neutral/15 rounded w-32 h-3 animate-pulse mt-1" />
                                 )}
                             </div>
                         </div>

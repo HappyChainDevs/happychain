@@ -18,20 +18,17 @@ window.addEventListener("message", (msg) => {
 
     switch (msg.data.type) {
         case Msgs.RequestCurrentUser: {
-            msg.source?.postMessage({
-                type: Msgs.RespondCurrentUser,
-                payload: getUser(),
-            })
+            msg.source?.postMessage({ type: Msgs.RespondCurrentUser, payload: getUser() })
             return
         }
         case Msgs.PopupApprove: {
             handleApprovedRequest(msg.data.payload)
-            msg.source?.postMessage("request-close")
+            msg.source?.postMessage({ type: Msgs.ClosePopup })
             return
         }
         case Msgs.PopupReject: {
             handleRejectedRequest(msg.data.payload)
-            msg.source?.postMessage("request-close")
+            msg.source?.postMessage({ type: Msgs.ClosePopup })
             return
         }
     }

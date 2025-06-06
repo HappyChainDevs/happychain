@@ -117,9 +117,14 @@ export enum Msgs {
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
 
-    /** Signals the user needs to be sent to the popup */
+    /** Signals the user needs to be sent to the popup because it is not available directly from local storage */
     RequestCurrentUser = "popup:request-current-user",
+
+    /** Returns the current user to the popup, as requested by {@link Msgs.RequestCurrentUser} */
     RespondCurrentUser = "popup:respond-current-user",
+
+    /** Signals to the popup that its time to close itself */
+    ClosePopup = "popup:close",
 }
 
 // =================================================================================================
