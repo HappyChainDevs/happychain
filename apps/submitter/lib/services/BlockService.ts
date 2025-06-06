@@ -1,13 +1,16 @@
 import { exit } from "node:process"
 import { type Hash, Mutex, type RejectType, promiseWithResolvers, sleep } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
-import { type Block, type PublicClient, type RpcBlock, formatBlock } from "viem"
+import { type OnBlockParameter, type PublicClient, type RpcBlock, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { LruCache } from "#lib/utils/LruCache.ts"
 import { chain, rpcUrls } from "#lib/utils/clients" // Assuming these are correctly imported
 import { blockLogger } from "#lib/utils/logger"
 
 const BLOCK_TIME = 2000
+const MAX_BACKFILL = 15n
+
+export type Block = OnBlockParameter<typeof chain>
 
 export class BlockService {
     #current?: Block
@@ -160,7 +163,7 @@ export class BlockService {
                     ;({ unsubscribe } = await this.#client.transport.subscribe({
                         params: ["newHeads"],
                         onData: async (data: { result: Partial<RpcBlock> }) =>
-                            void this.#handleNewBlock(formatBlock(data.result)),
+                            void this.#handleNewBlock(formatBlock(data.result) as Block),
                         onError: reject,
                     }))
                 } else {
@@ -218,8 +221,8 @@ export class BlockService {
 
         // otherwise it's the very first block after starting
         if (this.#current) {
-            const curNum = this.#current.number!
-            const curHash = this.#current.hash!
+            const curNum = this.#current.number
+            const curHash = this.#current.hash
 
             // Check for out-of-order deliveries (block number gap)
             if (block.number > curNum + 1n) {
@@ -283,9 +286,13 @@ export class BlockService {
 
     /** Backfills blocks with numbers in [from, to] (inclusive). */
     async #backfill(from: bigint, to: bigint): Promise<boolean> {
+        // Cap backfill to max allowed, we won't be seeing the other blocks, but given what
+        // the submitter uses this for, we don't care, the boops will be long timed out.
+        if (to - from > MAX_BACKFILL) from = to - MAX_BACKFILL
+
         return this.#backfillMutex.locked(async () => {
             // It's possible all or part of the range was backfilled while we were waiting.
-            if (this.#current?.number ?? 0 > from) from = this.#current!.number!
+            if (this.#current?.number ?? 0n > from) from = this.#current!.number
             if (from >= to) return true
 
             blockLogger.info(`Backfilling blocks in [${from}, ${to}] (inclusive).`)

@@ -129,7 +129,7 @@ export class BoopReceiptService {
             this.#setActiveEvmTx(sub, evmTxInfo, boop)
             // This gets cleared by our tx inclusion listening logic, once the executor wallet gets a transaction
             // with the same nonce included (either this, a retry, or a cancel tx).
-            sub.interval ??= setInterval(() => void this.cancelOrReplace(sub), env.STUCK_TX_WAIT_TIME)
+            sub.interval ??= setInterval(() => void this.replaceOrCancel(sub), env.STUCK_TX_WAIT_TIME)
         }
 
         // 4. race the receipt against a timeout
@@ -158,7 +158,7 @@ export class BoopReceiptService {
     }
 
     // Note: must be 'private func' not '#func' to be callable and spied on from the tests!
-    private async cancelOrReplace(sub: PendingBoopInfo): Promise<void> {
+    private async replaceOrCancel(sub: PendingBoopInfo): Promise<void> {
         const tx = sub.latestEvmTx!
 
         // 1. Retry the transaction once. This won't recursively retry because the interval is unique for the boopHash.
