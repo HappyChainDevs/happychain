@@ -8,7 +8,7 @@ import {
     promiseWithResolvers,
     sleep,
 } from "@happy.tech/common"
-import { type Log, type TransactionReceipt, TransactionRejectedRpcError } from "viem"
+import type { Log, TransactionReceipt } from "viem"
 import { deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForRevertError } from "#lib/handlers/errors"
 import { GetState } from "#lib/handlers/getState"
@@ -28,7 +28,7 @@ import {
     extractFeeInfo,
 } from "#lib/types"
 import { headerCouldContainBoop } from "#lib/utils/bloom"
-import { publicClient, walletClient } from "#lib/utils/clients"
+import { isNonceTooLowError, publicClient, walletClient } from "#lib/utils/clients"
 import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
@@ -81,6 +81,7 @@ export class BoopReceiptService {
             for (const evmTxHash of header.transactions) {
                 const boop = this.#evmTxHashMap.get(evmTxHash)
                 if (!boop) continue // not one of our transactions
+                logger.trace("EVM tx was included", evmTxHash, boop.boopHash)
                 void this.#handleTransactionInBlock(evmTxHash, boop)
             }
         })
@@ -167,7 +168,9 @@ export class BoopReceiptService {
         if (status === Onchain.Success) return
 
         // 2. Retry failed, switch to cancellation.
-        receiptLogger.warn(`Cancelling Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
+        receiptLogger.warn(
+            `Retry failed (${status}), cancelling transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`,
+        )
         const account = findExecutionAccount(sub.boop)
         const block = await this.#blockService.getCurrentBlock()
         const fetchedMaxFeePerGas = block.baseFeePerGas! + tx.maxPriorityFeePerGas
@@ -183,12 +186,9 @@ export class BoopReceiptService {
             const evmTxHash = await walletClient.sendTransaction({ ...partialEvmTxInfo, account, to: account.address })
             this.#setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
         } catch (error) {
-            if (
-                error instanceof TransactionRejectedRpcError &&
-                (error.message.includes("nonce too low") || error.message.includes("is lower than the current nonce"))
-            ) {
+            if (isNonceTooLowError(error)) {
                 // A tx with the same nonce landed on chain earlier.
-                logger.warn("Nonce too low for cancel tx", sub.boopHash)
+                logger.warn("Nonce too low for cancel tx", tx.evmTxHash, sub.boopHash)
                 // Give the actual included tx some time to be processed.
                 await sleep(1000)
                 // Then resolve & clear interval. Those will do nothing if
@@ -214,6 +214,7 @@ export class BoopReceiptService {
         // cancellation is normally caused by a chain with full blocks. But the makers of this code are not perfect...
         try {
             const receipt = await publicClient.getTransactionReceipt({ hash: evmTxHash })
+            logger.trace("Got receipt for EVM tx", evmTxHash, sub.boopHash)
 
             // We identify cancel transactions by making them self-sends.
             if (receipt.to === receipt.from)
@@ -260,7 +261,7 @@ export class BoopReceiptService {
         const decoded = decodeRawError("0x")
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
         let output = outputForRevertError(entryPoint, boop, boopHash, decoded)
-        const simulation = await simulationCache.get(boopHash)
+        const simulation = simulationCache.get(boopHash)
         if (
             // detect out-of-gas
             output.status === Onchain.UnexpectedReverted &&
