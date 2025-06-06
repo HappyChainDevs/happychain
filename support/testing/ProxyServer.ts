@@ -193,12 +193,16 @@ export class ProxyServer {
             const targetUrl = new URL(reqUrl.pathname + reqUrl.search, this.upstreamHttpUrl)
 
             try {
+                const start = performance.now()
                 const response = await fetch(targetUrl.toString(), {
                     method: c.req.method,
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
                 })
                 const data = await response.json()
+                this.logger?.trace(
+                    `(http) ${(Math.round((performance.now() - start) * 1000) / 1000).toString().padEnd(8, "0")}ms => ${body.method}`,
+                )
 
                 return c.json(data, response.status as ContentfulStatusCode)
             } catch (error) {
