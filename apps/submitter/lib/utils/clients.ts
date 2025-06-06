@@ -1,71 +1,48 @@
-import { uniques } from "@happy.tech/common"
-import {
-    type PublicClient as BasePublicClient,
-    type WalletClient as BaseWalletClient,
-    type Chain,
-    webSocket,
-} from "viem"
+import { binaryPartition, uniques } from "@happy.tech/common"
+import { type PublicClient as BasePublicClient, type WalletClient as BaseWalletClient, webSocket } from "viem"
 import { http, createPublicClient, createWalletClient, fallback } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
 import { logger } from "#lib/utils/logger"
 
-function canonicalize(type: "http" | "ws", rpcs: readonly string[]): string[] {
+function canonicalize(rpcs: readonly string[]): string[] {
     return uniques(
         rpcs.map((rpc) => {
             let result = rpc.trim().replace("127.0.0.1", "localhost")
-            if (!rpc.startsWith("http") && !rpc.startsWith("ws")) result = `${type}://${result}`
+            if (!rpc.startsWith("http") && !rpc.startsWith("ws")) result = `http://${result}`
             if (result.endsWith("/")) result = result.slice(0, result.length - 1)
             if (result === "https://rpc.testnet.happy.tech") result = `${result}/http`
+            if (result === "wss://rpc.testnet.happy.tech") result = `${result}/ws`
             return result
         }),
     )
 }
 
-function getChain(): Chain {
-    const chain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
+export const { chain, rpcUrls } = (() => {
+    const knownChain = [anvil, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID)
+    const chainRpcs = knownChain?.rpcUrls.default
+    const rpcUrls = canonicalize(env.RPC_URLS ?? [...(chainRpcs?.webSocket ?? []), ...(chainRpcs?.http ?? [])])
+    const [http, webSocket] = binaryPartition(rpcUrls, (url) => url.startsWith("http"))
 
-    if (chain) {
-        // TODO: don't want fallback to default values
-        const http = canonicalize("http", env.RPC_HTTP_URLS?.length ? env.RPC_HTTP_URLS : chain.rpcUrls.default.http)
-        const webSocket = canonicalize(
-            "ws",
-            env.RPC_WS_URLS?.length ? env.RPC_WS_URLS : chain.rpcUrls.default.webSocket,
-        )
-        return { ...chain, rpcUrls: { default: { http, webSocket } } }
-    }
-    if (!env.RPC_HTTP_URLS) {
-        throw new Error("Chain is not supported by default and RPC_HTTP_URLS was not defined.")
-    }
-    return {
-        id: env.CHAIN_ID,
-        name: "Blockchain",
-        rpcUrls: {
-            default: {
-                http: env.RPC_HTTP_URLS,
-                webSocket: env.RPC_WS_URLS,
-            },
-        },
-        nativeCurrency: {
-            symbol: "UNKNOWN",
-            name: "UNKNOWN",
-            decimals: 18,
-        },
-    }
-}
+    if (!rpcUrls.length) throw Error("Chain is not supported by default and RPC_URLS was not defined.")
 
-export const chain: Chain = getChain()
+    const chain = knownChain
+        ? { ...knownChain, rpcUrls: { default: { http, webSocket } } }
+        : {
+              id: env.CHAIN_ID,
+              name: "Blockchain",
+              rpcUrls: { default: { http, webSocket } },
+              nativeCurrency: { symbol: "UNKNOWN", name: "UNKNOWN", decimals: 18 },
+          }
+
+    return { chain, rpcUrls }
+})()
 
 export const config = {
     chain,
-    batch: {
-        multicall: true,
-    },
+    batch: { multicall: true },
     transport: fallback(
-        [
-            ...(env.USE_WEBSOCKET ? (chain.rpcUrls.default.webSocket ?? []) : []).map((url) => webSocket(url)),
-            ...chain.rpcUrls.default.http.map((url) => http(url)),
-        ],
+        rpcUrls.map((url) => (url.startsWith("http") ? http(url) : webSocket(url))),
         {
             shouldThrow: (err: Error) => {
                 if (err.message.includes("execution reverted")) return true
