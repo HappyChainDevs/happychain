@@ -12,6 +12,7 @@ import { receiptService } from "#lib/services"
 import { BlockService } from "#lib/services/BlockService.ts"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { config } from "#lib/utils/clients"
 import {
     assertMintLog,
@@ -297,7 +298,7 @@ describe("submitter_execute", () => {
             expect(env.MAX_BLOCKED_PER_TRACK).toBeGreaterThanOrEqual(count)
             expect(env.MAX_TOTAL_BLOCKED).toBeGreaterThanOrEqual(count)
 
-            const transactions = await Promise.all(
+            const boops = await Promise.all(
                 Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
                     const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
                     return await sign(dummyBoop)
@@ -305,11 +306,11 @@ describe("submitter_execute", () => {
             )
 
             const results = await Promise.all(
-                transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
+                boops.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
             expect(results).toHaveLength(count)
             results.forEach((r, i) => {
-                expect(r.status, `status at index ${i}`).toBe(Onchain.Success)
+                expect(r.status, `boop with hash ${computeBoopHash(env.CHAIN_ID, boops[i])}`).toBe(Onchain.Success)
                 expect(r.receipt.status, `receipt.status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.evmTxHash, `evmTxHash at index ${i}`).toEqual(expect.any(String))
                 assertMintLog(r.receipt, account)

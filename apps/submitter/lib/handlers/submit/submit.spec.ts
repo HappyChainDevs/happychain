@@ -1,5 +1,6 @@
 // proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
+import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
@@ -46,7 +47,7 @@ describe("submitter_submit", () => {
         expect(env.MAX_BLOCKED_PER_TRACK).toBeGreaterThanOrEqual(count)
         expect(env.MAX_TOTAL_BLOCKED).toBeGreaterThanOrEqual(count)
 
-        const transactions = await Promise.all(
+        const boops = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonceValue) => {
                 const dummyBoop = createMintBoop({ account, nonceValue, nonceTrack })
                 return await sign(dummyBoop)
@@ -54,7 +55,7 @@ describe("submitter_submit", () => {
         )
 
         const submitResults = await Promise.all(
-            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
+            boops.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const receipts = await Promise.all(
@@ -81,13 +82,13 @@ describe("submitter_submit", () => {
                 if (!("receipt" in a)) return { status: a.status }
                 assertMintLog(a.receipt as BoopReceipt, account)
                 const receipt = a.receipt as { evmTxHash: `0x${string}` }
-                return publicClient.waitForTransactionReceipt({ hash: receipt.evmTxHash, pollingInterval: 100 })
+                return publicClient.getTransactionReceipt({ hash: receipt.evmTxHash })
             }),
         )
 
         expect(submitResults.length).toBe(count)
         expect(submitResults.every((r) => r.status === Onchain.Success)).toBe(true)
         expect(rs.length).toBe(count)
-        expect(rs.every((r) => r.status === "success")).toBe(true)
+        rs.forEach((r, i) => expect(r.status, `boop with hash ${computeBoopHash(env.CHAIN_ID, boops[i])}`).toBe("success"))
     })
 })
