@@ -8,9 +8,6 @@ import { LruCache } from "#lib/utils/LruCache.ts"
 import { chain, rpcUrls } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
-const BLOCK_TIME = 2000
-const MAX_BACKFILL = 15n
-
 export type Block = OnBlockParameter<typeof chain>
 
 export class BlockService {
@@ -33,7 +30,7 @@ export class BlockService {
      * Maps block numbers to their hashes, which can be used to discriminate between
      * re-orgs and out-of-order block delivery as long as the block number is in the cache.
      */
-    #blockHistory = new LruCache<bigint, Hash>(1000)
+    #blockHistory = new LruCache<bigint, Hash>(env.BLOCK_HISTORY_SIZE)
 
     /** Call this to unwind the current block subscription and skip to the next client. */
     #skipToNextClient!: RejectType
@@ -56,6 +53,7 @@ export class BlockService {
 
     async getCurrentBlock(): Promise<Block> {
         if (this.#current) return this.#current
+        // Not configurable, this is only on boot, and if your RPCs cannot get you this under 5s, you're toast anyway.
         await waitForCondition(() => this.#current !== undefined, 5000)
         if (!this.#current) {
             const msg = "Current block is not set after waiting 5s."
@@ -81,12 +79,11 @@ export class BlockService {
      * - Ping all RPCs for latest block to determine who is alive.
      * - If none are, halt the process (the idea being to trigger an auto restart)
      * - If the returned blocks are not current, we wait until block production resumes.
-     * - We select the most prioritary RPC that
-     * Each time this is called, we ping all RPCs to determine who is alive. If none are, we halt the process hoping
-     * that a service restart might improve things. Next
+     * - We select the most prioritary RPC that is live and did not fail in the last configurable period.
+     * - If there are none, we drop the "no recent failures" requirement.
      */
     async #nextRPC(): Promise<void> {
-        function createClient(url: string, timeout = 10_000): PublicClient {
+        function createClient(url: string, timeout = env.RPC_REQUEST_TIMEOUT): PublicClient {
             const isWs = url.startsWith("ws")
             const transport = isWs ? webSocket(url, { timeout }) : http(url, { timeout })
             return createPublicClient({ chain, name: url, transport })
@@ -108,11 +105,10 @@ export class BlockService {
             // Don't need to clear. The worse that can happen is it will be removed a bit early
             // if re-added after the failed set was cleared following a block production stall.
             // Extremely rare scenario that doesn't break anything. Not worth the extra bookkeeping.
-            setTimeout(() => this.#recentlyFailedRpcs.delete(this.#rpcUrl), 60_000)
+            setTimeout(() => this.#recentlyFailedRpcs.delete(this.#rpcUrl), env.RPC_TIMED_OUT_PERIOD)
         }
 
-        // Request a block from all RPCs with a short timeout.
-        let rpcResults = await pingRpcsForBlock(500)
+        let rpcResults = await pingRpcsForBlock(env.RPC_SHORT_REQUEST_TIMEOUT)
         let anyAlive = rpcResults.some(isSuccess)
 
         if (!anyAlive) {
@@ -150,7 +146,7 @@ export class BlockService {
                     // A re-org might have occured — reset block number and check for forward movement from there.
                     current = localMax
                 }
-            }, 1000)
+            }, env.BLOCK_MONITORING_HALTED_POLL_TIMEOUT)
             await promise
             if (current !== this.#current) {
                 // A re-org occurred, emit the new base.
@@ -178,10 +174,10 @@ export class BlockService {
         // to `maxRetryDelay` with a max of `maxAttempts` attempts.
         // However, default values only retries once without delay, otherwise we'd rather move on to another RPC than
         // waste time waiting.
-        const initialRetryDelay = 1000
-        const maxRetryDelay = 8_000
-        const maxAttempts = 2 // per client
-        const pollingInterval = 200
+        const baseDelay = env.BLOCK_MONITORING_BASE_DELAY
+        const maxDelay = env.BLOCK_MONITORING_MAX_DELAY
+        const maxAttempts = env.BLOCK_MONITORING_MAX_ATTEMPTS // per client
+        const pollingInterval = env.BLOCK_MONITORING_POLLING_INTERVAL
         let skipToNextClient = false
 
         // noinspection InfiniteLoopJS
@@ -202,7 +198,7 @@ export class BlockService {
                 if (this.#attempt > 1) {
                     // We want first retry (attempt = 1) to be instant.
                     // Note that `this.#attempt` is guaranteed >= 1 here.
-                    const delay = Math.min(initialRetryDelay * 2 ** (this.#attempt - 2), maxRetryDelay)
+                    const delay = Math.min(baseDelay * 2 ** (this.#attempt - 2), maxDelay)
                     blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#client.name}`)
                     await sleep(delay)
                 }
@@ -266,7 +262,7 @@ export class BlockService {
         clearTimeout(this.blockTimeout)
         this.blockTimeout = setTimeout(() => {
             this.#skipToNextClient("Timed out while waiting for block")
-        }, BLOCK_TIME + 1000)
+        }, env.BLOCK_MONITORING_TIMEOUT)
     }
 
     async #handleNewBlock(block: Block, allowBackfill = true): Promise<void> {
@@ -351,7 +347,7 @@ export class BlockService {
     async #backfill(from: bigint, to: bigint): Promise<boolean> {
         // Cap backfill to max allowed, we won't be seeing the other blocks, but given what
         // the submitter uses this for, we don't care, the boops will be long timed out.
-        if (to - from > MAX_BACKFILL) from = to - MAX_BACKFILL
+        if (to - from > env.MAX_BLOCK_BACKFILL) from = to - env.MAX_BLOCK_BACKFILL
 
         // Use a Mutex to avoid backfilling the same range many times.
         return this.#backfillMutex.locked(async () => {

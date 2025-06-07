@@ -212,17 +212,17 @@ export class BoopReceiptService {
 
     async #handleTransactionInBlock(evmTxHash: Hash, sub: PendingBoopInfo): Promise<void> {
         try {
-            // Experience has shown we can't assume that eth_getTransactionReceipt will succeed after seeing the tx
-            // hash in the block (at least not with Anvil), so we perform three retries with increasing delays before
-            // declaring the receipt timed out (even though it is available if the RPC isn't lying).
+            // Experience has shown we can't assume that eth_getTransactionReceipt will succeed after seeing
+            // the tx hash in the block (at least not with Anvil), so we perform three attempts with delays
+            // between them declaring the receipt timed out (even though it is available if the RPC isn't lying).
             let receipt: TransactionReceipt | null = null
-            for (let i = 0; i < 3; ++i)
+            for (let i = 1; i <= 3; ++i)
                 try {
                     receipt = await publicClient.getTransactionReceipt({ hash: evmTxHash })
                     logger.trace("Got receipt for EVM tx", evmTxHash, sub.boopHash)
                     break
                 } catch {
-                    await sleep(200 * (i + 1))
+                    await sleep(env.RECEIPT_RETRY_DELAY * i)
                 }
 
             if (!receipt) {
