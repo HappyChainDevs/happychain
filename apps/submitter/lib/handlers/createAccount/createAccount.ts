@@ -35,6 +35,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             functionName: "createAccount",
             args: [salt, owner],
             account: accountDeployer,
+            gas: env.ACCOUNT_CREATION_GAS_LIMIT,
         })
 
         logger.trace("Waiting for account creation tx inclusion", predictedAddress, hash)
