@@ -5,11 +5,11 @@ import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import {
     boopNonceManager,
+    boopReceiptService,
     boopStore,
     computeHash,
     evmNonceManager,
     findExecutionAccount,
-    receiptService,
 } from "#lib/services"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
@@ -126,7 +126,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 // (requires knowing the txHash).
                 const evmTxInfo = { ...partialEvmTxInfo, to: entryPoint, evmTxHash }
                 const args = { boopHash, boop, entryPoint, evmTxInfo, timeout }
-                const receiptPromise = receiptService.waitForInclusion(args)
+                const receiptPromise = boopReceiptService.waitForInclusion(args)
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
                 return { ...outputForGenericError(error), stage: "submit" }

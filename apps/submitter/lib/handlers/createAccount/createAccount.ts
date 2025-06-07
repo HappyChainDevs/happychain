@@ -1,8 +1,9 @@
-import { type Address, promiseWithResolvers } from "@happy.tech/common"
-import { type TransactionReceipt, TransactionReceiptNotFoundError, createWalletClient } from "viem"
-import { abis, deployment } from "#lib/env"
-import { BlockService } from "#lib/services/BlockService.ts"
+import type { Address } from "@happy.tech/common"
+import { createWalletClient } from "viem"
+import { abis, deployment, env } from "#lib/env"
+import { evmReceiptService } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
+import { headerCouldContainAccountCreation } from "#lib/utils/bloom"
 import { config, publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
@@ -37,9 +38,20 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             account: accountDeployer,
         })
 
-        logger.trace("Waiting for transaction inclusion", hash, predictedAddress)
+        logger.trace("Waiting for transaction inclusion", predictedAddress, hash)
+        const { receipt, timedOut, cantFetch } = await evmReceiptService.waitForReceipt(
+            hash,
+            env.RECEIPT_TIMEOUT,
+            headerCouldContainAccountCreation,
+        )
 
-        const receipt = await waitForTransactionReceipt(hash)
+        if (timedOut || cantFetch) {
+            // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
+            const description = "Timed out while waiting for receipt."
+            return { status: CreateAccount.Timeout, description, owner, salt }
+        }
+
+        logger.trace("Got receipt for account creation tx", predictedAddress, hash)
 
         if (receipt.status === "success") {
             const foundLog = receipt.logs.find((log) => decodeEvent(log)?.eventName === "Deployed")
@@ -64,33 +76,4 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
     } catch (error) {
         return { ...outputForGenericError(error), owner, salt }
     }
-}
-
-async function waitForTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
-    const { promise, resolve, reject } = promiseWithResolvers<TransactionReceipt>()
-
-    const timeout = setTimeout(() => reject(new Error("Account creation timed out")), 8_000)
-
-    const unwatch = BlockService.instance.onBlock(async (_block) => {
-        try {
-            const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
-            if (receipt) resolve(receipt)
-        } catch (_) {
-            // This errors when the receipt is not found — ignore the error.
-        }
-    })
-
-    try {
-        // We must fire once in case it's already been included.
-        const receipt: TransactionReceipt = await publicClient.getTransactionReceipt({ hash })
-        if (receipt) resolve(receipt)
-    } catch (err) {
-        // Failed to fetch receipt, which is fine, we will wait for it to be mined
-        if (!(err instanceof TransactionReceiptNotFoundError)) throw err
-    }
-
-    return await promise.finally(() => {
-        unwatch()
-        clearTimeout(timeout)
-    })
 }

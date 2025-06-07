@@ -1,6 +1,7 @@
 import { hexToBytes, keccak256 } from "viem"
 import type { Block, Hex } from "viem"
 import { deployment } from "#lib/env"
+import { getSelectorFromEventName } from "#lib/utils/parsing"
 import { BOOP_STARTED_SELECTOR, BOOP_SUBMITTED_SELECTOR } from "../services/BoopReceiptService"
 import { logger } from "./logger"
 
@@ -8,6 +9,9 @@ const BLOOM_SIZE_BYTES = 256 // fixed in protocol
 const ZERO_BLOOM = ("0x" + "0".repeat(512)) as Hex
 
 const ENTRY_POINT = deployment.EntryPoint.toLowerCase() as Hex
+const ACCOUNT_FACTORY = deployment.HappyAccountBeaconProxyFactory.toLowerCase() as Hex
+
+const DEPLOYED_SELECTOR = getSelectorFromEventName("Deployed") as Hex
 
 /**
  * Return `true` iff the three bits derived from `input` are all set in `bloom`.
@@ -38,7 +42,19 @@ export function headerCouldContainBoop(block: Block): boolean {
             isInBloom(bloom, BOOP_SUBMITTED_SELECTOR)
         )
     } catch {
-        logger.error(`Invalid bloom filter in block: ${block}`)
-        return false
+        logger.error(`Invalid bloom filter in block: ${block.hash}`)
+        return true // we have to check
+    }
+}
+
+export function headerCouldContainAccountCreation(block: Block): boolean {
+    try {
+        const bloom = block.logsBloom
+        if (!bloom || bloom === ZERO_BLOOM) return false
+        // both conditions must be *possible* in the bloom
+        return isInBloom(bloom, ACCOUNT_FACTORY) && isInBloom(bloom, DEPLOYED_SELECTOR)
+    } catch {
+        logger.error(`Invalid bloom filter in block: ${block.hash}`)
+        return true // we have to check
     }
 }
