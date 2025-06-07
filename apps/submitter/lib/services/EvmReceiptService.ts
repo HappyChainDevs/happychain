@@ -1,5 +1,5 @@
 import { HappyMap, type Hash, type UnionFill, promiseWithResolvers, sleep } from "@happy.tech/common"
-import type { Block, TransactionReceipt } from "viem"
+import type { TransactionReceipt } from "viem"
 import { env } from "#lib/env"
 import { publicClient } from "#lib/utils/clients"
 import type { BlockService } from "./BlockService"
@@ -13,8 +13,6 @@ export type EvmReceiptResult = UnionFill<
     | { /** Indicates a time out while waiting for the receipt. */
         timedOut: true }
 >
-
-const truePredicate = () => true
 
 export class EvmReceiptService {
     // Maps tx hashes to a set of promises waiting on them.
@@ -33,11 +31,7 @@ export class EvmReceiptService {
      * Returns a promise that waits for the receipt of the given EVM transaction to be available and returns it, or
      * null if we know the transaction was included but didn't manage to fetch the receipt.
      */
-    async waitForReceipt(
-        evmTxHash: Hash,
-        timeout: number,
-        bloomPredicate: (bloom: Block) => boolean = truePredicate,
-    ): Promise<EvmReceiptResult> {
+    async waitForReceipt(evmTxHash: Hash, timeout: number): Promise<EvmReceiptResult> {
         const pwr = promiseWithResolvers<EvmReceiptResult>()
         const pwrs = this.#hashes.getOrSet(evmTxHash.toLowerCase() as Hash, new Set())
         pwrs.add(pwr)

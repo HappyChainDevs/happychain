@@ -3,7 +3,6 @@ import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { evmReceiptService } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
-import { headerCouldContainAccountCreation } from "#lib/utils/bloom"
 import { config, publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
@@ -39,11 +38,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
         })
 
         logger.trace("Waiting for transaction inclusion", predictedAddress, hash)
-        const { receipt, timedOut, cantFetch } = await evmReceiptService.waitForReceipt(
-            hash,
-            env.RECEIPT_TIMEOUT,
-            headerCouldContainAccountCreation,
-        )
+        const { receipt, timedOut, cantFetch } = await evmReceiptService.waitForReceipt(hash, env.RECEIPT_TIMEOUT)
 
         if (timedOut || cantFetch) {
             // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
