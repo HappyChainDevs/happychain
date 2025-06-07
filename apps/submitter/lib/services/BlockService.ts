@@ -38,6 +38,24 @@ export class BlockService {
     /** Call this to unwind the current block subscription and skip to the next client. */
     #skipToNextClient!: RejectType
 
+    #stop!: () => void
+
+    isRunning = false
+
+    public async start() {
+        void this.#startBlockWatcher()
+        this.isRunning = true
+    }
+
+    public async stop() {
+        this.isRunning = false
+
+        try {
+            clearTimeout(this.blockTimeout)
+            await this.#stop()
+        } catch {}
+    }
+
     /** Timeout for receiving a block. Private so it can be disabled in tests. */
     private blockTimeout: Timer | undefined = undefined
 
@@ -49,6 +67,7 @@ export class BlockService {
 
     private constructor() {
         void this.#startBlockWatcher()
+        this.isRunning = true
     }
 
     // =================================================================================================================
@@ -216,10 +235,11 @@ export class BlockService {
             blockLogger.info(`Starting block watcher with ${client} (Attempt ${this.#attempt + 1}/${maxAttempts}).`)
 
             // 2. Setup subscription
-            const { promise, reject } = promiseWithResolvers<void>()
+            const { promise, resolve, reject } = promiseWithResolvers<void>()
             this.#skipToNextClient = reject
+
             let unsubscribe: (() => void) | null = null
-            let pollingTimer: Timer | undefined = undefined
+            const pollingTimer: Timer | undefined = undefined
             try {
                 this.#startBlockTimeout()
 
@@ -227,19 +247,33 @@ export class BlockService {
                     let unsub: (() => void) | null = null
                     ;({ unsubscribe: unsub } = await this.#client.transport.subscribe({
                         params: ["newHeads"],
-                        onData: async (data: { result: Partial<RpcBlock> }) =>
-                            void this.#handleNewBlock(formatBlock(data.result) as Block),
+                        onData: async (data: { result: Partial<RpcBlock> }) => {
+                            if (!this.isRunning) return
+                            void this.#handleNewBlock(formatBlock(data.result) as Block)
+                        },
                         onError: reject,
                     }))
-                    unsubscribe = () => {
+
+                    unsubscribe = async () => {
                         console.log("unsubscribe called explicitly")
                         console.trace()
-                        unsub!()
+                        clearTimeout(this.blockTimeout)
+                        clearInterval(pollingTimer)
+                        await unsub?.()
+                    }
+
+                    this.#stop = async () => {
+                        this.isRunning = false
+                        clearTimeout(this.blockTimeout)
+                        clearInterval(pollingTimer)
+                        await unsub?.()
+                        resolve()
                     }
                 } else {
-                    pollingTimer = setInterval(async () => {
-                        void this.#handleNewBlock(await this.#client.getBlock())
-                    }, pollingInterval)
+                    console.log("starting polling in http :( ")
+                    // pollingTimer = setInterval(async () => {
+                    //     void this.#handleNewBlock(await this.#client.getBlock())
+                    // }, pollingInterval)
                 }
 
                 // The above is equivalent to the below Viem watchBlock invocation (minus emitOnBegin
@@ -257,9 +291,9 @@ export class BlockService {
                 //     onError: reject,
                 // })
 
-                await promise // Waits forever unless these is an error.
+                return await promise // Waits forever unless these is an error.
             } catch (e) {
-                unsubscribe?.()
+                await unsubscribe?.()
                 clearInterval(pollingTimer)
                 clearTimeout(this.blockTimeout)
                 blockLogger.error("Block watcher error", client, e)
@@ -276,6 +310,7 @@ export class BlockService {
     }
 
     async #handleNewBlock(block: Block, allowBackfill = true): Promise<void> {
+        if (!this.isRunning) return
         // Validate format
         if (!block?.number || !block.hash) {
             blockLogger.error("Received an invalid block from the watcher, skipping.", block)
@@ -287,8 +322,10 @@ export class BlockService {
         if (block.hash === this.#current?.hash) {
             // Don't warn when polling, since this is expected to happen all the time.
             if (this.#client.transport.type === "webSocket")
-                blockLogger.warn(`Received duplicate block ${block.number}, skipping.`)
+                blockLogger.warn(`Received duplicate block ${block.number}, skipping.`, block.hash)
             return
+        } else {
+            // console.log(Number(block.number), block.hash)
         }
 
         // otherwise it's the very first block after starting

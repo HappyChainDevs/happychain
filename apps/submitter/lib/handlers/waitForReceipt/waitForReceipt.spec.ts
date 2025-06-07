@@ -1,8 +1,9 @@
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
+import { BlockService } from "#lib/services/BlockService.ts"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
@@ -19,6 +20,7 @@ describe("submitter_receipt", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
+        await BlockService.instance.start()
         account = await createSmartAccount(testAccount.address)
     })
 
@@ -27,6 +29,9 @@ describe("submitter_receipt", () => {
         nonceValue = await getNonce(account, nonceTrack)
         unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
+    })
+    afterAll(async () => {
+        await BlockService.instance.stop()
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {

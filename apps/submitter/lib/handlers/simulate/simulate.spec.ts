@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -6,6 +6,7 @@ import type { SimulateError, SimulateOutput, SimulateSuccess } from "#lib/handle
 import type { Boop } from "#lib/types"
 import { CallStatus, Onchain } from "#lib/types"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { BlockService } from "#lib/services/BlockService.ts"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -18,7 +19,11 @@ describe("submitter_simulate", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
+        await BlockService.instance.start()
         account = await createSmartAccount(testAccount.address)
+    })
+    afterAll(async () => {
+        await BlockService.instance.stop()
     })
 
     beforeEach(async () => {

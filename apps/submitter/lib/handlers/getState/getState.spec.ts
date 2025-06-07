@@ -1,7 +1,7 @@
 // Proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, sleep } from "@happy.tech/common"
 import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -12,6 +12,7 @@ import { Onchain } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
+import { BlockService } from "#lib/services/BlockService.ts"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -24,6 +25,7 @@ describe("submitter_state", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
+        await BlockService.instance.start()
         account = await createSmartAccount(testAccount.address)
     })
 
@@ -32,6 +34,9 @@ describe("submitter_state", () => {
         nonceValue = await getNonce(account, nonceTrack)
         unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
+    })
+    afterAll(async () => {
+        await BlockService.instance.stop()
     })
 
     it("fetches state of recent tx", async () => {

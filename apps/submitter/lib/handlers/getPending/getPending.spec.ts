@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { serializeBigInt, sleep } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -7,6 +7,7 @@ import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/typ
 import type { Boop } from "#lib/types"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { withInterval } from "#lib/utils/test/proxyServer"
+import { BlockService } from "#lib/services/BlockService.ts"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -17,12 +18,16 @@ describe("submitter_pending", () => {
     let nonceValue = 0n
 
     beforeAll(async () => {
+        await BlockService.instance.start()
         account = await createSmartAccount(testAccount.address)
     })
 
     beforeEach(async () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(account, nonceTrack)
+    })
+    afterAll(async () => {
+        await BlockService.instance.stop()
     })
 
     // biome-ignore format: keep indentation low

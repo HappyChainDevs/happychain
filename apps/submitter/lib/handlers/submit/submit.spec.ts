@@ -2,11 +2,12 @@
 import "#lib/utils/test/proxyServer"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { SubmitSuccess } from "#lib/handlers/submit"
+import { BlockService } from "#lib/services/BlockService.ts"
 import { type Boop, type BoopReceipt, Onchain } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
 import { assertMintLog, client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
@@ -22,6 +23,7 @@ describe("submitter_submit", () => {
     let signedTx: Boop
 
     beforeAll(async () => {
+        await BlockService.instance.start()
         account = await createSmartAccount(testAccount.address)
     })
 
@@ -30,6 +32,9 @@ describe("submitter_submit", () => {
         nonceValue = await getNonce(account, nonceTrack)
         unsignedTx = createMintBoop({ account, nonceValue, nonceTrack })
         signedTx = await sign(unsignedTx)
+    })
+    afterAll(async () => {
+        await BlockService.instance.stop()
     })
 
     it("submits 'mint token' tx successfully.", async () => {

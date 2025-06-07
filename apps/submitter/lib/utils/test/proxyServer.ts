@@ -70,13 +70,14 @@ export function withInterval(
             }
         }
     return async () => {
-        if (env.AUTOMINE_TESTS) await testClient.setAutomine(false)
+        // console.log({ BLOCK_TIME })
         await testClient.setIntervalMining({ interval: timeSeconds })
+        if (env.AUTOMINE_TESTS) await testClient.setAutomine(false)
         try {
             await f()
         } finally {
             if (env.AUTOMINE_TESTS) {
-                await testClient.setIntervalMining({ interval: 0 })
+                await testClient.setIntervalMining({ interval: 1 })
                 await testClient.setAutomine(true)
             } else {
                 await testClient.setIntervalMining({ interval: BLOCK_TIME })
