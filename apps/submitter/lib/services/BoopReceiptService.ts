@@ -27,11 +27,12 @@ import {
     SubmitterError,
     extractFeeInfo,
 } from "#lib/types"
-import { isNonceTooLowError, publicClient, walletClient } from "#lib/utils/clients"
+import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
 import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 import type { BlockService } from "./BlockService"
+import type { EvmReceiptService } from "./EvmReceiptService"
 
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
 export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
@@ -67,22 +68,11 @@ export class BoopReceiptService {
     #pendingBoopInfos = new Map</* boopHash: */ Hash, PendingBoopInfo>()
     #evmTxHashMap = new Map</* evmTxHash: */ Hash, PendingBoopInfo>()
     #blockService: BlockService
+    #evmReceiptService: EvmReceiptService
 
-    constructor(blockService: BlockService) {
+    constructor(blockService: BlockService, evmReceiptService: EvmReceiptService) {
         this.#blockService = blockService
-        this.#blockService.onBlock((header) => {
-            if (!header.hash) {
-                // This shouldn't happen in theory, but it feels like I've seen this before. Better logged than sorry.
-                logger.error("Undefined hash", header)
-                return
-            }
-            for (const evmTxHash of header.transactions) {
-                const boop = this.#evmTxHashMap.get(evmTxHash)
-                if (!boop) continue // not one of our transactions
-                logger.trace("EVM tx was included", evmTxHash, boop.boopHash)
-                void this.#handleTransactionInBlock(evmTxHash, boop)
-            }
-        })
+        this.#evmReceiptService = evmReceiptService
     }
 
     async waitForInclusion({
@@ -124,12 +114,11 @@ export class BoopReceiptService {
         sub.entryPoint ??= entryPoint
 
         // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
-        if (evmTxInfo) {
-            this.#setActiveEvmTx(sub, evmTxInfo, boop)
-            // This gets cleared by our tx inclusion listening logic, once the executor wallet gets a transaction
-            // with the same nonce included (either this, a retry, or a cancel tx).
-            sub.interval ??= setInterval(() => void this.replaceOrCancel(sub), env.STUCK_TX_WAIT_TIME)
-        }
+        if (evmTxInfo) this.#setActiveEvmTx(sub, evmTxInfo, boop)
+
+        // // This gets cleared by our tx inclusion listening logic, once the executor wallet gets a transaction
+        // // with the same nonce included (either this, a retry, or a cancel tx).
+        // sub.interval ??= setInterval(() => void this.replaceOrCancel(sub), env.STUCK_TX_WAIT_TIME)
 
         // 4. race the receipt against a timeout
         const output = await Promise.race([
@@ -154,6 +143,17 @@ export class BoopReceiptService {
         sub.latestEvmTx = evmTx
         sub.boopGasForEvmTxHash.set(evmTx.evmTxHash, ifDef(boop, extractFeeInfo))
         this.#evmTxHashMap.set(evmTx.evmTxHash, sub)
+        void this.#evmReceiptService
+            .waitForReceipt(evmTx.evmTxHash, env.STUCK_TX_WAIT_TIME) //
+            .then(({ receipt, cantFetch, timedOut }) => {
+                if (receipt) void this.#handleTransactionInBlock(receipt, sub)
+                else if (timedOut) void this.replaceOrCancel(sub)
+                else if (cantFetch)
+                    sub.pwr.resolve({
+                        status: SubmitterError.ReceiptTimeout,
+                        description: "Transaction receipt could not be fetched after multiple retries",
+                    })
+            })
     }
 
     // Note: must be 'private func' not '#func' to be callable and spied on from the tests!
@@ -208,27 +208,9 @@ export class BoopReceiptService {
         }
     }
 
-    async #handleTransactionInBlock(evmTxHash: Hash, sub: PendingBoopInfo): Promise<void> {
+    async #handleTransactionInBlock(receipt: TransactionReceipt, sub: PendingBoopInfo): Promise<void> {
         try {
-            // Experience has shown we can't assume that eth_getTransactionReceipt will succeed after seeing
-            // the tx hash in the block (at least not with Anvil), so we perform three attempts with delays
-            // between them declaring the receipt timed out (even though it is available if the RPC isn't lying).
-            let receipt: TransactionReceipt | null = null
-            for (let i = 1; i <= 3; ++i)
-                try {
-                    receipt = await publicClient.getTransactionReceipt({ hash: evmTxHash })
-                    logger.trace("Got receipt for EVM tx", evmTxHash, sub.boopHash)
-                    break
-                } catch {
-                    await sleep(env.RECEIPT_RETRY_DELAY * i)
-                }
-
-            if (!receipt) {
-                sub.pwr.resolve({
-                    status: SubmitterError.ReceiptTimeout,
-                    description: "Transaction receipt could not be fetched after multiple retries",
-                })
-            } else if (receipt.to === receipt.from) {
+            if (receipt.to === receipt.from) {
                 // We identify cancel transactions by making them self-sends.
                 // No need to check if the tx was successful (it's 0 self-send, it can't really fail),
                 // we only care about the executor address nonce bump.
@@ -238,7 +220,7 @@ export class BoopReceiptService {
                 })
             } else {
                 // Reconstruct boop with fee info matching the EVM tx that landed.
-                const gasInfo = sub.boopGasForEvmTxHash.get(evmTxHash)
+                const gasInfo = sub.boopGasForEvmTxHash.get(receipt.transactionHash)
                 if (!gasInfo) throw Error("BUG: missing boop fee info for non-cancel EVM transaction")
                 const boop = { ...sub.boop, ...gasInfo }
                 sub.pwr.resolve(await this.#getReceiptResult(boop, receipt))
