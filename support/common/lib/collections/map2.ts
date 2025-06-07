@@ -1,3 +1,5 @@
+import { type Lazy, force } from "../utils/functions"
+
 /**
  * Map that keys on two values — internally implemented as a two-level map.
  */
@@ -100,14 +102,14 @@ export class Map2<K1, K2, V> {
         return this.map.delete(key1)
     }
 
-    getOrSet(key1: K1, key2: K2, value: V | (() => V)): V {
+    getOrSet(key1: K1, key2: K2, value: Lazy<V>): V {
         let innerMap = this.map.get(key1)
         if (!innerMap) {
             innerMap = new Map<K2, V>()
             this.map.set(key1, innerMap)
         }
         if (innerMap.has(key2)) return innerMap.get(key2)!
-        const _value = typeof value === "function" ? (value as () => V)() : value
+        const _value = force(value)
         innerMap.set(key2, _value)
         return _value
     }
@@ -118,14 +120,14 @@ export class Map2<K1, K2, V> {
      *
      * If the key pair has a value upon initial invocation, the promise is not awaited.
      */
-    async getOrSetAsync(key1: K1, key2: K2, value: Promise<V> | (() => Promise<V>)): Promise<V> {
+    async getOrSetAsync(key1: K1, key2: K2, value: Lazy<Promise<V>>): Promise<V> {
         let innerMap = this.map.get(key1)
         if (!innerMap) {
             innerMap = new Map<K2, V>()
             this.map.set(key1, innerMap)
         }
         if (innerMap.has(key2)) return innerMap.get(key2)!
-        const _value = typeof value === "function" ? await (value as () => Promise<V>)() : await value
+        const _value = await force(value)
         if (innerMap.has(key2)) return innerMap.get(key2)!
         innerMap.set(key2, _value)
         return _value
