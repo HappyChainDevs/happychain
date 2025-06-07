@@ -31,6 +31,7 @@ const simulateSuccess = type(entryPointOutput.omit("revertData"), "&", {
     maxFeePerGas: UInt256,
     submitterFee: UInt256,
     feeTooLowDuringSimulation: "boolean",
+    feeTooHighDuringSimulation: "boolean",
 })
 
 const simulateError = type({

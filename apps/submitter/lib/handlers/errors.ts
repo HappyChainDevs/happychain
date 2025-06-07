@@ -160,12 +160,12 @@ export function outputForRevertError(
             if (simulation) {
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {
-                    status: Onchain.GasPriceTooHigh,
+                    status: Onchain.GasPriceTooLow,
                     description: "GasPriceTooHigh during simulation — this is an implementation bug, please report!",
                 }
             } else {
                 return {
-                    status: Onchain.GasPriceTooHigh,
+                    status: Onchain.GasPriceTooLow,
                     description:
                         "The boop got rejected because the gas price was above the maxFeePerGas.\n" +
                         "Try again, with a higher maxFeePerGas if you are setting it manually.",

@@ -22,7 +22,13 @@ export const Onchain = {
     MissingGasValues: "onchainMissingGasValues",
 
     /**
-     * The boop got rejected because the onchain gas price was above the maxFeePerGas.
+     * The boop got rejected because the maxFeePerGas was lower than the onchain gas price (base fee).
+     */
+    GasPriceTooLow: "onchainGasPriceTooLow",
+
+    /**
+     * The boop got rejected because the maxFeePerGas (either explicitly specified by the sender
+     * or computed from the network) was higher than what the submitter was willing to accept.
      */
     GasPriceTooHigh: "onchainGasPriceTooHigh",
 

@@ -28,7 +28,7 @@ import {
     extractFeeInfo,
 } from "#lib/types"
 import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
-import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
+import { getFees } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 import type { BlockService } from "./BlockService"
@@ -67,11 +67,9 @@ export type WaitForInclusionArgs =
 export class BoopReceiptService {
     #pendingBoopInfos = new Map</* boopHash: */ Hash, PendingBoopInfo>()
     #evmTxHashMap = new Map</* evmTxHash: */ Hash, PendingBoopInfo>()
-    #blockService: BlockService
     #evmReceiptService: EvmReceiptService
 
-    constructor(blockService: BlockService, evmReceiptService: EvmReceiptService) {
-        this.#blockService = blockService
+    constructor(evmReceiptService: EvmReceiptService) {
         this.#evmReceiptService = evmReceiptService
     }
 
@@ -170,15 +168,7 @@ export class BoopReceiptService {
             `Retry failed (${status}), cancelling transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`,
         )
         const account = findExecutionAccount(sub.boop)
-        const block = await this.#blockService.getCurrentBlock()
-        const fetchedMaxFeePerGas = block.baseFeePerGas! + tx.maxPriorityFeePerGas
-        const maxPriorityFeePerGas = getMaxPriorityFeePerGas(tx)
-        const maxFeePerGas = getMaxFeePerGas(fetchedMaxFeePerGas, tx)
-        const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
-            nonce: tx.nonce,
-            maxFeePerGas,
-            maxPriorityFeePerGas,
-        }
+        const partialEvmTxInfo = { nonce: tx.nonce, ...getFees(tx) } satisfies Omit<EvmTxInfo, "evmTxHash">
         try {
             // We identify cancel transaction by making them self-sends.
             const evmTxHash = await walletClient.sendTransaction({

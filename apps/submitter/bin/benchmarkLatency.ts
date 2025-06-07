@@ -1,7 +1,7 @@
 import { BoopClient, CreateAccount, computeBoopHash } from "@happy.tech/boop-sdk"
 import { delayed, stringify } from "@happy.tech/common"
 import { type PrivateKeyAccount, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { createAndSignMintBoop } from "#lib/utils/test/helpers"
+import { createAndSignMintBoop } from "#lib/utils/test/helpers" // no barrel: don't start services
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.

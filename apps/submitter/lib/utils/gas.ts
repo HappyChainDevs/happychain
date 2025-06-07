@@ -1,19 +1,67 @@
+import { bigIntMax } from "@happy.tech/common"
+import { env } from "#lib/env"
+import { blockService } from "#lib/services"
 import type { EvmTxInfo } from "#lib/types"
 
-// Needs to be >= 10 to be considered for replacement EVM tx to be considered.
-const feeBumpPercent = 15n
-const defaultPriorityFee = 1n
-
-export function getMaxPriorityFeePerGas(replacedTx?: EvmTxInfo): bigint {
-    const tip = replacedTx?.maxPriorityFeePerGas
-    if (!tip) return defaultPriorityFee
-    const repriced = (tip * (100n + feeBumpPercent)) / 100n
-    return repriced > tip ? repriced : tip + 1n // 115% of 1 is still 1, so bump by at least 1
+export type Fees = {
+    maxFeePerGas: bigint
+    maxPriorityFeePerGas: bigint
 }
 
-export function getMaxFeePerGas(fetchedMaxFeePerGas: bigint, replacedTx?: EvmTxInfo): bigint {
-    if (!replacedTx) return fetchedMaxFeePerGas
-    const repriced = (replacedTx.maxFeePerGas! * (100n + feeBumpPercent)) / 100n
-    // If the gas price has increased more than what our bump would achieve, use the current price instead.
-    return fetchedMaxFeePerGas > repriced ? fetchedMaxFeePerGas : repriced
+function addPercent(num: bigint, percent: bigint): bigint {
+    return (num * (100n + percent)) / 100n
+}
+
+/**
+ * Returns fees for sending a transaction now, optionally taking into account that this is a replacement transaction.
+ */
+export function getFees(replacedTx?: EvmTxInfo): Fees {
+    const lastBaseFee = getLastBaseFee()
+    let baseFee = addPercent(lastBaseFee, env.BASEFEE_MARGIN)
+    if (baseFee > env.MAX_BASEFEE) baseFee = getMinFeeNoReplaced()
+    const maxFeePerGas = baseFee + env.INITIAL_PRIORITY_FEE
+    const maxPriorityFeePerGas = env.INITIAL_PRIORITY_FEE
+    if (!replacedTx) return { maxFeePerGas, maxPriorityFeePerGas }
+    const minFees = getMinReplacementFees(replacedTx)
+    return {
+        maxFeePerGas: bigIntMax(maxFeePerGas, minFees.maxFeePerGas),
+        maxPriorityFeePerGas: bigIntMax(maxPriorityFeePerGas, minFees.maxPriorityFeePerGas),
+    }
+}
+
+/**
+ * Returns the minimum maxFeePerGas the submitter is willing to use for the current
+ * block, optionally taking into account that this is a replacement transaction.
+ *
+ * This will return a lower basefee than {@link getFees} — it applies a {@link env.MIN_BASEFEE_MARGIN}
+ * increase to the last block's base fee, instead of {@link env.BASEFEE_MARGIN}
+ */
+export function getMinFee(replacedTx?: EvmTxInfo): bigint {
+    const maxFeePerGas = getMinFeeNoReplaced()
+    if (!replacedTx) return maxFeePerGas
+    const minReplacementFee = getMinReplacementFees(replacedTx).maxFeePerGas
+    return bigIntMax(maxFeePerGas, minReplacementFee)
+}
+
+function getLastBaseFee(): bigint {
+    const lastBlock = blockService.getCurrentBlock()
+    if (!lastBlock.baseFeePerGas)
+        throw Error("Error fetching the fees: the RPC sent a block with missing fee information")
+    return lastBlock.baseFeePerGas
+}
+
+function getMinFeeNoReplaced(): bigint {
+    return addPercent(getLastBaseFee(), env.MIN_BASEFEE_MARGIN) + env.INITIAL_PRIORITY_FEE
+}
+
+/**
+ * Returns the minimum fees for a replacement transaction (applying {@link env.FEE_BUMP_PERCENT}).
+ * This does NOT account for current gas price!
+ */
+function getMinReplacementFees(replacedTx: EvmTxInfo): Fees {
+    // + 1n is insurance that the fee rise in case they're extremely low
+    return {
+        maxFeePerGas: addPercent(replacedTx.maxFeePerGas, env.FEE_BUMP_PERCENT) + 1n,
+        maxPriorityFeePerGas: addPercent(replacedTx.maxPriorityFeePerGas, env.FEE_BUMP_PERCENT) + 1n,
+    }
 }

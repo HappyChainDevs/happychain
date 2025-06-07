@@ -3,6 +3,7 @@ import { testClient } from "hono/testing"
 import { CreateAccount } from "#lib/handlers/createAccount"
 import { app } from "#lib/server"
 
+/** Hono test client. */
 export const client = testClient(app)
 
 export async function createSmartAccount(owner: Address): Promise<Address> {
