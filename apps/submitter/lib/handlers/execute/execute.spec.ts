@@ -1,5 +1,6 @@
 // Proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
+
 import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"
 import type { ClientResponse } from "hono/client"
@@ -9,21 +10,21 @@ import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { blockService, boopReceiptService } from "#lib/services"
-import { type Boop, SubmitterError } from "#lib/types"
-import { Onchain } from "#lib/types"
+import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
 import { config } from "#lib/utils/clients"
 import {
     assertMintLog,
+    client,
     createMintBoop,
+    createSmartAccount,
     fundAccount,
     getMockTokenBalance,
     getNonce,
     mockDeployments,
     signBoop,
+    withInterval,
 } from "#lib/utils/test"
-import { client, createSmartAccount } from "#lib/utils/test"
-import { withInterval } from "#lib/utils/test/proxyServer"
 
 const testClient = createTestClient({ ...config, mode: "anvil" })
 const testAccount = privateKeyToAccount(generatePrivateKey())

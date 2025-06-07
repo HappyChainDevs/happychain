@@ -1,4 +1,4 @@
-import type { Hash } from "@happy.tech/common"
+import { type Hash, bigIntMax } from "@happy.tech/common"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
@@ -14,7 +14,7 @@ import {
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { walletClient } from "#lib/utils/clients"
-import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
+import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
@@ -43,9 +43,13 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
         const [ogBoop, ogBoopError] = getOriginalBoop(input)
         if (ogBoopError) return ogBoopError
 
+        // === Simulate ===
+
         logger.trace("Submitting boop", boopHash)
         let simulation = await simulate({ entryPoint, boop }, true)
         if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
+
+        // === Validate simulation results & update boop ===
 
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
             return {
@@ -53,19 +57,17 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 description: "More information needed for the boop to pass validation — most likely a signature.",
                 stage: "submit",
             }
-        if (simulation.feeTooLowDuringSimulation)
-            return {
-                status: Onchain.GasPriceTooHigh,
-                description: `The onchain gas price is higher than the specified maxFeePerGas (${boop.maxFeePerGas} wei/gas).`,
-                stage: "submit",
-            }
 
-        // Self-paying boops must specifies their maxFeePerGas and gas limits to be
-        // submitted (but not to be simulated). This will usually be caught above by the
-        // lack of valid signature, but we must guard against signatures over zero values.
+        if (simulation.feeTooLowDuringSimulation) return gasPriceTooLow
+        if (simulation.feeTooHighDuringSimulation) return gasPriceTooHigh
+
         const selfPaying = boop.account === boop.payer
         if (selfPaying && (!boop.maxFeePerGas || !boop.gasLimit || !boop.validateGasLimit || !boop.validateGasLimit))
-            // validatePaymentGasLimit can be 0 — it is not called for self-paying boops.
+            // Self-paying boops must specifies their maxFeePerGas and gas limits to be
+            // submitted (but not to be simulated). This will usually be caught above by the
+            // lack of valid signature, but we must guard against signatures over zero values.
+            //
+            // `validatePaymentGasLimit` can be 0 — it is not called for self-paying boops.
             return {
                 status: Onchain.MissingGasValues,
                 description:
@@ -77,6 +79,8 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
 
         const afterSimulationPromise = (async (): Promise<SubmitInternalOutput> => {
             try {
+                // === Wait for the nonce to be ready to submit ===
+
                 if (simulation.futureNonceDuringSimulation && !replacedTx && boopNonceManager.isBlocked(boop)) {
                     logger.trace("boop has future nonce, waiting until it becomes unblocked", boopHash)
                     const error = await boopNonceManager.waitUntilUnblocked(entryPoint, boop)
@@ -93,8 +97,44 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                     boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue)
                 }
 
+                // === Fee revalidation ===
+
+                // Simulation & the validation of its result did validate the fees, however the fees might have changed
+                // since, or this may be a replacement submit, which wasn't taken into account by simulation.
+
                 const account = findExecutionAccount(boop)
-                logger.trace("Submitting to the chain using execution account", account.address, boopHash)
+                const fees = getFees(replacedTx)
+                const minFee = getMinFee(replacedTx)
+
+                if (fees.maxFeePerGas > env.MAX_BASEFEE) {
+                    if (minFee > env.MAX_BASEFEE) return gasPriceTooHigh
+                    logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", boopHash)
+                    fees.maxFeePerGas = minFee
+                }
+
+                if (simulation.maxFeePerGas < minFee) {
+                    if (!ogBoop.maxFeePerGas) {
+                        // This is a sponsored boop, we can freely change the fee.
+                        boop.maxFeePerGas = fees.maxFeePerGas
+                    } else if (replacedTx && simulation.maxFeePerGas >= getMinFee()) {
+                        // The EVM tx gas price can be higher than the boop gas price. Because the gas is only required
+                        // to be higher because of replacement, but the excess base fee is refunded, this shouldn't
+                        // incur a loss to the submitter. The increase in priority fee is assumed to be negligible.
+                    } else {
+                        // The user explicitly specified a fee that is now too low, reject.
+                        return gasPriceTooLow
+                    }
+                }
+
+                // NOTE 1: We use `fees.maxFeePerGas` even if `minFee <= simulation.maxFeePerGas < fees.maxFeePerGas`.
+                // This could incur a submitter loss, but cancelling a tx also has a cost.
+                // If this is a concern to you, you should tweak `env.BASEFEE_MARGIN` and
+                // `env.MIN_BASEFEE_MARGIN` (setting these two to be identical removes the risk).
+
+                // NOTE 2: `fees.maxFeePerGas` can be lower than `simulation.maxFeePerGas` if the user specified a
+                // large `maxFeePerGas` or the gas price went down. This is perfectly safe.
+
+                // === Submit onchain ===
 
                 const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
                     nonce:
@@ -104,11 +144,11 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                             chainId: env.CHAIN_ID,
                             client: walletClient,
                         })),
-                    maxFeePerGas: getMaxFeePerGas(simulation.maxFeePerGas, replacedTx),
-                    maxPriorityFeePerGas: getMaxPriorityFeePerGas(replacedTx),
+                    ...fees,
                 }
 
                 // TODO: implement own nonce manager, Viem's one sucks and always incurs a eth_getTransactionCount
+                logger.trace("Submitting to the chain using execution account", account.address, boopHash)
                 const evmTxHash = await walletClient.writeContract({
                     account,
                     address: entryPoint,
@@ -139,6 +179,20 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
         return { ...outputForGenericError(error), stage: "submit" }
     }
 }
+
+const gasPriceTooLow = {
+    status: Onchain.GasPriceTooLow,
+    stage: "submit",
+    description: "The network's gas price is higher than the specified maxFeePerGas.",
+} as const
+
+const gasPriceTooHigh = {
+    status: Onchain.GasPriceTooHigh,
+    stage: "submit",
+    description:
+        "The gas price (either supplied by the sender or computed from the network) " +
+        "exceeds the submitter's max price.",
+} as const
 
 function getOriginalBoop({
     boop,

@@ -3,11 +3,12 @@ import type { Address } from "@happy.tech/common"
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
 import type { PrivateKeyAccount } from "viem"
 import { decodeEventLog, zeroAddress } from "viem"
-import { encodeFunctionData } from "viem/utils"
+import { encodeFunctionData, parseEther } from "viem/utils"
 import { abis, deployment, env } from "#lib/env"
+import { findExecutionAccount } from "#lib/services/evmAccounts" // no barrel: don't start services
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
-import { publicClient } from "#lib/utils/clients"
+import { publicClient, walletClient } from "#lib/utils/clients"
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
@@ -113,4 +114,14 @@ export function assertMintLog(receipt: BoopReceipt, smartAccount: Address) {
     expect(args.from).toBe(zeroAddress)
     expect(args.to.toLowerCase()).toBe(smartAccount.toLowerCase())
     expect(receipt.logs[0].address).toBe(mockDeployments.MockTokenA.toLowerCase() as Address)
+}
+
+/**
+ * Fund the given account with 1 Ether.
+ * Exported from the index to avoid pulling business logic into helpers.ts, so that we can use it for scripts, etc.
+ */
+export async function fundAccount(address: Address) {
+    const executor = findExecutionAccount(/* Default Execution Account */)
+    const hash = await walletClient.sendTransaction({ account: executor, to: address, value: parseEther("1") })
+    await publicClient.waitForTransactionReceipt({ hash })
 }

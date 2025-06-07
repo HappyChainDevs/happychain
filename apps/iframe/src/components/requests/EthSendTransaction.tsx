@@ -50,15 +50,19 @@ export const EthSendTransaction = ({
         query: { enabled: shouldQueryBalance },
     })
 
-    const { simulateOutput, simulateError, isSimulatePending } = useSimulateBoop({
+    const {
+        simulateOutput: simulation,
+        simulateError,
+        isSimulatePending,
+    } = useSimulateBoop({
         userAddress: user?.address,
         tx,
         enabled: isValidTransaction,
     })
 
     const values = useMemo(() => {
-        if (!simulateOutput) return
-        const { maxFeePerGas, submitterFee, gas } = simulateOutput
+        if (!simulation) return
+        const { maxFeePerGas, submitterFee, gas } = simulation
         const cost = BigInt(gas) * maxFeePerGas + submitterFee
         let roundedCost = (cost / MIN_DISPLAY_WEI) * MIN_DISPLAY_WEI
         roundedCost += cost % MIN_DISPLAY_WEI > MIN_DISPLAY_WEI / 2n ? MIN_DISPLAY_WEI : 0n
@@ -71,14 +75,13 @@ export const EthSendTransaction = ({
                 submitterFee: formatEther(submitterFee),
             },
         }
-    }, [simulateOutput])
+    }, [simulation])
 
     const fundsNeeded = isSelfPaying && values ? txValue + values.cost : txValue
     const notEnoughFunds = !!userBalance && userBalance.value < fundsNeeded
     const isConfirmActionDisabled = (txValue && isBalancePending) || isSimulatePending
-    const isRequestDisabled = Boolean(
-        !isValidTransaction || notEnoughFunds || simulateError || simulateOutput?.feeTooLowDuringSimulation,
-    )
+    const wrongFee = simulation?.feeTooLowDuringSimulation || simulation?.feeTooHighDuringSimulation
+    const isRequestDisabled = Boolean(!isValidTransaction || notEnoughFunds || simulateError || wrongFee)
 
     function getDescription() {
         if (!user?.address) return "Disconnected from wallet"
@@ -86,8 +89,11 @@ export const EthSendTransaction = ({
         if (!tx.to) return `Invalid receiver address: ${tx.to}`
         if (notEnoughFunds) return "Not enough funds!"
         if (simulateError) return `Failed to simulate transaction: ${simulateError.message}`
-        if (simulateOutput?.feeTooLowDuringSimulation)
-            return "Provided maxFeePerGas is lower than the current gas price."
+        if (simulation?.feeTooLowDuringSimulation) return "Provided maxFeePerGas is lower than the current gas price."
+        if (simulation?.feeTooHighDuringSimulation)
+            return tx.maxFeePerGas
+                ? `Specified gas price (${tx.maxFeePerGas}) is higher than what the submitter is willing to accept.`
+                : "The network gas price is higher than what the submitter is willing to accept."
 
         return "Unknown error"
     }
@@ -103,7 +109,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": isConfirmActionDisabled || isRequestDisabled,
                         onClick: () => {
                             if (isConfirmActionDisabled || isRequestDisabled) return
-                            accept({ method, params: [tx], extraData: simulateOutput })
+                            accept({ method, params: [tx], extraData: simulation })
                         },
                     },
                     reject: {

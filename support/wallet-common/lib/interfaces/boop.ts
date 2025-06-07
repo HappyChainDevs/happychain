@@ -52,11 +52,6 @@ type EntryPointOutput = {
      */
     futureNonceDuringSimulation: boolean
     /**
-     * If true, indicates that in simulation mode, the provided maxFeePerGas is lower than the
-     * current gas price.
-     */
-    feeTooLowDuringSimulation: boolean
-    /**
      * Status of the call specified by the boop.
      */
     callStatus: CallStatus
@@ -79,6 +74,15 @@ export type SimulateSuccess = Omit<EntryPointOutput, "revertData"> & {
 
     /** Total fee requested by the submitter for submitting this boop (in wei). */
     submitterFee: bigint
+
+    /** If true, indicates that the provided maxFeePerGas is lower than the current gas price. */
+    feeTooLowDuringSimulation: boolean
+
+    /**
+     * If true, indicates that the maxFeePerGas (either provided by the sender,
+     * or compute from the network) exceeded the submitter's maximum price.
+     */
+    feeTooHighDuringSimulation: boolean
 
     revertData?: undefined
     description?: undefined

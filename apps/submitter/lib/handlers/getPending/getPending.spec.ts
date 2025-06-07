@@ -5,8 +5,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment, env } from "#lib/env"
 import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/types"
 import type { Boop } from "#lib/types"
-import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
-import { withInterval } from "#lib/utils/test/proxyServer"
+import { client, createMintBoop, createSmartAccount, getNonce, signBoop, withInterval } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)

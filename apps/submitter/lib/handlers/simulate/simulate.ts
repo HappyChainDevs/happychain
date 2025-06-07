@@ -3,11 +3,12 @@ import { parseAccount } from "viem/accounts"
 import { abis, deployment, env } from "#lib/env"
 import { outputForExecuteError, outputForGenericError, outputForRevertError } from "#lib/handlers/errors"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
-import { getSubmitterFee } from "#lib/policies/submitterFee"
+import { getSubmitterFee, validateSubmitterFee } from "#lib/policies/submitterFee"
 import { computeHash, simulationCache } from "#lib/services"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
 import { publicClient } from "#lib/utils/clients"
+import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { getRevertError } from "#lib/utils/parsing"
 import type { SimulateInput, SimulateOutput, SimulateSuccess } from "./types"
@@ -21,10 +22,15 @@ export async function simulate(
     const selfPaying = boop.account === boop.payer
 
     logger.trace("Simulating boop", boopHash, boop)
+
+    // === Validate input gas values ===
+
     const invalidGasOutput = validateGasInput(boop, forSubmit, selfPaying)
     if (invalidGasOutput) return invalidGasOutput
 
     try {
+        // === Simulate the boop & fetch the balance if needed ===
+
         const simulatePromise = publicClient.simulateContract({
             address: entryPoint,
             args: [encodedBoop],
@@ -32,23 +38,26 @@ export async function simulate(
             abi: abis.EntryPoint,
             functionName: "submit",
         })
-        const gasPricePromise = publicClient.getGasPrice()
 
         const balancePromise = selfPaying
             ? await publicClient.getBalance({ address: boop.account })
             : Promise.resolve(null)
 
-        const [{ result: entryPointOutput }, gasPrice, balance] = await Promise.all([
-            simulatePromise,
-            gasPricePromise,
-            balancePromise,
-        ])
+        const [{ result: entryPointOutput }, balance] = await Promise.all([simulatePromise, balancePromise])
         const status = getEntryPointStatusFromCallStatus(entryPointOutput.callStatus)
 
-        // EntryPoint.submit succeeded, but the execution failed.
         if (status !== Onchain.Success)
+            // EntryPoint.submit succeeded, but the execution failed.
             return outputForExecuteError(boop, status, entryPointOutput.revertData, "simulation")
 
+        // === Construct output values ===
+
+        // Note that by design we never override user-provided (non-zero) values.
+        // Instead if the provided values are invalid, an error output is returned (or a boolean flag set for fees).
+        // This happens in `validateGasInput`, and here for the boolean flags.
+
+        const minFee = getMinFee()
+        const maxFeePerGas = boop.maxFeePerGas || getFees().maxFeePerGas
         const output = {
             ...entryPointOutput,
             status: Onchain.Success,
@@ -57,10 +66,13 @@ export async function simulate(
             validateGas: boop.validateGasLimit || applyGasMargin(entryPointOutput.validateGas),
             validatePaymentGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validatePaymentGas),
             executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas),
-            maxFeePerGas: boop.maxFeePerGas || (gasPrice * env.FEE_SAFETY_MARGIN) / 100n,
-            submitterFee: getSubmitterFee(boop),
-            feeTooLowDuringSimulation: boop.maxFeePerGas === 0n ? false : gasPrice > boop.maxFeePerGas,
+            maxFeePerGas,
+            submitterFee: selfPaying ? boop.submitterFee : boop.submitterFee || getSubmitterFee(boop),
+            feeTooLowDuringSimulation: minFee > maxFeePerGas,
+            feeTooHighDuringSimulation: maxFeePerGas > env.MAX_BASEFEE,
         } satisfies SimulateSuccess
+
+        // === Validate balance ===
 
         if (balance !== null) {
             // `balance !== null` implies `selfPaying`
@@ -72,6 +84,8 @@ export async function simulate(
                     description: "Not enough funds to pay for a self-paying boop.",
                 }
         }
+
+        // === Cache & return ===
 
         await simulationCache.set(boopHash, output)
         logger.trace("Finished simulation with output", boopHash, output)
@@ -87,13 +101,15 @@ export async function simulate(
     }
 }
 
+function outputForInvalidGasValue(description: string): SimulateOutput {
+    return { status: SubmitterError.InvalidValues, description }
+}
+
 /**
  * Checks if the gas value are valid and consistent, and if not returns the output to be returned.
  */
 function validateGasInput(boop: Boop, forSubmit: boolean, selfPaying: boolean): SimulateOutput | undefined {
-    function out(description: string) {
-        return { status: SubmitterError.InvalidValues, description }
-    }
+    const out = outputForInvalidGasValue
 
     if (forSubmit && selfPaying && (boop.gasLimit === 0 || boop.executeGasLimit === 0 || boop.validateGasLimit === 0)) {
         return out("All non-paymaster gas limits must be specified when submitting a self-paying boop.")
@@ -115,10 +131,14 @@ function validateGasInput(boop: Boop, forSubmit: boolean, selfPaying: boolean): 
     if (boop.gasLimit > env.MAX_GAS_LIMIT) {
         return out(`The gas limit is greater than the maximum of ${env.MAX_GAS_LIMIT}.)`)
     }
+    if (selfPaying || boop.submitterFee > 0) {
+        const description = validateSubmitterFee(boop)
+        if (description) return out(description)
+    }
 }
 
 function applyGasMargin(value: number): number {
-    return Math.floor((value * env.GAS_SAFETY_MARGIN) / 100)
+    return Math.ceil((value * (100 + env.GAS_SAFETY_MARGIN)) / 100)
 }
 
 function getEntryPointStatusFromCallStatus(callStatus: number): OnchainStatus {

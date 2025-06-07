@@ -112,6 +112,12 @@ export async function sendBoop(
             throw new EIP1474InvalidInput(
                 `Specified gas price (${boop.maxFeePerGas} wei/gas) was too low at simulation time.`,
             )
+        if (simulation?.feeTooHighDuringSimulation)
+            throw new EIP1474InvalidInput(
+                boop.maxFeePerGas
+                    ? `Specified gas price (${boop.maxFeePerGas}) is higher than what the submitter is willing to accept.`
+                    : "The network gas price is higher than what the submitter is willing to accept.",
+            )
 
         boopHash = computeBoopHash(BigInt(getCurrentChain().chainId), boop)
         boopCache.putBoop(boopHash, boop)
@@ -271,6 +277,7 @@ function translateBoopError(output: Outputs): HappyRpcError {
     switch (output.status) {
         case Onchain.MissingValidationInformation:
         case Onchain.MissingGasValues:
+        case Onchain.GasPriceTooLow:
         case Onchain.GasPriceTooHigh:
         case Onchain.InvalidNonce:
         case Onchain.ExecuteRejected:

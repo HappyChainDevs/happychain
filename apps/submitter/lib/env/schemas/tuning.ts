@@ -3,7 +3,8 @@ import z from "zod"
 /**
  * Performance tuning settings — for controlling things like timeouts, delays and retries.
  *
- * See also the limits schema for limiting load. Some of these settings interplay with the tuning settings.
+ * See also the limits schema for limiting load, and the gas schema for gas limits
+ * and fee margins. Some of these settings interplay with the tuning settings.
  *
  * Settings are ordering roughly in order of how much you should pay attention to them.
  */
@@ -125,12 +126,4 @@ export const tuningSchema = z.object({
      * never had a > 7 blocks re-org and L2 don't normally re-org. Defaults to 100.
      */
     BLOCK_HISTORY_SIZE: z.coerce.number().nonnegative().default(100),
-
-    /**
-     * Gas limit for the account creation call, avoiding a chain roundtrip for simulation.
-     * Defaults to 300k.
-     *
-     * Our last measurement (07 Jun 2025) is 246493 gas used.
-     */
-    ACCOUNT_CREATION_GAS_LIMIT: z.coerce.bigint().positive().default(300_000n),
 })

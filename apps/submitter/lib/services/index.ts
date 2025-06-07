@@ -21,8 +21,10 @@ export const simulationCache = new LruCache<Hash, SimulateOutput>({
     maxAge: env.SIMULATION_CACHE_TTL,
 })
 export const blockService = new BlockService()
+await blockService.waitForInitialization()
+
 export const evmReceiptService = new EvmReceiptService(blockService)
-export const boopReceiptService = new BoopReceiptService(blockService, evmReceiptService)
+export const boopReceiptService = new BoopReceiptService(evmReceiptService)
 
 export type { WaitForInclusionArgs } from "./BoopReceiptService"
 export { computeHash } from "../utils/boop/computeHash"
