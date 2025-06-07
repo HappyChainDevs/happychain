@@ -38,13 +38,7 @@ export class BlockService {
     /** Timeout for receiving a block. Private so it can be disabled in tests. */
     private blockTimeout: Timer | undefined = undefined
 
-    static #instance: BlockService
-    public static get instance(): BlockService {
-        BlockService.#instance ??= new BlockService()
-        return BlockService.#instance
-    }
-
-    private constructor() {
+    constructor() {
         void this.#startBlockWatcher()
     }
 
@@ -64,8 +58,9 @@ export class BlockService {
     }
 
     /** Register a callback on the current block. */
-    onBlock(callback: (block: Block) => void): () => void {
+    onBlock(callback: (block: Block) => void, skipInitial?: "skipInitial"): () => void {
         this.#callbacks.add(callback)
+        if (!skipInitial && this.#current) callback(this.#current)
         return () => this.#callbacks.delete(callback)
     }
 
@@ -92,7 +87,7 @@ export class BlockService {
         /** Get latest block from all RPCs. */
         async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<Block>[]> {
             const promises = rpcUrls.map((url) => createClient(url, timeout).getBlock({ includeTransactions: false }))
-            return Promise.allSettled(promises)
+            return await Promise.allSettled(promises)
         }
 
         /** Can be applied to {@link pingRpcsForBlock} result to select successful calls. */

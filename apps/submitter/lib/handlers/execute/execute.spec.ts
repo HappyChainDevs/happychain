@@ -8,8 +8,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
-import { receiptService } from "#lib/services"
-import { BlockService } from "#lib/services/BlockService.ts"
+import { blockService, boopReceiptService } from "#lib/services"
 import { type Boop, SubmitterError } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
@@ -52,8 +51,8 @@ describe("submitter_execute", () => {
     describe("repricing", () => {
         // biome-ignore format: keep indentation low
         it("reprices", withInterval(0, false, async () => {
-            clearTimeout((BlockService.instance as any).blockTimeout)
-            const spy = spyOn<any, string>(receiptService, "replaceOrCancel")
+            clearTimeout((blockService as any).blockTimeout)
+            const spy = spyOn<any, string>(boopReceiptService, "replaceOrCancel")
             expect(spy).toHaveBeenCalledTimes(0)
 
             // will wait a 1/4 second past the minimum wait time to ensure the tx is stuck & replaced

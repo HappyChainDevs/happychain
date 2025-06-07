@@ -22,6 +22,8 @@ export const CreateAccount = {
     Success: "createAccountSuccess",
     /** The account was already existing. */
     AlreadyCreated: "createAccountAlreadyCreated",
+    /** Timed out while waiting for the account creation receipt. */
+    Timeout: SubmitterError.ReceiptTimeout,
     /** The account creation transaction made it onchain, but failed there. */
     Failed: "createAccountFailed",
 } as const
