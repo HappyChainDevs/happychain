@@ -39,7 +39,8 @@ export const { chain, rpcUrls } = (() => {
 })()
 
 function transport(url: string) {
-    const config = { timeout: env.RPC_REQUEST_TIMEOUT }
+    // Batching sends requests on the same event loop tick together.
+    const config = { timeout: env.RPC_REQUEST_TIMEOUT, batch: true }
     return url.startsWith("http") ? http(url, config) : webSocket(url, config)
 }
 
