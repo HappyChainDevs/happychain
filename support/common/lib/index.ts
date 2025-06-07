@@ -4,7 +4,7 @@ export { createStorage } from "./services/storage"
 
 // === COLLECTIONS =================================================================================
 
-export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map"
+export { getOrSet, getOrSetAsync, transform, HappyMap } from "./collections/map"
 export { Map2 } from "./collections/map2"
 export { FIFOCache } from "./collections/fifoCache"
 
