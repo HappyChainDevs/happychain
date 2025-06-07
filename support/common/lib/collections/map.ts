@@ -15,6 +15,13 @@ export async function getOrSetAsync<K, V>(map: Map<K, V>, key: K, value: Promise
     return _value
 }
 
+export function transform<K, V>(map: Map<K, V>, key: K, f: (v: V | undefined) => V): V {
+    const current = map.get(key)
+    const updated = f(current)
+    map.set(key, updated)
+    return updated
+}
+
 /**
  * Extends the native {@link Map} class with useful helper functions.
  */
@@ -24,5 +31,8 @@ export class HappyMap<K, V> extends Map<K, V> {
     }
     getOrSetAsync(key: K, value: Promise<V> | (() => Promise<V>)): Promise<V> {
         return getOrSetAsync(this, key, value)
+    }
+    transform(key: K, f: (v: V | undefined) => V): V {
+        return transform(this, key, f)
     }
 }
