@@ -27,7 +27,6 @@ import {
     SubmitterError,
     extractFeeInfo,
 } from "#lib/types"
-import { headerCouldContainBoop } from "#lib/utils/bloom"
 import { isNonceTooLowError, publicClient, walletClient } from "#lib/utils/clients"
 import { getMaxFeePerGas, getMaxPriorityFeePerGas } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
@@ -77,7 +76,6 @@ export class BoopReceiptService {
                 logger.error("Undefined hash", header)
                 return
             }
-            if (!headerCouldContainBoop(header)) return // fast bloom filter check
             for (const evmTxHash of header.transactions) {
                 const boop = this.#evmTxHashMap.get(evmTxHash)
                 if (!boop) continue // not one of our transactions
