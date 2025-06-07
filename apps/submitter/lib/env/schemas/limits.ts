@@ -2,6 +2,9 @@ import { z } from "zod"
 
 /**
  * Schema for configuration options related to operational limits.
+ * These mostly have to do with limiting the submitter's load.
+ *
+ * Also see the tuning schema for relevant performance settings.
  */
 export const limitsSchema = z.object({
     /**
@@ -44,15 +47,4 @@ export const limitsSchema = z.object({
      * only expires when the cache reaches max size ({@link SIMULATION_CACHE_SIZE}).
      */
     SIMULATION_CACHE_TTL: z.coerce.number().positive().default(30_000),
-
-    /**
-     * The amount of time to wait before a submitted EVM transaction (carrying a boop or cancelling a previous
-     * transaction) is considered stuck and a replacement transaction is sent. Defaults to 3 seconds.
-     */
-    STUCK_TX_WAIT_TIME: z.coerce.number().positive().default(3_000),
-
-    /**
-     * The default timeout passed to the Viem client for RPC requests.
-     */
-    RPC_REQUEST_TIMEOUT: z.coerce.number().positive().default(3_000),
 })

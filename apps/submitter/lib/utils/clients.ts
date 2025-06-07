@@ -39,14 +39,15 @@ export const { chain, rpcUrls } = (() => {
 })()
 
 function transport(url: string) {
-    // Batching sends requests on the same event loop tick together.
-    const config = { timeout: env.RPC_REQUEST_TIMEOUT, batch: true }
+    const config = {
+        timeout: env.RPC_REQUEST_TIMEOUT,
+        batch: env.USE_RPC_BATCHING ? { wait: env.RPC_BATCH_WAIT, size: env.RPC_BATCH_WAIT } : false,
+    }
     return url.startsWith("http") ? http(url, config) : webSocket(url, config)
 }
 
 export const config = {
     chain,
-    batch: { multicall: true },
     transport: fallback(rpcUrls.map(transport), {
         shouldThrow: (err: Error) => {
             // The two cases below indicate a properly functioning RPC reporting something wrong with the tx.

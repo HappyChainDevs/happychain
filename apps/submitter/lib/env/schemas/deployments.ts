@@ -9,7 +9,7 @@ export const deploymentsSchema = z.object({
      * ID of the chain the submitter operates on. If you need support
      * for multiple chains, run a separate submitter for every chain.
      */
-    CHAIN_ID: z.coerce.number(),
+    CHAIN_ID: z.coerce.number().nonnegative(),
 
     /**
      * When {@link CHAIN_ID}=216 (HappyChain Sepolia), whether to use the staging contracts or the prod prod contracts.
