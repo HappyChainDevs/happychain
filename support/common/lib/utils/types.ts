@@ -125,7 +125,7 @@ export type UnionToTuple<Union> =
  * Given an union U, selects one of its members. This is *generally* the
  * last one, but sometimes it does weird things, e.g. `Select<1|2|3> == 2`.
  */
-type Select<U> = ReturnOf<InferAsArg<RetFunc<U>>>
+export type Select<U> = ReturnOf<InferAsArg<RetFunc<U>>>
 
 type RetFunc<T> = T extends never ? never : () => T
 type ArgFunc<T> = T extends never ? never : (_: T) => void
@@ -182,3 +182,37 @@ export type ObjectFromTuples<KeyTuple extends PropertyKey[], ValueTuple extends 
 export type RecursiveReplace<T, Src, Dst> = Prettify<{
     [K in keyof T]: T[K] extends Src ? Dst : T[K] extends object ? RecursiveReplace<T[K], Src, Dst> : T[K]
 }>
+
+/**
+ * Returns a type that has all keys in both T and O, with the type of the keys in O for the common keys.
+ *
+ * e.g. `Override<{ a: number, b: number }, { b: string, c: string }>`
+ * evaluates to `{ a: number, b: string, c: string }`
+ */
+// biome-ignore format: pretty
+export type Override<T, O> = Prettify<
+    & { [K in Exclude<keyof T, keyof O>]: T[K] }
+    & { [K in keyof O]: O[K] }
+>
+
+/** Extract all keys from a union of objects. */
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type AllKeys<Union> = Union extends any ? keyof Union : never
+
+/**
+ * Returns a copy of an union of objects, where each object is augmented with the
+ * optional undefined-typed keys from the other objects that it does not have itself.
+ *
+ * e.g. `UnionFill<{ a: string } | { b: string }>` evaluates to
+ * `{ a: string, b?: undefined } | { a?: undefined, b: string }`
+ */
+// biome-ignore format: pretty
+export type UnionFill<Union, Original = Union> = Prettify<
+    [Union] extends [never]
+        ? never
+        : Select<Union> extends infer Member
+            ? | ( & { [K in Exclude<AllKeys<Original>, keyof Member>]?: undefined }
+                  & { [K in keyof Member]: Member[K] } )
+              | UnionFill<Exclude<Union, Member>, Original>
+            : never
+>
