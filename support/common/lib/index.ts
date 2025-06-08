@@ -1,7 +1,6 @@
 // === SERVICES ====================================================================================
 
 export { createStorage } from "./services/storage"
-export { Anvil, type AnvilParams } from "./services/anvil"
 
 // === COLLECTIONS =================================================================================
 
