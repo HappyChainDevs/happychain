@@ -196,8 +196,16 @@ export type Override<T, O> = Prettify<
 >
 
 /** Extract all keys from a union of objects. */
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type AllKeys<Union> = Union extends any ? keyof Union : never
+export type AllKeys<Union> = Union extends unknown ? keyof Union : never
+
+/**
+ * Distributes the types in an union.
+ *
+ * e.g. `Distribute<{ a: 1, b: 2 } | { a: 3, b: 4 }>` evaluates to `{ a: 1 | 3, b: 2 | 4 }`
+ */
+export type Distribute<T> = {
+    [K in AllKeys<T>]: T extends Record<K, infer U> ? U : never
+}
 
 /**
  * Returns a copy of an union of objects, where each object is augmented with the

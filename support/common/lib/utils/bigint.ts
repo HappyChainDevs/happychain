@@ -2,19 +2,20 @@ import { hasOwnKey } from "./objects"
 import type { RecursiveReplace } from "./types"
 
 /**
- * Returns the maximum value among the given BigInt arguments.
- * @param values - One or more BigInt values to compare.
- * @returns The maximum BigInt value.
- * @throws {Error} If no arguments are provided.
+ * Returns the maximum value among the arguments, or 0n if no values are provided.
  */
 export function bigIntMax(...values: bigint[]): bigint {
-    if (values.length === 0) {
-        throw new Error("At least one argument must be provided")
-    }
+    if (values.length === 0) return 0n
+    return values.reduce((max, current) => (current > max ? current : max))
+}
 
-    return values.reduce((max, current) => {
-        return current > max ? current : max
-    })
+/**
+ * Returns the minimum value among the given arguments, or 0n if no values are provided.
+ * @throws {Error} If no arguments are provided.
+ */
+export function bigIntMin(...values: bigint[]): bigint {
+    if (values.length === 0) return 0n
+    return values.reduce((min, current) => (current < min ? current : min))
 }
 
 export type BigIntString = `#bigint.${string}`

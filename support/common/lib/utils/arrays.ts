@@ -9,9 +9,12 @@ export function array<T>(...array: (T | undefined | null)[]): T[] {
     return array.filter((it) => it !== undefined && it !== null)
 }
 
-/**
- * Returns a copy of the array with duplicate items removed.
- */
+/** Returns a copy of the array with duplicate items removed. */
 export function uniques<T>(array: T[]): T[] {
     return [...new Set(array)]
+}
+
+/** Returns the last item in the array. */
+export function last<T>(array: T[]): T {
+    return array[array.length - 1]
 }
