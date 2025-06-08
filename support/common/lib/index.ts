@@ -1,17 +1,20 @@
 // === SERVICES ====================================================================================
 
 export { createStorage } from "./services/storage"
+export { Anvil, type AnvilParams } from "./services/anvil"
 
 // === COLLECTIONS =================================================================================
 
 export { getOrSet, getOrSetAsync, transform, HappyMap } from "./collections/map"
 export { Map2 } from "./collections/map2"
 export { FIFOCache } from "./collections/fifoCache"
+export { Stream } from "./collections/stream"
 
 // === UTILS =======================================================================================
 
 export {
     bigIntMax,
+    bigIntMin,
     bigIntReplacer,
     bigIntReviver,
     bigIntToZeroPadded,
@@ -73,29 +76,38 @@ export type {
     Override,
     Select,
     AllKeys,
+    Distribute,
     UnionFill,
 } from "./utils/types"
 
 export { isHttpString } from "./utils/types"
 
 export { isAddress } from "./utils/address"
-export { array, uniques } from "./utils/arrays"
+export { array, uniques, last } from "./utils/arrays"
+export { With } from "./utils/classes"
 export { HappyMethodNames, TransactionType } from "./utils/constants"
 export { nowInSeconds } from "./utils/date"
 export { debounce } from "./utils/debounce"
 export { unknownToError, tryCatch, tryCatchAsync, tryCatchU, tryCatchAsyncU, type Result } from "./utils/error"
 export { fetchWithRetry } from "./utils/fetch"
-export { type Lazy, force } from "./utils/functions"
+export { type Fn, type Lazy, force } from "./utils/functions"
 export { binaryPartition, partition } from "./utils/iterables"
 export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
 export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
 export { Mutex } from "./utils/mutex"
 export { getProp, hasDefinedKey, hasKey, hasOwnKey, ifDef, isEmpty } from "./utils/objects"
-export { promiseWithResolvers, delayed } from "./utils/promises"
-export type { PromiseWithResolvers, Resolvers, RejectType, ResolveInputType, ResolveType } from "./utils/promises"
+export { promiseWithResolvers, delayed, waitForCondition } from "./utils/promises"
+export type {
+    Awaitable,
+    PromiseWithResolvers,
+    Resolvers,
+    RejectType,
+    ResolveInputType,
+    ResolveType,
+} from "./utils/promises"
 export { entries, keys } from "./utils/records"
 export { validateNumericInput } from "./utils/regexChecks"
-export { sleep } from "./utils/sleep"
+export { sleep, timeoutAfter } from "./utils/sleep"
 export { retry } from "./utils/retry"
 export { onlyUnique } from "./utils/streams"
 export { stringify } from "./utils/string"

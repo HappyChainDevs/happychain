@@ -1,3 +1,8 @@
+import { type Fn, type Lazy, force } from "./functions"
+import { sleep } from "./sleep"
+
+export type Awaitable<T> = T | Promise<T>
+
 /** Type of the parameter in the {@link PromiseConstructor#resolve} function. */
 export type ResolveInputType<T> = T | PromiseLike<T>
 
@@ -28,14 +33,29 @@ export function promiseWithResolvers<T>(): PromiseWithResolvers<T> {
 }
 
 /**
- * Returns the value from the callback after the specified {@link timeout}.
+ * Returns the value after the specified {@link timeout}.
  */
-export async function delayed<T>(timeout: number, callback: () => T | Promise<T>): Promise<T> {
+export async function delayed<T>(timeout: number, value: Lazy<T | Promise<T>>): Promise<T> {
     return await new Promise<T>((resolve, reject) => {
         setTimeout(() => {
             // biome-ignore format: terse
-            try { resolve(callback())}
+            try { resolve(force(value))}
             catch (e) { reject(e) }
         }, timeout)
     })
+}
+
+/**
+ * Returns a promise that waits until either {@link condition} returns a truthy value, or {@link timeoutMs} milliseconds elapse
+ * (in which case it rejects with a {@link TimeoutError}). The conditions is called every {@link intervalMs} milliseconds.
+ */
+export async function waitForCondition(condition: Fn, timeoutMs = 30_000, intervalMs = 50): Promise<void> {
+    if (await condition()) return
+    const pwr = Promise.withResolvers()
+    const interval = setInterval(async () => (await condition()) && pwr.resolve(), intervalMs)
+    try {
+        await Promise.race([pwr.promise, sleep(timeoutMs)])
+    } finally {
+        clearInterval(interval)
+    }
 }
