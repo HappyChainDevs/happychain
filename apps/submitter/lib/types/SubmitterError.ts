@@ -41,6 +41,12 @@ export const SubmitterError = {
 
     /** Boop was submitted onchain by another submitter or entity. */
     ExternalSubmit: "submitterExternalSubmit",
+
+    /**
+     * The boop got rejected because the maxFeePerGas (either explicitly specified by the sender
+     * or computed from the network) was higher than what the submitter was willing to accept.
+     */
+    GasPriceTooHigh: "onchainGasPriceTooHigh",
 } as const
 
 /**

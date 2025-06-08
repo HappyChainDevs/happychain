@@ -27,12 +27,6 @@ export const Onchain = {
     GasPriceTooLow: "onchainGasPriceTooLow",
 
     /**
-     * The boop got rejected because the maxFeePerGas (either explicitly specified by the sender
-     * or computed from the network) was higher than what the submitter was willing to accept.
-     */
-    GasPriceTooHigh: "onchainGasPriceTooHigh",
-
-    /**
      * The nonce provided was invalid outside of simulation.
      */
     InvalidNonce: "onchainInvalidNonce",

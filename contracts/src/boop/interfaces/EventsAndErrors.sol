@@ -41,10 +41,9 @@ event ExecutionReverted(bytes revertData);
 // ENTRYPOINT ERRORS
 
 /**
- * The entrypoint reverts with this error when the gas price exceeds
- * {interfaces/Types.Boop}.maxFeePerGas.
+ * The entrypoint reverts with this error when {interfaces/Types.Boop}.maxFeePerGas is lower than the gas price.
  */
-error GasPriceTooHigh();
+error GasPriceTooLow();
 
 /**
  * The entrypoint reverts with this error if the paymaster cannot cover the gas limit cost from his

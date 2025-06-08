@@ -628,7 +628,7 @@ const contractToAbi = ({
     },
     {
       "type": "error",
-      "name": "GasPriceTooHigh",
+      "name": "GasPriceTooLow",
       "inputs": []
     },
     {
@@ -2464,12 +2464,12 @@ const aliasToContract = ({
 
 export const deployment = ({
   "BatchCallExecutor": "0x3473ac298B0A1dCa9d6832a35eBdf4CCe1c2e2e5",
-  "EntryPoint": "0x3e037A2A45cd11829Dfe3D225AD90CD48D2aF004",
-  "HappyAccountBeacon": "0x7a9561d90eA80aaf04ABebC9E029455515c75bDF",
-  "HappyAccountBeaconProxyFactory": "0x5DDD664dd83C1A42d5043Daa5788a08FeE194f33",
-  "HappyAccountImpl": "0xd7bdA5E152dC7DC744501CB21fD1dEB31a768385",
+  "EntryPoint": "0xb52fA6cfcBb0775Dc403d9C338351FB12ab36495",
+  "HappyAccountBeacon": "0xC449B3595af10Ef2eDDC21a59693D27e1c72C4e0",
+  "HappyAccountBeaconProxyFactory": "0xFaE1963cEAe600B2a68B82b08577139E4CEF30cB",
+  "HappyAccountImpl": "0xBD72a28f0c1f0d7A901D5bB79070C679455d9735",
   "HappyAccountRegistry": "0xc4d696851e6dE7e6309F04b10D07704470e171A4",
-  "HappyPaymaster": "0xD4Dc0828285d37Ed26EDfd9D7b72d39064BC4345",
+  "HappyPaymaster": "0xDd943eEe83E5cd34fD90855aE43F89a663513710",
   "SessionKeyValidator": "0x9b14b539CECee62F36aa80DF1791a049511D5249"
 }) as const
 

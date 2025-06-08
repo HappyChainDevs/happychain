@@ -9,7 +9,7 @@ import {
     CallReverted,
     ExecutionRejected,
     ExecutionReverted,
-    GasPriceTooHigh,
+GasPriceTooLow,
     InsufficientStake,
     InvalidNonce,
     ValidationReverted,
@@ -118,7 +118,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         if (tx.gasprice > boop.maxFeePerGas) {
             if (!isSimulation) {
-                revert GasPriceTooHigh();
+                revert GasPriceTooLow();
             }
         }
 

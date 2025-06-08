@@ -187,7 +187,7 @@ const gasPriceTooLow = {
 } as const
 
 const gasPriceTooHigh = {
-    status: Onchain.GasPriceTooHigh,
+    status: SubmitterError.GasPriceTooHigh,
     stage: "submit",
     description:
         "The gas price (either supplied by the sender or computed from the network) " +
