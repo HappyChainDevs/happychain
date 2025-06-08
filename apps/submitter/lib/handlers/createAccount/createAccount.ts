@@ -1,12 +1,13 @@
 import type { Address } from "@happy.tech/common"
 import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
+import { outputForGenericError } from "#lib/handlers/errors"
 import { evmReceiptService } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { config, publicClient } from "#lib/utils/clients"
+import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
-import { outputForGenericError } from "../errors"
 import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
 import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
 
@@ -27,7 +28,6 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             return { status, salt, owner, address: predictedAddress }
         }
 
-        // TODO: we could speed this up by hardcoding the gas and maintaining a gas pricing service
         logger.trace("Sending account creation tx", predictedAddress)
         const hash = await walletClient.writeContract({
             address: deployment.HappyAccountBeaconProxyFactory,
@@ -36,6 +36,7 @@ export async function createAccount({ salt, owner }: CreateAccountInput): Promis
             args: [salt, owner],
             account: accountDeployer,
             gas: env.ACCOUNT_CREATION_GAS_LIMIT,
+            ...getFees(),
         })
 
         logger.trace("Waiting for account creation tx inclusion", predictedAddress, hash)
