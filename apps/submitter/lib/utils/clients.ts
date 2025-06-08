@@ -48,21 +48,7 @@ function transport(url: string) {
 
 export const config = {
     chain,
-    transport: fallback(rpcUrls.map(transport), {
-        shouldThrow: (err: Error) => {
-            // The two cases below indicate a properly functioning RPC reporting something wrong with the tx.
-            // There are properly other cases like that we haven't run into. It's okay, we're just going to be
-            // less efficient by doing needless retries.
-
-            if (err.message.includes("execution reverted")) return true
-
-            // This gets handled in the receipt service.
-            if (isNonceTooLowError(err)) return true
-
-            logger.warn("RPC failed, falling back to next RPC:", err.message)
-            return false // dont throw but proceed to the next RPC
-        },
-    }),
+    transport: fallback(rpcUrls.map(transport), { shouldThrow }),
 } as const
 
 export type PublicClient = BasePublicClient<typeof config.transport, typeof config.chain>
@@ -76,4 +62,24 @@ export function isNonceTooLowError(error: unknown) {
         error instanceof Error &&
         (error.message.includes("nonce too low") || error.message.includes("is lower than the current nonce"))
     )
+}
+
+// For Viem to know whether to throw or fallback to next RPC
+function shouldThrow(err: Error): boolean {
+    // The cases below indicate a properly functioning RPC reporting something wrong
+    // with the tx. There are properly other cases like that we haven't run into.
+    // It's okay, we're just going to be less efficient by doing needless retries.
+
+    const msg = err.message
+    if (msg.includes("execution reverted")) return true
+    if (msg.includes("replacement transaction underpriced")) return true
+
+    // This happens when resyncing and we reach max fees, ignore for `testResync.ts`.
+    if (env.NODE_ENV === "development" && msg.includes("transaction already imported")) return true
+
+    // This gets handled in the receipt service.
+    if (isNonceTooLowError(err)) return true
+
+    logger.warn("RPC failed, falling back to next RPC:", msg)
+    return false // dont throw but proceed to the next RPC
 }

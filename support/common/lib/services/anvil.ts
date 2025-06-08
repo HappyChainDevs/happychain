@@ -129,10 +129,6 @@ export class Anvil extends With<Required<AnvilParams>>() implements Readonly<Req
      * Can reject with OS and I/O errors.
      */
     async start(waitReadyTimeout?: number): Promise<void> {
-        // Kill any existing Anvil process on the same port
-        this.logger.info(`Cleaning up existing Anvil processes running on ${this.port} ...`)
-        // TODO shouldn't be here
-
         const cliArgs = [
             `--port=${this.port}`,
             `--host=${this.host}`,

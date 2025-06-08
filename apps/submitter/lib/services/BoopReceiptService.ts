@@ -77,7 +77,7 @@ export class BoopReceiptService {
         boop,
         entryPoint,
         evmTxInfo,
-        timeout = env.RECEIPT_TIMEOUT,
+        timeout = env.BOOP_RECEIPT_TIMEOUT,
     }: WaitForInclusionArgs): Promise<WaitForReceiptOutput> {
         // 1. fast‑path → receipt already in DB?
         try {
@@ -163,6 +163,7 @@ export class BoopReceiptService {
             `Retry failed (${status}), cancelling transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`,
         )
         const account = findExecutionAccount(sub.boop)
+        // TODO validate that fees are not above the max
         const partialEvmTxInfo = { nonce: tx.nonce, ...getFees(tx) } satisfies Omit<EvmTxInfo, "evmTxHash">
         try {
             // We identify cancel transaction by making them self-sends.
@@ -184,7 +185,7 @@ export class BoopReceiptService {
                 // we picked up the included tx and processed it already.
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
-                    description: "Timed out while waiting for the receipt.",
+                    description: "Timed out while waiting for the receipt (nonce too low).",
                 })
                 clearInterval(sub.interval)
             } else {
