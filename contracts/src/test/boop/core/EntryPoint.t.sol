@@ -11,7 +11,7 @@ import {
     PayoutFailed,
     ValidationRejected,
     ValidationReverted,
-GasPriceTooLow,
+    GasPriceTooLow,
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
 import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
