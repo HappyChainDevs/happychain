@@ -31,7 +31,6 @@ import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
-import type { BlockService } from "./BlockService"
 import type { EvmReceiptService } from "./EvmReceiptService"
 
 export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
