@@ -9,7 +9,7 @@ import {
     CallReverted,
     ExecutionRejected,
     ExecutionReverted,
-GasPriceTooLow,
+    GasPriceTooLow,
     InsufficientStake,
     InvalidNonce,
     ValidationReverted,
