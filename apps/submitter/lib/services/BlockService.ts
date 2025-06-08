@@ -48,14 +48,7 @@ export class BlockService {
     async waitForInitialization(): Promise<void> {
         if (this.#current) return
 
-        // Otherwise we're still waiting for the first block. Do an explicit request to maybe
-        // speed things up. This also helps not getting deadlocked when testing and automining.
-        void tryCatchAsync(async () => {
-            // `publicClient`, not `this.#client` is intentional, we want fallback behaviour.
-            const block = await publicClient.getBlock()
-            if (!this.#current) this.#current = block
-        })
-
+        // In automined tests, no new block will come in, but RPC selection will give us a block via `getBlock`.
         blockLogger.trace("Waiting for initialization...")
         // Not configurable, this is only on boot, and if your RPCs cannot get you this under 5s, you're toast anyway.
         await waitForCondition(() => this.#current !== undefined, 5000)
@@ -139,9 +132,6 @@ export class BlockService {
 
         // === Check to see if block production has halted ===
 
-        // If production is halted and we detect a re-org while monitoring, we'll need to re-emit the base block
-        let reorgBaseBlock: Block | null = null
-
         if (!rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))) {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             blockLogger.error("Block production has halted, waiting for it to resume.")
@@ -167,10 +157,6 @@ export class BlockService {
                 }
             }, env.BLOCK_MONITORING_HALTED_POLL_TIMEOUT)
             await promise
-            if (current !== this.#current) {
-                // A re-org occurred, save the new base.
-                reorgBaseBlock = formatBlock(current as unknown as RpcBlock) as Block
-            }
             // The issue was a block production stall — it should be safe to retry the previous RPCs.
             this.#recentlyFailedRpcs.clear()
         }
@@ -179,15 +165,32 @@ export class BlockService {
 
         // Get most prioritary alive RPC, excluding recently failed ones.
         let index = rpcResults.findIndex((it, i) => isSuccess(it) && !this.#recentlyFailedRpcs.has(rpcUrls[i]))
-        if (index < 0) blockLogger.error("Every alive RPC has failed within the last minute, but some RPCs are live.")
-        index = rpcResults.findIndex(isSuccess) // we know this must be > 0
+        if (index < 0) {
+            blockLogger.error("Every alive RPC has failed within the last minute, but some RPCs are live.")
+            index = rpcResults.findIndex(isSuccess) // we know this must be > 0
+        }
 
         this.#rpcUrl = rpcUrls[index]
         this.#client = createClient(this.#rpcUrl)
         this.#attempt = 0
 
-        if (reorgBaseBlock) this.#handleNewBlock(reorgBaseBlock)
+        // We got a new block in the whole affair, handle it.
+        // This is always ok: this is either a more recent block or a re-org occured.
+        const newBlock = (rpcResults[index] as PromiseFulfilledResult<Block>).value
+        if (!this.#current || this.#current.number < newBlock.number) this.#handleNewBlock(newBlock)
     }
+
+    // Note that in the case of re-orgs, we will be missing blocks compared to the "most re-orged"
+    // block that we saw. We should handle that but don't sweat too much about it right now. We
+    // haven't really audited the code for re-orgs. In theory, the Viem nonce manager should handle
+    // EVM tx nonces. Boop nonces get a resync via `InvalidNonce`, and the nonce cache expires fast
+    // anyway. We might suffer from stuck transactions in the future (meant for pre-re-org chain).
+    //
+    // The most immediate to-do item is to call out the resync system to cancel submit and
+    // createAccount transactions, which we need for robustness.
+    //
+    // The other big issue with re-orgs is that some receipts in the database will now be bogus but their boopHash
+    // could recur.
 
     // =================================================================================================================
     // BLOCK MONITORING

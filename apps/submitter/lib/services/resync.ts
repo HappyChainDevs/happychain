@@ -13,7 +13,6 @@ import { accountDeployer, executorAccounts } from "./evmAccounts"
 export async function resyncAllAccounts(): Promise<void> {
     resyncLogger.info("Startup: resyncing all accounts")
     let accounts: Account[] = executorAccounts
-    console.log(accounts.map((it) => it.address))
     if (!accounts.map((it) => it.address).includes(accountDeployer.address)) accounts = [accountDeployer, ...accounts]
     await Promise.all(accounts.map((account) => resyncAccount(account, "recheck")))
     resyncLogger.info("Completed startup account resync")
@@ -38,7 +37,6 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
         try {
             included_ = await publicClient.getTransactionCount({ address })
             pending_ = await publicClient.getTransactionCount({ address, blockTag: "pending" })
-            console.log("initial", included_, pending_)
             if (included_ >= pending_) return
             break
         } catch (error) {
@@ -122,7 +120,6 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
             const underpriced = msg?.includes("replacement") || msg?.includes("underpriced")
             const alreadyKnown = msg?.includes("transaction already imported")
             const priceMaxedOut = maxFeePerGas >= env.MAX_BASEFEE && maxPriorityFeePerGas >= env.MAX_BASEFEE
-            console.log("underpriced", underpriced, "alreadyKnown", alreadyKnown, "priceMaxxedOut", priceMaxedOut)
 
             const delay = Math.max(maxDelay, initialDelay * 2 ** attempt++)
             if (!underpriced && !alreadyKnown)
