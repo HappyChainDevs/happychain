@@ -1,4 +1,4 @@
-import { type Hash, bigIntMax } from "@happy.tech/common"
+import type { Hash } from "@happy.tech/common"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
@@ -59,7 +59,6 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
             }
 
         if (simulation.feeTooLowDuringSimulation) return gasPriceTooLow
-        if (simulation.feeTooHighDuringSimulation) return gasPriceTooHigh
 
         const selfPaying = boop.account === boop.payer
         if (selfPaying && (!boop.maxFeePerGas || !boop.gasLimit || !boop.validateGasLimit || !boop.validateGasLimit))
@@ -107,7 +106,12 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 const minFee = getMinFee(replacedTx)
 
                 if (fees.maxFeePerGas > env.MAX_BASEFEE) {
-                    if (minFee > env.MAX_BASEFEE) return gasPriceTooHigh
+                    if (minFee > env.MAX_BASEFEE) {
+                        const description =
+                            "The gas price (either supplied by the sender or computed from the network) " +
+                            "exceeds the submitter's max price."
+                        return { status: SubmitterError.GasPriceTooHigh, stage: "submit", description }
+                    }
                     logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", boopHash)
                     fees.maxFeePerGas = minFee
                 }
@@ -184,14 +188,6 @@ const gasPriceTooLow = {
     status: Onchain.GasPriceTooLow,
     stage: "submit",
     description: "The network's gas price is higher than the specified maxFeePerGas.",
-} as const
-
-const gasPriceTooHigh = {
-    status: SubmitterError.GasPriceTooHigh,
-    stage: "submit",
-    description:
-        "The gas price (either supplied by the sender or computed from the network) " +
-        "exceeds the submitter's max price.",
 } as const
 
 function getOriginalBoop({
