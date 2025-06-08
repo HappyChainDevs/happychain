@@ -11,7 +11,7 @@ import {
     PayoutFailed,
     ValidationRejected,
     ValidationReverted,
-    GasPriceTooHigh,
+GasPriceTooLow,
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
 import {SessionKeyValidator} from "boop/extensions/SessionKeyValidator.sol";
@@ -228,10 +228,10 @@ contract EntryPointTest is BoopTestUtils {
     // ====================================================================================================
     // ENTRYPOINT PRE-VALIDATION TESTS
 
-    function testGasPriceTooHigh() public {
+    function testGasPriceTooLow() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         vm.txGasPrice(boop.maxFeePerGas * 2);
-        vm.expectRevert(GasPriceTooHigh.selector);
+        vm.expectRevert(GasPriceTooLow.selector);
         entryPoint.submit(boop.encode());
     }
 

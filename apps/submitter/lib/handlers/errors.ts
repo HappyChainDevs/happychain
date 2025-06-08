@@ -156,7 +156,7 @@ export function outputForRevertError(
                 revertData: decoded.args[0] as Hex,
             }
         }
-        case "GasPriceTooHigh": {
+        case "GasPriceTooLow": {
             if (simulation) {
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {

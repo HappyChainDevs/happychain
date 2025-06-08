@@ -56,10 +56,10 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.ExtensionAlreadyRegistered:
         case Onchain.ExecuteReverted:
         case Onchain.CallReverted:
-        case Onchain.GasPriceTooLow:
-        case Onchain.GasPriceTooHigh:
         case Onchain.UnexpectedReverted:
         case Onchain.EntryPointOutOfGas:
+        case Onchain.GasPriceTooLow:
+        case SubmitterError.GasPriceTooHigh:
         case SubmitterError.RpcError:
         case SubmitterError.NonceTooFarAhead:
         case SubmitterError.BoopReplaced:

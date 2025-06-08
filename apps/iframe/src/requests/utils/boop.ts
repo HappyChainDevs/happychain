@@ -277,11 +277,11 @@ function translateBoopError(output: Outputs): HappyRpcError {
     switch (output.status) {
         case Onchain.MissingValidationInformation:
         case Onchain.MissingGasValues:
-        case Onchain.GasPriceTooLow:
-        case Onchain.GasPriceTooHigh:
         case Onchain.InvalidNonce:
         case Onchain.ExecuteRejected:
         case Onchain.InvalidExtensionValue:
+        case Onchain.GasPriceTooLow:
+        case SubmitterError.GasPriceTooHigh:
         case SubmitterError.InvalidValues:
             return new EIP1474InvalidInput(output.description, output)
         case Onchain.ValidationRejected:
