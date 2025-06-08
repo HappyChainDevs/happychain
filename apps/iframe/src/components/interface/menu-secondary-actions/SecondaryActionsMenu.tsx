@@ -11,6 +11,9 @@ const TriggerSecondaryActionsMenu = () => {
     const router = useRouter()
 
     const handleAction = (e: React.PointerEvent<HTMLButtonElement>) => {
+        // Otherwise a click on the icon when the menu is open causes it to immediately re-open.
+        // The menu will close if clicking anywhere outside it, including on this icon.
+        if (isVisible) return
         e.stopPropagation()
         e.preventDefault()
 
@@ -30,7 +33,7 @@ const TriggerSecondaryActionsMenu = () => {
             type="button"
             title={isVisible ? "Close this menu" : "Open this menu"}
             aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
-            onPointerDown={handleAction}
+            onClick={handleAction}
         >
             <GearSixIcon size="1em" weight={isVisible ? "fill" : "regular"} />
         </button>
