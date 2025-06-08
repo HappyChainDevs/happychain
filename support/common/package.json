@@ -9,6 +9,10 @@
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
+        },
+        "./anvil": {
+            "default": "./dist/anvil.es.js",
+            "types": "./dist/anvil.es.d.ts"
         }
     },
     "peerDependencies": {
