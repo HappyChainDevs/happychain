@@ -105,8 +105,8 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 const fees = getFees(replacedTx)
                 const minFee = getMinFee(replacedTx)
 
-                if (fees.maxFeePerGas > env.MAX_BASEFEE) {
-                    if (minFee > env.MAX_BASEFEE) {
+                if (fees.maxFeePerGas > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
+                    if (minFee > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
                         const description =
                             "The gas price (either supplied by the sender or computed from the network) " +
                             "exceeds the submitter's max price."

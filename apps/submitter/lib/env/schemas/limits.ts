@@ -8,14 +8,20 @@ import { z } from "zod"
  */
 export const limitsSchema = z.object({
     /**
-     * Default timeout for waiting for receipts in milliseconds. Defaults to 8 seconds.
+     * Default timeout for waiting for EVM transaction receipts in milliseconds. Defaults to 3 seconds.
+     * If you want to enable retries, this should be lower than {@link BOOP_RECEIPT_TIMEOUT}.
      */
-    RECEIPT_TIMEOUT: z.coerce.number().positive().default(8000),
+    RECEIPT_TIMEOUT: z.coerce.number().positive().default(3000),
 
     /**
-     * Max timeout that caller can specify for the `boop/receipt` route.
+     * Default timeout for waiting for boop receipts in milliseconds. Defaults to 8s.
      */
-    MAX_RECEIPT_TIMEOUT: z.coerce.number().positive().default(8000),
+    BOOP_RECEIPT_TIMEOUT: z.coerce.number().positive().default(8000),
+
+    /**
+     * Max timeout that caller can specify for the `boop/receipt` route. Defaults to 8s.
+     */
+    MAX_BOOP_RECEIPT_TIMEOUT: z.coerce.number().positive().default(8000),
 
     /**
      * Maximum number of boops that be queued up for a specific (account, nonceTrack) pair while waiting for boops

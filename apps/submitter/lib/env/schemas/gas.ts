@@ -35,7 +35,7 @@ export const gasSchema = z.object({
      * `maxFeePerGas` is specified by the user, or when using {@link BASEFEE_MARGIN} and the fee
      * exceeds {@link MAX_BASEFEE}, it will lower its threshold to use thing minimum margin instead.
      */
-    MIN_BASEFEE_MARGIN: z.coerce.bigint().nonnegative().lte(10_000n).default(5n),
+    MIN_BASEFEE_MARGIN: z.coerce.bigint().positive().lte(10_000n).default(5n),
 
     /**
      * How much (in percent) to bump the fees by when replacing a transaction.
@@ -44,16 +44,23 @@ export const gasSchema = z.object({
     FEE_BUMP_PERCENT: z.coerce.bigint().min(10n).default(15n),
 
     /**
+     * The maximum base fee per gas (in wei) that the submitter is willing to pay for his EVM transactions.
+     * Defaults to 100 gwei.
+     *
+     * TODO: Make this conditional to whether the boop is self-paying, sponsored or submitter-sponsored.
+     */
+    MAX_BASEFEE: z.coerce.bigint().positive().default(100_000_000_000n),
+
+    /**
      * The initial priority fee per gas (in wei) for the submitter to pay on his EVM transactions. Defaults to 1.
      */
     INITIAL_PRIORITY_FEE: z.coerce.bigint().nonnegative().default(1n),
 
     /**
-     * The maximum base fee per gas that the submitter is willing to pay (in gwei). Defaults to 100 gwei.
-     *
-     * TODO: Make this conditional to whether the boop is self-paying, sponsored or submitter-sponsored.
+     * The maximum priority fee per gas (in wei) that the submitter is willing to pay for his EVM transactions.
+     * Defaults to 1000 wei.
      */
-    MAX_BASEFEE: z.coerce.bigint().nonnegative().default(100_000_000_000n),
+    MAX_PRIORITY_FEE: z.coerce.bigint().nonnegative().default(1000n),
 
     /**
      * Gas reserved for entrypoint execution when validating gas values before simulation.
@@ -105,12 +112,4 @@ export const gasSchema = z.object({
      * Our last measurement (07 Jun 2025) is 246493 gas used.
      */
     ACCOUNT_CREATION_GAS_LIMIT: z.coerce.bigint().positive().default(300_000n),
-
-    /**
-     * Maximum priority fee (in gwei) to be used for resync operations when
-     * canceling transactions on submitter startup.
-     *
-     * Default to 10 gwei.
-     */
-    MAX_RESYNC_PRIORITY_FEE_GWEI: z.coerce.string().default("10"),
 })

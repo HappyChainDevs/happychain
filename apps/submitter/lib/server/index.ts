@@ -11,11 +11,13 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import { env, isProduction } from "#lib/env"
-import { resyncService } from "#lib/services"
+import { resyncAllAccounts } from "#lib/services"
 import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
 import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
+
+await resyncAllAccounts()
 
 // Create the app but don't configure routes yet - we'll do that after resync
 const app = new Hono()
@@ -42,53 +44,8 @@ const app = new Hono()
     )
     .use(timeoutMiddleware(30_000))
     .use(requestIdMiddleware())
-
-// Ensure resync operation runs before enabling routes
-let routesEnabled = false
-
-// This will run the resync routine when the server starts
-const initializeServer = async () => {
-    if (!routesEnabled) {
-        try {
-            // Run the resync routine to catch any in-flight transactions, but not in test environment
-            if (env.NODE_ENV !== "test") {
-                logger.info("Running resync routine on submitter startup...")
-                await resyncService.resyncOnStartup()
-                logger.info("Resync routine completed successfully, enabling routes")
-            } else {
-                logger.info("Skipping resync routine in test environment")
-            }
-
-            // Now enable the routes
-            app.route("/api/v1/accounts", accountsApi)
-            app.route("/api/v1/boop", boopApi)
-
-            routesEnabled = true
-        } catch (error) {
-            logger.error("Failed to run resync routine", error)
-            throw new Error(`Submitter initialization failed: ${(error as Error).message}`)
-        }
-    }
-
-    // Return the initialized app
-    return app
-}
-
-// Initialize the server immediately in production/staging, otherwise initialize on first request
-if (["production", "staging", "development", "test"].includes(env.NODE_ENV)) {
-    initializeServer().catch((error) => {
-        logger.error("Failed to initialize server", error)
-        process.exit(1)
-    })
-} else {
-    // For test environments, initialize on first request
-    app.use("*", async (_, next) => {
-        if (!routesEnabled) {
-            await initializeServer()
-        }
-        return next()
-    })
-}
+    .route("/api/v1/accounts", accountsApi)
+    .route("/api/v1/boop", boopApi)
 
 // === Don't chain below here to simplify AppType ===
 

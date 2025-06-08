@@ -9,12 +9,12 @@ import { logger } from "#lib/utils/logger"
 
 export const evmNonceManager = createNonceManager({ source: jsonRpc() })
 
-const evmAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
+export const executorAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
     privateKeyToAccount(key, { nonceManager: evmNonceManager }),
 )
-const executorService = new ExecutorCacheService(evmAccounts)
+const executorService = new ExecutorCacheService(executorAccounts)
 
-export const defaultAccount: Account = evmAccounts[0]
+export const defaultAccount: Account = executorAccounts[0]
 
 export function findExecutionAccount(tx?: Boop): Account {
     if (!tx) return defaultAccount
