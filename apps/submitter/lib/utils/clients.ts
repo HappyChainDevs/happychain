@@ -1,5 +1,10 @@
-import { binaryPartition, uniques } from "@happy.tech/common"
-import { type PublicClient as BasePublicClient, type WalletClient as BaseWalletClient, webSocket } from "viem"
+import { stringify as _stringify, binaryPartition, uniques } from "@happy.tech/common"
+import {
+    BaseError,
+    type PublicClient as BasePublicClient,
+    type WalletClient as BaseWalletClient,
+    webSocket,
+} from "viem"
 import { http, createPublicClient, createWalletClient, fallback } from "viem"
 import { anvil, happychainTestnet } from "viem/chains"
 import { env } from "#lib/env"
@@ -9,7 +14,7 @@ function canonicalize(rpcs: readonly string[]): string[] {
     return uniques(
         rpcs.map((rpc) => {
             let result = rpc.trim().replace("127.0.0.1", "localhost")
-            if (!rpc.startsWith("http") && !rpc.startsWith("ws")) result = `http://${result}`
+            if (!rpc.includes("://")) result = `http://${result}`
             if (result.endsWith("/")) result = result.slice(0, result.length - 1)
             if (result === "https://rpc.testnet.happy.tech") result = `${result}/http`
             if (result === "wss://rpc.testnet.happy.tech") result = `${result}/ws`
@@ -82,4 +87,10 @@ function shouldThrow(err: Error): boolean {
 
     logger.warn("RPC failed, falling back to next RPC:", msg)
     return false // dont throw but proceed to the next RPC
+}
+
+export function stringify(value: unknown): string {
+    // Cut on the verbosity
+    if (value instanceof BaseError) return value.message
+    return _stringify(value)
 }

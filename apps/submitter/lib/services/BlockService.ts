@@ -5,7 +5,7 @@ import { type OnBlockParameter, type PublicClient, type RpcBlock, formatBlock } 
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
 import { LruCache } from "#lib/utils/LruCache"
-import { chain, publicClient, rpcUrls } from "#lib/utils/clients"
+import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
 export type Block = OnBlockParameter<typeof chain>
@@ -229,7 +229,7 @@ export class BlockService {
                     await sleep(delay)
                 }
             } catch (e) {
-                blockLogger.error(`Failed to create new public client for ${this.#rpcUrl}`, e)
+                blockLogger.error(`Failed to create new public client for ${this.#rpcUrl}`, stringify(e))
                 skipToNextClient = true
                 continue
             }
@@ -240,21 +240,30 @@ export class BlockService {
             // 2. Setup subscription
             const { promise, reject } = promiseWithResolvers<void>()
             this.#skipToNextClient = reject
-            let unsubscribe: (() => void) | null = null
+            let unsubscribe: (() => Promise<void>) | null = null
             let pollingTimer: Timer | undefined = undefined
             try {
                 this.#startBlockTimeout()
 
                 if (this.#client.transport.type === "webSocket") {
-                    ;({ unsubscribe } = await this.#client.transport.subscribe({
-                        params: ["newHeads"],
-                        onData: async (data: { result: Partial<RpcBlock> }) =>
-                            void this.#handleNewBlock(formatBlock(data.result) as Block),
-                        onError: reject,
-                    }))
+                    try {
+                        ;({ unsubscribe } = await this.#client.transport.subscribe({
+                            params: ["newHeads"],
+                            onData: async (data: { result: Partial<RpcBlock> }) =>
+                                void this.#handleNewBlock(formatBlock(data.result) as Block),
+                            onError: reject,
+                        }))
+                    } catch (e) {
+                        // If you remove the try-catch and the `reject` call, then you can make the exception escape.
+                        // Rethrowing the error here has the same behaviour.
+                        // This makes *no sense* given the outer try catch. Maybe a Bun bug.
+                        reject(e)
+                    }
                 } else {
                     pollingTimer = setInterval(async () => {
-                        void this.#handleNewBlock(await this.#client.getBlock())
+                        // biome-ignore format: terse
+                        try { void this.#handleNewBlock(await this.#client.getBlock())}
+                        catch (e) { reject(e) }
                     }, pollingInterval)
                 }
 
@@ -275,10 +284,10 @@ export class BlockService {
 
                 await promise // Waits forever unless these is an error.
             } catch (e) {
-                unsubscribe?.()
+                unsubscribe && tryCatchAsync(unsubscribe)
                 clearInterval(pollingTimer)
                 clearTimeout(this.blockTimeout)
-                blockLogger.error("Block watcher error", client, e)
+                blockLogger.error("Block watcher error", client, stringify(e))
                 ++this.#attempt
             }
         }
