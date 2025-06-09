@@ -60,7 +60,7 @@ export class Anvil extends With<Required<AnvilParams>>() implements Readonly<Req
         this.url = params.url ?? `${this.protocol}://${this.host}:${this.port}`
         this.blockTime = params.blockTime ?? 2
         this.extraCliArgs = params.extraCliArgs ?? []
-        this.logger = params.logger ?? Logger.create("Anvil", LogLevel.OFF)
+        this.logger = params.logger ?? Logger.create("Anvil", { level: LogLevel.OFF })
         const transport = this.isWebsocket() ? webSocket(this.url) : http(this.url)
         const config = { chain: anvil, transport, mode: "anvil" } as const
         this.test = createTestClient(config)

@@ -9,6 +9,26 @@ const envSchema = z.object({
         .trim()
         .transform((value) => Number(value)),
     RANDOM_CONTRACT_ADDRESS: hexSchema,
+    LOG_COLORS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
+    LOG_TIMESTAMPS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

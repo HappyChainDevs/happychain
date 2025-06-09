@@ -22,6 +22,7 @@ const envSchema = z
 /**
  * Provides access to filtered and validated environment variables, which define the configuration of the submitter.
  */
+
 export const env: Environment = envSchema.parse(process.env)
 export type Environment = z.infer<typeof envSchema>
 

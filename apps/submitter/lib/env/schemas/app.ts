@@ -55,6 +55,27 @@ export const appSchema = z.object({
         z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default("INFO"),
     ),
 
+    LOG_COLORS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
+    LOG_TIMESTAMPS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
+
     /**
      * The minimum log level at which logs will be added as span events and emitted to the tracing system.
      * Span events provide detailed logging information within trace spans for debugging and monitoring.

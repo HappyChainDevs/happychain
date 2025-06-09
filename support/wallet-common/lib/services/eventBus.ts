@@ -1,8 +1,7 @@
 import { LogLevel, Logger, type TaggedLogger } from "@happy.tech/common"
 import { waitForCondition } from "../utils/waitForCondition"
 
-const silentLogger = Logger.create("silent")
-silentLogger.setLogLevel(LogLevel.OFF)
+const silentLogger = Logger.create("silent", { level: LogLevel.OFF })
 
 // Browser APIs type definition for SSR safety
 type BrowserGlobal = typeof globalThis & {

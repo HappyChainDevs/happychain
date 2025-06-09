@@ -12,10 +12,10 @@ Logger.instance.setLogLevel(defaultLogLevel)
 export const logger = Logger.instance
 
 /** Logger facade for "back-end" request handling (i.e. not used in the request popups). */
-export const reqLogger = Logger.create("Requests", defaultLogLevel)
+export const reqLogger = Logger.create("Requests", { level: defaultLogLevel })
 
 /** Logger facade for session key logic. */
-export const sessionKeyLogger = Logger.create("SessionKeys", defaultLogLevel)
+export const sessionKeyLogger = Logger.create("SessionKeys", { level: defaultLogLevel })
 
 /** Logger facade for permission logic. */
-export const permissionsLogger = Logger.create("Permissions", defaultLogLevel)
+export const permissionsLogger = Logger.create("Permissions", { level: defaultLogLevel })

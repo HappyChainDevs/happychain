@@ -63,6 +63,8 @@ jobs:
             USE_STAGING_CONTRACTS=true
             TRACES_ENDPOINT=http://localhost:4318/v1/traces
             PROMETHEUS_PORT=9091
+            LOG_COLORS=false
+            LOG_TIMESTAMPS=false
             EOF
               cd /home/staging_submitter/build
               bun migrate.es.js

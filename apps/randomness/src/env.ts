@@ -34,6 +34,26 @@ const envSchema = z.object({
     EVM_DRAND_PERIOD_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_MARGIN: z.string().transform((s) => BigInt(s)),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().trim().optional(),
+    LOG_COLORS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
+    LOG_TIMESTAMPS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
