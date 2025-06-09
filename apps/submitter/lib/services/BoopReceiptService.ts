@@ -155,13 +155,11 @@ export class BoopReceiptService {
 
         // 1. Retry the transaction once. This won't recursively retry because the interval is unique for the boopHash.
         receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
-        const { status } = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
-        if (status === Onchain.Success) return
+        const output = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
+        if (output.status === Onchain.Success) return
 
         // 2. Retry failed, switch to cancellation.
-        receiptLogger.warn(
-            `Retry failed (${status}), cancelling transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`,
-        )
+        receiptLogger.warn(`Retry failed, cancelling: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`, output)
         const account = findExecutionAccount(sub.boop)
         // TODO validate that fees are not above the max
         const partialEvmTxInfo = { nonce: tx.nonce, ...getFees(tx) } satisfies Omit<EvmTxInfo, "evmTxHash">

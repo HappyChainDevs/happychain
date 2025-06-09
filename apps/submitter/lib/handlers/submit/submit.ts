@@ -1,7 +1,7 @@
 import type { Hash } from "@happy.tech/common"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
-import { type SimulateSuccess, simulate } from "#lib/handlers/simulate"
+import { simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import {
     boopNonceManager,
@@ -13,6 +13,7 @@ import {
 } from "#lib/services"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop/encodeBoop"
+import { updateBoopFromSimulation } from "#lib/utils/boop/updateBoopFromSimulation"
 import { walletClient } from "#lib/utils/clients"
 import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
@@ -36,7 +37,8 @@ type SubmitInternalOutput =
     | (SubmitError & { evmTxHash?: undefined; receiptPromise?: undefined })
 
 export async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
-    const { entryPoint = deployment.EntryPoint, boop, timeout, earlyExit, replacedTx } = input
+    const { entryPoint = deployment.EntryPoint, timeout, earlyExit, replacedTx } = input
+    let boop = input.boop
 
     const boopHash = computeHash(boop)
     try {
@@ -74,7 +76,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                 stage: "submit",
             }
 
-        mutateBoopGasFromSimulation(ogBoop, boop, simulation)
+        if (!selfPaying) boop = updateBoopFromSimulation(ogBoop, simulation)
 
         const afterSimulationPromise = (async (): Promise<SubmitInternalOutput> => {
             try {
@@ -91,7 +93,7 @@ export async function submitInternal(input: SubmitInternalInput): Promise<Submit
                         boopStore.delete(input.boop)
                         return { ...simulation, stage: "simulate" }
                     }
-                    mutateBoopGasFromSimulation(ogBoop, boop, simulation)
+                    if (!selfPaying) boop = updateBoopFromSimulation(ogBoop, simulation)
                 } else {
                     boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue)
                 }
@@ -225,19 +227,4 @@ function getOriginalBoop({
             stage: "submit",
         },
     ]
-}
-
-/**
- * Mutates {@link boop} with updated gas limit & fees from the simulation, honoring
- * values specified in the original boop ({@link ogBoop} whenever specified).
- */
-function mutateBoopGasFromSimulation(ogBoop: Boop, boop: Boop, simulation: SimulateSuccess): void {
-    // We can't mutate self-paying boop values, but they will be validated during simulation.
-    if (boop.account === boop.payer) return
-    boop.gasLimit = ogBoop.gasLimit || simulation.gas
-    boop.validateGasLimit = ogBoop.validateGasLimit || simulation.validateGas
-    boop.validatePaymentGasLimit = ogBoop.validatePaymentGasLimit || simulation.validatePaymentGas
-    boop.executeGasLimit = ogBoop.executeGasLimit || simulation.executeGas
-    boop.maxFeePerGas = ogBoop.maxFeePerGas || simulation.maxFeePerGas
-    boop.submitterFee = ogBoop.submitterFee || simulation.submitterFee
 }
