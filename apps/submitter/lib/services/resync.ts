@@ -60,12 +60,10 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
         }
     })
 
-    const MAX_PRIORITY_FEE = 100n // TODO make env var
-
     // === Send cancel transactions until included nonce catches up with pending nonce ===
 
     function updateGasPrice(): void {
-        maxPriorityFeePerGas = bigIntMin(MAX_PRIORITY_FEE, maxPriorityFeePerGas * 2n)
+        maxPriorityFeePerGas = bigIntMin(env.MAX_PRIORITY_FEE, maxPriorityFeePerGas * 2n)
         const minFee = getMinFee() - env.INITIAL_PRIORITY_FEE + maxPriorityFeePerGas
         maxFeePerGas = bigIntMin(env.MAX_BASEFEE, bigIntMax(minFee, maxFeePerGas * 2n))
         resyncLogger.trace(`Updated fees: maxFeePerGas=${maxFeePerGas}, maxPriorityFeePerGas=${maxPriorityFeePerGas}`)
@@ -98,10 +96,9 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
                 )
             await Promise.all(promises)
 
-            const timeout = sleep(env.RECEIPT_TIMEOUT)
             while (true) {
                 // Wait for next nonce or timeout.
-                const nonce = await Promise.race([nonceStream.consume(), timeout])
+                const nonce = await Promise.race([nonceStream.consume(), sleep(env.RECEIPT_TIMEOUT)])
                 if (!nonce) break
                 if (nonce > included)
                     resyncLogger.trace(`Resyncing account (2) ${address}, included: ${included}, pending: ${pending}`)
@@ -141,7 +138,5 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
             // Don't sleep if the transaction is underpriced and we haven't maxxed out the gas price yet.
             if (!underpriced || priceMaxedOut) await sleep(delay)
         }
-
-        // TODO this can't be correct, we're not updating the price, only on errors
     } // end while loop
 }
