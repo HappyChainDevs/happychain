@@ -90,7 +90,7 @@ export class RpcMonitor {
             await sendSlackMessageToAlertChannel(`❗️❗️ RPC ${rpcUrl} is not live`)
         }
         if (previousRpcStatus.isLive === false && newRpcStatus.isLive === true) {
-            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now again live`)
+            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now live again`)
         }
 
         if (previousRpcStatus.isSyncing === true && newRpcStatus.isSyncing === false) {
@@ -98,7 +98,7 @@ export class RpcMonitor {
         }
 
         if (previousRpcStatus.isSyncing === false && newRpcStatus.isSyncing === true) {
-            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now again syncing`)
+            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now syncing again`)
         }
 
         this.rpcStatus[rpcUrl] = newRpcStatus
