@@ -6,6 +6,7 @@ import { computeHash } from "#lib/utils/boop/computeHash"
 
 const defaultLogLevel = logLevel(env.LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
+Logger.instance.setSpanEventLogLevel(logLevel(env.SPAN_EVENT_LEVEL))
 
 export const logger = Logger.create("Submitter")
 export const blockLogger = Logger.create("BlockService")

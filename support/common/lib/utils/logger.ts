@@ -72,6 +72,11 @@ export class Logger {
         return this.minLevel
     }
 
+    private minSpanEventLogLevel: LogLevel = LogLevel.OFF
+    get spanEventLogLevel(): LogLevel {
+        return this.spanEventLogLevel
+    }
+
     /**
      * To show or not show the timestamp in the log messages.
      * Defaults to true.
@@ -147,6 +152,15 @@ export class Logger {
     }
 
     /**
+     * Sets the minimum log level for span events. Messages below this level will not be added as span events.
+     *
+     * @param level The minimum log level for span events to set.
+     */
+    public setSpanEventLogLevel(level: LogLevel): void {
+        this.minSpanEventLogLevel = level
+    }
+
+    /**
      * Enables logging for the specified tags.
      *
      * @param tags The tags to enable.
@@ -180,6 +194,12 @@ export class Logger {
         return inputTags.some((tag) => this.enabledTags.has(tag))
     }
 
+    private shouldAddSpanEvent(level: LogLevel, inputTags: LogTag[]): boolean {
+        if (level > this.minSpanEventLogLevel) return false
+        if (this.enabledTags.size === 0) return false
+        return inputTags.some((tag) => this.enabledTags.has(tag))
+    }
+
     /**
      * Generates the log prelude indicating the log level, timestamp, and tags.
      *
@@ -208,6 +228,9 @@ export class Logger {
 
         if (this.shouldLog(level, tags)) {
             console.log(this.getPrelude(level, tags), ...args)
+        }
+
+        if (this.shouldAddSpanEvent(level, tags)) {
             const activeSpan = trace.getActiveSpan()
             activeSpan?.addEvent("logger", {
                 level: level.toString(),
