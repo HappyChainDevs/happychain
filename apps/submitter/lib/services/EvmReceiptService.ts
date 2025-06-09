@@ -20,8 +20,13 @@ export class EvmReceiptService {
 
     constructor(blockService: BlockService) {
         blockService.onBlock((block) => {
+            console.log("EvmReceiptService: block", block)
             for (const evmTxHash of block.transactions) {
-                if (!this.#hashes.has(evmTxHash.toLowerCase() as Hash)) continue
+                if (!this.#hashes.has(evmTxHash.toLowerCase() as Hash)) {
+                    console.log(("we do not care about: " + evmTxHash).toLowerCase())
+                    continue
+                }
+                console.log("applicable transction found", evmTxHash)
                 void this.#resolveReceipt(evmTxHash, "knownAsIncluded")
             }
         })
