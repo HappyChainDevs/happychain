@@ -39,6 +39,7 @@ export type TaggedLogger = {
 }
 
 export interface LoggerOptions {
+    level?: LogLevel
     /** Whether to use colors in the log messages. Defaults to true. Note: in CI, colors are never used */
     colors?: boolean
     /** Whether to show the timestamp in the log messages. Defaults to true */
@@ -119,15 +120,13 @@ export class Logger {
 
     public static create(
         tag: LogTag,
-        logLevel?: LogLevel,
-        { colors = true, timestamp = true }: LoggerOptions = {},
+        { level = Logger.instance.minLevel, colors = true, timestamp = true }: LoggerOptions = {},
     ): TaggedLogger {
         const logger = new Logger()
         logger.useColors = colors
         logger.showTimestamp = timestamp
         logger.enableTags(tag)
-        logger.setLogLevel(logLevel ?? Logger.instance.minLevel)
-
+        logger.setLogLevel(level)
         return new Proxy(logger, {
             get(target, prop, receiver) {
                 const value = Reflect.get(target, prop, receiver)

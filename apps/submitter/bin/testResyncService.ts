@@ -52,7 +52,7 @@ console.log(executorAccount.address)
 const anvilParams = {
     blockTime: BLOCK_TIME,
     extraCliArgs: [`--base-fee=${INITIAL_BASE_FEE}`],
-    logger: Logger.create("Anvil", logLevel(process.env.LOG_LEVEL)),
+    logger: Logger.create("Anvil", { level: logLevel(process.env.LOG_LEVEL) }),
     stdoutFilter,
     stderrFilter: () => true,
 } satisfies AnvilParams

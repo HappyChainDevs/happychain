@@ -68,6 +68,8 @@ jobs:
   
               cat > .env <<-EOF
             ${{vars.RANDOMNESS_MONITOR_ENV}}
+            LOG_COLORS=false
+            LOG_TIMESTAMPS=false
             EOF
 
               npm rebuild

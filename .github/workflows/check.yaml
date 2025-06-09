@@ -21,6 +21,8 @@ env:
   VITE_WEB3AUTH_VERIFIER: "-"
   VITE_TURNSTILE_SITEKEY: "-"
   VITE_FAUCET_ENDPOINT: "-"
+  LOG_COLORS: false
+  LOG_TIMESTAMPS: false
 
 jobs:
   check:

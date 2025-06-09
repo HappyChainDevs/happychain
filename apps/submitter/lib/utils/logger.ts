@@ -5,14 +5,20 @@ import type { Boop } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 
 const defaultLogLevel = logLevel(env.LOG_LEVEL)
-Logger.instance.setLogLevel(defaultLogLevel)
+
 Logger.instance.setSpanEventLogLevel(logLevel(env.SPAN_EVENT_LEVEL))
 
-export const logger = Logger.create("Submitter")
-export const blockLogger = Logger.create("BlockService")
-export const receiptLogger = Logger.create("BoopReceiptService")
-export const resyncLogger = Logger.create("ResyncService")
-export const proxyLogger = Logger.create("proxyServer")
+const defaultLoggerOptions = {
+    colors: env.LOG_COLORS,
+    timestamp: env.LOG_TIMESTAMPS,
+    level: defaultLogLevel,
+}
+
+export const logger = Logger.create("Submitter", defaultLoggerOptions)
+export const blockLogger = Logger.create("BlockService", defaultLoggerOptions)
+export const receiptLogger = Logger.create("BoopReceiptService", defaultLoggerOptions)
+export const resyncLogger = Logger.create("ResyncService", defaultLoggerOptions)
+export const proxyLogger = Logger.create("proxyServer", defaultLoggerOptions)
 
 // Don't trace unless enabled by dev, as this fills the logs quick.
 blockLogger.setLogLevel(Math.min(LogLevel.INFO, defaultLogLevel))

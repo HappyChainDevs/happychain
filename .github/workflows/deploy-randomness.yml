@@ -74,6 +74,8 @@ jobs:
             export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
             export RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
             export ${{vars.RANDOMNESS_ENV}}
+            export LOG_COLORS=false
+            export LOG_TIMESTAMPS=false
             EOF
 
               npm rebuild

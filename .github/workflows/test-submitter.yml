@@ -20,6 +20,8 @@ env:
   AUTOMINE_TESTS: true
   LOG_LEVEL: "TRACE"
   DATABASE_URL: "submitter-tests.sqlite"
+  LOG_COLORS: false
+  LOG_TIMESTAMPS: false
 
 jobs:
   test-submitter:
