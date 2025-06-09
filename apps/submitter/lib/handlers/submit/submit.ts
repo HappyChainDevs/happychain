@@ -199,9 +199,6 @@ function getOriginalBoop({
 }: SubmitInternalInput): [Boop, undefined] | [undefined, SubmitError] {
     const ogBoop = boopStore.getByHash(computeHash(boop))
 
-    // Check if a boop with the same account/nonceTrack/nonceValue is already being processed
-    const isNonceBeingProcessed = boopStore.hasNonce(boop.account, boop.nonceTrack, boop.nonceValue)
-
     if (replacedTx) {
         if (ogBoop) return [ogBoop, undefined]
         // If we have a replacement TX, but no original boop, something went terribly wrong.
@@ -214,32 +211,20 @@ function getOriginalBoop({
         }]
     }
 
-    if (isNonceBeingProcessed && !ogBoop) {
+    if (ogBoop) {
+        // The boop is already known but this isn't an internal replacement — the boop was resubmitted by the user.
+        // The current behaviour is to always reject in this case.
+        const description = "Already processing a boop with the same hash."
+        return [undefined, { status: SubmitterError.AlreadyProcessing, description, stage: "submit" }]
+    }
+
+    if (boopStore.hasNonce(boop.account, boop.nonceTrack, boop.nonceValue)) {
         // A different boop with the same account/nonceTrack/nonceValue is already being processed
-        return [
-            undefined,
-            {
-                status: SubmitterError.AlreadyProcessing,
-                description: "Already processing a boop with the same account and nonce.",
-                stage: "submit",
-            },
-        ]
+        const description = "Already processing a boop with the same account and nonce."
+        return [undefined, { status: SubmitterError.AlreadyProcessing, description, stage: "submit" }]
     }
 
-    if (!ogBoop) {
-        // This is the first time we see the boop, save it, then return the frozen version from the store.
-        boopStore.set(boop, entryPoint ?? deployment.EntryPoint)
-        return [boopStore.getByHash(computeHash(boop))!, undefined]
-    }
-
-    // The boop is already known but this isn't an internal replacement — the boop was resubmitted by the user.
-    // The current behaviour is to always reject in this case.
-    return [
-        undefined,
-        {
-            status: SubmitterError.AlreadyProcessing,
-            description: "Already processing a boop with the same hash.",
-            stage: "submit",
-        },
-    ]
+    // This is the first time we see the boop, save it, then return the frozen version from the store.
+    boopStore.set(boop, entryPoint ?? deployment.EntryPoint)
+    return [boopStore.getByHash(computeHash(boop))!, undefined]
 }
