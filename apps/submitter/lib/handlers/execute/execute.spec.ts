@@ -122,8 +122,6 @@ describe("submitter_execute", () => {
             expect(response.status).toBe(Onchain.Success)
             expect(response.receipt).not.toBeEmpty()
             expect(response.receipt.boopHash).toBeString()
-            expect(response.receipt.status).toBe(Onchain.Success)
-            expect(response.receipt.description).toBeString()
             expect(response.receipt.entryPoint).toBeString()
 
             expect(response.receipt.revertData).toBe("0x")
@@ -311,7 +309,6 @@ describe("submitter_execute", () => {
             expect(results).toHaveLength(count)
             results.forEach((r, i) => {
                 expect(r.status, `boop with hash ${computeBoopHash(env.CHAIN_ID, boops[i])}`).toBe(Onchain.Success)
-                expect(r.receipt.status, `receipt.status at index ${i}`).toBe(Onchain.Success)
                 expect(r.receipt.evmTxHash, `evmTxHash at index ${i}`).toEqual(expect.any(String))
                 assertMintLog(r.receipt, account)
             })

@@ -21,7 +21,6 @@ export const overrides = {
         "boops.extraData": "Hex",
 
         "receipts.boopHash": "Hash",
-        "receipts.status": "OnchainStatus",
         "receipts.gasCost": "bigint",
         "receipts.nonceTrack": "bigint",
         "receipts.nonceValue": "bigint",

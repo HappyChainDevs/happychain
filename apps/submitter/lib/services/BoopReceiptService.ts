@@ -278,8 +278,6 @@ export class BoopReceiptService {
         const logs = this.filterLogs(evmTxReceipt.logs, boopHash)
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
 
-        let status: OnchainStatus = Onchain.Success
-        let description = "Boop executed successfully."
         let revertData: Hex = "0x"
         for (const log of logs) {
             const decoded = decodeEvent(log)
@@ -289,17 +287,13 @@ export class BoopReceiptService {
             // Don't get pranked by contracts emitting the same event.
             if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
             const error = outputForExecuteError(boop, entryPointStatus, decoded.args.revertData as Hex)
-            status = error.status
-            description = error.description || "unknown error"
             revertData = error.revertData ?? "0x"
         }
 
         const receipt = {
             boopHash,
             entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployments
-            status,
             logs,
-            description,
             revertData,
             evmTxHash: evmTxReceipt.transactionHash,
             blockHash: evmTxReceipt.blockHash,

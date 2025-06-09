@@ -28,8 +28,6 @@ export async function up(db: DB) {
     await db.schema
         .createTable("receipts")
         .addColumn("boopHash", "text", (col) => col.primaryKey().notNull().references("boops.boopHash"))
-        .addColumn("status", "text", (col) => col.notNull())
-        .addColumn("description", "text", (col) => col.notNull())
         .addColumn("logs", "text", (col) => col.notNull())
         .addColumn("revertData", "text", (col) => col.notNull())
         .addColumn("evmTxHash", "text", (col) => col.notNull())

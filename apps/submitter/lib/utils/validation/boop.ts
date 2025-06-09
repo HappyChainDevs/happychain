@@ -1,6 +1,6 @@
 import type { AssertCompatible } from "@happy.tech/common"
 import { type } from "arktype"
-import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
+import type { Boop, BoopLog, BoopReceipt } from "#lib/types"
 import { Address, Bytes, Hash, Int256, UInt32, UInt256 } from "./ark"
 
 export const SBoop = type({
@@ -31,8 +31,6 @@ export const SBoopLog = type({
 export const SBoopReceipt = type({
     boopHash: Hash,
     boop: SBoop,
-    status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
-    description: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: Address,
     logs: SBoopLog.array(),
     revertData: Bytes,

@@ -1,6 +1,5 @@
 import type { Address, Hash, Hex, UInt256 } from "@happy.tech/common"
 import type { Boop } from "./Boop"
-import type { OnchainStatus } from "./Onchain"
 
 /**
  * Describes the result of a Boop that has been submitted onchain.
@@ -12,11 +11,6 @@ export type BoopReceipt = {
     /** The boop that this receipt is for. */
     boop: Boop
 
-    /** Result of onchain submission of the Boop. */
-    status: OnchainStatus
-
-    /** Description of the status, potentially including finer-grained details. */
-    description: string
 
     /** EntryPoint to which the Boop was submitted onchain. */
     entryPoint: Address
