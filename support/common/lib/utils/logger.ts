@@ -216,6 +216,23 @@ export class Logger {
             : `[${levelStr}] [${tagsStr}]`
     }
 
+    #getConsoleForLevel(level: LogLevel) {
+        switch (level) {
+            case LogLevel.OFF:
+                return () => {} // No-op for OFF level
+            case LogLevel.ERROR:
+                return console.error
+            case LogLevel.WARN:
+                return console.warn
+            case LogLevel.INFO:
+                return console.log
+            case LogLevel.TRACE:
+                return console.debug
+            default:
+                return console.log
+        }
+    }
+
     /**
      * Generic log function that logs a message at the specified log level.
      *
@@ -227,7 +244,8 @@ export class Logger {
         const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
 
         if (this.shouldLog(level, tags)) {
-            console.log(this.getPrelude(level, tags), ...args)
+            const logger = this.#getConsoleForLevel(level)
+            logger(this.getPrelude(level, tags), ...args)
         }
 
         if (this.shouldAddSpanEvent(level, tags)) {
