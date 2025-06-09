@@ -33,7 +33,7 @@ describe("submitter_submit", () => {
     })
 
     it("submits 'mint token' tx successfully.", async () => {
-        const result = await (client as any).api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
+        const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         const response = (await result.json()) as unknown as SubmitSuccess
         expect(result.status).toBe(200)
         expect(response.status).toBe(Onchain.Success)
@@ -42,7 +42,7 @@ describe("submitter_submit", () => {
 
     it("rejects submission with the same nonce but different content", async () => {
         // First submit a transaction
-        const firstResult = await (client as any).api.v1.boop.submit.$post({
+        const firstResult = await client.api.v1.boop.submit.$post({
             json: { boop: serializeBigInt(signedTx) },
         })
         const firstResponse = (await firstResult.json()) as unknown as SubmitSuccess
@@ -60,7 +60,7 @@ describe("submitter_submit", () => {
         const signedDifferentTx = await signBoop(testAccount, differentTx)
 
         // Try to submit the second transaction
-        const secondResult = await (client as any).api.v1.boop.submit.$post({
+        const secondResult = await client.api.v1.boop.submit.$post({
             json: { boop: serializeBigInt(signedDifferentTx) },
         })
         const secondResponse = (await secondResult.json()) as unknown as SubmitError
