@@ -97,10 +97,16 @@ test-fast:
 	$(call test-shared)
 .PHONY: test-fast
 
+test.fast: test-fast # alt, I keep making this mistake
+.PHONY: test.fast
+
 test-slow:
 	$(call set_automine,false)
 	$(call test-shared)
 .PHONY: test-slow
+
+test.slow: test-slow # alt, I keep making this mistake
+.PHONY: test.slow
 
 test-run-anvil:
 	$(call setup-test-env)
