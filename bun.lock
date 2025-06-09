@@ -69,19 +69,6 @@
         "typescript": "^5.6.2",
       },
     },
-    "apps/fund-monitor": {
-      "name": "@happy.tech/fund-monitor",
-      "version": "0.1.0",
-      "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/txm": "workspace:0.1.0",
-        "viem": "^2.21.53",
-      },
-      "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "typescript": "^5.6.2",
-      },
-    },
     "apps/iframe": {
       "name": "@happy.tech/iframe",
       "version": "0.2.1",
@@ -135,6 +122,20 @@
       },
       "peerDependencies": {
         "abitype": "^1.0.0",
+      },
+    },
+    "apps/monitor-service": {
+      "name": "@happy.tech/monitor-service",
+      "version": "0.1.0",
+      "dependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/txm": "workspace:0.1.0",
+        "eventemitter3": "^5.0.1",
+        "viem": "^2.21.53",
+      },
+      "devDependencies": {
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "typescript": "^5.6.2",
       },
     },
     "apps/randomness": {
@@ -920,11 +921,11 @@
 
     "@happy.tech/faucet": ["@happy.tech/faucet@workspace:apps/faucet"],
 
-    "@happy.tech/fund-monitor": ["@happy.tech/fund-monitor@workspace:apps/fund-monitor"],
-
     "@happy.tech/happybuild": ["@happy.tech/happybuild@workspace:support/happybuild"],
 
     "@happy.tech/iframe": ["@happy.tech/iframe@workspace:apps/iframe"],
+
+    "@happy.tech/monitor-service": ["@happy.tech/monitor-service@workspace:apps/monitor-service"],
 
     "@happy.tech/randomness": ["@happy.tech/randomness@workspace:apps/randomness"],
 

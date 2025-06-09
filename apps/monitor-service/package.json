@@ -1,5 +1,5 @@
 {
-    "name": "@happy.tech/fund-monitor",
+    "name": "@happy.tech/monitor-service",
     "private": true,
     "version": "0.1.0",
     "type": "module",
@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "viem": "^2.21.53",
+        "eventemitter3": "^5.0.1",
         "@happy.tech/common": "workspace:0.1.0",
         "@happy.tech/txm": "workspace:0.1.0"
     },

@@ -5,7 +5,7 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
-start: ## Starts the randomness service
+start: ## Starts the monitor service
 	node --env-file=.env dist/index.es.js
 .PHONY: start
 
