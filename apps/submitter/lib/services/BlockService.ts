@@ -248,8 +248,31 @@ export class BlockService {
                     try {
                         ;({ unsubscribe } = await this.#client.transport.subscribe({
                             params: ["newHeads"],
-                            onData: async (data: { result: Partial<RpcBlock> }) =>
-                                void this.#handleNewBlock(formatBlock(data.result) as Block),
+                            onData: async (data: { result: Partial<RpcBlock> }) => {
+                                const formattedBlock = formatBlock(data.result)
+                                if (!formattedBlock || !formattedBlock.number || !formattedBlock.hash) {
+                                    blockLogger.error("Received malformed block data, skipping.")
+                                    return
+                                }
+                                let retries = 0
+                                while (retries < 3) {
+                                    try {
+                                        const blockWithTransactionHashes = await this.#client.getBlock({
+                                            blockNumber: formattedBlock.number,
+                                            includeTransactions: false,
+                                        })
+                                        void this.#handleNewBlock(blockWithTransactionHashes as Block)
+                                        return
+                                    } catch (e) {
+                                        ++retries
+                                        blockLogger.warn(
+                                            `Failed to getBlock ${formattedBlock.number}, likely too early, retrying (${retries}/3).`,
+                                            stringify(e),
+                                        )
+                                        await sleep(20)
+                                    }
+                                }
+                            },
                             onError: reject,
                         }))
                     } catch (e) {
@@ -291,6 +314,8 @@ export class BlockService {
             }
         }
     }
+
+    #getBlock() {}
 
     #startBlockTimeout() {
         clearTimeout(this.blockTimeout)
