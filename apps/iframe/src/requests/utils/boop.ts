@@ -131,7 +131,7 @@ export async function sendBoop(
         markBoopAsSuccess(boopHash, output.receipt)
         return output.receipt.boopHash
     } catch (err) {
-        reqLogger.info(`boop submission failed — ${retry} attempts left`, err)
+        reqLogger.trace(`boop submission failed — ${retry} attempts left`, err)
         deleteNonce(account, nonceTrack)
         if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
         if (boopHash) {

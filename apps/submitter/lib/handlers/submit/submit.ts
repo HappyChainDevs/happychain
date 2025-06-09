@@ -1,5 +1,6 @@
 import type { Hash } from "@happy.tech/common"
 import { trace } from "@opentelemetry/api"
+import { type BaseError, InsufficientFundsError } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { simulate } from "#lib/handlers/simulate"
@@ -14,8 +15,7 @@ import {
 } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
-import { encodeBoop } from "#lib/utils/boop"
-import { updateBoopFromSimulation } from "#lib/utils/boop"
+import { encodeBoop, updateBoopFromSimulation } from "#lib/utils/boop"
 import { walletClient } from "#lib/utils/clients"
 import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
@@ -53,10 +53,10 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
 
         logger.trace("Submitting boop", boopHash)
         let simulation = await simulate({ entryPoint, boop }, true)
+
         if (simulation.status !== Onchain.Success) return { ...simulation, stage: "simulate" }
 
         // === Validate simulation results & update boop ===
-
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
             return {
                 status: Onchain.ValidationReverted,
@@ -159,6 +159,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
 
                 // TODO: implement own nonce manager, Viem's one sucks and always incurs a eth_getTransactionCount
                 logger.trace("Submitting to the chain using execution account", account.address, boopHash)
+
                 const evmTxHash = await walletClient.writeContract({
                     account,
                     address: entryPoint,
@@ -179,6 +180,13 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 const receiptPromise = boopReceiptService.waitForInclusion(args)
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
+                if ((error as BaseError)?.walk((e) => e instanceof InsufficientFundsError)) {
+                    return {
+                        status: SubmitterError.UnexpectedError,
+                        description: "Submitter failed to pay for the boop.",
+                        stage: "submit",
+                    }
+                }
                 return { ...outputForGenericError(error), stage: "submit" }
             }
         })()

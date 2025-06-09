@@ -63,7 +63,7 @@ export async function sendResponse<Request extends ProviderEventPayload<Approved
             void happyProviderBus.emit(Msgs.RequestResponse, response)
         }
     } catch (e) {
-        reqLogger.info("request handling threw", e)
+        reqLogger.warn("request handling threw", e)
 
         // Peel off up to two layers of Viem wrappers to get at the root cause and avoid noise in errors.
         const err = e instanceof RpcError ? (getProp(e.cause, "cause") ?? e.cause) : e
