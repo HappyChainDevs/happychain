@@ -56,6 +56,16 @@ export const appSchema = z.object({
     ),
 
     /**
+     * The minimum log level at which logs will be added as span events and emitted to the tracing system.
+     * Span events provide detailed logging information within trace spans for debugging and monitoring.
+     * Must be one of: "OFF", "TRACE", "INFO", "WARN", or "ERROR". Defaults to "TRACE".
+     */
+    SPAN_EVENT_LEVEL: z.preprocess(
+        (level) => level && String(level).toUpperCase(),
+        z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default("TRACE"),
+    ),
+
+    /**
      * URL for the SQLite database file this submitter is to use.
      */
     DATABASE_URL: z.string(),
