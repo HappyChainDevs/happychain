@@ -11,7 +11,6 @@ export type BoopReceipt = {
     /** The boop that this receipt is for. */
     boop: Boop
 
-
     /** EntryPoint to which the Boop was submitted onchain. */
     entryPoint: Address
 
