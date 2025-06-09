@@ -78,6 +78,7 @@ function shouldThrow(err: Error): boolean {
     const msg = err.message
     if (msg.includes("execution reverted")) return true
     if (msg.includes("replacement transaction underpriced")) return true
+    if (msg.includes("Insufficient funds")) return true
 
     // This happens when resyncing and we reach max fees, ignore for `testResync.ts`.
     if (env.NODE_ENV === "development" && msg.includes("transaction already imported")) return true

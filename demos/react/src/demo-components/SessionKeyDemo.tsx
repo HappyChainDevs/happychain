@@ -64,9 +64,8 @@ const SessionKeyDemo = () => {
 
             const next = await refetch(getCurrentUser()!.address)
             toast.success(`Counter incremented to ${next}`)
-        } catch (error) {
-            console.warn("[incrementCounter] error:", error)
-            toast.error("Failed to increment counter: " + (error instanceof Error ? error.message : "Unknown error"))
+        } catch {
+            toast.error("Failed to increment counter")
         }
     }
     async function resetCounter() {
@@ -85,9 +84,8 @@ const SessionKeyDemo = () => {
 
             const newCount = await refetch(getCurrentUser()!.address)
             toast.success(`Counter incremented to ${newCount}`)
-        } catch (error) {
-            console.warn("[incrementCounter] error:", error)
-            toast.error("Failed to reset counter: " + (error instanceof Error ? error.message : "Unknown error"))
+        } catch {
+            toast.error("Failed to reset counter")
         }
     }
 
