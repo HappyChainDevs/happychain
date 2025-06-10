@@ -10,7 +10,7 @@ export const Route = createRootRoute({
     component: RootComponent,
 })
 
-// This must be in a file called __root to be picked up by TansStack Router.
+// This must be in a file called __root to be picked up by TanStack Router.
 function RootComponent() {
     const router = useRouter()
     useEffect(() => {
