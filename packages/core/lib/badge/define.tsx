@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-export type { BadgeProps } from "./badge"
+export type { ConnectButtonProps } from "./badge"
 
 function setStyles(stylesId: string, css: string) {
     const prev = document.head.querySelector(`#${stylesId}`)
