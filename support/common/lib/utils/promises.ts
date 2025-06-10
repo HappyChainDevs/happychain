@@ -70,3 +70,25 @@ export async function waitForCondition(condition: Fn, timeoutMs = 30_000, interv
         clearInterval(interval)
     }
 }
+/**
+ * Returns a promise that waits until either {@link condition} returns a value other than undefined,
+ * or {@link timeoutMs} milliseconds elapse.
+ */
+export async function waitForValue<TResult>(
+    condition: Fn<TResult>,
+    timeoutMs = 30_000,
+    intervalMs = 50,
+): Promise<TResult | undefined> {
+    const value = await condition()
+    if (value !== undefined) return value
+    const pwr = Promise.withResolvers<TResult>()
+    const interval = setInterval(async () => {
+        const value = await condition()
+        if (value) pwr.resolve(value)
+    }, intervalMs)
+    try {
+        return await Promise.race([pwr.promise, sleep(timeoutMs).then(() => undefined)])
+    } finally {
+        clearInterval(interval)
+    }
+}
