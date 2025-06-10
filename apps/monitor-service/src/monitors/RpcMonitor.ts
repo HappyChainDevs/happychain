@@ -3,12 +3,24 @@ import { createViemPublicClient } from "../createViemPublicClient"
 import { env } from "../env"
 import { sendSlackMessageToAlertChannel } from "../slack"
 
+enum AlertStatus {
+    NORMAL = "NORMAL",
+    ALERTING = "ALERTING",
+    RECOVERING = "RECOVERING",
+}
+
+export type Alert = {
+    status: AlertStatus
+    changedAt: Date
+}
+
 type RpcStatus = {
-    isLive: boolean
-    isSyncing: boolean
+    isLive: Alert
+    isSyncing: Alert
 }
 
 export const NotSyncingSecondsThreshold = 4n
+export const TimeToConsiderAlertRecoveredMilliseconds = 1000 * 60
 
 export class RpcMonitor {
     private readonly rpcStatus: Record<string, RpcStatus>
@@ -19,8 +31,14 @@ export class RpcMonitor {
         this.rpcStatus = env.RPCS_TO_MONITOR.reduce(
             (acc, rpcUrl) => {
                 acc[rpcUrl] = {
-                    isLive: true,
-                    isSyncing: true,
+                    isLive: {
+                        status: AlertStatus.NORMAL,
+                        changedAt: new Date(),
+                    },
+                    isSyncing: {
+                        status: AlertStatus.NORMAL,
+                        changedAt: new Date(),
+                    },
                 }
                 return acc
             },
@@ -59,10 +77,8 @@ export class RpcMonitor {
 
         this.rpcLocks[rpcUrl] = true
 
-        const newRpcStatus: RpcStatus = {
-            isLive: true,
-            isSyncing: true,
-        }
+        let isLive = true
+        let isSyncing = true
 
         const viemClient = this.rpcClients[rpcUrl]
 
@@ -78,30 +94,59 @@ export class RpcMonitor {
             // If the difference between the current time and the block timestamp is greater than the threshold, we consider the RPC is not syncing
             const gap = BigInt(Math.floor(Date.now() / 1000)) - blockTimestampSeconds
             if (gap > NotSyncingSecondsThreshold) {
-                newRpcStatus.isSyncing = false
+                isSyncing = false
             }
         } catch (_error) {
-            newRpcStatus.isLive = false
+            isLive = false
         }
 
-        const previousRpcStatus = this.rpcStatus[rpcUrl]
+        await this.handleNewCheckForAnAlert(
+            this.rpcStatus[rpcUrl].isLive,
+            isLive,
+            `❗️❗️ RPC ${rpcUrl} is not live`,
+            `✅✅ RPC ${rpcUrl} is now live again`,
+        )
+        await this.handleNewCheckForAnAlert(
+            this.rpcStatus[rpcUrl].isSyncing,
+            isSyncing,
+            `❗️❗️ RPC ${rpcUrl} is not syncing`,
+            `✅✅ RPC ${rpcUrl} is now syncing again`,
+        )
 
-        if (previousRpcStatus.isLive === true && newRpcStatus.isLive === false) {
-            await sendSlackMessageToAlertChannel(`❗️❗️ RPC ${rpcUrl} is not live`)
-        }
-        if (previousRpcStatus.isLive === false && newRpcStatus.isLive === true) {
-            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now live again`)
-        }
-
-        if (previousRpcStatus.isSyncing === true && newRpcStatus.isSyncing === false) {
-            await sendSlackMessageToAlertChannel(`❗️❗️ RPC ${rpcUrl} is not syncing`)
-        }
-
-        if (previousRpcStatus.isSyncing === false && newRpcStatus.isSyncing === true) {
-            await sendSlackMessageToAlertChannel(`✅✅ RPC ${rpcUrl} is now syncing again`)
-        }
-
-        this.rpcStatus[rpcUrl] = newRpcStatus
         this.rpcLocks[rpcUrl] = false
+    }
+
+    private async handleNewCheckForAnAlert(
+        currentAlert: Alert,
+        newCheck: boolean,
+        alertingMessage: string,
+        recoveredMessage: string,
+    ) {
+        if (
+            (currentAlert.status === AlertStatus.NORMAL || currentAlert.status === AlertStatus.RECOVERING) &&
+            newCheck === false
+        ) {
+            if (currentAlert.status === AlertStatus.NORMAL) {
+                await sendSlackMessageToAlertChannel(alertingMessage)
+            }
+
+            currentAlert.status = AlertStatus.ALERTING
+            currentAlert.changedAt = new Date()
+        }
+
+        if (currentAlert.status === AlertStatus.ALERTING && newCheck === true) {
+            currentAlert.status = AlertStatus.RECOVERING
+            currentAlert.changedAt = new Date()
+        }
+
+        const timeSinceLastStatusChange = new Date().getTime() - currentAlert.changedAt.getTime()
+        if (
+            currentAlert.status === AlertStatus.RECOVERING &&
+            timeSinceLastStatusChange > TimeToConsiderAlertRecoveredMilliseconds
+        ) {
+            currentAlert.status = AlertStatus.NORMAL
+            currentAlert.changedAt = new Date()
+            await sendSlackMessageToAlertChannel(recoveredMessage)
+        }
     }
 }
