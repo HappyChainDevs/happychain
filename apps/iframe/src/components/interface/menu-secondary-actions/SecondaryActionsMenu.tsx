@@ -5,6 +5,7 @@ import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
 import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
+import { navigationStateManager } from "#src/utils/NavStateManager"
 
 const TriggerSecondaryActionsMenu = () => {
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
@@ -19,6 +20,10 @@ const TriggerSecondaryActionsMenu = () => {
 
         const isOnHome = router.state.location.pathname === "/embed"
         if (!isOnHome) {
+            // Push callback to keep menu open when navigating back
+            navigationStateManager.pushBackCallback(() => {
+                setVisibility(true)
+            })
             // Navigate to embed if not already there
             router.navigate({ to: "/embed" })
         } else {
@@ -106,7 +111,16 @@ const SecondaryActionsMenu = () => {
                 >
                     <div className="overflow-y-auto flex flex-col px-2">
                         <Menu.Item asChild value={MenuActions.Permissions}>
-                            <Link preload="intent" to="/embed/permissions">
+                            <Link
+                                preload="intent"
+                                to="/embed/permissions"
+                                onClick={() => {
+                                    // Push callback to reopen menu when coming back from permissions
+                                    navigationStateManager.pushBackCallback(() => {
+                                        setSecondaryMenuVisibility(true)
+                                    })
+                                }}
+                            >
                                 <span className="w-full max-w-prose mx-auto justify-between items-center inline-flex">
                                     <span className="flex items-center gap-2">
                                         <QueueIcon size="1em" />

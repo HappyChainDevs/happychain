@@ -2,6 +2,7 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { ArrowLeftIcon, ArrowsInSimpleIcon } from "@phosphor-icons/react"
 import { useRouter } from "@tanstack/react-router"
 import { appMessageBus } from "#src/services/eventBus"
+import { navigationStateManager } from "#src/utils/NavStateManager"
 import { TriggerSecondaryActionsMenu } from "./menu-secondary-actions/SecondaryActionsMenu"
 
 function signalClosed() {
@@ -11,10 +12,15 @@ function signalClosed() {
 export const GlobalHeader = () => {
     const router = useRouter()
 
+    const handleBack = () => {
+        navigationStateManager.popAndExecuteBackCallback()
+        router.history.back()
+    }
+
     return (
         <div className="relative max-w-prose mx-auto items-center w-full py-3 hidden lg:flex">
             {router.state.location.pathname !== "/embed" && (
-                <button type="button" onClick={() => router.history.back()} aria-label="Go back" title="Go back">
+                <button type="button" onClick={handleBack} aria-label="Go back" title="Go back">
                     <ArrowLeftIcon
                         weight="bold"
                         className="text-base-content absolute start-2 top-1/2 -translate-y-1/2"
