@@ -1,20 +1,25 @@
-import { hexSchema } from "@happy.tech/common"
-import type { Hex } from "viem"
+import { type Hex, isHex } from "viem"
 import { z } from "zod"
 
 const envSchema = z.object({
+    NODE_ENV: z.enum(["production", "development"]).default("development"),
     RPC_URL: z.string().trim(),
     CHAIN_ID: z
         .string()
         .trim()
         .transform((value) => Number(value)),
-    PRIVATE_KEY: hexSchema,
+    PRIVATE_KEY: z
+        .string()
+        .trim()
+        .refine((value) => isHex(value), {
+            message: "PRIVATE_KEY must be a valid hex string",
+        }),
     BLOCK_TIME: z.string().transform((value) => BigInt(value)),
     MONITOR_ADDRESSES: z
         .string()
         .trim()
         .transform((value) => value.split(","))
-        .refine((addresses) => addresses.every((addr) => hexSchema.safeParse(addr).success), {
+        .refine((addresses) => addresses.every((addr) => isHex(addr)), {
             message: "All monitor addresses must be valid hex strings",
         })
         .transform((addresses) => addresses.map((addr) => addr as Hex)),

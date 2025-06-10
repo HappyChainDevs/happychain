@@ -1,5 +1,5 @@
+import { createViemPublicClient } from "@happy.tech/common"
 import type { PublicClient } from "viem"
-import { createViemPublicClient } from "../createViemPublicClient"
 import { env } from "../env"
 import { sendSlackMessageToAlertChannel } from "../slack"
 
@@ -47,7 +47,7 @@ export class RpcMonitor {
 
         this.rpcClients = env.RPCS_TO_MONITOR.reduce(
             (acc, rpcUrl) => {
-                acc[rpcUrl] = createViemPublicClient(rpcUrl)
+                acc[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
                 return acc
             },
             {} as Record<string, PublicClient>,
