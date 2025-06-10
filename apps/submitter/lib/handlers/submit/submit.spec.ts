@@ -1,6 +1,6 @@
 // proxy HAS TO BE IMPORTED FIRST so that it starts before submitter starts!
 import "#lib/utils/test/proxyServer"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { computeBoopHash } from "#lib/utils/boop"
 
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { type Address, serializeBigInt } from "@happy.tech/common"

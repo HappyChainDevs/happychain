@@ -8,7 +8,7 @@ import { getSubmitterFee, validateSubmitterFee } from "#lib/policies/submitterFe
 import { computeHash, simulationCache } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
-import { encodeBoop } from "#lib/utils/boop/encodeBoop"
+import { encodeBoop } from "#lib/utils/boop"
 import { publicClient } from "#lib/utils/clients"
 import { getFees, getMinFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"

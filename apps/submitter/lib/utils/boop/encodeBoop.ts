@@ -1,12 +1,11 @@
 import type { Hex } from "@happy.tech/common"
 import { toBytes, toDynamicLengthBytes } from "@happy.tech/common"
-import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop } from "#lib/types"
 
 /**
  * Encodes a Boop into the encoded {@link Hex} form for onchain submission.
  */
-function encodeBoop(boop: Boop): Hex {
+export function encodeBoop_noTrace(boop: Boop): Hex {
     // Static fields
     const accountHex = boop.account.slice(2)
     const destHex = boop.dest.slice(2)
@@ -47,7 +46,3 @@ function encodeBoop(boop: Boop): Hex {
 
     return `0x${encodedHex}`
 }
-
-const tracedEncodeBoop = traceFunction(encodeBoop, "encodeBoop")
-
-export { tracedEncodeBoop as encodeBoop }

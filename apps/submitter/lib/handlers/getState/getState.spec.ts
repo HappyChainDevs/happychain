@@ -9,7 +9,7 @@ import { env } from "#lib/env"
 import type { ExecuteSuccess } from "#lib/handlers/execute"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { computeBoopHash } from "#lib/utils/boop"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
 
