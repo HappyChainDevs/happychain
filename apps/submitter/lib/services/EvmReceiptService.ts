@@ -77,7 +77,7 @@ export class EvmReceiptService {
                 receipt = await publicClient.getTransactionReceipt({ hash: evmTxHash })
                 break
             } catch {
-                await sleep(env.RECEIPT_RETRY_DELAY * i)
+                await sleep(env.LINEAR_RETRY_DELAY * i)
             }
         return receipt
     }

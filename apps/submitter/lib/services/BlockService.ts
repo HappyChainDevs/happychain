@@ -314,7 +314,7 @@ export class BlockService {
                 })
                 break
             } catch {
-                await sleep(env.BLOCK_RETRY_DELAY * i)
+                await sleep(env.LINEAR_RETRY_DELAY * i)
             }
         }
         return block

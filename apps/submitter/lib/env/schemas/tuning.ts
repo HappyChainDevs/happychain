@@ -57,21 +57,12 @@ export const tuningSchema = z.object({
     BLOCK_MONITORING_TIMEOUT: z.coerce.number().positive().default(3000),
 
     /**
-     * When we hear that a block included an EVM transaction we sent, we fetch its receipts. The
-     * node might not immediately have the receipt available, so we try up to three times, with the
-     * first retry waiting for this delay (in milliseconds), and the second retry waiting twice
-     * the amount. The time for the attempt itself is not included (and could take up to {@link
-     * RPC_REQUEST_TIMEOUT}. Note that this will eat into receipt timeouts ({@link RECEIPT_TIMEOUT}).
-     *
-     * Defaults to 200.
+     * The time in milliseconds to wait before successive attempts to fetch a block
+     * or receipt from the RPC provider. The time for the attempt itself is not included (and could take up to {@link
+     * RPC_REQUEST_TIMEOUT}. Note: in the case of the receipt, this will eat into receipt timeouts ({@link RECEIPT_TIMEOUT}).
+     * Defaults to 100 ms.
      */
-    RECEIPT_RETRY_DELAY: z.coerce.number().positive().default(200),
-
-    /**
-     * The time in milliseconds to wait before successive attempts to fetch a block from the RPC
-     * Defaults to 20 ms.
-     */
-    BLOCK_RETRY_DELAY: z.coerce.number().positive().default(20),
+    LINEAR_RETRY_DELAY: z.coerce.number().positive().default(100),
 
     /**
      * The maximum number of blocks to backfill if block monitoring runs into a block
