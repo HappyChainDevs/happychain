@@ -68,6 +68,12 @@ export const tuningSchema = z.object({
     RECEIPT_RETRY_DELAY: z.coerce.number().positive().default(200),
 
     /**
+     * The time in milliseconds to wait before successive attempts to fetch a block from the RPC
+     * Defaults to 20 ms.
+     */
+    BLOCK_RETRY_DELAY: z.coerce.number().positive().default(20),
+
+    /**
      * The maximum number of blocks to backfill if block monitoring runs into a block
      * gap. If a gap bigger than this is encoutered, only the most recent {@link
      * MAX_BLOCK_BACKFILL} will be backfilled, and the previous ones will be skipped.

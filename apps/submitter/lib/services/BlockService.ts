@@ -254,24 +254,13 @@ export class BlockService {
                                     blockLogger.error("Received malformed block data, skipping.")
                                     return
                                 }
-                                let retries = 0
-                                while (retries < 3) {
-                                    try {
-                                        const blockWithTransactionHashes = await this.#client.getBlock({
-                                            blockNumber: formattedBlock.number,
-                                            includeTransactions: false,
-                                        })
-                                        void this.#handleNewBlock(blockWithTransactionHashes as Block)
-                                        return
-                                    } catch (e) {
-                                        ++retries
-                                        blockLogger.warn(
-                                            `Failed to getBlock ${formattedBlock.number}, likely too early, retrying (${retries}/3).`,
-                                            stringify(e),
-                                        )
-                                        await sleep(20)
-                                    }
+                                // subsciption may not populate the transactions list, so we need to fetch the block
+                                const block: Block | null = await this.#getBlock(formattedBlock.number)
+                                if (!block) {
+                                    blockLogger.warn(`Block ${formattedBlock.number} not found, skipping.`)
+                                    return
                                 }
+                                void this.#handleNewBlock(block)
                             },
                             onError: reject,
                         }))
@@ -315,7 +304,21 @@ export class BlockService {
         }
     }
 
-    #getBlock() {}
+    async #getBlock(number: bigint): Promise<Block | null> {
+        let block: Block | null = null
+        for (let i = 1; i <= 3; ++i) {
+            try {
+                block = await this.#client.getBlock({
+                    blockNumber: number,
+                    includeTransactions: false,
+                })
+                break
+            } catch {
+                await sleep(env.BLOCK_RETRY_DELAY * i)
+            }
+        }
+        return block
+    }
 
     #startBlockTimeout() {
         clearTimeout(this.blockTimeout)
