@@ -6,7 +6,7 @@
 import { BoopClient, CreateAccount, type ExecuteSuccess, GetNonce, Onchain } from "@happy.tech/boop-sdk"
 import { stringify } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { createAndSignMintBoop } from "#lib/utils/test"
+import { createAndSignMintBoop } from "#lib/utils/test/helpers" // no barrel import to avoid starting services
 
 if (process.env.SUBMITTER_URL === undefined) {
     throw new Error("SUBMITTER_URL is not defined. Please set it in your environment variables.")
