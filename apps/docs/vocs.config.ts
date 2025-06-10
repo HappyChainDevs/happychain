@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { defineConfig } from "vocs"
 
 export default defineConfig({
@@ -5,6 +6,8 @@ export default defineConfig({
     title: "HappyChain Docs 🤠",
     iconUrl: "/happyicon.png",
     vite: {
+        envPrefix: "HAPPY_",
+        envDir: __dirname,
         server: { port: 4000, strictPort: true },
         preview: { port: 4000, strictPort: true },
         resolve: {
@@ -134,20 +137,25 @@ export default defineConfig({
             ],
         },
         {
-            text: "Plaintext Docs (for LLMs)",
+            text:
+                process.env.NODE_ENV === "development"
+                    ? "Plaintext Docs (Disabled in Dev)"
+                    : "Plaintext Docs (for LLMs)",
             collapsed: true,
             items: [
                 {
                     text: "Docs List",
+                    disabled: process.env.NODE_ENV === "development",
                     // Note: this needs to be an absolute URL, or else the SPA routing
                     // will take over and result in a 404 when the page is not directly accessed.
-                    link: "https://docs.happy.tech/llms.txt",
+                    link: `${process.env.HAPPY_DOCS_URL ?? "https://docs.happy.tech"}/llms.txt`,
                 },
                 {
                     text: "Full Docs",
+                    disabled: process.env.NODE_ENV === "development",
                     // Note: this needs to be an absolute URL, or else the SPA routing
                     // will take over and result in a 404 when the page is not directly accessed.
-                    link: "https://docs.happy.tech/llms-full.txt",
+                    link: `${process.env.HAPPY_DOCS_URL ?? "https://docs.happy.tech"}/llms-full.txt`,
                 },
             ],
         },
