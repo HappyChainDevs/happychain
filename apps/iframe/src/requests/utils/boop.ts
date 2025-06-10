@@ -283,14 +283,14 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case Onchain.GasPriceTooLow:
         case SubmitterError.GasPriceTooHigh:
         case SubmitterError.InvalidValues:
-            return new EIP1474InvalidInput(output.description, output)
+            return new EIP1474InvalidInput(output.error, output)
         case Onchain.ValidationRejected:
         case Onchain.PaymentValidationRejected:
         case Onchain.InsufficientStake:
         case Onchain.InvalidSignature:
         case Onchain.ExtensionAlreadyRegistered:
         case Onchain.ExtensionNotRegistered:
-            return new EIP1474TransactionRejected(output.description, output)
+            return new EIP1474TransactionRejected(output.error, output)
         case Onchain.ExecuteReverted:
         case Onchain.CallReverted:
         case Onchain.ValidationReverted:
@@ -299,11 +299,11 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case Onchain.EntryPointOutOfGas:
         case Onchain.UnexpectedReverted:
         case SubmitterError.UnexpectedError:
-            return new RevertRpcError(output.description, output)
+            return new RevertRpcError(output.error, output)
         case SubmitterError.BufferExceeded:
         case SubmitterError.OverCapacity:
         case SubmitterError.NonceTooFarAhead:
-            return new EIP1474LimitExceeded(output.description, output)
+            return new EIP1474LimitExceeded(output.error, output)
         case SubmitterError.SubmitTimeout:
         case SubmitterError.ReceiptTimeout:
         case SubmitterError.RpcError:
@@ -312,10 +312,10 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case SubmitterError.ExternalSubmit:
         case SubmitterError.AlreadyProcessing:
         case GetNonce.Error:
-            return new EIP1474InternalError(output.description, output)
+            return new EIP1474InternalError(output.error, output)
         case GetState.UnknownState:
         case GetState.UnknownBoop:
-            return new EIP1474ResourceNotfound(output.description, output)
+            return new EIP1474ResourceNotfound(output.error, output)
         case GetNonce.Success:
         case Onchain.Success:
         case GetState.Receipt:
