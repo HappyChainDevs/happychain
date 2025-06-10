@@ -1,21 +1,38 @@
-import { useQueryClient } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import { useCallback, useRef, useState } from "react"
 import { getBalanceQueryKey } from "wagmi/query"
 import { Button } from "#src/components/primitives/button/Button"
+import { FormField } from "#src/components/primitives/form-field/FormField"
 import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
+import { queryClient } from "#src/tanstack-query/config"
 import { UserNotFoundWarning } from "./UserNotFoundWarning"
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
 const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!
 
+type RequestStatus = "idle" | "loading" | "success" | "error"
+
+const StatusMessage = ({ status, message }: { status: RequestStatus; message?: string }) => {
+    if (status === "idle") return null
+    return (
+        <div
+            className={cx("mt-2 rounded px-3 py-2 w-full break-words whitespace-normal text-xs animate-fadeIn", {
+                "bg-success/50 text-success": status === "success",
+                "bg-error/50 text-error": status === "error",
+                "bg-neutral/50": status === "loading",
+            })}
+        >
+            {message}
+        </div>
+    )
+}
+
 export const FaucetView = () => {
     const user = useAtomValue(userAtom)
-    const queryClient = useQueryClient()
-    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
-    const [message, setMessage] = useState("")
+    const [status, setStatus] = useState<RequestStatus>("idle")
+    const [message, setMessage] = useState<string>()
     const turnstileRef = useRef<HTMLDivElement>(null)
 
     const { loading: turnstileLoading, token: getToken } = useTurnstile({
@@ -46,42 +63,31 @@ export const FaucetView = () => {
                     queryKey: getBalanceQueryKey({ address: user.address }),
                 })
             } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setStatus("error")
-                    setMessage(err.message)
-                } else {
-                    setStatus("error")
-                    setMessage("Network error")
-                }
+                setStatus("error")
+                setMessage(err instanceof Error ? err.message : "Network error")
             }
         },
-        [getToken, user, turnstileLoading, queryClient],
+        [getToken, user, turnstileLoading],
     )
 
     if (!user) return <UserNotFoundWarning />
 
     return (
-        <div className="p-4 max-w-md mx-auto w-full overflow-hidden">
-            <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-                <Button type="submit" disabled={turnstileLoading || status === "loading"}>
-                    {status === "loading" ? "Sending..." : "Request Tokens"}
-                </Button>
-                {status !== "idle" && (
-                    <p
-                        className={cx(
-                            "mt-2 rounded px-2 py-1 w-full break-words whitespace-normal overflow-hidden text-xs",
-                            {
-                                "bg-success/50 text-success": status === "success",
-                                "bg-error/50 text-error": status === "error",
-                            },
-                        )}
+        <div className="p-6 max-w-md mx-auto w-full overflow-hidden">
+            <FormField.Root>
+                <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
+                    <Button
+                        type="submit"
+                        intent="primary"
+                        isLoading={status === "loading"}
+                        disabled={turnstileLoading || status === "loading"}
                     >
-                        {message}
-                    </p>
-                )}
-                {/* Turnstile will render here. */}
-                <div ref={turnstileRef} />
-            </form>
+                        {status === "loading" ? "" : "Request Tokens"}
+                    </Button>
+                    <StatusMessage status={status} message={message} />
+                    <div ref={turnstileRef} />
+                </form>
+            </FormField.Root>
         </div>
     )
 }

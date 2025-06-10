@@ -5,7 +5,6 @@ export enum ContentType {
     TOKENS = "Tokens",
     GAMES = "Games",
     ACTIVITY = "Activity",
-    FAUCET = "Faucet",
 }
 
 /**

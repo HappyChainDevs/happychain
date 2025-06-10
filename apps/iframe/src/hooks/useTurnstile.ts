@@ -38,7 +38,7 @@ export type UseTurnstileReturn<Lazy extends boolean> =
           remove: () => void
       }
 
-export type UseTurnStyleArgs<Lazy extends boolean> = {
+export type UseTurnstileArgs<Lazy extends boolean> = {
     lazy: Lazy
     widget: RefObject<HTMLElement | null>
     sitekey: string
@@ -61,7 +61,7 @@ export function useTurnstile<Lazy extends boolean>({
     lazy,
     widget,
     sitekey,
-}: UseTurnStyleArgs<Lazy>): UseTurnstileReturn<Lazy> {
+}: UseTurnstileArgs<Lazy>): UseTurnstileReturn<Lazy> {
     // only use those in non-lazy mode
     const [token, setToken] = useState<string | undefined>(undefined)
     const [error, setError] = useState<string | undefined>(undefined)

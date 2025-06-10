@@ -3,7 +3,6 @@ import { useAtomValue } from "jotai"
 import { historyAtom } from "#src/state/boopHistory"
 import { ContentType } from "#src/state/interfaceState"
 import { Tab, TabContent } from "./home/tabs/Tabs"
-import { FaucetView } from "./home/tabs/views/Faucet"
 import { GamesView } from "./home/tabs/views/GamesView"
 import { ActivityView } from "./home/tabs/views/activity/ActivityView"
 import { TokenView } from "./home/tabs/views/tokens/TokenView"
@@ -19,7 +18,6 @@ export const WalletContentInfo = () => {
                     <Tab title={ContentType.TOKENS} />
                     {/*<Tab title={ContentType.GAMES} />*/}
                     <Tab title={ContentType.ACTIVITY} isDataLoading={isPending} />
-                    <Tab title={ContentType.FAUCET} />
                     <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
                 </Tabs.List>
             </div>
@@ -34,10 +32,6 @@ export const WalletContentInfo = () => {
 
             <TabContent title={ContentType.ACTIVITY}>
                 <ActivityView />
-            </TabContent>
-
-            <TabContent title={ContentType.FAUCET}>
-                <FaucetView />
             </TabContent>
         </Tabs.Root>
     )

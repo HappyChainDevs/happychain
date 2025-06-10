@@ -21,6 +21,7 @@ const EmbedLazyImport = createFileRoute('/embed')()
 const IndexLazyImport = createFileRoute('/')()
 const EmbedIndexLazyImport = createFileRoute('/embed/')()
 const EmbedSendLazyImport = createFileRoute('/embed/send')()
+const EmbedFaucetLazyImport = createFileRoute('/embed/faucet')()
 const EmbedPermissionsIndexLazyImport = createFileRoute('/embed/permissions/')()
 const EmbedPermissionsAppURLLazyImport = createFileRoute(
   '/embed/permissions/$appURL',
@@ -57,6 +58,12 @@ const EmbedSendLazyRoute = EmbedSendLazyImport.update({
   path: '/send',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() => import('./routes/embed/send.lazy').then((d) => d.Route))
+
+const EmbedFaucetLazyRoute = EmbedFaucetLazyImport.update({
+  id: '/faucet',
+  path: '/faucet',
+  getParentRoute: () => EmbedLazyRoute,
+} as any).lazy(() => import('./routes/embed/faucet.lazy').then((d) => d.Route))
 
 const EmbedPermissionsIndexLazyRoute = EmbedPermissionsIndexLazyImport.update({
   id: '/permissions/',
@@ -101,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedLazyImport
       parentRoute: typeof rootRoute
     }
+    '/embed/faucet': {
+      id: '/embed/faucet'
+      path: '/faucet'
+      fullPath: '/embed/faucet'
+      preLoaderRoute: typeof EmbedFaucetLazyImport
+      parentRoute: typeof EmbedLazyImport
+    }
     '/embed/send': {
       id: '/embed/send'
       path: '/send'
@@ -135,6 +149,7 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface EmbedLazyRouteChildren {
+  EmbedFaucetLazyRoute: typeof EmbedFaucetLazyRoute
   EmbedSendLazyRoute: typeof EmbedSendLazyRoute
   EmbedIndexLazyRoute: typeof EmbedIndexLazyRoute
   EmbedPermissionsAppURLLazyRoute: typeof EmbedPermissionsAppURLLazyRoute
@@ -142,6 +157,7 @@ interface EmbedLazyRouteChildren {
 }
 
 const EmbedLazyRouteChildren: EmbedLazyRouteChildren = {
+  EmbedFaucetLazyRoute: EmbedFaucetLazyRoute,
   EmbedSendLazyRoute: EmbedSendLazyRoute,
   EmbedIndexLazyRoute: EmbedIndexLazyRoute,
   EmbedPermissionsAppURLLazyRoute: EmbedPermissionsAppURLLazyRoute,
@@ -156,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexLazyRoute
   '/request': typeof RequestRoute
   '/embed': typeof EmbedLazyRouteWithChildren
+  '/embed/faucet': typeof EmbedFaucetLazyRoute
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed/': typeof EmbedIndexLazyRoute
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
@@ -165,6 +182,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/request': typeof RequestRoute
+  '/embed/faucet': typeof EmbedFaucetLazyRoute
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed': typeof EmbedIndexLazyRoute
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
@@ -176,6 +194,7 @@ export interface FileRoutesById {
   '/': typeof IndexLazyRoute
   '/request': typeof RequestRoute
   '/embed': typeof EmbedLazyRouteWithChildren
+  '/embed/faucet': typeof EmbedFaucetLazyRoute
   '/embed/send': typeof EmbedSendLazyRoute
   '/embed/': typeof EmbedIndexLazyRoute
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
@@ -188,6 +207,7 @@ export interface FileRouteTypes {
     | '/'
     | '/request'
     | '/embed'
+    | '/embed/faucet'
     | '/embed/send'
     | '/embed/'
     | '/embed/permissions/$appURL'
@@ -196,6 +216,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/request'
+    | '/embed/faucet'
     | '/embed/send'
     | '/embed'
     | '/embed/permissions/$appURL'
@@ -205,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/request'
     | '/embed'
+    | '/embed/faucet'
     | '/embed/send'
     | '/embed/'
     | '/embed/permissions/$appURL'
@@ -248,11 +270,16 @@ export const routeTree = rootRoute
     "/embed": {
       "filePath": "embed.lazy.tsx",
       "children": [
+        "/embed/faucet",
         "/embed/send",
         "/embed/",
         "/embed/permissions/$appURL",
         "/embed/permissions/"
       ]
+    },
+    "/embed/faucet": {
+      "filePath": "embed/faucet.lazy.tsx",
+      "parent": "/embed"
     },
     "/embed/send": {
       "filePath": "embed/send.lazy.tsx",
