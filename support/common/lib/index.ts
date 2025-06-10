@@ -122,8 +122,7 @@ export { throttle } from "./utils/throttle"
 export { getUrlProtocol } from "./utils/urlProtocol"
 export { type UUID, createUUID } from "./utils/uuid"
 export { formatMs } from "./utils/time"
-
-export { hexSchema } from "./utils/zod"
+export { createViemPublicClient } from "./utils/viem"
 
 // === DATA ========================================================================================
 

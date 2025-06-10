@@ -1,8 +1,7 @@
 import { getUrlProtocol } from "@happy.tech/common"
 import { http, type PublicClient, type Transport, createPublicClient, defineChain, webSocket } from "viem"
-import { env } from "./env"
 
-export function createViemPublicClient(rpcUrl: string): PublicClient {
+export function createViemPublicClient(chainId: number, rpcUrl: string): PublicClient {
     const protocolResult = getUrlProtocol(rpcUrl)
 
     if (protocolResult.isErr()) {
@@ -24,7 +23,7 @@ export function createViemPublicClient(rpcUrl: string): PublicClient {
      * This approach eliminates the need for users to provide unnecessary properties when configuring the library.
      */
     const chain = defineChain({
-        id: env.CHAIN_ID,
+        id: chainId,
         name: "Unknown",
         rpcUrls: {
             default: {
