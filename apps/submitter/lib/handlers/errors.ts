@@ -8,13 +8,13 @@ import { type DecodedRevertError, decodeRawError, extractErrorMessage } from "#l
 
 export type SubmitterErrorOutput = {
     status: SubmitterErrorStatus
-    description: string
+    error: string
 }
 
 export type OnchainErrorOutput = {
     status: Exclude<OnchainStatus, typeof Onchain.Success>
     revertData?: Hex
-    description: string
+    error: string
 }
 
 /**
@@ -25,12 +25,12 @@ export function outputForGenericError(error: unknown): SubmitterErrorOutput {
     if (error instanceof BaseError)
         return {
             status: SubmitterError.RpcError,
-            description: error.message,
+            error: error.message,
         }
 
     return {
         status: SubmitterError.UnexpectedError,
-        description: extractErrorMessage(error) ?? "An unknown error occured.",
+        error: extractErrorMessage(error) ?? "An unknown error occured.",
     }
 }
 
@@ -50,20 +50,20 @@ export function outputForRevertError(
             void boopNonceManager.resyncNonce(entryPoint, boop.account, boop.nonceTrack)
             return {
                 status: Onchain.InvalidNonce,
-                description: "The nonce of the boop is too low.",
+                error: "The nonce of the boop is too low.",
             }
         }
         case "InsufficientStake": {
             const payer = boop.payer === zeroAddress ? "submitter" : "paymaster"
             return {
                 status: Onchain.InsufficientStake,
-                description: `The ${payer} has insufficient stake`,
+                error: `The ${payer} has insufficient stake`,
             }
         }
         case "PayoutFailed": {
             return {
                 status: Onchain.PayoutFailed,
-                description: "Payment of a self-paying boop failed",
+                error: "Payment of a self-paying boop failed",
             }
         }
         case "ValidationReverted": {
@@ -72,11 +72,11 @@ export function outputForRevertError(
                 return {
                     status: Onchain.ValidationReverted,
                     revertData: decoded.args[0] as Hex,
-                    description: "Trying to validate a self-paying boop with a session key.",
+                    error: "Trying to validate a self-paying boop with a session key.",
                 }
             return {
                 status: Onchain.ValidationReverted,
-                description: "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
+                error: "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -88,17 +88,17 @@ export function outputForRevertError(
                 case "InvalidSignature":
                     return {
                         status: Onchain.InvalidSignature,
-                        description: "Account rejected the boop because of an invalid signature",
+                        error: "Account rejected the boop because of an invalid signature",
                     }
                 case "InvalidExtensionValue":
                     return {
                         status: Onchain.InvalidExtensionValue,
-                        description: "Account rejected the boop because an extension value in the extraData is invalid",
+                        error: "Account rejected the boop because an extension value in the extraData is invalid",
                     }
                 case "ExtensionNotRegistered":
                     return {
                         status: Onchain.ExtensionNotRegistered,
-                        description:
+                        error:
                             "Account rejected the boop because it requested an extension that was not registered.",
                     }
                 case "UnknownDuringSimulation": {
@@ -108,14 +108,14 @@ export function outputForRevertError(
 
             return {
                 status: Onchain.ValidationRejected,
-                description: "Account rejected the boop. " + tryParsing,
+                error: "Account rejected the boop. " + tryParsing,
                 revertData: decoded.args[0] as Hex,
             }
         }
         case "PaymentValidationReverted": {
             return {
                 status: Onchain.PaymentValidationReverted,
-                description:
+                error:
                     "Paymaster reverted in 'validatePayment` — this is not standard compliant behaviour." +
                     (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
@@ -127,14 +127,14 @@ export function outputForRevertError(
                 case "InvalidSignature": {
                     return {
                         status: Onchain.InvalidSignature,
-                        description: "Paymaster rejected the boop because of an invalid signature",
+                        error: "Paymaster rejected the boop because of an invalid signature",
                     }
                 }
                 case "SubmitterFeeTooHigh": {
                     // HappyPaymaster
                     return {
                         status: Onchain.PaymentValidationRejected,
-                        description: `Paymaster rejected the boop because of the submitter fee (${boop.submitterFee} wei) was too high`,
+                        error: `Paymaster rejected the boop because of the submitter fee (${boop.submitterFee} wei) was too high`,
                         revertData: decoded.args[0] as Hex,
                     }
                 }
@@ -142,7 +142,7 @@ export function outputForRevertError(
                     // HappyPaymaster
                     return {
                         status: Onchain.PaymentValidationRejected,
-                        description: "The HappyPaymaster rejected the boop because your gas budget is insufficient",
+                        error: "The HappyPaymaster rejected the boop because your gas budget is insufficient",
                         revertData: decoded.args[0] as Hex,
                     }
                 }
@@ -152,7 +152,7 @@ export function outputForRevertError(
             }
             return {
                 status: Onchain.PaymentValidationRejected,
-                description: "Paymaster rejected the boop. " + tryParsing,
+                error: "Paymaster rejected the boop. " + tryParsing,
                 revertData: decoded.args[0] as Hex,
             }
         }
@@ -161,12 +161,12 @@ export function outputForRevertError(
                 logger.error("escape GasPriceTooHigh during simulation — BIG BUG", boopHash)
                 return {
                     status: Onchain.GasPriceTooLow,
-                    description: "GasPriceTooHigh during simulation — this is an implementation bug, please report!",
+                    error: "GasPriceTooHigh during simulation — this is an implementation bug, please report!",
                 }
             } else {
                 return {
                     status: Onchain.GasPriceTooLow,
-                    description:
+                    error:
                         "The boop got rejected because the gas price was above the maxFeePerGas.\n" +
                         "Try again, with a higher maxFeePerGas if you are setting it manually.",
                 }
@@ -175,13 +175,13 @@ export function outputForRevertError(
         case "MalformedBoop": {
             return {
                 status: Onchain.UnexpectedReverted,
-                description: "Malformed boop simulated or submitted — this is an implementation bug, please report!",
+                error: "Malformed boop simulated or submitted — this is an implementation bug, please report!",
             }
         }
         case "ExtensionAlreadyRegistered": {
             return {
                 status: Onchain.ExtensionAlreadyRegistered,
-                description: `Extension ${decoded.args[0]} of type ${decoded.args[1]} has already been registered for this account.`,
+                error: `Extension ${decoded.args[0]} of type ${decoded.args[1]} has already been registered for this account.`,
             }
         }
         default: {
@@ -189,7 +189,7 @@ export function outputForRevertError(
             // But we check for this explicitly in the ReceiptService, replacing this error.
             return {
                 status: Onchain.UnexpectedReverted,
-                description: "The boop caused an unexpected revert.",
+                error: "The boop caused an unexpected revert.",
             }
         }
     }
@@ -211,34 +211,34 @@ export function outputForExecuteError(
             return {
                 status,
                 revertData,
-                description: "The call made by the account's `execute` function reverted.\n" + tryParsing,
+                error: "The call made by the account's `execute` function reverted.\n" + tryParsing,
             }
         case Onchain.ExecuteRejected: {
             const decodedReason = decodeRawError(revertData)
             if (decodedReason?.errorName === "InvalidExtensionValue")
                 return {
                     status: Onchain.InvalidExtensionValue,
-                    description:
+                    error:
                         "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
                 }
             if (decodedReason?.errorName === "ExtensionNotRegistered")
                 return {
                     status: Onchain.ExtensionNotRegistered,
-                    description:
+                    error:
                         "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",
                 }
             if (decodedReason?.errorName)
                 return {
                     status,
                     revertData,
-                    description:
+                    error:
                         `The account's \`execute\` function rejected the call with reason: ${decodedReason.errorName}.\n` +
                         `${tryParsing}\n${unexpectedDecode}`,
                 }
             return {
                 status: Onchain.ExecuteRejected,
                 revertData,
-                description: "The account's `execute` function rejected the call.\n" + tryParsing,
+                error: "The account's `execute` function rejected the call.\n" + tryParsing,
             }
         }
         case Onchain.ExecuteReverted: {
@@ -246,15 +246,15 @@ export function outputForExecuteError(
             const decodedReason = decodeRawError(revertData)
             switch (decodedReason?.errorName) {
                 case "CannotRegisterSessionKeyForValidator": {
-                    const description =
+                    const error =
                         "Trying to register a session key to interact with the session key validator itself, which is not allowed."
-                    output = { status, revertData, description }
+                    output = { status, revertData, error }
                     break
                 }
                 case "CannotRegisterSessionKeyForAccount": {
-                    const description =
+                    const error =
                         "Trying to register a session key to interact with a boop account, which is not allowed."
-                    output = { status, revertData, description }
+                    output = { status, revertData, error }
                     break
                 }
             }
@@ -262,14 +262,14 @@ export function outputForExecuteError(
                 ? {
                       status,
                       revertData,
-                      description:
+                      error:
                           `The account's \`execute\` function reverted with reason: ${decodedReason.errorName}.\n` +
                           `${tryParsing}\n${faultyAccount}\n${unexpectedDecode}`,
                   }
                 : {
                       status,
                       revertData,
-                      description: "The account's `execute` function reverted.\n" + faultyAccount,
+                      error: "The account's `execute` function reverted.\n" + faultyAccount,
                   }
             notePossibleMisbehaviour(boop, output, simulation)
             return output

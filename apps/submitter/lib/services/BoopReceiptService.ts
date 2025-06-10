@@ -89,12 +89,12 @@ export class BoopReceiptService {
             logger.error("Error while looking up boop receipt", boopHash, dbError)
             return {
                 status: SubmitterError.UnexpectedError,
-                description: `Failed to query database for boop status: ${String(dbError)}`,
+                error: `Failed to query database for boop status: ${String(dbError)}`,
             }
         }
 
         boop ??= boopStore.getByHash(boopHash)
-        if (!boop) return { status: GetState.UnknownBoop, description: "Unknown boop" }
+        if (!boop) return { status: GetState.UnknownBoop, error: "Unknown boop" }
 
         // 2. get or create pending boop info
         // biome-ignore format: terse
@@ -120,7 +120,7 @@ export class BoopReceiptService {
             sub.pwr.promise,
             delayed<WaitForReceiptOutput>(timeout, () => ({
                 status: SubmitterError.ReceiptTimeout,
-                description: "Timed out while waiting for receipt.",
+                error: "Timed out while waiting for receipt.",
             })),
         ])
 
@@ -147,7 +147,7 @@ export class BoopReceiptService {
                 else if (cantFetch)
                     sub.pwr.resolve({
                         status: SubmitterError.ReceiptTimeout,
-                        description: "Transaction receipt could not be fetched after multiple retries",
+                        error: "Transaction receipt could not be fetched after multiple retries",
                     })
             })
     }
@@ -186,7 +186,7 @@ export class BoopReceiptService {
                 // we picked up the included tx and processed it already.
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
-                    description: "Timed out while waiting for the receipt (nonce too low).",
+                    error: "Timed out while waiting for the receipt (nonce too low).",
                 })
                 clearInterval(sub.interval)
             } else {
@@ -203,7 +203,7 @@ export class BoopReceiptService {
                 // we only care about the executor address nonce bump.
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
-                    description: "The boop was submitted to the mempool but got stuck and was cancelled.",
+                    error: "The boop was submitted to the mempool but got stuck and was cancelled.",
                 })
             } else {
                 // Reconstruct boop with fee info matching the EVM tx that landed.
@@ -262,7 +262,7 @@ export class BoopReceiptService {
         ) {
             output = {
                 status: Onchain.EntryPointOutOfGas,
-                description:
+                error:
                     "The boop was included onchain but ran out of gas. If the transaction is self-paying, " +
                     "this can indicate a `payout` function that consumes more gas during execution than during simulation.",
             }
@@ -290,7 +290,7 @@ export class BoopReceiptService {
             if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
             const error = outputForExecuteError(boop, entryPointStatus, decoded.args.revertData as Hex)
             status = error.status
-            description = error.description || "unknown error"
+            description = error.error || "unknown error"
             revertData = error.revertData ?? "0x"
         }
 
@@ -299,7 +299,7 @@ export class BoopReceiptService {
             entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployments
             status,
             logs,
-            description,
+            error: description,
             revertData,
             evmTxHash: evmTxReceipt.transactionHash,
             blockHash: evmTxReceipt.blockHash,

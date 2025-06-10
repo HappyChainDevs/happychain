@@ -53,7 +53,7 @@ export type ExecuteSuccess = {
     receipt: BoopReceipt
 
     stage?: undefined
-    description?: undefined
+    error?: undefined
     revertData?: undefined
 }
 
@@ -86,7 +86,7 @@ export type ExecuteError = {
     revertData?: Bytes
 
     /** Description of the problem. */
-    description: string
+    error: string
 
     receipt?: undefined
 }

@@ -48,8 +48,8 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
 
         if (timedOut || cantFetch) {
             // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
-            const description = "Timed out while waiting for receipt."
-            return { status: CreateAccount.Timeout, description, owner, salt }
+            const error = "Timed out while waiting for receipt."
+            return { status: CreateAccount.Timeout, error, owner, salt }
         }
 
         logger.trace("Got receipt for account creation tx", predictedAddress, hash)
@@ -71,9 +71,9 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
             return { status, owner, salt, address }
         }
 
-        const description = "Account creation failed onchain"
-        logger.error(description, owner, salt, receipt)
-        return { status: CreateAccount.Failed, owner, salt, description }
+        const error = "Account creation failed onchain"
+        logger.error(error, owner, salt, receipt)
+        return { status: CreateAccount.Failed, owner, salt, error }
     } catch (error) {
         return { ...outputForGenericError(error), owner, salt }
     }

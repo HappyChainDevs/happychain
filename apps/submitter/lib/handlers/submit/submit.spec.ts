@@ -68,7 +68,7 @@ describe("submitter_submit", () => {
         // Expect rejection due to duplicate nonce
         expect(secondResult.status).toBe(422) // Status 422 is Unprocessable Entity
         expect(secondResponse.status).toBe(SubmitterError.AlreadyProcessing)
-        expect(secondResponse.description).toContain("same account and nonce")
+        expect(secondResponse.error).toContain("same account and nonce")
     })
 
     // biome-ignore format: keep indentation low

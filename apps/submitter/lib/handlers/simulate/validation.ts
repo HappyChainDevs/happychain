@@ -40,7 +40,7 @@ const simulateError = type({
     // Pick this example in particular because we can't select the example for `status` without making
     // the OpenAPI playground display weird (shows all options as named "example") — it will pick
     // the first value in lexicographic order as example, which happens to be Onchain.CallReverted.
-    description: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
+    error: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
 })
 
 export const simulateDescription = describeRoute({

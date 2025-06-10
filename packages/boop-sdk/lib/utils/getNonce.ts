@@ -28,6 +28,6 @@ export async function getNonce(rpcUrl: string, to: `0x${string}`, input: GetNonc
 
         return { ...input, nonceValue, status: GetNonce.Success }
     } catch (error) {
-        return { ...input, status: GetNonce.Error, description: stringify(error) }
+        return { ...input, status: GetNonce.Error, error: stringify(error) }
     }
 }

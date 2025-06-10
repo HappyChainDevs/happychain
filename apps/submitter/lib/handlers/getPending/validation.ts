@@ -28,7 +28,7 @@ const getPendingSuccess = type({
 
 const getPendingError = type({
     status: type.valueOf(SubmitterError),
-    description: type.string.configure({ example: "Failed to retrieve pending boops for the specified account" }),
+    error: type.string.configure({ example: "Failed to retrieve pending boops for the specified account" }),
 })
 
 export const getPendingDescription = describeRoute({

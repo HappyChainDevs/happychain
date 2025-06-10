@@ -28,7 +28,7 @@ const getStateSuccessStatus = type.enumerated(GetState.Receipt, GetState.Simulat
 
 const getStateError = type({
     status: type.valueOf(GetState).exclude(getStateSuccessStatus),
-    description: type.string.configure({ example: "Failed to retrieve boop state" }),
+    error: type.string.configure({ example: "Failed to retrieve boop state" }),
 })
 
 export const getStateDescription = describeRoute({

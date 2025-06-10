@@ -45,7 +45,7 @@ export type SubmitSuccess = {
     entryPoint: Address
 
     revertData?: undefined
-    description?: undefined
+    error?: undefined
 }
 
 // =====================================================================================================================
@@ -70,7 +70,7 @@ export type SubmitError = {
     revertData?: Bytes
 
     /** Description of the problem. */
-    description: string
+    error: string
 
     boopHash?: undefined
     entryPoint?: undefined

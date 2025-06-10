@@ -23,8 +23,8 @@ const executeError = type({
     status: type.valueOf(Execute).exclude(type.unit(Execute.Success)),
     stage: type.enumerated("simulate", "submit", "execute"),
     revertData: Bytes.optional(),
-    // cf. simulateError.description
-    description: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
+    // cf. simulateError.error
+    error: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
 })
 
 export const executeDescription = describeRoute({
