@@ -7,7 +7,7 @@ import { FormField } from "#src/components/primitives/form-field/FormField"
 import { useTurnstile } from "#src/hooks/useTurnstile"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
-import { UserNotFoundWarning } from "./UserNotFoundWarning"
+import { UserNotFoundWarning } from "../home/tabs/views/UserNotFoundWarning"
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY!
 const FAUCET_ENDPOINT = import.meta.env.VITE_FAUCET_ENDPOINT!

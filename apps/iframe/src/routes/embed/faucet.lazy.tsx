@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { FaucetView } from "#src/components/interface/home/tabs/views/Faucet.tsx"
+import { FaucetView } from "#src/components/interface/faucet/Faucet"
 
 export const Route = createLazyFileRoute("/embed/faucet")({
     component: Faucet,
