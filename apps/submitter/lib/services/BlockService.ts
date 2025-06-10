@@ -254,7 +254,7 @@ export class BlockService {
                                     blockLogger.error("Received malformed block data, skipping.")
                                     return
                                 }
-                                // subsciption may not populate the transactions list, so we need to fetch the block
+                                // Subscription may not populate the transactions list, so we need to fetch the block.
                                 const block: Block | null = await this.#getBlock(formattedBlock.number)
                                 if (!block) {
                                     blockLogger.warn(`Block ${formattedBlock.number} not found, skipping.`)
