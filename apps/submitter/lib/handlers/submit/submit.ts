@@ -75,8 +75,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
             // `validatePaymentGasLimit` can be 0 — it is not called for self-paying boops.
             return {
                 status: Onchain.MissingGasValues,
-                error:
-                    "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
+                error: "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
                 stage: "submit",
             }
 
