@@ -36,7 +36,7 @@ export type GetPendingSuccess = {
     status: typeof GetPending.Success
     account: Address
     pending: PendingBoopInfo[]
-    description?: undefined
+    error?: undefined
 }
 
 /** Information about a pending boop. */
@@ -55,7 +55,7 @@ export type PendingBoopInfo = {
 /** A failed `getPending` call. */
 export type GetPendingError = {
     status: SubmitterErrorStatus
-    description: string
+    error: string
     account?: undefined
     pending?: undefined
 }

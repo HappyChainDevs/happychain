@@ -14,10 +14,10 @@ async function getState(input: GetStateInput): Promise<GetStateOutput> {
         const simulation = await simulationCache.get(boopHash)
         if (simulation) return { status: GetState.Simulated, simulation }
         const boop = boopStore.getByHash(boopHash)
-        if (!boop) return { status: GetState.UnknownBoop, description: "Unknown boop." }
+        if (!boop) return { status: GetState.UnknownBoop, error: "Unknown boop." }
         return {
             status: GetState.UnknownState,
-            description: "The boop is known, but there is no receipt or simulation data to serve.",
+            error: "The boop is known, but there is no receipt or simulation data to serve.",
         }
     } catch (error) {
         return outputForGenericError(error)

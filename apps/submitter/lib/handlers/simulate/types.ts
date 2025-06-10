@@ -59,7 +59,7 @@ export type SimulateSuccess = Omit<EntryPointOutput, "revertData"> & {
     feeTooHighDuringSimulation: boolean
 
     revertData?: undefined
-    description?: undefined
+    error?: undefined
 }
 
 // =====================================================================================================================
@@ -92,7 +92,7 @@ export type SimulateError = {
     revertData?: Bytes
 
     /** Description of the problem. */
-    description: string
+    error: string
 }
 
 // =====================================================================================================================

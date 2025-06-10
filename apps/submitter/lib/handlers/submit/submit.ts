@@ -60,7 +60,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
         if (simulation.validityUnknownDuringSimulation || simulation.paymentValidityUnknownDuringSimulation)
             return {
                 status: Onchain.ValidationReverted,
-                description: "More information needed for the boop to pass validation — most likely a signature.",
+                error: "More information needed for the boop to pass validation — most likely a signature.",
                 stage: "submit",
             }
 
@@ -75,7 +75,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
             // `validatePaymentGasLimit` can be 0 — it is not called for self-paying boops.
             return {
                 status: Onchain.MissingGasValues,
-                description:
+                error:
                     "Trying to submit a self-paying boop without specifying all the necessary gas fees and limits.",
                 stage: "submit",
             }
@@ -113,10 +113,10 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
 
                 if (fees.maxFeePerGas > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
                     if (minFee > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
-                        const description =
+                        const error =
                             "The gas price (either supplied by the sender or computed from the network) " +
                             "exceeds the submitter's max price."
-                        return { status: SubmitterError.GasPriceTooHigh, stage: "submit", description }
+                        return { status: SubmitterError.GasPriceTooHigh, stage: "submit", error }
                     }
                     logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", boopHash)
                     fees.maxFeePerGas = minFee
@@ -183,7 +183,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 if ((error as BaseError)?.walk((e) => e instanceof InsufficientFundsError)) {
                     return {
                         status: SubmitterError.UnexpectedError,
-                        description: "Submitter failed to pay for the boop.",
+                        error: "Submitter failed to pay for the boop.",
                         stage: "submit",
                     }
                 }
@@ -201,7 +201,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
 const gasPriceTooLow = {
     status: Onchain.GasPriceTooLow,
     stage: "submit",
-    description: "The network's gas price is higher than the specified maxFeePerGas.",
+    error: "The network's gas price is higher than the specified maxFeePerGas.",
 } as const
 
 function getOriginalBoop_({
@@ -218,7 +218,7 @@ function getOriginalBoop_({
         // biome-ignore format: terse
         return [ undefined, {
             status: SubmitterError.UnexpectedError,
-            description: "Replaced EVM transaction without original boop in cache.",
+            error: "Replaced EVM transaction without original boop in cache.",
             stage: "submit",
         }]
     }
@@ -226,14 +226,14 @@ function getOriginalBoop_({
     if (ogBoop) {
         // The boop is already known but this isn't an internal replacement — the boop was resubmitted by the user.
         // The current behaviour is to always reject in this case.
-        const description = "Already processing a boop with the same hash."
-        return [undefined, { status: SubmitterError.AlreadyProcessing, description, stage: "submit" }]
+        const error = "Already processing a boop with the same hash."
+        return [undefined, { status: SubmitterError.AlreadyProcessing, error, stage: "submit" }]
     }
 
     if (boopStore.hasNonce(boop.account, boop.nonceTrack, boop.nonceValue)) {
         // A different boop with the same account/nonceTrack/nonceValue is already being processed
-        const description = "Already processing a boop with the same account and nonce."
-        return [undefined, { status: SubmitterError.AlreadyProcessing, description, stage: "submit" }]
+        const error = "Already processing a boop with the same account and nonce."
+        return [undefined, { status: SubmitterError.AlreadyProcessing, error, stage: "submit" }]
     }
 
     // This is the first time we see the boop, save it, then return the frozen version from the store.

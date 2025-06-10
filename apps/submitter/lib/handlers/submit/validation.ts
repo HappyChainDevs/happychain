@@ -23,8 +23,8 @@ const submitError = type({
     status: type.valueOf(Submit).exclude(type.unit(Submit.Success)),
     stage: type.enumerated("simulate", "submit"),
     revertData: Bytes.optional(),
-    // cf. simulateError.description
-    description: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
+    // cf. simulateError.error
+    error: type.string.configure({ example: "The call made by the account's `execute` function reverted." }),
 })
 
 export const submitDescription = describeRoute({

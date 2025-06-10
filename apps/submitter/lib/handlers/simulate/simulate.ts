@@ -85,7 +85,7 @@ async function simulate(
             if (balance < cost)
                 return {
                     status: Onchain.PayoutFailed,
-                    description: "Not enough funds to pay for a self-paying boop.",
+                    error: "Not enough funds to pay for a self-paying boop.",
                 }
         }
 
@@ -105,8 +105,8 @@ async function simulate(
     }
 }
 
-function outputForInvalidGasValue(description: string): SimulateOutput {
-    return { status: SubmitterError.InvalidValues, description }
+function outputForInvalidGasValue(error: string): SimulateOutput {
+    return { status: SubmitterError.InvalidValues, error }
 }
 
 /**

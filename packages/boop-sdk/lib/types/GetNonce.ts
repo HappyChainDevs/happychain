@@ -21,5 +21,5 @@ export type GetNonceSuccess = GetNonceInput & {
 
 export type GetNonceError = GetNonceInput & {
     status: typeof GetNonce.Error
-    description: string
+    error: string
 }

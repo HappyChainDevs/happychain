@@ -34,7 +34,7 @@ export class DatabaseService {
             if (!storedBoop || !storedReceipt) return
             const { entryPoint, boopHash: _, ...boop } = storedBoop
             const { logs, ...receipt } = storedReceipt
-            return { ...receipt, boop, entryPoint, logs: JSON.parse(logs, bigIntReviver) }
+            return { ...receipt, error: receipt.description, boop, entryPoint, logs: JSON.parse(logs, bigIntReviver) }
         } catch (error) {
             databaseErrorsCounter.add(1, { operation: "findReceipt" })
             logger.error("Error while looking up receipt", boopHash, error)

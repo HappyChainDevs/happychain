@@ -32,7 +32,7 @@ export const SBoopReceipt = type({
     boopHash: Hash,
     boop: SBoop,
     status: type.valueOf(Onchain).configure({ example: Onchain.Success }),
-    description: type("string").configure({ example: "Boop executed successfully." }),
+    error: type("string").configure({ example: "Boop executed successfully." }),
     entryPoint: Address,
     logs: SBoopLog.array(),
     revertData: Bytes,

@@ -150,7 +150,7 @@ export class BoopNonceManager {
                 description = "Boop was submitted onchain by another submitter or entity."
                 break
         }
-        return { status, description, stage: "submit" }
+        return { status, error: description, stage: "submit" }
     }
 
     /**

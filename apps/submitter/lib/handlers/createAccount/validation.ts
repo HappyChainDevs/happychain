@@ -29,7 +29,7 @@ const createAccountError = type({
     owner: Address,
     salt: Bytes32.configure({ example: "0x42" }),
     status: type.valueOf(CreateAccount).exclude(successStatus),
-    description: type.string.configure({ example: "Account creation failed onchain" }),
+    error: type.string.configure({ example: "Account creation failed onchain" }),
 })
 
 export const createAccountDescription = describeRoute({
