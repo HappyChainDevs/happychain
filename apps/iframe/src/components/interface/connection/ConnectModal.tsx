@@ -3,20 +3,29 @@ import type { ConnectionProvider, MsgsFromApp } from "@happy.tech/wallet-common"
 import { Msgs, WalletDisplayAction } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { Button } from "#src/components/primitives/button/Button"
 import { FirebaseErrorCode, isFirebaseError } from "#src/connections/firebase/errors"
+import { useConnectionProviders } from "#src/connections/initialize"
+import { useAbortController } from "#src/hooks/useAbortController"
+import { appMessageBus } from "#src/services/eventBus"
 import { walletID } from "#src/utils/appURL"
-import { patchTimeoutOff, signalClosed } from "#src/utils/walletState"
-import { useConnectionProviders } from "../connections/initialize"
-import { appMessageBus } from "../services/eventBus"
-import { DotLinearMotionBlurLoader } from "./loaders/DotLinearMotionBlurLoader"
-import { Button } from "./primitives/button/Button"
+import { patchTimeoutOff } from "#src/utils/walletState"
+import {
+    CloseButton,
+    ConnectErrors,
+    ErrorDisplay,
+    PendingProvider,
+    isBusyProviderError,
+    isCreateAccountError,
+    isUserRejectedRequestError,
+} from "./errors"
 
 export function ConnectModal() {
     return (
-        <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col items-center justify-center">
+        <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col items-center justify-start">
             <div className="max-w-xs grid grid-rows-[auto_1fr] gap-6 px-2 p-4 w-full">
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center mt-12">
                     <div className="flex flex-col items-center gap-2">
                         <img
                             alt="HappyChain Logo"
@@ -26,7 +35,7 @@ export function ConnectModal() {
                         <p className="text-xl font-bold">HappyChain</p>
                     </div>
                 </div>
-                <div className="grid min-h-0 max-h-[335px] gap-4">
+                <div className="grid min-h-0 max-h-[335px] h-full gap-4">
                     <ConnectContent />
                 </div>
             </div>
@@ -69,13 +78,11 @@ function useClientConnectionRequest() {
 }
 
 const ConnectContent = () => {
-    const [popupBlocked, setPopupBlocked] = useState(false)
     const { clientConnectionRequest, clearClientConnectionRequest } = useClientConnectionRequest()
-    const abortRef = useRef(new AbortController())
-    const abort = abortRef.current
+    const abort = useAbortController()
 
     const mutationLogin = useMutation({
-        mutationFn: async (provider: ConnectionProvider) => {
+        async mutationFn(provider: ConnectionProvider) {
             // if no dapp-request exists here, we will initiate a new one
             const connectRequest = clientConnectionRequest ?? {
                 key: createUUID(),
@@ -83,28 +90,34 @@ const ConnectContent = () => {
                 error: null,
                 payload: { method: "eth_requestAccounts" },
             }
-            const { response, request } = await provider.connect(connectRequest)
+            const { response, request } = await provider.connect(connectRequest, abort.signal)
             return clientConnectionRequest ? { response, request } : undefined
         },
-        onSettled(response, _error) {
+        onError(error) {
             // User pressed "Cancel", ignore result.
             // This captures the abort controller in use when the mutation is created.
             if (abort.signal.aborted) return
 
             // popup was blocked
-            if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) return setPopupBlocked(true)
-
-            setPopupBlocked(false)
+            if (isFirebaseError(error, FirebaseErrorCode.PopupBlocked)) return
 
             // Remove timeout patch for next time in-case this is what caused the error
-            if (_error) patchTimeoutOff()
+            if (error) patchTimeoutOff()
 
             // user just closed the popup without connecting
             // Don't need to log the error
-            if (_error && isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) return
+            if (isUserRejectedRequestError(error)) return
+
+            // Failed to create happy account
+            if (isCreateAccountError(error)) return
 
             // unknown error, just log it.
-            if (_error) return console.error(_error)
+            if (error) return console.error(error)
+        },
+        onSuccess(response) {
+            // User pressed "Cancel", ignore result.
+            // This captures the abort controller in use when the mutation is created.
+            if (abort.signal.aborted) return
 
             // iframe-originated requests won't need any response to be emitted
             if (!response) return
@@ -115,37 +128,26 @@ const ConnectContent = () => {
     })
 
     const reset = () => {
+        abort.reset()
         mutationLogin.reset()
-        abortRef.current = new AbortController()
     }
 
-    const cancel = () => {
-        abort.abort()
-        reset()
+    if (mutationLogin.isError && isFirebaseError(mutationLogin.error, FirebaseErrorCode.PopupBlocked)) {
+        return <ErrorDisplay error={ConnectErrors.PopupBlocked} onAccept={reset} />
     }
-
-    if (popupBlocked || mutationLogin.isError)
-        return (
-            <div className="overflow-y-auto scrollbar-thin">
-                <ErrorDisplay
-                    popupBlocked={popupBlocked}
-                    onAccept={() => {
-                        setPopupBlocked(false)
-                        reset()
-                    }}
-                />
-            </div>
-        )
-
-    return mutationLogin.isPending ? (
-        <>
-            <div className="overflow-y-auto scrollbar-thin">
-                <LoginPending provider={mutationLogin.variables} />
-            </div>
-            <CloseButton />
-            <CancelButton cancel={cancel} />
-        </>
-    ) : (
+    if (mutationLogin.isError && isCreateAccountError(mutationLogin.error)) {
+        return <ErrorDisplay error={ConnectErrors.CreateAccountFailed} onAccept={reset} />
+    }
+    if (mutationLogin.isError && isBusyProviderError(mutationLogin.error)) {
+        return <ErrorDisplay error={ConnectErrors.ConnectionProviderBusy} onAccept={reset} />
+    }
+    if (mutationLogin.isError && !isUserRejectedRequestError(mutationLogin.error)) {
+        return <ErrorDisplay error={undefined} onAccept={reset} />
+    }
+    if (mutationLogin.isPending) {
+        return <PendingProvider provider={mutationLogin.variables} onCancel={reset} />
+    }
+    return (
         <>
             <div className="overflow-y-auto scrollbar-thin">
                 <ProviderList onSelect={mutationLogin.mutate} />
@@ -155,38 +157,7 @@ const ConnectContent = () => {
     )
 }
 
-const CloseButton = () => (
-    <Button intent="ghost" type="button" className="h-fit justify-center" onClick={signalClosed}>
-        Close
-    </Button>
-)
-
-const CancelButton = ({ cancel }: { cancel: () => void }) => (
-    <Button intent="outline-negative" type="button" className="h-fit justify-center" onClick={cancel}>
-        Cancel
-    </Button>
-)
-
-const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
-    return (
-        <div className="grid gap-8">
-            <div className="flex items-center justify-center gap-4">
-                <img alt="HappyChain Logo" src="/images/happychainLogoSimple.png" className="h-10" />
-                <DotLinearMotionBlurLoader />
-                <img
-                    className={cx("h-8", provider?.id === "injected:wallet.injected" && "dark:invert")}
-                    src={provider?.icon}
-                    alt={`${provider?.name} icon`}
-                />
-            </div>
-            <div className="text-center flex items-center justify-center">
-                Verify your {provider?.name} account to continue with HappyChain.
-            </div>
-        </div>
-    )
-}
-
-const ProviderList = ({ onSelect }: { onSelect: (provider: ConnectionProvider) => void }) => {
+function ProviderList({ onSelect }: { onSelect: (provider: ConnectionProvider) => void }) {
     const providers = useConnectionProviders()
 
     return (
@@ -206,43 +177,6 @@ const ProviderList = ({ onSelect }: { onSelect: (provider: ConnectionProvider) =
                     </Button>
                 )
             })}
-        </div>
-    )
-}
-
-const ErrorDisplay = ({ popupBlocked, onAccept }: { popupBlocked: boolean; onAccept: () => void }) => {
-    return (
-        <>
-            {popupBlocked ? <PopupBlockedWarning /> : <GenericConnectionWarning />}
-            <div className="flex items-center justify-center mt-4 ">
-                <Button intent="secondary" type="button" className="w-full h-fit justify-center" onClick={onAccept}>
-                    Ok
-                </Button>
-            </div>
-        </>
-    )
-}
-
-const PopupBlockedWarning = () => {
-    return (
-        <div
-            role="alert"
-            className="animate-fadeIn space-y-[1ex] text-content border-warning border rounded-lg py-[2ex] px-[1em] text-xs text-center"
-        >
-            <p>The popup was blocked.</p>
-            <p>Please enable popups to sign in and try again.</p>
-        </div>
-    )
-}
-
-const GenericConnectionWarning = () => {
-    return (
-        <div
-            role="alert"
-            className="animate-fadeIn space-y-[1ex] text-content border-warning border rounded-lg py-[2ex] px-[1em] text-xs text-center"
-        >
-            <p>Unable to set up your account and complete login.</p>
-            <p>Please check your connection and try signing in again.</p>
         </div>
     )
 }

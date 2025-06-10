@@ -82,8 +82,12 @@ export class InjectedConnector implements ConnectionProvider {
         await setUserWithProvider(undefined, undefined)
     }
 
-    public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
+    public async connect(
+        req: MsgsFromApp[Msgs.ConnectRequest],
+        signal: AbortSignal,
+    ): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
+        if (signal.aborted) throw new Error("Connection aborted by user")
         this.setProvider()
         await this.onConnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
         return { request, response }

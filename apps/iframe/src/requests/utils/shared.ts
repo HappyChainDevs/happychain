@@ -17,7 +17,7 @@ import { boopCache } from "#src/requests/utils/boopCache"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { getBoopClient } from "#src/state/boopClient"
-import { getPublicClient } from "#src/state/publicClient.ts"
+import { getPublicClient } from "#src/state/publicClient"
 import { reqLogger } from "#src/utils/logger"
 
 export const FORWARD = Symbol("FORWARD")

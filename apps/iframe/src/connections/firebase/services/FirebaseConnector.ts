@@ -1,4 +1,4 @@
-import { type Address, retry } from "@happy.tech/common"
+import { type Address, type RejectType, type ResolveType, retry, waitForValue } from "@happy.tech/common"
 import {
     type ConnectionProvider,
     type HappyUser,
@@ -17,20 +17,43 @@ import {
 } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { getBoopAccountAddress } from "#src/connections/boopAccount"
+import { StorageKey, storage } from "#src/services/storage"
 import { getPermissions } from "#src/state/permissions"
+import { getUser } from "#src/state/user"
 import { getAppURL } from "#src/utils/appURL"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
-import {
-    getFirebaseAuthState,
-    getFirebaseSharedUser,
-    setFirebaseAuthState,
-    setFirebaseSharedUser,
-} from "../workers/firebase.sw"
-import { FirebaseAuthState } from "../workers/firebase/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
-type HappyUserDetails = Omit<HappyUser, "address" | "controllingAddress">
+export enum FirebaseAuthState {
+    Disconnected = "disconnected",
+    Disconnecting = "disconnecting",
+    Connected = "connected",
+    Connecting = "connecting",
+}
+
+// Store in local storage to share current auth state progress across tabs
+function getFirebaseAuthState() {
+    return localStorage.getItem("firebase-cache") as FirebaseAuthState | undefined
+}
+
+function setFirebaseAuthState(val: FirebaseAuthState) {
+    return localStorage.setItem("firebase-cache", val)
+}
+
+export class ConnectionProviderBusyError extends Error {
+    constructor(message = "Connection Provider Is Busy") {
+        super(message)
+        this.name = "ConnectionProviderBusyError"
+    }
+}
+
+export class ConnectionAbortedError extends Error {
+    constructor(message = "Connection Aborted") {
+        super(message)
+        this.name = "ConnectionAbortedError"
+    }
+}
 
 export abstract class FirebaseConnector implements ConnectionProvider {
     public readonly type: string
@@ -61,103 +84,141 @@ export abstract class FirebaseConnector implements ConnectionProvider {
      */
     #userInitiatedAction = false
 
-    public async connect(request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
+    public async connect(
+        request: MsgsFromApp[Msgs.ConnectRequest],
+        signal: AbortSignal,
+    ): Promise<MsgsFromWallet[Msgs.ConnectResponse]> {
+        const { promise, reject, resolve } = Promise.withResolvers<MsgsFromWallet[Msgs.ConnectResponse]>()
+        queueMicrotask(() => this.#connectAsync(request, signal, { resolve, reject }))
+        return promise
+    }
+
+    async #connectAsync(
+        request: MsgsFromApp[Msgs.ConnectRequest],
+        signal: AbortSignal,
+        { resolve, reject }: { resolve: ResolveType<MsgsFromWallet[Msgs.ConnectResponse]>; reject: RejectType },
+    ) {
         // If we are already connecting/connected, don't attempt to connect again
-        const prev = await getFirebaseAuthState()
-        if (prev !== FirebaseAuthState.Disconnected) throw new Error("Already Connecting Elsewhere")
+        const authState = getFirebaseAuthState()
+        if (authState !== FirebaseAuthState.Disconnected) reject(new ConnectionProviderBusyError())
 
         this.#userInitiatedAction = true
 
         // Set shared firebase auth state for other tabs to be aware
-        await setFirebaseAuthState(FirebaseAuthState.Connecting)
+        setFirebaseAuthState(FirebaseAuthState.Connecting)
+
+        // need to handle here with listeners so we can abort mid-async call, such as with
+        // signInWithPopup, when we have no access to cancel it due to it being managed by firebase sdk
+        // This will restore our wallet to 'new' state, and a subsequent connection attempt is unblocked
+        // in the case of signInWithPopup with a 2nd attempt while the popup is still open, the old popup
+        // will be closed and the new one will open automatically
+        const handleAbort = async () => {
+            setFirebaseAuthState(FirebaseAuthState.Disconnected)
+            await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
+            await this.onDisconnect()
+            reject(new ConnectionAbortedError())
+        }
+
         try {
+            // listen for abort signal, and handle it by restoring the wallet to its initial state
+            // this will also remove the firebase auth state from localStorage and disconnect
+            // web3auth if available.
+            signal.addEventListener("abort", handleAbort, { once: true })
+
             const userCredential = await signInWithPopup(
                 firebaseAuth,
                 this.getAuthProvider(),
                 browserPopupRedirectResolver,
             )
-            const token = await this.#fetchFirebaseTokenForUser(userCredential.user)
-            const happyUser = await this.connectWithWeb3Auth(
-                FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
-                token,
-            )
-            if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
-            await setFirebaseAuthState(FirebaseAuthState.Connected)
+            // if the signal is aborted, we have already returned the wallet to its starting state,
+            // and are ready to accept a new connection attempt, however if the signInWithPopup
+            // modal was _also_ successful, we will now need to (again) manually sign out of firebase
+            // and clear its storage cache to avoid reconnecting on the next refresh automatically
+            if (signal.aborted) throw new ConnectionAbortedError()
+
+            const happyUser = await this.#connectFirebaseUserToWeb3Auth(userCredential.user)
+
+            // See explanation for signal.aborted check after signInWithPopup
+            if (signal.aborted) throw new ConnectionAbortedError()
+
+            setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
-            return {
+
+            return resolve({
                 request,
                 response:
                     request.payload.method === "eth_requestAccounts"
                         ? [happyUser.address]
                         : getPermissions(getAppURL(), "eth_accounts"),
-            }
+            })
         } catch (e) {
-            await setFirebaseAuthState(FirebaseAuthState.Disconnected)
-            throw e
+            setFirebaseAuthState(FirebaseAuthState.Disconnected)
+            await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
+            await this.onDisconnect()
+            return reject(e)
         } finally {
             // Reset the user initiated action flag regardless of success or failure
             this.#userInitiatedAction = false
+            signal.removeEventListener("abort", handleAbort)
         }
     }
 
     public async disconnect(): Promise<undefined> {
         try {
             this.#userInitiatedAction = true
-            await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
-            // just do our best, it may fail
+            setFirebaseAuthState(FirebaseAuthState.Disconnecting)
+            // just do our best to cancel all third parties, it may fail if they are already signed out for example
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect()
-            await setFirebaseAuthState(FirebaseAuthState.Disconnected)
-        } catch (e) {
-            console.warn(e)
-            const next = (await isWeb3AuthConnected()) ? FirebaseAuthState.Connected : FirebaseAuthState.Disconnected
-            await setFirebaseAuthState(next)
         } finally {
             // Reset the user initiated action flag regardless of success or failure
+            setFirebaseAuthState(FirebaseAuthState.Disconnected)
             this.#userInitiatedAction = false
         }
     }
 
-    private static makeHappyUserPartial(user: FirebaseAuthUser, id: string) {
-        return {
+    async #connectFirebaseUserToWeb3Auth(user: FirebaseAuthUser, signal?: AbortSignal) {
+        // (force) refetch fresh Firebase JWT - by default firebase will re-use the token if its still
+        // valid, however web3auth throws an error if the token has been used before.
+        const idToken = await user.getIdTokenResult(true)
+        if (!idToken.claims.sub) throw new Error("No verified ID")
+        if (signal?.aborted) throw new ConnectionAbortedError()
+        // Connect to web3Auth using the JWT token
+        const addresses = await this.#web3ConnectWithRetry({
+            verifier: import.meta.env.VITE_WEB3AUTH_VERIFIER,
+            verifierId: idToken.claims.sub,
+            idToken: idToken.token,
+        } satisfies JWTLoginParams)
+        if (signal?.aborted) throw new ConnectionAbortedError()
+        // Create or find the HappyAccount for the user
+        const happyAccountAddress = await this.#getBoopAccountAddressWithRetry(addresses[0])
+        if (signal?.aborted) throw new ConnectionAbortedError()
+        const happyUser = {
             // connection type
-            provider: id,
+            provider: this.id,
             type: WalletType.Social,
 
-            // social details
+            // firebase auth social details
             avatar: user.photoURL || "",
             email: user.email || "",
             ens: "", // filled in later, async, using a jotai atom subscription
             name: user.displayName || "",
             uid: user.uid,
-        } satisfies HappyUserDetails
-    }
 
-    private static makeHappyUser(user: HappyUserDetails, addresses: Address[], smartAccountAddress: Address) {
-        return {
-            ...user,
             // web3 details
-            address: smartAccountAddress || addresses[0],
+            address: happyAccountAddress || addresses[0],
             controllingAddress: addresses[0],
-        }
+        } satisfies HappyUser
+
+        return happyUser
     }
 
-    private async connectWithWeb3Auth(
-        partialUser: ReturnType<typeof FirebaseConnector.makeHappyUserPartial>,
-        token: JWTLoginParams,
-    ) {
-        const addresses = await this.#web3ConnectWithRetry(token)
-        if (!addresses || addresses.length === 0) return await this.disconnect()
-
-        const happyAccountAddress = await this.#getBoopAccountAddressWithRetry(addresses[0])
-        if (!happyAccountAddress) return await this.disconnect()
-
-        const user = FirebaseConnector.makeHappyUser(partialUser, addresses, happyAccountAddress)
-        await setFirebaseSharedUser(user)
-        return user
-    }
-
-    async #getBoopAccountAddressWithRetry(address: Address): Promise<Address | undefined> {
+    /**
+     * Attempts to get the Boop account address for the given user address,
+     * retrying up to 3 times with a 3 second wait between attempts.
+     * If it fails, it will log a warning and throw an error.
+     */
+    async #getBoopAccountAddressWithRetry(address: Address): Promise<Address> {
         const maxRetries = 3
         const waitTime = 3_000
         try {
@@ -172,10 +233,15 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             return boopAccount
         } catch (e) {
             console.warn("Failed to get Boop account address", e)
+            throw e
         }
     }
 
-    async #web3ConnectWithRetry(token: JWTLoginParams): Promise<Address[] | undefined> {
+    /**
+     * Attempts to log in with web3 auth, retrying up to 3 times with a 3 second wait between attempts.
+     * If it fails, it will log a warning and throw an error.
+     */
+    async #web3ConnectWithRetry(token: JWTLoginParams): Promise<[Address, ...Address[]]> {
         const maxRetries = 3
         const waitTime = 3_000
 
@@ -187,22 +253,12 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 (attempt, error) =>
                     console.warn(`Failed to connect to web3Auth, Retrying ${attempt}/${maxRetries}`, error),
             )
-            if (!addresses || addresses.length === 0) throw new Error("No addresses returned from web3Auth")
-            return addresses
+            if (!addresses?.length) throw new Error("No addresses returned from web3Auth")
+            return addresses as [Address, ...Address[]]
         } catch (e) {
             console.warn("Failed to connect to web3Auth after retries", e)
+            throw e
         }
-    }
-
-    async #fetchFirebaseTokenForUser(user: FirebaseAuthUser) {
-        const token = await user.getIdTokenResult(true)
-        if (!token.claims.sub) throw new Error("No verified ID")
-
-        return {
-            verifier: import.meta.env.VITE_WEB3AUTH_VERIFIER,
-            verifierId: token.claims.sub,
-            idToken: token.token,
-        } satisfies JWTLoginParams
     }
 
     private listenForAuthChange() {
@@ -213,31 +269,53 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             // without interfering with the user initiated action.
             if (this.#userInitiatedAction) return
 
-            if (!_user) return await this.disconnect()
+            const authState = getFirebaseAuthState()
 
-            // web3auth doesn't need this call as calling connect() multiple times simply returns
-            // the current user if they are already logged in, however each firebase JWT can be used
-            // only once, so if a user is not connected already, we must refresh the JWT with
-            // firebase prior to a connection.
-            if (await isWeb3AuthConnected()) {
-                const user = await getFirebaseSharedUser()
-                if (user) {
-                    await this.onReconnect(user, web3AuthEIP1193Provider)
-                    return
+            if (_user) {
+                // new user logged in, or re-connected
+                switch (authState) {
+                    case FirebaseAuthState.Disconnecting:
+                    case FirebaseAuthState.Disconnected: {
+                        // ignore
+                        return
+                    }
+                    case FirebaseAuthState.Connecting:
+                    case FirebaseAuthState.Connected: {
+                        const firebaseCachedUser = await waitForValue(
+                            () => getUser() ?? storage.get(StorageKey.HappyUser),
+                            30_000, // runs in background, 30 seconds should be more than enough time to check login
+                            250,
+                        )
+                        if (!firebaseCachedUser) return
+
+                        if (await isWeb3AuthConnected()) {
+                            await this.onReconnect(firebaseCachedUser, web3AuthEIP1193Provider)
+                            return
+                        } else {
+                            const happyUser = await this.#connectFirebaseUserToWeb3Auth(_user)
+                            await this.onReconnect(happyUser, web3AuthEIP1193Provider)
+                            return
+                        }
+                    }
                 }
-                // allow fall through to refresh JWT and log in again
-                console.warn("failed to reconnect to network")
-            }
-            const token = await this.#fetchFirebaseTokenForUser(_user)
-            const happyUser = await this.connectWithWeb3Auth(
-                FirebaseConnector.makeHappyUserPartial(_user, this.id),
-                token,
-            )
-
-            if (happyUser) {
-                await this.onReconnect(happyUser, web3AuthEIP1193Provider)
             } else {
-                console.warn("failed to re-connect")
+                // user absent, disconnect, or not yet loaded. Sometimes on page load, during reconnect
+                // this will be falsely null
+                switch (authState) {
+                    case FirebaseAuthState.Connecting:
+                    case FirebaseAuthState.Connected: {
+                        // no user, but we are trying to connect. just ignore this event
+                        // later if the connection is successful and the full user is resolved,
+                        // we will handle that
+                        return
+                    }
+                    case FirebaseAuthState.Disconnecting:
+                    case FirebaseAuthState.Disconnected: {
+                        // already disconnected, or disconnecting
+                        await this.disconnect()
+                        return
+                    }
+                }
             }
         })
     }

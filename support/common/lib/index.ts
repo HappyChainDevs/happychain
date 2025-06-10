@@ -101,7 +101,14 @@ export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBi
 export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
 export { Mutex } from "./utils/mutex"
 export { getProp, hasDefinedKey, hasKey, hasOwnKey, ifDef, isEmpty } from "./utils/objects"
-export { promiseWithResolvers, delayed, waitForCondition, type NotPromise, type MaybePromise } from "./utils/promises"
+export {
+    promiseWithResolvers,
+    delayed,
+    waitForCondition,
+    waitForValue,
+    type NotPromise,
+    type MaybePromise,
+} from "./utils/promises"
 export type {
     Awaitable,
     PromiseWithResolvers,

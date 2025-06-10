@@ -10,6 +10,9 @@ export interface ConnectionProvider {
     name: string
     icon: string
     type: string
-    connect: (request: MsgsFromApp[Msgs.ConnectRequest]) => Promise<MsgsFromWallet[Msgs.ConnectResponse]>
+    connect: (
+        request: MsgsFromApp[Msgs.ConnectRequest],
+        signal: AbortSignal,
+    ) => Promise<MsgsFromWallet[Msgs.ConnectResponse]>
     disconnect: () => Promise<void>
 }

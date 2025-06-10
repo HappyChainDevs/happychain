@@ -4,7 +4,7 @@ import { createBigIntStorage } from "@happy.tech/common"
 import { atom, getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { StorageKey } from "#src/services/storage"
-import { logger } from "#src/utils/logger.ts"
+import { logger } from "#src/utils/logger"
 import { userAtom } from "./user"
 
 // === Atom ============================================================================================================
