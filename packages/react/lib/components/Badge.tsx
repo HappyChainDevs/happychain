@@ -1,10 +1,10 @@
-import type { BadgeProps } from "@happy.tech/core"
-export type { BadgeProps }
+import type { ConnectButtonProps } from "@happy.tech/core"
+export type { ConnectButtonProps }
 declare module "react" {
     // biome-ignore lint/style/noNamespace:
     namespace JSX {
         interface IntrinsicElements {
-            "happychain-connect-button": BadgeProps
+            "happychain-connect-button": ConnectButtonProps
         }
     }
 }
@@ -13,6 +13,6 @@ declare module "react" {
  * Simple wrapper to create a react component from the native web component
  */
 
-export function ConnectButton({ disableStyles }: BadgeProps) {
+export function ConnectButton({ disableStyles }: ConnectButtonProps) {
     return <happychain-connect-button disable-styles={disableStyles} />
 }

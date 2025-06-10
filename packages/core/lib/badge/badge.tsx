@@ -7,9 +7,9 @@ import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
 import { useConnection } from "./useConnection"
 
-export type BadgeProps = { disableStyles?: boolean | string }
+export type ConnectButtonProps = { disableStyles?: boolean | string }
 
-export function Badge({ disableStyles = false }: BadgeProps) {
+export function Badge({ disableStyles = false }: ConnectButtonProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
 
     const { connecting, connect, open } = useConnection()
