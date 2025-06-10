@@ -141,7 +141,6 @@ export async function eth_estimateGas(
     // This handles both legacy and EIP-1559 transactions.
     const boop = await boopFromTransaction(account, tx)
     const output = await boopClient.simulate({ entryPoint, boop })
-    if (output.status !== Onchain.Success)
-        throw new EIP1474InternalError(`Gas estimation failed: ${output.error}`)
+    if (output.status !== Onchain.Success) throw new EIP1474InternalError(`Gas estimation failed: ${output.error}`)
     return toHex(output.executeGas)
 }
