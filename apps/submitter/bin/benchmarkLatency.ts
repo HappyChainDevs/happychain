@@ -12,7 +12,7 @@ async function run({
 }: { eoa?: PrivateKeyAccount; numBoops?: number } = {}) {
     const boopClient = new BoopClient({
         rpcUrl: process.env.RPC_HTTP_URLS?.split(",").map((a) => a.trim())[0],
-        baseUrl: process.env.SUBMITTER_URL,
+        submitterUrl: process.env.SUBMITTER_URL,
     })
 
     // Step 1: Create account (this remains serial)

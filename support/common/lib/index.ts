@@ -84,6 +84,7 @@ export { isHttpString } from "./utils/types"
 
 export { isAddress } from "./utils/address"
 export { array, uniques, last } from "./utils/arrays"
+export { type AssertionError, assertDef, assertType } from "./utils/assertions"
 export { With } from "./utils/classes"
 export { HappyMethodNames, TransactionType } from "./utils/constants"
 export { nowInSeconds } from "./utils/date"

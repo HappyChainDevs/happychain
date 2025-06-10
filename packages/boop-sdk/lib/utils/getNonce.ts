@@ -4,11 +4,11 @@ import { GetNonce, type GetNonceInput, type GetNonceOutput } from "../types/GetN
 // "nonceValues(address,uint192)(uint64)"
 const nonceValuesSelector = "0xe631c8f2"
 
-export async function getNonce(baseUrl: string, to: `0x${string}`, input: GetNonceInput): Promise<GetNonceOutput> {
+export async function getNonce(rpcUrl: string, to: `0x${string}`, input: GetNonceInput): Promise<GetNonceOutput> {
     try {
         const addressData = input.address.replace(/^0x/, "").toLowerCase().padStart(64, "0")
         const nonceTrackData = input.nonceTrack.toString(16).padStart(64, "0")
-        const nonceValue = await fetch(baseUrl, {
+        const nonceValue = await fetch(rpcUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

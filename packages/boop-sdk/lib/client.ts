@@ -1,4 +1,4 @@
-import { type Address, serializeBigInt } from "@happy.tech/common"
+import { type Address, type Hash, type Hex, serializeBigInt } from "@happy.tech/common"
 import {
     type Boop,
     type BoopReceipt,
@@ -20,6 +20,9 @@ import {
     type SimulateOutput as SubmitterSimulateOutput,
     type WaitForReceiptInput,
     type WaitForReceiptOutput,
+    computeBoopHash,
+    decodeBoop,
+    encodeBoop,
 } from "@happy.tech/submitter/client"
 import { env } from "./env"
 import type { GetNonceInput, GetNonceOutput } from "./types/GetNonce"
@@ -27,7 +30,7 @@ import { ApiClient } from "./utils/apiClient"
 import { getNonce } from "./utils/getNonce"
 
 export type BoopClientConfig = {
-    baseUrl: string
+    submitterUrl: string
     rpcUrl: string
     entryPoint: Address
 }
@@ -38,12 +41,12 @@ export class BoopClient {
 
     constructor(config?: Partial<BoopClientConfig>) {
         this.#config = this.#applyDefaults(config)
-        this.#client = new ApiClient({ baseUrl: this.#config.baseUrl })
+        this.#client = new ApiClient({ submitterUrl: this.#config.submitterUrl })
     }
 
     #applyDefaults(config?: Partial<BoopClientConfig>): BoopClientConfig {
         return {
-            baseUrl: config?.baseUrl ?? env.SUBMITTER_URL,
+            submitterUrl: config?.submitterUrl ?? env.SUBMITTER_URL,
             rpcUrl: config?.rpcUrl ?? env.RPC_URL,
             entryPoint: config?.entryPoint ?? env.ENTRYPOINT,
         }
@@ -176,6 +179,21 @@ export class BoopClient {
     async getPending({ account }: GetPendingInput): Promise<GetPendingOutput> {
         const response = await this.#client.get(`/api/v1/boop/pending/${account}`)
         return this.#getPendingOutput(response)
+    }
+
+    /** {@inheritDoc encodeBoop} */
+    encode(boop: Boop): Hex {
+        return encodeBoop(boop)
+    }
+
+    /** {@inheritDoc decodeBoop} */
+    decode(boop: Hex): Boop {
+        return decodeBoop(boop)
+    }
+
+    /** {@inheritDoc computeBoopHash} */
+    computeBoopHash(chainId: number, boop: Boop): Hash {
+        return computeBoopHash(chainId, boop)
     }
 
     // == Formatting Utils =========================================================================

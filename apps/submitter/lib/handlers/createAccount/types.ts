@@ -1,4 +1,4 @@
-import type { Address, Hex, Prettify } from "@happy.tech/common"
+import type { Address, Hex } from "@happy.tech/common"
 import { SubmitterError } from "#lib/types"
 
 // =====================================================================================================================
@@ -9,7 +9,7 @@ export type CreateAccountInput = {
     /** User EOA address */
     owner: Address
     /** Salt for the account creation — no greater than 32 bytes. */
-    salt: Hex
+    salt?: Hex
 }
 
 // =====================================================================================================================
@@ -45,26 +45,30 @@ export type CreateAccountOutput = CreateAccountSuccess | CreateAccountError
 // OUTPUT (SUCCESS)
 
 /** Successful account creation (or creation previously successful). */
-export type CreateAccountSuccess = Prettify<
-    CreateAccountInput & {
-        status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
-        /** The address of the account. */
-        address: Address
-        description?: undefined
-    }
->
+export type CreateAccountSuccess = {
+    status: typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated
+    /** User EOA address */
+    owner: Address
+    /** Salt for the account creation — no greater than 32 bytes. */
+    salt: Hex
+    /** The address of the account. */
+    address: Address
+    description?: undefined
+}
 
 // =====================================================================================================================
 // OUTPUT (ERROR)
 
 /** Failed account creation. */
-export type CreateAccountError = Prettify<
-    CreateAccountInput & {
-        status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
-        /** Description of the problem. */
-        description: string
-        address?: undefined
-    }
->
+export type CreateAccountError = {
+    status: Exclude<CreateAccountStatus, typeof CreateAccount.Success | typeof CreateAccount.AlreadyCreated>
+    /** User EOA address */
+    owner: Address
+    /** Salt for the account creation — no greater than 32 bytes. */
+    salt: Hex
+    /** Description of the problem. */
+    description: string
+    address?: undefined
+}
 
 // =====================================================================================================================

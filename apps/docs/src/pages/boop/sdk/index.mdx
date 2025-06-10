@@ -1,12 +1,14 @@
+---
+layout: doc
+showOutline: true
+---
+
 # Boop SDK
 
-The **Boop SDK** is a TypeScript library for interaction with the Boop account abstraction stack.
+The **Boop SDK** is a TypeScript library for interaction with the [Boop account abstraction stack](/boop).
 
-Boop is an account abstraction stack built for speed, efficiency, and simplicity.
-It's an alternative to the ERC-4337 spec, optimized for low-latency end-to-end transaction processing.
-
-While it thrives on HappyChain, it's fully chain-agnostic and ready to plug into any EVM-compatible
-network where the Boop Contracts are deployed.
+It provides easy type-safe access to the Boop Submitter's [REST API](/boop/rest) as well as useful functions when
+working with boops.
 
 ## Installation
 
@@ -32,14 +34,19 @@ bun add @happy.tech/boop-sdk
 
 :::
 
-## Usage
+## Example
 
-Here's an example that shows you how to create an account and send a transaction using the SDK.
+Here's an example that shows you how to create an account and send a
+transaction using the SDK. Refer to the [API reference](/boop/sdk/api) for more details.
 
 We use the [viem](https://viem.sh) library to provide auxiliary functions.
 
-```
-import { BoopClient, Success } from "@happy.tech/boop-sdk"
+```ts twoslash
+// NOTE: The types work in Typescript, but twoslash can't puzzle them output, so we have to help it A LOT.
+import type { UnionFill, Address, Hex } from "@happy.tech/common"
+import  type { Boop, CreateAccountInput, ExecuteInput } from "@happy.tech/boop-sdk"
+// ---cut---
+import { BoopClient } from "@happy.tech/boop-sdk"
 import { encodeFunctionData, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { parseAbi } from "viem/utils"
@@ -47,45 +54,71 @@ import { parseAbi } from "viem/utils"
 const ownerPrivateKey = generatePrivateKey()
 const owner = privateKeyToAccount(ownerPrivateKey)
 
-// TODO rename baseURL to submitter
+// ---cut-start---
+{
+// ---cut-end---
 const boopClient = new BoopClient({
-    submitter: "https://submitter.happy.tech",
-    rpc: "https://rpc.testnet.happy.tech/http",
+    submitterUrl: "https://submitter.happy.tech",
+    rpcUrl: "https://rpc.testnet.happy.tech/http",
 })
-
-// TODO make salt optional
-// TODO allow destructuring?
-// TODO rename result.address to account
-const accountResult = await boopClient.createAccount({ owner: owner.publicKey })
-
-if (accountResult.status === Success) {
-    console.log("Your account address is: " + accountResult.address)
+// ---cut-start---
+}
+type BoopReceipt = {}
+type CreateAccountInput = {}
+type ExecuteInput = {}
+type CreateAccountOutput = UnionFill<{ address: Address } | { description: string }>
+type ExecuteOutput = UnionFill<{ receipt: BoopReceipt } | { description: string }>
+const boopClient = {
+    createAccount(input: CreateAccountInput): CreateAccountOutput { return null as any },
+    encode(boop: Boop): Hex { return null as any},
+    execute(input: ExecuteInput): ExecuteOutput { return null as any },
+}
+// ---cut-end---
+const { address, description: error1 }
+    = await boopClient.createAccount({ owner: owner.publicKey })
+if (address) {
+    console.log("Your account address is: ", address)
 } else {
-    console.log("Could not create account: " + accountResult.description)
+    throw Error("Could not create account: " + error1)
 }
 
-// TODO make fields optional in SDK: gas fields, nonceTrack, value, extraData, validatorData
-const boop = {
+// TODO make fields optional in SDK:
+//  gas fields, nonceTrack, value, extraData, validatorData
+const unsignedBoop = {
     // mock ERC20 contract deployed on HappyChain Sepolia
     dest: 0x02206fac6469b2f59fc2bb9d3bc181fbe703f8b7,
-    account: accountResult.address,
+    account: address,
     nonceValue: 0n, // first one!
     payer: zeroAddress, // the HappyChain submitter will pay for it
     callData: encodeFunctionData({
         abi: parseAbi(["function mint(address _account, uint256 _amount)"]),
         functionName: "mint",
-        args: [accountResult.address, 100n],
+        args: [address, 100n],
     }),
-}
+} as Boop // TODO
 
-const signedBoop = owner.sign(boopClient.encode(boop))
+// TODO needs hash
+const boop = await owner.sign({ hash: boopClient.encode(unsignedBoop) })
 
 // No need to estimate gas or simulate — the submitter takes care of it!
-const executeResult = await boopClient.execute({ boop: signedBoop })
-
-if (executeResult.status === Success) {
-    console.log("You are now 100 MockTokenA richer! Here's a receipt to prove it: ", executeResult.receipt)
+const { receipt, description: error2 } = await boopClient.execute({ boop })
+if (receipt) {
+    console.log(
+        "You are now 100 MockTokenA richer! " +
+        "Here's a receipt to prove it: ", receipt)
 } else {
-    console.log("Could not execute boop: ", executeResult.description)
+    throw Error("Could not execute boop: " + error2)
 }
 ```
+
+## Methods Overview
+
+TODO
+
+- `simulate`
+- `getNonce`
+- `execute`
+- `submit`
+- `waitForReceipt`
+- `getState`
+- `getPending`

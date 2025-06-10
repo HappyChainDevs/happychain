@@ -1,4 +1,4 @@
-import type { Chain } from "@happy.tech/wallet-common"
+import { type Chain, happyChainSepolia } from "@happy.tech/wallet-common"
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import { happyProvider } from "./happyProvider"
 import { loadHappyWallet } from "./loadHappyWallet"
@@ -62,7 +62,7 @@ export function happyWagmiConnector(): CreateConnectorFn {
  * @see {@link https://wagmi.sh/react/api/createConfig#config Wagmi Config Documentation}
  * @see {@link https://viem.sh/docs/glossary/types#chain Viem Chain Type}
  */
-export function createHappyChainWagmiConfig(chain: Chain): Config {
+export function createHappyChainWagmiConfig(chain: Chain = happyChainSepolia): Config {
     return createConfig({
         chains: [chain],
         connectors: [happyWagmiConnector()],

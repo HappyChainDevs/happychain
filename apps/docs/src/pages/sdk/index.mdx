@@ -7,18 +7,22 @@ import { HomePage, Callout } from 'vocs/components'
 # Happy Wallet SDK
 
 The Happy Wallet is an embedded wallet that lets user log in with their social accounts (web3 wallets are
-also supported), enables gas sponsorship (1), and allows apps to make transactions without the user having to confirm them
+also supported), enables gas sponsorship*, and allows apps to make transactions without the user having to confirm them
 via [session keys].
 
 Please see the [Getting Started] page for a full overview of how to integrate and interact with the
-wallet.
+wallet in your app.
 
-[Getting Started]: /sdk/js/getting-started
-[session keys]: /sdk/js/getting-started#session-keys
+[Getting Started]: /sdk/js
+[session keys]: /sdk/js#session-keys
 
-(1) Each user gets a daily gas budget that streams back over time. On the HappyChain Sepolia
+\* All gas is currently sponsored on the testnet! We'll introduce a daily buget later.
+
+{/*
+Each user gets a daily gas budget that streams back over time. On the HappyChain Sepolia
 testnet, this budget is quite large. Once the user runs out of budget, he must pay for the gas
 himself, or an app must sponsor (not implemented yet).
+*/}
 
 :::info
 ℹ️ The Happy Wallet SDK currently only works on the HappyChain Sepolia testnet.
