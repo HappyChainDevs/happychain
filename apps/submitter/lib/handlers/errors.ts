@@ -98,8 +98,7 @@ export function outputForRevertError(
                 case "ExtensionNotRegistered":
                     return {
                         status: Onchain.ExtensionNotRegistered,
-                        error:
-                            "Account rejected the boop because it requested an extension that was not registered.",
+                        error: "Account rejected the boop because it requested an extension that was not registered.",
                     }
                 case "UnknownDuringSimulation": {
                     logger.error("escaped UnknownDuringSimulation — BIG BUG")
@@ -218,14 +217,12 @@ export function outputForExecuteError(
             if (decodedReason?.errorName === "InvalidExtensionValue")
                 return {
                     status: Onchain.InvalidExtensionValue,
-                    error:
-                        "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
+                    error: "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
                 }
             if (decodedReason?.errorName === "ExtensionNotRegistered")
                 return {
                     status: Onchain.ExtensionNotRegistered,
-                    error:
-                        "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",
+                    error: "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",
                 }
             if (decodedReason?.errorName)
                 return {
