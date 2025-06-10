@@ -1,0 +1,110 @@
+---
+layout: doc
+showOutline: true
+---
+
+# The Boop Account Abstraction Stack
+
+TODO picture
+
+## What is account abstraction?
+
+Account abstraction means making "the user account" a smart contract instead
+of an "EOA" (Externally Owned Account, i.e. an account linked to private key).
+
+Smart account come with many benefits:
+
+- Security & recovery: the account specifies how its transactions are validated. The most common schema is
+to use an EOA as the owner of the smart account. Using a smart account enables setting up mechanisms to
+recover the account in case of key loss, as well as rotating the key in case it might have been compromised.
+
+- Gas sponsorships & gas abstraction: smart accounts enable someone else to pay for the transaction fees
+(gas sponsorship), or for someone to front the fees, to be repaid in a different token (gas abstraction).
+
+- Better onboarding: it's possible to control a smart account via a
+social account (Google etc) or a passkey instead of a traditional EOA. If more security
+becomes needed, the mechanism can be changed later or supplemented with a recovery mechanism.
+
+- Delegation and fine-grained permissions: smart accounts can delegate the authority of performing
+transaction on their behalf to third-parties or to mechanisms with different security characteristics, on
+the basis of validation logic in the account. Two mechanisms that enable this are session
+keys (authorized other keys to perform select operations on your behalf) and subaccounts
+(create secondary accounts authorized to draw some funds from the main account).
+
+- Plug'n'play extensibility: as hinted above, you can extend your smart account with extra capabilities by installing
+extensions that follow the smart account's extension standard.
+
+... and a few drawbacks:
+
+- Higher gas fees compared to EOAs.
+- Immature wallet support. But it's fully supported by the [Happy Wallet](/sdk)!
+
+## What is Boop?
+
+Boop is an EVM account abstraction stack similar to ERC-4337 but with notable benefits and different trade-offs to it.
+
+Boop's design choices prioritize three goals:
+
+- Enable low-latency smart account execution.
+- Keep the system as simple as possible without compromising on its power.
+- Great user and developer experience.
+
+To achieve this, it makes the following trade-offs (especially compared to ERC-4337):
+
+- The gas cost is slightly higher.
+- There are less restrictions aimed at preventing infrastructure operators from taking
+losses. In practice, both ERC-4337 and Boop need to rely on reputation heuristics
+— we just systematize this and make the system simpler in the process.
+
+Here are a few highlights of where Boop shines:
+
+- Users can send a sponsored transaction in a single network call (no
+  need to pre-simulate, fetch gas fees, hit up a paymaster service, ...).
+
+- The latency is vastly better, leading to ~2.2s send to confirmed latency on average
+  on a 2s-block blockchain compared to ~7s with ERC-4337 in the same latency conditions. About 1.2s of this due to
+  the average time to wait for a new block, meaning that the ratio improves in Boop's favour as block time get lower.
+
+- We don't require users to keep a separate balance to pay for transaction fees ("staking"), avoiding fragmentation.
+
+- Our code is simpler, smaller, and much more pleasant to read than the alternative.
+  This means that if Boop doesn't do exactly what you want, it is easy to fork & tweak.
+  The contracts and the supporting infrastructure was developed in concert.
+
+- Our extension system is much better than ERC-4337 — we actually specify things for one, meaning that extensions
+  can be compatible between multiple account implementations.
+
+- Top-notch documentation ✨
+
+## What about EIP-7702?
+
+EIP-7702 is a standard that enables EOA to be upgraded to smart accounts.
+
+Boop should be fully compatible with EIP-7702 — it should be as
+simple as delegating your EOA to a Boop account implementation.
+
+That being said, we haven't yet done the needful to verify
+that this works — reach out at hello@happy.tech if interested!
+
+## Who's building this? Is this open-source?
+
+The Boop stack is designed and maintained by Happy Devs, a team
+that works on infrastructure for the HappyChain blockchain.
+
+Happy Devs also builds the Happy Wallet, which is powered by the Boop stack.
+
+Boop itself is open-source under the BSD license, it's free to use, modify and redistribute
+in all cases. You just can't use our brand names (Happy Devs, HappyChain) to promote
+your work. We accept no liability for your use of the work, and you can't sue us ;)
+
+You can find the source code at:
+- https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter
+- https://github.com/HappyChainDevs/happychain/tree/master/packages/boop-sdk
+- https://github.com/HappyChainDevs/happychain/tree/master/contracts/src/boop
+
+Want to contribute to the development? Reach out to hello@happy.tech
+or message [@HappyChainDevs](https://x.com/happychaindevs) on X.
+
+## Learn more
+
+TODO

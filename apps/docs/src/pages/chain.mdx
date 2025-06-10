@@ -8,15 +8,19 @@ The hub also includes a faucet where you can claim funds to pay for contract dep
 
 {/* span below is intentional, to break auto-link */}
 
-- Chain ID: 216
-- RPC (HTTP): https:<span>//</span>rpc.testnet.happy.tech/http
-- RPC (WS): wss://rpc.testnet.happy.tech/ws
-- Hosted MUD Indexer: https:<span>//</span>mud.happy.tech/
-- Gas Token: $HAPPY, bridged from ETH on (\*) Ethereum Sepolia
+- **Chain ID**: 216
+- **RPC (HTTP)**: https:<span>//</span>rpc.testnet.happy.tech/http
+- **RPC (WS)**: wss://rpc.testnet.happy.tech/ws
+- **Hosted MUD** Indexer: https:<span>//</span>mud.happy.tech/
+- **Gas Token**: $HAPPY, bridged from ETH on Ethereum Sepolia*
 
-(\*) $HAPPY will be its own token on mainnet, but for the first testnet, it is bridged 1-1 from
-SepoliaETH.
+⚠️**IMPORTANT**: The RPC URLs should not be used for apps that leverage the [Happy Wallet], instead you should
+setup your Viem/Ethers/... clients with our provider, as [described here][wallet-usage].
 
+[Happy Wallet]: https://master.happychain.pages.dev/sdk
+[wallet-usage]: https://master.happychain.pages.dev/sdk/js#usage
+
+\* $HAPPY will be its own token on mainnet, but for the first testnet, it is bridged 1-1 from SepoliaETH.
 
 Useful links:
 

@@ -5,14 +5,14 @@ import { constructUrl } from "./urls"
 type HttpMethod = "GET" | "POST"
 
 interface ApiClientOptions {
-    baseUrl?: string
+    submitterUrl?: string
 }
 
 export class ApiClient {
-    #baseUrl: string
+    submitterUrl: string
 
-    constructor({ baseUrl = "" }: ApiClientOptions = {}) {
-        this.#baseUrl = baseUrl
+    constructor({ submitterUrl = "" }: ApiClientOptions = {}) {
+        this.submitterUrl = submitterUrl
     }
 
     async get(endpoint: string, query: unknown = {}): Promise<unknown> {
@@ -24,7 +24,7 @@ export class ApiClient {
     }
 
     async #request(method: HttpMethod, endpoint: string, { body, query }: ProcessedRequestParams): Promise<unknown> {
-        const url = constructUrl(this.#baseUrl, endpoint, query)
+        const url = constructUrl(this.submitterUrl, endpoint, query)
         // set application/json header for POST requests only
         const hasBody = method !== "GET" && body !== undefined && body !== null
         const headers = hasBody ? { "Content-Type": "application/json" } : undefined

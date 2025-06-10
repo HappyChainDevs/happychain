@@ -1,10 +1,15 @@
+---
+layout: doc
+showOutline: true
+---
+
 # Getting started with JavaScript/TypeScript
 
 The `@happy.tech/core` package provides the base functionality, to be used in isolation or to 
 support a framework specific package such as [`@happy.tech/react`][react-getting-started] or [`@happy.tech/vue`][vue-getting-started].
 
-[react-getting-started]: /sdk/react/getting-started
-[vue-getting-started]: /sdk/vue/getting-started
+[react-getting-started]: /sdk/react
+[vue-getting-started]: /sdk/vue
 
 
 ## Install
@@ -75,16 +80,16 @@ happyProvider.request({ method: "eth_requestAccounts" }) // [!code focus]
 ```ts [Viem] twoslash
 import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/core"
 
-const publicClient = createHappyPublicClient() // [!code focus]
-const walletClient = createHappyWalletClient() // [!code focus]
+const publicClient = createHappyPublicClient() // [!code focus:2]
+const walletClient = createHappyWalletClient()
 ```
 
 ```ts [Wagmi] twoslash
 import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
 import { connect } from "@wagmi/core"
 
-const config = createHappyChainWagmiConfig(happyChainSepolia)// [!code focus]
-const result = await connect(config, {connector: config.connectors[0]}) // [!code focus]
+const config = createHappyChainWagmiConfig(happyChainSepolia)// [!code focus:2]
+const result = await connect(config, {connector: config.connectors[0]})
 ```
 
 ```ts [Ethers] twoslash
@@ -95,13 +100,18 @@ const ethersProvider = new BrowserProvider(happyProvider) // [!code focus]
 ```
 
 ```ts [Viem (custom)] twoslash
-// Don't include this in the snippet!
 import { happyProvider } from "@happy.tech/core"
 import { createPublicClient, createWalletClient, custom } from "viem"
 
-const transport = custom(happyProvider) // [!code focus]
-const publicClient = createPublicClient({ transport }) // [!code focus]
-const walletClient = createWalletClient({ transport }) // [!code focus]
+const transport = custom(happyProvider) // [!code focus:9]
+const publicClient = createPublicClient({
+    transport,
+    // ... your custom options (https://viem.sh/docs/clients/public)
+})
+const walletClient = createWalletClient({
+    transport,
+    // ... your custom options (https://viem.sh/docs/clients/wallet)
+})
  ```
 
 ```ts [Wagmi (custom)] twoslash
@@ -109,7 +119,7 @@ import { happyChainSepolia, happyProvider } from "@happy.tech/core"
 import { happyWagmiConnector } from "@happy.tech/core"
 import { connect, createConfig, custom } from "@wagmi/core"
 
-const connector = happyWagmiConnector()
+const connector = happyWagmiConnector() // [!code focus:10]
 const config = createConfig({
         chains: [happyChainSepolia],
         connectors: [connector],
@@ -187,27 +197,27 @@ The session key is persisted between session, and further calls to the function 
 prompting the user, so it is safe to always call this function before other actions.
 
 ```ts twoslash
-import {
-    createHappyChainWagmiConfig,
-    happyChainSepolia,
-    requestSessionKey
-} from "@happy.tech/core"
-import { writeContract } from "@wagmi/core"
+import { createHappyWalletClient, requestSessionKey } from "@happy.tech/core"
 import { parseAbi, type Hash } from "viem"
 
-const config = createHappyChainWagmiConfig(happyChainSepolia)
+const walletClient = createHappyWalletClient() // [!code focus:2]
+const counterContract = "0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca" as const
 
 async function noApproveTx(): Promise<Hash> {
-
-    await requestSessionKey("0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca")
-
-    return await writeContract(config, {
+    await requestSessionKey(counterContract) // [!code focus:6]
+    return await walletClient.writeContract({
         address: "0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca",
         abi: parseAbi(["function increment()"]),
         functionName: "increment",
     })
 }
 ```
+
+What happens under the hood? When a session key is approved, the wallet creates a key and saves it in the wallet's
+local storage. The session key's address is registered with the user's wallet onchain. The key itself never leaves
+the wallet, so it cannot leak.
+
+Session keys can be revoked in the wallet settings, under "Permissions".
 
 ### UI component
 

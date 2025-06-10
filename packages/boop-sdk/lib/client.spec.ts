@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test"
 import { deployment } from "@happy.tech/contracts/boop/anvil"
 import { anvil } from "viem/chains"
-import { BoopClient } from "./client"
+import { BoopClient, type BoopClientConfig } from "./client"
 import { GetNonce } from "./types/GetNonce"
 
 const setupOptions = {
-    baseUrl: "http://localhost:3001",
+    submitterUrl: "http://localhost:3001",
     rpcUrl: anvil.rpcUrls.default.http[0],
     entryPoint: deployment.EntryPoint,
-}
+} satisfies BoopClientConfig
 
 describe("BoopClient", () => {
     const client = new BoopClient(setupOptions)

@@ -1,4 +1,4 @@
-import type { Address } from "@happy.tech/common"
+import { type Address, assertDef } from "@happy.tech/common"
 import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
@@ -15,6 +15,7 @@ import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from
 const walletClient = createWalletClient({ ...config, account: accountDeployer })
 
 async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
+    assertDef(salt) // from validator
     try {
         const predictedAddress = computeHappyAccountAddress(salt, owner)
         logger.trace("Predicted account address for owner", predictedAddress, owner, salt)

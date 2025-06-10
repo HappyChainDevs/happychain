@@ -15,7 +15,7 @@ if (process.env.SUBMITTER_URL === undefined) {
 async function run() {
     const eoa = privateKeyToAccount(generatePrivateKey())
     const boopClient = new BoopClient({
-        baseUrl: process.env.SUBMITTER_URL,
+        submitterUrl: process.env.SUBMITTER_URL,
     })
     const createAccountResult = await boopClient.createAccount({
         owner: eoa.address,

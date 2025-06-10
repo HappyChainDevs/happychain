@@ -9,7 +9,7 @@ export const boopClientAtom: Atom<BoopClient | undefined> = atom<BoopClient | un
     const currentChain = get(currentChainAtom)
     if (!currentChain) return
     return new BoopClient({
-        baseUrl: SUBMITTER_URL,
+        submitterUrl: SUBMITTER_URL,
         rpcUrl: currentChain.rpcUrls[0],
         entryPoint: deployment.EntryPoint,
     })

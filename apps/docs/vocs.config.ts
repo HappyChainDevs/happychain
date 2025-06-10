@@ -33,14 +33,18 @@ export default defineConfig({
         },
         {
             text: "Happy Wallet SDK",
-            link: "/sdk",
+            collapsed: false,
             items: [
+                {
+                    text: "Overview",
+                    link: "/sdk",
+                },
                 {
                     text: "JavaScript & TypeScript",
                     items: [
                         {
                             text: "Getting Started",
-                            link: "/sdk/js/getting-started",
+                            link: "/sdk/js",
                         },
                         {
                             text: "API Reference",
@@ -53,7 +57,7 @@ export default defineConfig({
                     items: [
                         {
                             text: "Getting Started",
-                            link: "/sdk/react/getting-started",
+                            link: "/sdk/react",
                         },
                         {
                             text: "API Reference",
@@ -66,7 +70,7 @@ export default defineConfig({
                     items: [
                         {
                             text: "Getting Started",
-                            link: "/sdk/vue/getting-started",
+                            link: "/sdk/vue",
                         },
                         {
                             text: "API Reference",
@@ -77,30 +81,23 @@ export default defineConfig({
             ],
         },
         {
-            text: "TXM (Transaction Manager)",
-            link: "/txm",
-            collapsed: true,
-            items: [
-                {
-                    text: "Getting Started",
-                    link: "/txm/getting-started",
-                },
-                {
-                    text: "API Reference",
-                    link: "/txm/api",
-                },
-            ],
-        },
-        {
             text: "Boop (Account Abstraction)",
             collapsed: false,
             items: [
+                {
+                    text: "Overview",
+                    link: "/boop",
+                },
+                {
+                    text: "Architecture",
+                    link: "/boop/architecture",
+                },
                 {
                     text: "Client SDK",
                     items: [
                         {
                             text: "Getting Started",
-                            link: "/boop/sdk/getting-started",
+                            link: "/boop/sdk",
                         },
                         {
                             text: "API Reference",
@@ -109,8 +106,30 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: "Rest API",
-                    link: "/boop/rest-api",
+                    text: "Boop Submitter",
+                    link: "/boop/submitter",
+                },
+                {
+                    text: "Boop Contracts",
+                    link: "/boop/contracts",
+                },
+                {
+                    text: "REST API",
+                    link: "/boop/rest",
+                },
+            ],
+        },
+        {
+            text: "TXM (Transaction Manager)",
+            collapsed: true,
+            items: [
+                {
+                    text: "Getting Started",
+                    link: "/txm",
+                },
+                {
+                    text: "API Reference",
+                    link: "/txm/api",
                 },
             ],
         },

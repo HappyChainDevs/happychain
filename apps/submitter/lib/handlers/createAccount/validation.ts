@@ -2,6 +2,7 @@ import type { AssertCompatible } from "@happy.tech/common"
 import { arktypeValidator } from "@hono/arktype-validator"
 import { type } from "arktype"
 import { describeRoute } from "hono-openapi"
+import { padHex } from "viem"
 import { Address, Bytes32, openApiBodyContent, openApiResponseContent } from "#lib/utils/validation/ark"
 import { CreateAccount } from "./types"
 import type * as types from "./types"
@@ -9,7 +10,7 @@ import type * as types from "./types"
 export const createAccountInput = type({
     "+": "reject",
     owner: Address,
-    salt: Bytes32.configure({ example: "0x42" }),
+    salt: Bytes32.configure({ example: "0x42" }).default(padHex("0x1", { size: 32 })),
 })
 
 const successStatus = type.enumerated(CreateAccount.Success, CreateAccount.AlreadyCreated)
@@ -57,7 +58,7 @@ export const createAccountDescription = describeRoute({
 export const createAccountBodyValidation = arktypeValidator("json", createAccountInput)
 export const createAccountOutputValidation = type(createAccountSuccess, "|", createAccountError)
 
-type CreateAccountInput = typeof createAccountInput.infer
+type CreateAccountInput = typeof createAccountInput.in.infer
 type CreateAccountSuccess = typeof createAccountSuccess.infer
 type CreateAccountError = typeof createAccountError.infer
 type CreateAccountOutput = typeof createAccountOutputValidation.infer

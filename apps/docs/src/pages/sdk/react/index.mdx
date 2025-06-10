@@ -3,7 +3,7 @@
 The `@happy.tech/react` package provides React-specific functionality, to be used instead or in
 addition to those provided in [`@happy.tech/core`][js-getting-started].
 
-[js-getting-started]: /sdk/js/getting-started
+[js-getting-started]: /sdk/js
 
 ## Install 
 
@@ -37,12 +37,12 @@ After installing, the first thing you will need to do, is wrap your app in the [
 
 [`HappyWalletProvider`]: /sdk/react/api/functions/HappyWalletProvider
 
-```tsx
+```tsx twoslash
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { HappyWalletProvider } from "@happy.tech/react"
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
     <HappyWalletProvider>
         {/* <YourApp /> */}
     </HappyWalletProvider>
@@ -69,7 +69,7 @@ Of particular relevance to React users, we provide an easy way to create a Wagmi
 ([`createHappyChainWagmiConfig`]), and a Wagmi connector if you need to customize the config
 ([`happyWagmiConnector`]). Don't forget to call the Wagmi [`connect`] function!
 
-[js-web3-integration]: /sdk/js/getting-started#web3-integration
+[js-web3-integration]: /sdk/js#web3-integration
 [`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig
 [`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
 [`connect`]: https://wagmi.sh/core/api/actions/connect
@@ -86,13 +86,11 @@ if the user is connected, otherwise it returns undefined.
 import React from "react"
 import { useHappyWallet } from "@happy.tech/react"
 
-function UserAddressComponent() {
+function UserAddressComponent() { // [!code focus:6]
     const { user } = useHappyWallet()
-
     if (!user) {
         return <div>Not connected</div>
     }
-
     return <div>{user.address}</div>
 }
 ```
@@ -100,7 +98,7 @@ function UserAddressComponent() {
 To get the active user outside of React components, see [the corresponding section][js-active-user]
 in the "Getting started with JavaScript/TypeScript" page.
 
-[js-active-user]: /sdk/js/getting-started#getting-the-active-user
+[js-active-user]: /sdk/js#getting-the-active-user
 
 ### UI component
 
