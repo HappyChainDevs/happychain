@@ -196,7 +196,7 @@ const gasPriceTooLow = {
     description: "The network's gas price is higher than the specified maxFeePerGas.",
 } as const
 
-function getOriginalBoop({
+function getOriginalBoop_({
     boop,
     entryPoint,
     replacedTx,
@@ -232,9 +232,9 @@ function getOriginalBoop({
     boopStore.set(boop, entryPoint ?? deployment.EntryPoint)
     return [boopStore.getByHash(computeHash(boop))!, undefined]
 }
+const getOriginalBoop = traceFunction(getOriginalBoop_, "getOriginalBoop")
 
 const tracedSubmit = traceFunction(submit, "submit")
 const tracedSubmitInternal = traceFunction(submitInternal, "submitInternal")
-const tracedGetOriginalBoop = traceFunction(getOriginalBoop, "getOriginalBoop")
 
-export { tracedSubmit as submit, tracedSubmitInternal as submitInternal, tracedGetOriginalBoop as getOriginalBoop }
+export { tracedSubmit as submit, tracedSubmitInternal as submitInternal }
