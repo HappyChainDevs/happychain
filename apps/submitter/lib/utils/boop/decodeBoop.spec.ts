@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Hex } from "@happy.tech/common"
 import type { Boop } from "#lib/types"
-import { decodeBoop } from "./decodeBoop"
+import { decodeBoop } from "./index"
 
 describe("decode", () => {
     test("should correctly decode tx with empty dynamic data", () => {

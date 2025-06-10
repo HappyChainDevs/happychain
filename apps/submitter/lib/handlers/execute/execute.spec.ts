@@ -11,7 +11,7 @@ import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { blockService, boopReceiptService } from "#lib/services"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { computeBoopHash } from "#lib/utils/boop"
 import { config } from "#lib/utils/clients"
 import {
     assertMintLog,

@@ -4,7 +4,7 @@ import { serializeBigInt } from "@happy.tech/common"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { computeBoopHash } from "#lib/utils/boop"
 import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
 

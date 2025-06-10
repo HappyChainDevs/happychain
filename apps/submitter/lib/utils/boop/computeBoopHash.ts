@@ -1,8 +1,7 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import { traceFunction } from "#lib/telemetry/traces"
 import type { Boop, BoopGasInfo } from "#lib/types"
-import { encodeBoop } from "#lib/utils/boop/encodeBoop"
+import { encodeBoop_noTrace } from "#lib/utils/boop/encodeBoop"
 
 export const zeroGasData = {
     maxFeePerGas: 0n,
@@ -16,8 +15,7 @@ export const zeroGasData = {
 /**
  * Computes a boop hash, which is compute over a Boop and the chain ID.
  */
-
-function computeBoopHash(chainId: bigint | number, boop: Boop): Hash {
+export function computeBoopHash_noTrace(chainId: bigint | number, boop: Boop): Hash {
     // Don't include validator data in the signature so that pre & post signing are the same.
     const boopToHash: Boop = { ...boop, validatorData: "0x" }
 
@@ -32,9 +30,5 @@ function computeBoopHash(chainId: bigint | number, boop: Boop): Hash {
         Object.assign(boopToHash, zeroGasData)
     }
 
-    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop(boopToHash), BigInt(chainId)]))
+    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop_noTrace(boopToHash), BigInt(chainId)]))
 }
-
-const tracedComputeBoopHash = traceFunction(computeBoopHash, "computeBoopHash")
-
-export { tracedComputeBoopHash as computeBoopHash }

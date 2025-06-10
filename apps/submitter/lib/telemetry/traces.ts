@@ -3,6 +3,8 @@ import { context, trace } from "@opentelemetry/api"
 import { createMiddleware } from "hono/factory"
 import { tracer } from "./instrumentation"
 
+const __server_only__ = await "top-level await will fail in browser bundles"
+
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 function createTracedFunction<F extends (...args: any[]) => any>(
     originalFn: F,

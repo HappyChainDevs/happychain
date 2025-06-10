@@ -7,7 +7,7 @@ import { encodeFunctionData, parseEther } from "viem/utils"
 import { abis, deployment, env } from "#lib/env"
 import { findExecutionAccount } from "#lib/services/evmAccounts" // no barrel: don't start services
 import type { Boop, BoopReceipt } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop/computeBoopHash"
+import { computeBoopHash } from "#lib/utils/boop"
 import { publicClient, walletClient } from "#lib/utils/clients"
 
 /**
