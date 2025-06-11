@@ -1,6 +1,7 @@
 import { apiReference } from "@scalar/hono-api-reference"
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
+import { bodyLimit } from "hono/body-limit"
 import { every, except } from "hono/combine"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
@@ -21,6 +22,12 @@ await resyncAllAccounts()
 
 // Create the app but don't configure routes yet - we'll do that after resync
 const app = new Hono()
+    .use(
+        bodyLimit({
+            maxSize: 100 * 1024, // 100 KiB, enough for a boop with a large payload
+            onError: (c) => c.json({ error: "Request body too large" }, 413),
+        }),
+    )
     .use(traceMiddleware)
     .use(
         "*",
