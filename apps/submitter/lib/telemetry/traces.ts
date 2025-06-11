@@ -2,7 +2,12 @@ import { bigIntReplacer, unknownToError } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import { createMiddleware } from "hono/factory"
 import { tracer } from "./instrumentation"
-import { httpInFlightRequestsGauge, httpRequestDurationHistogram, httpRequestsCounter, httpResponseSizeHistogram } from "./metrics"
+import {
+    httpInFlightRequestsGauge,
+    httpRequestDurationHistogram,
+    httpRequestsCounter,
+    httpResponseSizeHistogram,
+} from "./metrics"
 
 const __server_only__ = await "top-level await will fail in browser bundles"
 
@@ -113,9 +118,17 @@ export const instrumentHttpMiddleware = createMiddleware(async (c, next) => {
             httpInFlightRequestsGauge.record(++inFlight)
             await next()
             httpInFlightRequestsGauge.record(--inFlight)
-            httpRequestDurationHistogram.record(Date.now() - start, { "method": c.req.method, "path": c.req.path, "status": c.res.status })
-            httpRequestsCounter.add(1, { "method": c.req.method, "path": c.req.path, "status": c.res.status })
-            httpResponseSizeHistogram.record(Number(c.res.headers.get("content-length")) ?? 0, { "method": c.req.method, "path": c.req.path, "status": c.res.status })
+            httpRequestDurationHistogram.record(Date.now() - start, {
+                method: c.req.method,
+                path: c.req.path,
+                status: c.res.status,
+            })
+            httpRequestsCounter.add(1, { method: c.req.method, path: c.req.path, status: c.res.status })
+            httpResponseSizeHistogram.record(Number(c.res.headers.get("content-length")) ?? 0, {
+                method: c.req.method,
+                path: c.req.path,
+                status: c.res.status,
+            })
             span.setAttribute("http.method", c.req.method)
             span.setAttribute("http.route", c.req.path)
             span.setAttribute("http.status", c.res.status)

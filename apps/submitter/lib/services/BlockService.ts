@@ -15,10 +15,10 @@ import { waitForCondition } from "@happy.tech/wallet-common"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
+import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
-import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 
 /**
  * Type of block we get from Viem's `getBlock` — made extra permissive for safety,

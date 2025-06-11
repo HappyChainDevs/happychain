@@ -1,8 +1,8 @@
 import { type Address, type Hash, Map2 } from "@happy.tech/common"
+import { boopsStoredGauge } from "#lib/telemetry/metrics.ts"
 import { TraceMethod } from "#lib/telemetry/traces"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import type { Boop } from "../types"
-import { boopsStoredGauge } from "#lib/telemetry/metrics.ts"
 
 /**
  * This stores the original version of all boops currently being processed by the submitter — from being received
