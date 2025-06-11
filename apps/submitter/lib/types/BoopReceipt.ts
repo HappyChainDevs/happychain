@@ -16,7 +16,7 @@ export type BoopReceipt = {
     status: OnchainStatus
 
     /** Description of the status, potentially including finer-grained details. */
-    error: string
+    description: string
 
     /** EntryPoint to which the Boop was submitted onchain. */
     entryPoint: Address
