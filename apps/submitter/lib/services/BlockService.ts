@@ -18,6 +18,7 @@ import { env } from "#lib/env"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
+import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 
 /**
  * Type of block we get from Viem's `getBlock` — made extra permissive for safety,
@@ -462,6 +463,7 @@ export class BlockService {
         this.#current = block
         this.#blockHistory.set(block.number, block.hash)
         this.#startBlockTimeout()
+        currentBlockGauge.record(Number(this.#current.number))
         blockLogger.trace(`Processing new block: ${this.#current.number} / ${this.#current.hash}`)
         if (this.#callbacks.size === 0) return
 

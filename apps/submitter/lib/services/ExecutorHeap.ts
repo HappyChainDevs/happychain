@@ -1,6 +1,7 @@
 import { type Address, IndexedHeap } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
 import { TraceMethod } from "#lib/telemetry/traces"
+import { blockExecutorJobCountGauge } from "#lib/telemetry/metrics.ts"
 
 interface Executor {
     account: Account
@@ -23,6 +24,7 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     @TraceMethod("ExecutorHeap.addAccount")
     public addAccount(account: Account): void {
         super.add({ account, jobCount: 0 })
+        blockExecutorJobCountGauge.record(0, { "account": account.address })
     }
 
     /** Increments job count for an executor. */
@@ -30,6 +32,7 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     public increment(address: Address): boolean {
         return this.update(address, (e) => {
             e.jobCount++
+            blockExecutorJobCountGauge.record(e.jobCount, { "account": address })
         })
     }
 
@@ -38,6 +41,7 @@ export class ExecutorHeap extends IndexedHeap<Executor> {
     public decrement(address: Address): boolean {
         return this.update(address, (e) => {
             e.jobCount--
+            blockExecutorJobCountGauge.record(e.jobCount, { "account": address })
         })
     }
 

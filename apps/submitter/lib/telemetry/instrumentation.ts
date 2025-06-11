@@ -5,6 +5,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node"
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions"
 import pkg from "../../package.json" with { type: "json" }
 import { env } from "../env"
+import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
 
 const __server_only__ = await "top-level await will fail in browser bundles"
 
@@ -23,9 +24,12 @@ const traceExporter = env.TRACES_ENDPOINT
       })
     : undefined
 
+const metricReader = new PrometheusExporter({ port: env.PROMETHEUS_PORT })
+
 const sdk = new NodeSDK({
     resource,
     traceExporter,
+    metricReader,
 })
 
 export const tracer = trace.getTracer(serviceName)
