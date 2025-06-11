@@ -2,10 +2,14 @@ import { type Hash, bigIntReplacer, bigIntReviver } from "@happy.tech/common"
 import type { Kysely } from "kysely"
 import type { DB } from "#lib/database/generated"
 import { computeHash } from "#lib/services"
+import {
+    databaseErrorsCounter,
+    databaseOperationDurationHistogram,
+    databaseOperationsCounter,
+} from "#lib/telemetry/metrics.ts"
 import { TraceMethod } from "#lib/telemetry/traces"
 import type { BoopReceipt } from "#lib/types"
 import { logger } from "#lib/utils/logger"
-import { databaseErrorsCounter, databaseOperationDurationHistogram, databaseOperationsCounter } from "#lib/telemetry/metrics.ts"
 
 export class DatabaseService {
     constructor(private db: Kysely<DB>) {}
@@ -14,7 +18,7 @@ export class DatabaseService {
     @TraceMethod("DatabaseService.findReceipt")
     async findReceipt(boopHash: Hash): Promise<BoopReceipt | undefined> {
         try {
-            databaseOperationsCounter.add(1, { "operation": "findReceipt" })
+            databaseOperationsCounter.add(1, { operation: "findReceipt" })
             const storedBoop = await this.db
                 .selectFrom("boops")
                 .selectAll()
@@ -32,7 +36,7 @@ export class DatabaseService {
             const { logs, ...receipt } = storedReceipt
             return { ...receipt, boop, entryPoint, logs: JSON.parse(logs, bigIntReviver) }
         } catch (error) {
-            databaseErrorsCounter.add(1, { "operation": "findReceipt" })
+            databaseErrorsCounter.add(1, { operation: "findReceipt" })
             logger.error("Error while looking up receipt", boopHash, error)
             throw error
         }
@@ -45,7 +49,7 @@ export class DatabaseService {
         const { boop, logs, entryPoint, ...rest } = receipt
         const boopHash = computeHash(boop)
         try {
-            databaseOperationsCounter.add(1, { "operation": "saveReceipt" })
+            databaseOperationsCounter.add(1, { operation: "saveReceipt" })
             const start = Date.now()
             await this.db.transaction().execute(async (tx) => {
                 await tx
@@ -57,9 +61,9 @@ export class DatabaseService {
                     .values({ boopHash, entryPoint, ...boop })
                     .execute()
             })
-            databaseOperationDurationHistogram.record(Date.now() - start, { "operation": "saveReceipt" })
+            databaseOperationDurationHistogram.record(Date.now() - start, { operation: "saveReceipt" })
         } catch (error) {
-            databaseErrorsCounter.add(1, { "operation": "saveReceipt" })
+            databaseErrorsCounter.add(1, { operation: "saveReceipt" })
             logger.error("Error while saving Boop receipt", receipt.boopHash, error)
             throw error
         }

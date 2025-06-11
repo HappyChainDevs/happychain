@@ -2,32 +2,23 @@ import { ValueType, metrics } from "@opentelemetry/api"
 
 const submitterMeter = metrics.getMeter("submitter")
 
-export const currentBlockGauge = submitterMeter.createGauge(
-    "block-service.current-block",
-    {
-        description: "Current block number",
-        unit: "block",
-        valueType: ValueType.INT,
-    },
-)
+export const currentBlockGauge = submitterMeter.createGauge("block-service.current-block", {
+    description: "Current block number",
+    unit: "block",
+    valueType: ValueType.INT,
+})
 
-export const blockExecutorJobCountGauge = submitterMeter.createGauge(
-    "executor-heap.job-count",
-    {
-        description: "Number of jobs currently being processed for each executor",
-        unit: "count",
-        valueType: ValueType.INT,
-    },
-)
+export const blockExecutorJobCountGauge = submitterMeter.createGauge("executor-heap.job-count", {
+    description: "Number of jobs currently being processed for each executor",
+    unit: "count",
+    valueType: ValueType.INT,
+})
 
-export const boopsStoredGauge = submitterMeter.createGauge(
-    "boop-store.boops-stored",
-    {
-        description: "Number of boops currently stored in the boop store",
-        unit: "count",
-        valueType: ValueType.INT,
-    },
-)
+export const boopsStoredGauge = submitterMeter.createGauge("boop-store.boops-stored", {
+    description: "Number of boops currently stored in the boop store",
+    unit: "count",
+    valueType: ValueType.INT,
+})
 
 /* Database */
 
@@ -43,14 +34,11 @@ export const databaseErrorsCounter = submitterMeter.createCounter("database.erro
     valueType: ValueType.INT,
 })
 
-export const databaseOperationDurationHistogram = submitterMeter.createHistogram(
-    "database.operation-duration",
-    {
-        description: "Duration of database operations",
-        unit: "ms",
-        valueType: ValueType.INT,
-    },
-)
+export const databaseOperationDurationHistogram = submitterMeter.createHistogram("database.operation-duration", {
+    description: "Duration of database operations",
+    unit: "ms",
+    valueType: ValueType.INT,
+})
 
 /* HTTP */
 
@@ -85,7 +73,7 @@ export const httpRequestDurationHistogram = submitterMeter.createHistogram("http
             15000,
             Number.POSITIVE_INFINITY,
         ],
-    }
+    },
 })
 
 export const httpInFlightRequestsGauge = submitterMeter.createGauge("http.in-flight-requests", {
