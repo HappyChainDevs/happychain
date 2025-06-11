@@ -17,11 +17,6 @@ export type BoopReceipt = {
     /** Logs (events) that were emitted during the call made by the boop. */
     logs: BoopLog[]
 
-    /**
-     * The revertData carried by one of our custom error, or the raw deal for {@link Onchain.UnexpectedReverted}.
-     */
-    revertData: Hex
-
     // TODO try to reintroduce these (and upddate docs to explain cost structure)
 
     // /** Gas used by the boop */

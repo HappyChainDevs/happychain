@@ -124,7 +124,6 @@ describe("submitter_execute", () => {
             expect(response.receipt.boopHash).toBeString()
             expect(response.receipt.entryPoint).toBeString()
 
-            expect(response.receipt.revertData).toBe("0x")
             expect(response.receipt.evmTxHash).toBeString()
             expect(response.receipt.blockHash).toBeString()
             expect(BigInt(response.receipt.blockNumber)).toBeGreaterThan(0n)

@@ -33,7 +33,6 @@ export const SBoopReceipt = type({
     boop: SBoop,
     entryPoint: Address,
     logs: SBoopLog.array(),
-    revertData: Bytes,
     evmTxHash: Hash,
     blockHash: Hash,
     blockNumber: UInt256,

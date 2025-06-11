@@ -21,6 +21,7 @@ import {
     type Boop,
     type BoopGasInfo,
     type BoopLog,
+    type BoopReceipt,
     type EvmTxInfo,
     Onchain,
     type OnchainStatus,
@@ -236,7 +237,9 @@ export class BoopReceiptService {
 
     @TraceMethod("BoopReceiptService.getReceiptResult")
     private async getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
-        if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length) return this.buildReceipt(boop, evmTxReceipt)
+        if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length) {
+            return this.buildReceipt(boop, evmTxReceipt)
+        }
 
         // TODO? Get the revertData from a log and populate here (instead of "0x")
         //       This is quite difficult to do: it would require tracing the evm transaction in its intra-block
@@ -273,9 +276,6 @@ export class BoopReceiptService {
         const logs = this.filterLogs(evmTxReceipt.logs, boopHash)
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
 
-        let status: OnchainStatus = Onchain.Success
-        let revertData: Hex = "0x"
-        let description = "Boop executed successfully."
         for (const log of logs) {
             const decoded = decodeEvent(log)
             if (!decoded) continue
@@ -284,15 +284,10 @@ export class BoopReceiptService {
             // Don't get pranked by contracts emitting the same event.
             if (log.address.toLowerCase() !== entryPoint.toLowerCase()) continue
             const error = outputForExecuteError(boop, entryPointStatus, decoded.args.revertData as Hex)
-            status = error.status
-            revertData = error.revertData ?? "0x"
-            description = error.description || "unknown error"
-        }
-        if (status !== Onchain.Success) {
             return {
-                status,
-                revertData,
-                description,
+                status: error.status,
+                revertData: error.revertData ?? "0x",
+                description: error.description || "unknown error",
             }
         }
 
@@ -300,13 +295,12 @@ export class BoopReceiptService {
             boopHash,
             entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployments
             logs,
-            revertData,
             evmTxHash: evmTxReceipt.transactionHash,
             blockHash: evmTxReceipt.blockHash,
             blockNumber: evmTxReceipt.blockNumber,
             gasPrice: evmTxReceipt.effectiveGasPrice,
             boop,
-        }
+        } satisfies BoopReceipt
 
         void dbService.saveReceipt(receipt)
         return {

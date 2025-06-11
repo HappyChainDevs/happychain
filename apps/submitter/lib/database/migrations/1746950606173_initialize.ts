@@ -29,7 +29,6 @@ export async function up(db: DB) {
         .createTable("receipts")
         .addColumn("boopHash", "text", (col) => col.primaryKey().notNull().references("boops.boopHash"))
         .addColumn("logs", "text", (col) => col.notNull())
-        .addColumn("revertData", "text", (col) => col.notNull())
         .addColumn("evmTxHash", "text", (col) => col.notNull())
         .addColumn("blockHash", "text", (col) => col.notNull())
         .addColumn("blockNumber", "text", (col) => col.notNull())
