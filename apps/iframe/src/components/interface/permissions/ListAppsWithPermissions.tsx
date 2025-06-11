@@ -35,7 +35,7 @@ const ListItem = ({ appURL }: ListItemProps) => {
             <Link
                 className="absolute size-full block inset-0 z-10 opacity-0"
                 to="/embed/permissions/$appURL"
-                params={{ appURL: encodeURI(appURL) }}
+                params={{ appURL }}
             >
                 Open {appURL} detailed permissions list
             </Link>
