@@ -220,7 +220,7 @@ describe("submitter_execute", () => {
             const result2 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx2) } })
             const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
             expect(response1.error).toBeUndefined()
-            expect(response2.error).toBeUndefined()
+            expect(response2.error).toBeDefined()
             expect(result1.status).toBe(200)
             expect(result2.status).toBe(400)
             expect(response2.stage).toBe("simulate")
@@ -272,7 +272,7 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
-            expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
+            expect(response.error).toBeDefined()
             expect(result.status).toBe(422)
             expect(response.status).toBe(Onchain.CallReverted)
         })
@@ -287,7 +287,7 @@ describe("submitter_execute", () => {
             const jsonTx = await sign(tx)
             const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
-            expect(response.error).toBeUndefined()
+            expect(response.error).toBeDefined()
             expect(result.status).toBe(422)
             expect(response.status).toBe(Onchain.ValidationReverted)
         })
