@@ -25,7 +25,7 @@ const app = new Hono()
     .use(
         bodyLimit({
             maxSize: 100 * 1024, // 100 KiB, enough for a boop with a large payload
-            onError: (c) => c.json({ error: "Request body too large" }, 413),
+            onError: (c) => c.json({ error: "Request body too large (max 100kb)" }, 413),
         }),
     )
     .use(traceMiddleware)
