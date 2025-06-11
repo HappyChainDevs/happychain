@@ -44,6 +44,10 @@ export type {
     Hash,
     Hex,
     Address,
+    Nullish,
+    NotNull,
+    NotUndefined,
+    Defined,
     UInt256,
     UInt192,
     UInt160,
@@ -80,7 +84,7 @@ export type {
     UnionFill,
 } from "./utils/types"
 
-export { isHttpString } from "./utils/types"
+export { isHttpString, isDef, isNullish } from "./utils/types"
 
 export { isAddress } from "./utils/address"
 export { array, uniques, last } from "./utils/arrays"
@@ -92,7 +96,7 @@ export { debounce } from "./utils/debounce"
 export { unknownToError, tryCatch, tryCatchAsync, tryCatchU, tryCatchAsyncU, type Result } from "./utils/error"
 export { fetchWithRetry } from "./utils/fetch"
 export { type Fn, type Lazy, force } from "./utils/functions"
-export { binaryPartition, partition } from "./utils/iterables"
+export { binaryPartition, partition, filterMap } from "./utils/iterables"
 export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
 export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
 export { Mutex } from "./utils/mutex"

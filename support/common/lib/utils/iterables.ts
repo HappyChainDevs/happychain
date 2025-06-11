@@ -1,3 +1,5 @@
+import type { NotUndefined } from "./types"
+
 /**
  * Partitions the iterable into two arrays: the first holds the items for which the predicate
  * is true, the second the items for which it is false.
@@ -24,4 +26,19 @@ export function partition<T, Label extends string = string>(
         output[label].push(item)
     }
     return output
+}
+
+/**
+ * This is semantically equivalent to `[...iterable].filter(it => !!fn(it)).map(fn)` — it maps the iterable to an array
+ * using `fn` but excludes undefined values.
+ *
+ * It improves on the formulation above by performing a single iteration over the iterable instead of 3.
+ */
+export function filterMap<T, U extends NotUndefined>(iterable: Iterable<T>, fn: (item: T) => U | undefined): U[] {
+    const result: U[] = []
+    for (const item of iterable) {
+        const transformed = fn(item)
+        if (transformed !== undefined) result.push(transformed)
+    }
+    return result
 }
