@@ -10,147 +10,61 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as RequestRouteImport } from './routes/request'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as RequestImport } from './routes/request'
-
-// Create Virtual Routes
-
-const EmbedLazyImport = createFileRoute('/embed')()
-const IndexLazyImport = createFileRoute('/')()
-const EmbedIndexLazyImport = createFileRoute('/embed/')()
-const EmbedSendLazyImport = createFileRoute('/embed/send')()
-const EmbedPermissionsIndexLazyImport = createFileRoute('/embed/permissions/')()
-const EmbedPermissionsAppURLLazyImport = createFileRoute(
+const EmbedLazyRouteImport = createFileRoute('/embed')()
+const IndexLazyRouteImport = createFileRoute('/')()
+const EmbedIndexLazyRouteImport = createFileRoute('/embed/')()
+const EmbedSendLazyRouteImport = createFileRoute('/embed/send')()
+const EmbedPermissionsIndexLazyRouteImport = createFileRoute(
+  '/embed/permissions/',
+)()
+const EmbedPermissionsAppURLLazyRouteImport = createFileRoute(
   '/embed/permissions/$appURL',
 )()
 
-// Create/Update Routes
-
-const EmbedLazyRoute = EmbedLazyImport.update({
+const EmbedLazyRoute = EmbedLazyRouteImport.update({
   id: '/embed',
   path: '/embed',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/embed.lazy').then((d) => d.Route))
-
-const RequestRoute = RequestImport.update({
+const RequestRoute = RequestRouteImport.update({
   id: '/request',
   path: '/request',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/request.lazy').then((d) => d.Route))
-
-const IndexLazyRoute = IndexLazyImport.update({
+const IndexLazyRoute = IndexLazyRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
-
-const EmbedIndexLazyRoute = EmbedIndexLazyImport.update({
+const EmbedIndexLazyRoute = EmbedIndexLazyRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() => import('./routes/embed/index.lazy').then((d) => d.Route))
-
-const EmbedSendLazyRoute = EmbedSendLazyImport.update({
+const EmbedSendLazyRoute = EmbedSendLazyRouteImport.update({
   id: '/send',
   path: '/send',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() => import('./routes/embed/send.lazy').then((d) => d.Route))
-
-const EmbedPermissionsIndexLazyRoute = EmbedPermissionsIndexLazyImport.update({
-  id: '/permissions/',
-  path: '/permissions/',
-  getParentRoute: () => EmbedLazyRoute,
-} as any).lazy(() =>
-  import('./routes/embed/permissions.index.lazy').then((d) => d.Route),
-)
-
-const EmbedPermissionsAppURLLazyRoute = EmbedPermissionsAppURLLazyImport.update(
-  {
+const EmbedPermissionsIndexLazyRoute =
+  EmbedPermissionsIndexLazyRouteImport.update({
+    id: '/permissions/',
+    path: '/permissions/',
+    getParentRoute: () => EmbedLazyRoute,
+  } as any).lazy(() =>
+    import('./routes/embed/permissions/index.lazy').then((d) => d.Route),
+  )
+const EmbedPermissionsAppURLLazyRoute =
+  EmbedPermissionsAppURLLazyRouteImport.update({
     id: '/permissions/$appURL',
     path: '/permissions/$appURL',
     getParentRoute: () => EmbedLazyRoute,
-  } as any,
-).lazy(() =>
-  import('./routes/embed/permissions.$appURL.lazy').then((d) => d.Route),
-)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexLazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/request': {
-      id: '/request'
-      path: '/request'
-      fullPath: '/request'
-      preLoaderRoute: typeof RequestImport
-      parentRoute: typeof rootRoute
-    }
-    '/embed': {
-      id: '/embed'
-      path: '/embed'
-      fullPath: '/embed'
-      preLoaderRoute: typeof EmbedLazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/embed/send': {
-      id: '/embed/send'
-      path: '/send'
-      fullPath: '/embed/send'
-      preLoaderRoute: typeof EmbedSendLazyImport
-      parentRoute: typeof EmbedLazyImport
-    }
-    '/embed/': {
-      id: '/embed/'
-      path: '/'
-      fullPath: '/embed/'
-      preLoaderRoute: typeof EmbedIndexLazyImport
-      parentRoute: typeof EmbedLazyImport
-    }
-    '/embed/permissions/$appURL': {
-      id: '/embed/permissions/$appURL'
-      path: '/permissions/$appURL'
-      fullPath: '/embed/permissions/$appURL'
-      preLoaderRoute: typeof EmbedPermissionsAppURLLazyImport
-      parentRoute: typeof EmbedLazyImport
-    }
-    '/embed/permissions/': {
-      id: '/embed/permissions/'
-      path: '/permissions'
-      fullPath: '/embed/permissions'
-      preLoaderRoute: typeof EmbedPermissionsIndexLazyImport
-      parentRoute: typeof EmbedLazyImport
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface EmbedLazyRouteChildren {
-  EmbedSendLazyRoute: typeof EmbedSendLazyRoute
-  EmbedIndexLazyRoute: typeof EmbedIndexLazyRoute
-  EmbedPermissionsAppURLLazyRoute: typeof EmbedPermissionsAppURLLazyRoute
-  EmbedPermissionsIndexLazyRoute: typeof EmbedPermissionsIndexLazyRoute
-}
-
-const EmbedLazyRouteChildren: EmbedLazyRouteChildren = {
-  EmbedSendLazyRoute: EmbedSendLazyRoute,
-  EmbedIndexLazyRoute: EmbedIndexLazyRoute,
-  EmbedPermissionsAppURLLazyRoute: EmbedPermissionsAppURLLazyRoute,
-  EmbedPermissionsIndexLazyRoute: EmbedPermissionsIndexLazyRoute,
-}
-
-const EmbedLazyRouteWithChildren = EmbedLazyRoute._addFileChildren(
-  EmbedLazyRouteChildren,
-)
+  } as any).lazy(() =>
+    import('./routes/embed/permissions/$appURL.lazy').then((d) => d.Route),
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexLazyRoute
@@ -161,7 +75,6 @@ export interface FileRoutesByFullPath {
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions': typeof EmbedPermissionsIndexLazyRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/request': typeof RequestRoute
@@ -170,9 +83,8 @@ export interface FileRoutesByTo {
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions': typeof EmbedPermissionsIndexLazyRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexLazyRoute
   '/request': typeof RequestRoute
   '/embed': typeof EmbedLazyRouteWithChildren
@@ -181,7 +93,6 @@ export interface FileRoutesById {
   '/embed/permissions/$appURL': typeof EmbedPermissionsAppURLLazyRoute
   '/embed/permissions/': typeof EmbedPermissionsIndexLazyRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -211,65 +122,96 @@ export interface FileRouteTypes {
     | '/embed/permissions/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexLazyRoute: typeof IndexLazyRoute
   RequestRoute: typeof RequestRoute
   EmbedLazyRoute: typeof EmbedLazyRouteWithChildren
 }
 
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request': {
+      id: '/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof RequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed': {
+      id: '/embed'
+      path: '/embed'
+      fullPath: '/embed'
+      preLoaderRoute: typeof EmbedLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request': {
+      id: '/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof RequestLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/send': {
+      id: '/embed/send'
+      path: '/send'
+      fullPath: '/embed/send'
+      preLoaderRoute: typeof EmbedSendLazyRouteImport
+      parentRoute: typeof EmbedLazyRoute
+    }
+    '/embed/': {
+      id: '/embed/'
+      path: '/'
+      fullPath: '/embed/'
+      preLoaderRoute: typeof EmbedIndexLazyRouteImport
+      parentRoute: typeof EmbedLazyRoute
+    }
+    '/embed/permissions/$appURL': {
+      id: '/embed/permissions/$appURL'
+      path: '/permissions/$appURL'
+      fullPath: '/embed/permissions/$appURL'
+      preLoaderRoute: typeof EmbedPermissionsAppURLLazyRouteImport
+      parentRoute: typeof EmbedLazyRoute
+    }
+    '/embed/permissions/': {
+      id: '/embed/permissions/'
+      path: '/permissions'
+      fullPath: '/embed/permissions'
+      preLoaderRoute: typeof EmbedPermissionsIndexLazyRouteImport
+      parentRoute: typeof EmbedLazyRoute
+    }
+  }
+}
+
+interface EmbedLazyRouteChildren {
+  EmbedSendLazyRoute: typeof EmbedSendLazyRoute
+  EmbedIndexLazyRoute: typeof EmbedIndexLazyRoute
+  EmbedPermissionsAppURLLazyRoute: typeof EmbedPermissionsAppURLLazyRoute
+  EmbedPermissionsIndexLazyRoute: typeof EmbedPermissionsIndexLazyRoute
+}
+
+const EmbedLazyRouteChildren: EmbedLazyRouteChildren = {
+  EmbedSendLazyRoute: EmbedSendLazyRoute,
+  EmbedIndexLazyRoute: EmbedIndexLazyRoute,
+  EmbedPermissionsAppURLLazyRoute: EmbedPermissionsAppURLLazyRoute,
+  EmbedPermissionsIndexLazyRoute: EmbedPermissionsIndexLazyRoute,
+}
+
+const EmbedLazyRouteWithChildren = EmbedLazyRoute._addFileChildren(
+  EmbedLazyRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexLazyRoute: IndexLazyRoute,
   RequestRoute: RequestRoute,
   EmbedLazyRoute: EmbedLazyRouteWithChildren,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/request",
-        "/embed"
-      ]
-    },
-    "/": {
-      "filePath": "index.lazy.tsx"
-    },
-    "/request": {
-      "filePath": "request.tsx"
-    },
-    "/embed": {
-      "filePath": "embed.lazy.tsx",
-      "children": [
-        "/embed/send",
-        "/embed/",
-        "/embed/permissions/$appURL",
-        "/embed/permissions/"
-      ]
-    },
-    "/embed/send": {
-      "filePath": "embed/send.lazy.tsx",
-      "parent": "/embed"
-    },
-    "/embed/": {
-      "filePath": "embed/index.lazy.tsx",
-      "parent": "/embed"
-    },
-    "/embed/permissions/$appURL": {
-      "filePath": "embed/permissions.$appURL.lazy.tsx",
-      "parent": "/embed"
-    },
-    "/embed/permissions/": {
-      "filePath": "embed/permissions.index.lazy.tsx",
-      "parent": "/embed"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

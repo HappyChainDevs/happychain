@@ -1,4 +1,4 @@
-import { Outlet, type RouterEvents, createRootRoute, useRouter } from "@tanstack/react-router"
+import { Outlet, createRootRoute, useRouter } from "@tanstack/react-router"
 import { revokedSessionKeys } from "#src/state/interfaceState"
 import type { AppURL } from "#src/utils/appURL"
 import "#src/connections/initialize"
@@ -17,13 +17,12 @@ function RootComponent() {
         // This fires after a route transition completes.
         // cf. https://tanstack.com/router/latest/docs/framework/react/api/router/RouterType#subscribe-method
         // cf. https://tanstack.com/router/latest/docs/framework/react/api/router/RouterEventsType
-        return router.subscribe("onResolved", async (event: RouterEvents["onResolved"]) => {
+        return router.subscribe("onResolved", async (event) => {
             const isFromAppPermissionsPage = event.fromLocation?.pathname.match(/^\/embed\/permissions\/(.+)$/)
-
             // Checks if the navigation originated from `/embed/permissions/:appURL` and, if
             // so, revokes the permissions of the session keys associated with the app.
             if (isFromAppPermissionsPage) {
-                const app = decodeURI(isFromAppPermissionsPage[1]) as AppURL
+                const app = decodeURIComponent(isFromAppPermissionsPage[1]) as AppURL
                 await revokeSessionKeys(app, [...revokedSessionKeys.values()])
             }
         })

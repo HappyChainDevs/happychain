@@ -31,7 +31,7 @@ export const DecodedData = ({ data }: DecodedDataProps) => {
                 )}
             >
                 <div className="flex w-full justify-start items-center gap-[1ex]">
-                    <WarningCircleIcon size={"1.25em"} />
+                    <WarningCircleIcon size="1.25em" />
                     <span className="italic text-neutral">This ABI is not verified.</span>
                 </div>
                 <div className="flex w-full justify-between items-baseline gap-[1ex]">

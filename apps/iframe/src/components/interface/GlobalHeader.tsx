@@ -13,7 +13,7 @@ export const GlobalHeader = () => {
     return (
         <div className="relative max-w-prose mx-auto items-center w-full py-3 hidden lg:flex">
             {location.pathname !== "/embed" && (
-                <Link to={"/embed"}>
+                <Link to="/embed">
                     <ArrowLeftIcon
                         weight="bold"
                         className="text-base-content absolute start-2 top-1/2 -translate-y-1/2"

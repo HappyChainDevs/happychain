@@ -1,38 +1,28 @@
 import { Checkbox } from "@ark-ui/react"
 import { CheckIcon } from "@phosphor-icons/react"
-import { useState } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
-import { type SessionKeyRequest, hasPermissions } from "#src/state/permissions"
+import { grantPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
     appURL: AppURL
     contract: Address
-    addActiveSessionKey: (app: AppURL, request: SessionKeyRequest) => void
-    removeActiveSessionKey: (app: AppURL, request: SessionKeyRequest) => void
 }
 
-export const SessionKeyCheckbox = ({
-    appURL,
-    contract,
-    addActiveSessionKey,
-    removeActiveSessionKey,
-}: SessionKeyContractProps) => {
+export const SessionKeyCheckbox = ({ appURL, contract }: SessionKeyContractProps) => {
     // Initial state is whether the permission is granted or not.
     const permissionRequest = { [Permissions.SessionKey]: { target: contract } }
-    const [checked, setChecked] = useState(hasPermissions(appURL, permissionRequest))
 
     return (
         <Checkbox.Root
-            checked={checked}
+            checked={hasPermissions(appURL, permissionRequest)}
             className="w-full flex justify-between items-center focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
                 // in the atom to be used in the revokeSessionKey call
-                if (e.checked) addActiveSessionKey(appURL, permissionRequest)
-                else removeActiveSessionKey(appURL, permissionRequest)
-                setChecked(e.checked)
+                if (e.checked) grantPermissions(appURL, permissionRequest)
+                else revokePermissions(appURL, permissionRequest)
             }}
         >
             <Checkbox.Label className="font-mono block overflow-hidden text-ellipsis">{contract}</Checkbox.Label>

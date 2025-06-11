@@ -1,5 +1,6 @@
 import { createUUID } from "@happy.tech/common"
 import type { Address, UUID } from "@happy.tech/common"
+import type { HappyUser } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import { Permissions } from "#src/constants/permissions"
@@ -132,20 +133,26 @@ export function atomForPermissionsCheck(
  */
 export function getAppPermissions(app: AppURL): AppPermissions {
     const user = getUser()
+    const permissionsMap = store.get(permissionsMapAtom)
+    return getAppPermissionsPure(user, app, permissionsMap)
+}
+
+export function getAppPermissionsPure(
+    user: HappyUser | undefined,
+    app: AppURL,
+    permissionsMap: PermissionsMap,
+): AppPermissions {
     if (!user) {
         // This should never happen and requires investigating if it does!
         permissionsLogger.warn("No user found, returning empty permissions.")
         return {}
     }
 
-    const permissionsMap = store.get(permissionsMapAtom)
     const appPermissions = permissionsMap[user.address]?.[app]
 
-    if (appPermissions) {
-        return appPermissions
-    }
+    if (appPermissions) return appPermissions
 
-    // Permissions don't exist, create them.
+    // Permissions don't exist, create the default ones.
 
     const baseAppPermissions: AppPermissions =
         app === getWalletURL()
@@ -159,7 +166,9 @@ export function getAppPermissions(app: AppURL): AppPermissions {
                       id: createUUID(),
                   },
               }
-            : {}
+            : {
+                  // Other apps have no default permissions
+              }
 
     // It's not required to set the permissionsAtom here because the permissions don't actually
     // change (so nothing dependent on the atom needs to update). We just write them to avoid

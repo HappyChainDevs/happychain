@@ -9,5 +9,6 @@ export function useHasPermissions(permissionsRequest: PermissionsRequest, app: A
         () => atomForPermissionsCheck(permissionsRequest, app), //
         [permissionsRequest, app],
     )
+
     return useAtomValue(permissionsAtom)
 }

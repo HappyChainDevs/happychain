@@ -32,7 +32,7 @@ export function Badge({ disableStyles = false }: ConnectButtonProps) {
                   </style>
             }
             <button
-                type={"button"}
+                type="button"
                 className={`${!connected ? `${state} animated` : state} happychain-badge`}
                 onClick={onClick}
                 disabled={connecting}

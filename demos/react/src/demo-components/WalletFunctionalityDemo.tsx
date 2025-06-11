@@ -1,4 +1,4 @@
-import { loadAbi, showSendScreen } from "@happy.tech/core"
+import { loadAbi, requestSessionKey, showSendScreen } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 import { walletClient } from "../clients"
@@ -69,11 +69,23 @@ const WalletFunctionalityDemo = () => {
         )
     }
 
+    async function addSessionKey() {
+        await requestSessionKey(deployment.MockTokenA)
+        toast.success(
+            // No period after the address, as that will most often flush to a next line given toast width.
+            `Session Key will be used when interacting with ${deployment.HappyCounter} Try sending a transaction to the counter with the button below!`,
+        )
+    }
+
     return (
         <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Wallet Functionality</div>
             <button type="button" onClick={showSendScreen} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Show Send Screen
+            </button>
+
+            <button type="button" onClick={addSessionKey} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Add Session Key
             </button>
 
             <div className="flex flex-row w-full items-center justify-center space-x-6">
