@@ -2,9 +2,10 @@
 
 import sharedConfig from "@happy.tech/configs/vite.config"
 import { SharedWorkerPlugin } from "@happy.tech/worker"
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
+import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig, loadEnv, mergeConfig } from "vite"
+import type { ViteUserConfig } from "vitest/config"
 import z from "zod"
 
 const envConfigSchema = z.object({
@@ -44,7 +45,11 @@ export default defineConfig(({ command, mode }) => {
         server: { port: 5160 },
         preview: { port: 5160 },
         plugins: [
-            TanStackRouterVite(),
+            tanstackRouter({
+                target: "react",
+                autoCodeSplitting: true,
+                verboseFileRoutes: true,
+            }),
             react({ babel: { presets: ["jotai/babel/preset"] } }),
             SharedWorkerPlugin({
                 disabled: false,
@@ -71,7 +76,7 @@ export default defineConfig(({ command, mode }) => {
         test: {
             environment: "happy-dom",
         },
-    })
+    } satisfies ViteUserConfig)
 })
 
 /**
