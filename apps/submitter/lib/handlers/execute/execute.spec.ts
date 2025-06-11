@@ -123,7 +123,7 @@ describe("submitter_execute", () => {
             expect(response.receipt).not.toBeEmpty()
             expect(response.receipt.boopHash).toBeString()
             expect(response.receipt.status).toBe(Onchain.Success)
-            expect(response.receipt.error).toBeString()
+            expect(response.receipt.description).toBeString()
             expect(response.receipt.entryPoint).toBeString()
 
             expect(response.receipt.revertData).toBe("0x")

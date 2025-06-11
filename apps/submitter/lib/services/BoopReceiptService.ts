@@ -299,7 +299,7 @@ export class BoopReceiptService {
             entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployments
             status,
             logs,
-            error: description,
+            description,
             revertData,
             evmTxHash: evmTxReceipt.transactionHash,
             blockHash: evmTxReceipt.blockHash,
