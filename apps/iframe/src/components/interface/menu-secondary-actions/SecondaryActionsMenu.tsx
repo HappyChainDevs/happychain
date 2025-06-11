@@ -20,10 +20,6 @@ const TriggerSecondaryActionsMenu = () => {
 
         const isOnHome = router.state.location.pathname === "/embed"
         if (!isOnHome) {
-            // Push callback to keep menu open when navigating back
-            navigationStateManager.pushBackCallback(() => {
-                setVisibility(true)
-            })
             // Navigate to embed if not already there
             router.navigate({ to: "/embed" })
         } else {
