@@ -14,7 +14,7 @@ const LazyLoadTanStackRouterDevtools = !useDevTools
     ? () => null // Render nothing in production or embedded in iframe
     : lazy(() =>
           // Lazy load in development
-          import("@tanstack/router-devtools").then((res) => ({
+          import("@tanstack/react-router-devtools").then((res) => ({
               default: res.TanStackRouterDevtools,
               // For Embedded Mode
               // default: res.TanStackRouterDevtoolsPanel
