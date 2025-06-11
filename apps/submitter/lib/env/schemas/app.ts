@@ -83,4 +83,9 @@ export const appSchema = z.object({
      * The endpoint to send traces to.
      */
     TRACES_ENDPOINT: z.string().optional(),
+
+    /**
+     * The port to run the Prometheus metrics server on.
+     */
+    PROMETHEUS_PORT: z.coerce.number().default(9090),
 })

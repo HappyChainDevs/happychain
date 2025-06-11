@@ -12,7 +12,7 @@ import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { env, isProduction } from "#lib/env"
 import { resyncAllAccounts } from "#lib/services"
-import { traceMiddleware } from "#lib/telemetry/traces"
+import { instrumentHttpMiddleware } from "#lib/telemetry/traces"
 import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
 import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
@@ -28,7 +28,7 @@ const app = new Hono()
             onError: (c) => c.json({ error: "Request body too large (max 100kb)" }, 413),
         }),
     )
-    .use(traceMiddleware)
+    .use(instrumentHttpMiddleware)
     .use(
         "*",
         cors({

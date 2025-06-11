@@ -2,6 +2,7 @@ import { type Address, type Hash, Map2 } from "@happy.tech/common"
 import { TraceMethod } from "#lib/telemetry/traces"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import type { Boop } from "../types"
+import { boopsStoredGauge } from "#lib/telemetry/metrics.ts"
 
 /**
  * This stores the original version of all boops currently being processed by the submitter — from being received
@@ -45,6 +46,7 @@ export class BoopStore {
         this.#byHash.set(boopHash, ogBoop)
         this.#byNonce.set(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`, ogBoop)
         this.#entryPoints.set(boopHash, entryPoint)
+        boopsStoredGauge.record(this.#byNonce.size)
         return this
     }
 
@@ -68,6 +70,7 @@ export class BoopStore {
         const boopHash = computeHash(boop)
         this.#byNonce.delete(boop.account, `${boop.nonceTrack}/${boop.nonceValue}`)
         this.#entryPoints.delete(boopHash)
+        boopsStoredGauge.record(this.#byNonce.size)
         return this.#byHash.delete(boopHash)
     }
 }
