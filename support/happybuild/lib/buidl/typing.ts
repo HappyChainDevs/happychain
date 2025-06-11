@@ -1,8 +1,8 @@
 import { join } from "node:path"
 import { $ } from "bun"
-import chalk from "chalk"
 import type { Context } from "../build"
 import type { Config } from "../config/types"
+import { colors } from "../utils/colors"
 import { base } from "../utils/globals"
 import { spinner } from "../utils/spinner"
 import { rollupTypes } from "./rollupTypes"
@@ -33,7 +33,7 @@ export async function handleTypes(config: Config, ctx: Context) {
             await rollupTypes(config)
         } catch (e) {
             console.error(e)
-            console.warn(`[${chalk.yellow(config.fullName)}] ${chalk.red("Failed to rollup types. Creating Stub.")}`)
+            console.warn(`[${colors.yellow(config.fullName)}] ${colors.red("Failed to rollup types. Creating Stub.")}`)
             throw e
         }
         const t1 = performance.now()
