@@ -1,6 +1,6 @@
 import { $ } from "bun"
-import chalk from "chalk"
 import type { Config } from "../config/types"
+import { colors } from "../utils/colors"
 import { pkg, pkgExportNames } from "../utils/globals"
 import { spinner } from "../utils/spinner"
 import { withOutputsInExportDirs } from "../utils/symlinks"
@@ -73,9 +73,9 @@ export async function checkExportedTypes(configs: Config[]) {
     const table: Record<string, string>[] = []
     for (const row of rows) {
         const tableRow: Record<string, string> = {}
-        tableRow[chalk.blue("target")] = row.shift()!
+        tableRow[colors.blue("target")] = row.shift()!
         for (const [i, result] of row.entries()) {
-            tableRow[chalk.green(headers[i])] = result
+            tableRow[colors.green(headers[i])] = result
         }
         table.push(tableRow)
     }

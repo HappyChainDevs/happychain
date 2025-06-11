@@ -2,8 +2,8 @@ import { existsSync } from "node:fs"
 import { basename, join } from "node:path"
 import { Extractor, ExtractorConfig, type ExtractorResult } from "@microsoft/api-extractor"
 import { $ } from "bun"
-import chalk from "chalk"
 import type { Config } from "../config/types"
+import { colors } from "../utils/colors"
 import { base } from "../utils/globals"
 import { spinner } from "../utils/spinner"
 import { tscBuild } from "./typescript"
@@ -35,10 +35,10 @@ export async function rollupTypes(config: Config) {
     const typesfilename = basename(extractorConfig.mainEntryPointFilePath).replace(/(.es)?\.d\.ts/, "")
     if (entryfilename !== typesfilename) {
         console.warn(
-            `\n[${chalk.yellow(config.fullName)}] API-Extractor is configured to process '${chalk.red(`${typesfilename}.ts`)}', expecting '${chalk.green(`${entryfilename}.ts`)}'.`,
+            `\n[${colors.yellow(config.fullName)}] API-Extractor is configured to process '${colors.red(`${typesfilename}.ts`)}', expecting '${colors.green(`${entryfilename}.ts`)}'.`,
         )
         console.warn(
-            `[${chalk.yellow(config.fullName)}] Verify the api-extractor "mainEntryPointFilePath" and ensure its pointing to the correct path for this entrypoint.`,
+            `[${colors.yellow(config.fullName)}] Verify the api-extractor "mainEntryPointFilePath" and ensure its pointing to the correct path for this entrypoint.`,
         )
         throw new Error("API-Extractor mainEntryPointFilePath mismatch")
     }
@@ -56,7 +56,7 @@ function invokeExtractor(extractorConfig: ExtractorConfig): ExtractorResult {
     const ogLog = console.log.bind(console)
     const ogWarn = console.warn.bind(console)
     console.log = () => {}
-    console.warn = (...msg) => ogWarn(chalk.blue("[@microsoft/api-extractor]"), ...msg)
+    console.warn = (...msg) => ogWarn(colors.blue("[@microsoft/api-extractor]"), ...msg)
 
     const result = Extractor.invoke(extractorConfig, {
         localBuild: true,
