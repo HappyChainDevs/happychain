@@ -9,17 +9,35 @@ enum AlertStatus {
     RECOVERING = "RECOVERING",
 }
 
-export type Alert = {
-    status: AlertStatus
+export type AlertNormal = {
+    status: AlertStatus.NORMAL
     changedAt: Date
+    unhealthyAt: undefined
+    healthyAt: undefined
 }
+
+export type AlertAlerting = {
+    status: AlertStatus.ALERTING
+    changedAt: Date
+    unhealthyAt: Date
+    healthyAt: undefined
+}
+
+export type AlertRecovering = {
+    status: AlertStatus.RECOVERING
+    changedAt: Date
+    unhealthyAt: Date
+    healthyAt: Date
+}
+
+export type Alert = AlertNormal | AlertAlerting | AlertRecovering
 
 type RpcStatus = {
     isLive: Alert
     isSyncing: Alert
 }
 
-export const NotSyncingSecondsThreshold = 4n
+export const NotSyncingSecondsThreshold = 8n
 export const TimeToConsiderAlertRecoveredMilliseconds = 1000 * 60
 
 export class RpcMonitor {
@@ -34,10 +52,14 @@ export class RpcMonitor {
                     isLive: {
                         status: AlertStatus.NORMAL,
                         changedAt: new Date(),
+                        unhealthyAt: undefined,
+                        healthyAt: undefined,
                     },
                     isSyncing: {
                         status: AlertStatus.NORMAL,
                         changedAt: new Date(),
+                        unhealthyAt: undefined,
+                        healthyAt: undefined,
                     },
                 }
                 return acc
@@ -100,13 +122,13 @@ export class RpcMonitor {
             isLive = false
         }
 
-        await this.handleNewCheckForAnAlert(
+        this.rpcStatus[rpcUrl].isLive = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isLive,
             isLive,
             `❗️❗️ RPC ${rpcUrl} is not live`,
             `✅✅ RPC ${rpcUrl} is now live again`,
         )
-        await this.handleNewCheckForAnAlert(
+        this.rpcStatus[rpcUrl].isSyncing = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isSyncing,
             isSyncing,
             `❗️❗️ RPC ${rpcUrl} is not syncing`,
@@ -121,22 +143,36 @@ export class RpcMonitor {
         newCheck: boolean,
         alertingMessage: string,
         recoveredMessage: string,
-    ) {
+    ): Promise<Alert> {
         if (
             (currentAlert.status === AlertStatus.NORMAL || currentAlert.status === AlertStatus.RECOVERING) &&
             newCheck === false
         ) {
             if (currentAlert.status === AlertStatus.NORMAL) {
                 await sendSlackMessageToAlertChannel(alertingMessage)
+                return {
+                    status: AlertStatus.ALERTING,
+                    changedAt: new Date(),
+                    unhealthyAt: new Date(),
+                    healthyAt: undefined,
+                }
             }
 
-            currentAlert.status = AlertStatus.ALERTING
-            currentAlert.changedAt = new Date()
+            return {
+                status: AlertStatus.ALERTING,
+                changedAt: new Date(),
+                unhealthyAt: new Date(),
+                healthyAt: undefined,
+            }
         }
 
         if (currentAlert.status === AlertStatus.ALERTING && newCheck === true) {
-            currentAlert.status = AlertStatus.RECOVERING
-            currentAlert.changedAt = new Date()
+            return {
+                status: AlertStatus.RECOVERING,
+                changedAt: new Date(),
+                unhealthyAt: currentAlert.unhealthyAt,
+                healthyAt: new Date(),
+            }
         }
 
         const timeSinceLastStatusChange = new Date().getTime() - currentAlert.changedAt.getTime()
@@ -144,9 +180,18 @@ export class RpcMonitor {
             currentAlert.status === AlertStatus.RECOVERING &&
             timeSinceLastStatusChange > TimeToConsiderAlertRecoveredMilliseconds
         ) {
-            currentAlert.status = AlertStatus.NORMAL
-            currentAlert.changedAt = new Date()
-            await sendSlackMessageToAlertChannel(recoveredMessage)
+            const alertingTimeSeconds = (currentAlert.healthyAt.getTime() - currentAlert.unhealthyAt.getTime()) / 1000
+
+            await sendSlackMessageToAlertChannel(`${recoveredMessage} - Alert duration: ${alertingTimeSeconds}s`)
+
+            return {
+                status: AlertStatus.NORMAL,
+                changedAt: new Date(),
+                unhealthyAt: undefined,
+                healthyAt: undefined,
+            }
         }
+
+        return currentAlert
     }
 }

@@ -1,6 +1,6 @@
 import { getUrlProtocol } from "@happy.tech/common"
+import { createViemPublicClient } from "@happy.tech/common"
 import type { PublicClient } from "viem"
-import { createViemPublicClient } from "./createViemPublicClient"
 import { env } from "./env"
 import { logger } from "./logger"
 import { FundMonitor } from "./monitors/FundMonitor"
@@ -21,7 +21,7 @@ export class MonitorService {
 
         this.protocol = protocolResult.value
 
-        this.viemClient = createViemPublicClient(env.RPC_URL)
+        this.viemClient = createViemPublicClient(env.CHAIN_ID, env.RPC_URL)
 
         this.fundMonitor = new FundMonitor(this)
         this.rpcMonitor = new RpcMonitor()
