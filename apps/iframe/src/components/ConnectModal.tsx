@@ -20,7 +20,7 @@ export function ConnectModal() {
                     <div className="flex flex-col items-center gap-2">
                         <img
                             alt="HappyChain Logo"
-                            src={"/images/happychainLogoRopeBackground.png"}
+                            src="/images/happychainLogoRopeBackground.png"
                             className="mx-auto size-16 drop-shadow-lg"
                         />
                         <p className="text-xl font-bold">HappyChain</p>
@@ -171,7 +171,7 @@ const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
     return (
         <div className="grid gap-8">
             <div className="flex items-center justify-center gap-4">
-                <img alt="HappyChain Logo" src={"/images/happychainLogoSimple.png"} className="h-10" />
+                <img alt="HappyChain Logo" src="/images/happychainLogoSimple.png" className="h-10" />
                 <DotLinearMotionBlurLoader />
                 <img
                     className={cx("h-8", provider?.id === "injected:wallet.injected" && "dark:invert")}

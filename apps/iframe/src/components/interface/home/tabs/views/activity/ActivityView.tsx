@@ -43,7 +43,7 @@ export const ActivityView = () => {
             {/* In theory, can't be > 50, but it never hurts to be safe. */}
             {history.length >= 50 && (
                 <div className="flex flex-row items-center justify-center text-xs gap-1">
-                    <RowsIcon size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
+                    <RowsIcon size="1.15em" className="text-primary/70 dark:text-primary/70" />
                     <a
                         href={`${blockExplorerUrl}/address/${user.address}`}
                         target="_blank"

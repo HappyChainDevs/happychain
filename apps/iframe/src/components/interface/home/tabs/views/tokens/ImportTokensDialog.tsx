@@ -19,7 +19,7 @@ export const TriggerImportTokensDialog = () => {
         <button
             type="button"
             className="flex flex-row items-center justify-center gap-2 hover:underline"
-            aria-label={"Open Import Tokens Dialog"}
+            aria-label="Open Import Tokens Dialog"
             onClick={() => {
                 setVisibility(!isVisible)
             }}
@@ -156,7 +156,7 @@ export const ImportTokensDialog = () => {
                         </div>
 
                         <Dialog.CloseTrigger>
-                            <XIcon size={"1.25em"} />
+                            <XIcon size="1.25em" />
                         </Dialog.CloseTrigger>
                     </div>
                     <form className="w-full grid gap-4" onSubmit={submitWatchAssetData}>

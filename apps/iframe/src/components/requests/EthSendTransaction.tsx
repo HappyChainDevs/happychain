@@ -171,7 +171,7 @@ export const EthSendTransaction = ({
                 <DisclosureSection
                     title="Decoded Function Data"
                     showWarning
-                    warningText={"This ABI is not verified."}
+                    warningText="This ABI is not verified."
                     isOpen={true}
                 >
                     <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
