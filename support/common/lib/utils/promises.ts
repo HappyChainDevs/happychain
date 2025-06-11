@@ -32,14 +32,25 @@ export function promiseWithResolvers<T>(): PromiseWithResolvers<T> {
     return { promise, resolve: resolve!, reject: reject! }
 }
 
+/** `T` if `T` is not a promise, otherwise `never`. */
+export type NotPromise<T> = T extends Promise<unknown> ? never : T
+
+/**
+ * Either `T` or `Promise<T>`.
+ *
+ * Note that `T | Promise<T>` is not a suitable type for this, as `Promise<X>`
+ * always matches `T` — this uses {@link NotPromise} to alleviate this issue.
+ */
+export type MaybePromise<T> = Promise<T> | NotPromise<T>
+
 /**
  * Returns the value after the specified {@link timeout}.
  */
-export async function delayed<T>(timeout: number, value: Lazy<T | Promise<T>>): Promise<T> {
+export async function delayed<T>(timeout: number, value: Lazy<MaybePromise<T>>): Promise<T> {
     return await new Promise<T>((resolve, reject) => {
-        setTimeout(() => {
+        setTimeout(async () => {
             // biome-ignore format: terse
-            try { resolve(force(value))}
+            try { resolve(await force(value))}
             catch (e) { reject(e) }
         }, timeout)
     })

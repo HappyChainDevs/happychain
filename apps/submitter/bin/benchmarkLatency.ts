@@ -39,7 +39,7 @@ async function run({
         const nonceValue = BigInt(i) % 50n
         const nonceTrack = i < 50 ? 0n : 1n
         const tx = await createAndSignMintBoop(eoa, { account, nonceTrack, nonceValue })
-        boopPromises[i] = delayed(i * delayBetweenTransactions, async () => {
+        boopPromises[i] = delayed(i * delayBetweenTransactions, async (): Promise<void> => {
             const start = performance.now()
             let Status = "Unknown"
             let EvmTxHash = "N/A"
