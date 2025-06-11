@@ -204,16 +204,14 @@ export class Stream<T extends Exclude<unknown, undefined>> implements AsyncItera
     }
 
     /**
-     * Returns a stream of fulfilled promise results, in resolution order. Rejections
-     * are ignored. The stream closes after all the promises are fulfilled or rejected.
+     * Returns a stream of fulfilled promise results, in resolution order. Rejections are
+     * ignored (i.e. you must handle them yourself if they can happen, or an exception
+     * will escape). The stream closes after all the promises are fulfilled or rejected.
      */
     static ofFulfilled<U>(...promises: Promise<U>[]): Stream<U> {
         const stream = new Stream<U>()
-        promises.forEach((promise) =>
-            promise //
-                .then((value) => stream.push(value))
-                .finally(() => stream.close()),
-        )
+        promises.forEach((promise) => promise.then((value) => stream.push(value)))
+        void Promise.allSettled(promises).then(() => stream.close())
         return stream
     }
 
@@ -225,11 +223,8 @@ export class Stream<T extends Exclude<unknown, undefined>> implements AsyncItera
      */
     static ofRejected<U = unknown>(...promises: Promise<unknown>[]): Stream<U> {
         const stream = new Stream<U>()
-        promises.forEach((promise) =>
-            promise //
-                .catch((value) => stream.push(value))
-                .finally(() => stream.close()),
-        )
+        promises.forEach((promise) => promise.catch((value) => stream.push(value)))
+        void Promise.allSettled(promises).then(() => stream.close())
         return stream
     }
 
@@ -239,10 +234,8 @@ export class Stream<T extends Exclude<unknown, undefined>> implements AsyncItera
      */
     static of<U, Err = unknown>(...promises: Promise<U>[]): Stream<Result<U, Err>> {
         const stream = new Stream<Result<U, Err>>()
-        promises.forEach(async (promise) => {
-            stream.push(await tryCatchAsync(promise))
-            stream.close()
-        })
+        promises.forEach(async (promise) => stream.push(await tryCatchAsync(promise)))
+        void Promise.allSettled(promises).then(() => stream.close())
         return stream
     }
 }
