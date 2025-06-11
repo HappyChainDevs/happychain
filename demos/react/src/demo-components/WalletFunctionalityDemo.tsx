@@ -1,4 +1,4 @@
-import { loadAbi, showSendScreen } from "@happy.tech/core"
+import { connect, getCurrentUser, loadAbi, showSendScreen } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 import { walletClient } from "../clients"
@@ -30,12 +30,17 @@ const WalletFunctionalityDemo = () => {
     /** mints 1 MTA token to the connected account */
     async function mintTokens() {
         try {
-            if (!user?.address) return
+            // For many calls we can rely on the wallet to handle automatically prompting the user to
+            // connect if required, however this call requires the users address to be known ahead
+            // of time so it can be provided to 'args'. In this case we must manually call connect()
+            // to ensure there is a user connected to the wallet, and in args, we may call
+            // `getCurrentUser()` to get the address without waiting for react to re-render.
+            if (!user?.address) await connect()
             const writeCallResult = await walletClient.writeContract({
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
                 functionName: "mint",
-                args: [user.address, 1000000000000000000n],
+                args: [getCurrentUser()!.address, 1000000000000000000n],
             })
             if (writeCallResult) {
                 console.log("[mintTokens] success:", writeCallResult)
