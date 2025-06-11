@@ -53,7 +53,7 @@ export type CreateAccountSuccess = {
     salt: Hex
     /** The address of the account. */
     address: Address
-    description?: undefined
+    error?: undefined
 }
 
 // =====================================================================================================================
@@ -67,7 +67,7 @@ export type CreateAccountError = {
     /** Salt for the account creation — no greater than 32 bytes. */
     salt: Hex
     /** Description of the problem. */
-    description: string
+    error: string
     address?: undefined
 }
 
