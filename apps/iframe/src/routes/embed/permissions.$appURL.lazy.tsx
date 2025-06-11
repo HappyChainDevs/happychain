@@ -12,7 +12,7 @@ export const Route = createLazyFileRoute("/embed/permissions/$appURL")({
 function DappPermissions() {
     const appURL = useParams({
         from: "/embed/permissions/$appURL",
-        select: (params) => decodeURI(params.appURL),
+        select: (params) => params.appURL,
     }) as AppURL
 
     // Very purposefully not reactive: when revoking a permission, it will show as toggled off instead of vanishing,
