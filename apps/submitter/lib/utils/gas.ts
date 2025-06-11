@@ -1,4 +1,4 @@
-import { bigIntMax } from "@happy.tech/common"
+import { bigIntMax, getProp } from "@happy.tech/common"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
 import type { EvmTxInfo } from "#lib/types"
@@ -45,9 +45,9 @@ export function getMinFee(replacedTx?: EvmTxInfo): bigint {
 
 function getLastBaseFee(): bigint {
     const lastBlock = blockService.getCurrentBlock()
-    if (!lastBlock.baseFeePerGas)
-        throw Error("Error fetching the fees: the RPC sent a block with missing fee information")
-    return lastBlock.baseFeePerGas
+    const baseFee = lastBlock.baseFeePerGas ?? getProp(lastBlock, "gasPrice", "bigint")
+    if (!baseFee) throw Error("Error fetching the fees: the RPC sent a block with missing fee information")
+    return baseFee
 }
 
 function getMinFeeNoReplaced(): bigint {

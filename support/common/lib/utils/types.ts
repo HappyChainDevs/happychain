@@ -17,6 +17,43 @@ export type Address = `0x${string}`
 /** A hash, as hex-encoded data. (0x-prefixed string). */
 export type Hash = `0x${string}`
 
+/**
+ * Type shorthand for `null | undefined`.
+ */
+export type Nullish = null | undefined
+
+/**
+ * Type for any value that is not undefined. Very useful as a type bound.
+ */
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
+export type NotUndefined = {} | null
+
+/**
+ * Type for any value that is not null. Very useful as a type bound.
+ */
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
+export type NotNull = {} | undefined
+
+/**
+ * Type for any value that is not undefined or null. Very useful as a type bound.
+ */
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
+export type Defined = {}
+
+/**
+ * Type guard shorthand for `value !== null && value !== undefined`
+ */
+export function isDef(value: unknown): value is Defined {
+    return value !== null && value !== undefined
+}
+
+/**
+ * Type guard shorthand for `value === null || value === undefined`.
+ */
+export function isNullish(value: unknown): value is null | undefined {
+    return value === null || value === undefined
+}
+
 // === Solidity Type Mappings ================================================================================
 
 export type UInt256 = bigint

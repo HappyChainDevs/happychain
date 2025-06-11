@@ -1,14 +1,51 @@
 import { exit } from "node:process"
-import { type Hash, Mutex, type RejectType, promiseWithResolvers, sleep, tryCatchAsync } from "@happy.tech/common"
+import {
+    type Hash,
+    Mutex,
+    type RejectType,
+    assertType,
+    filterMap,
+    isNullish,
+    parseBigInt,
+    promiseWithResolvers,
+    sleep,
+    tryCatchAsync,
+} from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
-import { type OnBlockParameter, type PublicClient, type RpcBlock, formatBlock } from "viem"
+import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 
-export type Block = OnBlockParameter<typeof chain>
+/**
+ * Type of block we get from Viem's `getBlock` — made extra permissive for safety,
+ * and picking only the properties we care about to avoid type shenanigans.
+ */
+type InputBlock = {
+    number: bigint | null | undefined
+    hash: Hash | null | undefined
+    transactions: Hash[]
+    // This is supposed to be there, and the submitter won't work if it isn't, though we don't validate it yet.
+    // (though we support gasPrice being there instead in gas.ts)
+    baseFeePerGas: bigint | null | undefined
+}
+
+/**
+ * Type of block that we expose to subscribers via {@link BlockService.onBlock}.
+ */
+export type Block = {
+    number: bigint
+    hash: Hash
+    transactions: Hash[]
+    // This is supposed to be there, and the submitter won't work if it isn't, though we don't validate it yet.
+    // (though we support gasPrice being there instead in gas.ts)
+    baseFeePerGas: bigint | null | undefined
+}
+
+// Note there is an extra block type: `RpcBlock` from Viem representing an raw block from RPC, which we get on
+// our WebSocket subscription. We normalize those to `InputBlock`.
 
 export class BlockService {
     #current?: Block
@@ -94,14 +131,15 @@ export class BlockService {
         }
 
         /** Get latest block from all RPCs. */
-        async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<Block>[]> {
+        async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<InputBlock>[]> {
             const promises = rpcUrls.map((url) => createClient(url, timeout).getBlock({ includeTransactions: false }))
             return await Promise.allSettled(promises)
         }
 
         /** Can be applied to {@link pingRpcsForBlock} result to select successful calls. */
-        function isSuccess(result: PromiseSettledResult<Block>): result is PromiseFulfilledResult<Block> {
-            return result.status === "fulfilled"
+        function isSuccess(result: PromiseSettledResult<InputBlock>): result is PromiseFulfilledResult<Block> {
+            if (result.status !== "fulfilled") return false
+            return typeof result.value.number === "bigint" && typeof result.value.hash === "string"
         }
 
         // === Find live RPCs ===
@@ -241,58 +279,58 @@ export class BlockService {
             this.#skipToNextClient = reject
             let unsubscribe: (() => Promise<void>) | null = null
             let pollingTimer: Timer | undefined = undefined
-            try {
-                this.#startBlockTimeout()
 
-                if (this.#client.transport.type === "webSocket") {
-                    try {
-                        ;({ unsubscribe } = await this.#client.transport.subscribe({
-                            params: ["newHeads"],
-                            onData: async (data: { result: Partial<RpcBlock> }) => {
-                                const formattedBlock = formatBlock(data.result)
-                                if (!formattedBlock || !formattedBlock.number || !formattedBlock.hash) {
-                                    blockLogger.error("Received malformed block data, skipping.")
-                                    return
-                                }
-                                // Subscription may not populate the transactions list, so we need to fetch the block.
-                                const block: Block | null = await this.#getBlock(formattedBlock.number)
-                                if (!block) {
-                                    blockLogger.warn(`Block ${formattedBlock.number} not found, skipping.`)
-                                    return
-                                }
-                                void this.#handleNewBlock(block)
-                            },
-                            onError: reject,
-                        }))
-                    } catch (e) {
-                        // If you remove the try-catch and the `reject` call, then you can make the exception escape.
-                        // Rethrowing the error here has the same behaviour.
-                        // This makes *no sense* given the outer try catch. Maybe a Bun bug.
+            this.#startBlockTimeout()
+
+            if (this.#client.transport.type === "webSocket") {
+                try {
+                    ;({ unsubscribe } = await this.#client.transport.subscribe({
+                        params: ["newHeads"],
+                        // Type is unchecked, we're being conservative with what we receive.
+                        onData: (data?: { result?: Partial<RpcBlock> }) => {
+                            try {
+                                this.#handleNewRpcBlock(data?.result)
+                            } catch (e) {
+                                // This will never be called before `subscribe` returns.
+                                reject(e)
+                            }
+                        },
+                        onError: reject,
+                    }))
+                } catch (e) {
+                    // This `try` block is necessary because `subscribe` can throw AND call
+                    // `onError` which rejects `promise`, which if throwing here would not be
+                    // awaited, leading the exception to escape. We however do need the `onError`
+                    // as it is also called if there is an error later with the subscription.
+
+                    // For the same reason, we need to queue a microtask, execution will run from here
+                    // to `await promise` and the promise wil be awaited when the microtask is executed.
+                    queueMicrotask(() => {
                         reject(e)
-                    }
-                } else {
-                    pollingTimer = setInterval(async () => {
-                        // biome-ignore format: terse
-                        try { void this.#handleNewBlock(await this.#client.getBlock())}
-                        catch (e) { reject(e) }
-                    }, pollingInterval)
+                    })
                 }
+            } else {
+                pollingTimer = setInterval(async () => {
+                    // biome-ignore format: terse
+                    try { void this.#handleNewBlock(await this.#client.getBlock()) }
+                    catch (e) { reject(e) }
+                }, pollingInterval)
+            }
 
-                // The above is equivalent to the below Viem watchBlock invocation (minus emitOnBegin
-                // for the very first subscription). However, our version does not incur an extra
-                // useless eth_getBlock call when subscribing via WebSocket. Additionally, we
-                // duplicate a lot of the bookkeeping logic to be able to support cycling between
-                // RPCs in case of failure, so we might as well avoid having two layers doing this.
+            // The above if/else is equivalent to the below Viem watchBlock invocation. We unbundle
+            // it because we need to control the retry logic ourselves to implement RPC fallback
+            // for subscriptions, as well as resubscriptions — two things Viem doesn't handle.
 
-                // unwatch = this.#client.watchBlocks({
-                //     pollingInterval,
-                //     includeTransactions: false,
-                //     emitOnBegin: true,
-                //     emitMissed: true,
-                //     onBlock: this.#handleNewBlock.bind(this),
-                //     onError: reject,
-                // })
+            // unwatch = this.#client.watchBlocks({
+            //     pollingInterval,
+            //     includeTransactions: false,
+            //     emitOnBegin: false,
+            //     emitMissed: true,
+            //     onBlock: this.#handleNewBlock.bind(this),
+            //     onError: reject,
+            // })
 
+            try {
                 await promise // Waits forever unless these is an error.
             } catch (e) {
                 unsubscribe && tryCatchAsync(unsubscribe)
@@ -304,22 +342,6 @@ export class BlockService {
         }
     }
 
-    async #getBlock(number: bigint): Promise<Block | null> {
-        let block: Block | null = null
-        for (let i = 1; i <= 3; ++i) {
-            try {
-                block = await this.#client.getBlock({
-                    blockNumber: number,
-                    includeTransactions: false,
-                })
-                break
-            } catch {
-                await sleep(env.LINEAR_RETRY_DELAY * i)
-            }
-        }
-        return block
-    }
-
     #startBlockTimeout() {
         clearTimeout(this.blockTimeout)
         this.blockTimeout = setTimeout(() => {
@@ -327,13 +349,62 @@ export class BlockService {
         }, env.BLOCK_MONITORING_TIMEOUT)
     }
 
-    async #handleNewBlock(block: Block, allowBackfill = true): Promise<void> {
-        // Validate format
-        if (!block?.number || !block.hash) {
-            blockLogger.error("Received an invalid block from the watcher, skipping.", block)
-            // If this results in a gap or no more blocks come in, we'll notice. Same applies to other skips.
+    /**
+     * An {@link RpcBlock} is raw block from JSON-RPC API, whereas {@link Block} is such a block formatted by Viem.
+     *
+     * This function is called with RpcBlocks retrieves from a websocket subscription, as those might not include
+     * the transaction hash list, depending on the implementation (Anvil and Nethermind include it, Geth doesn't).
+     */
+    async #handleNewRpcBlock(rpcBlock: Partial<RpcBlock> | null | undefined): Promise<void> {
+        // If we skip the block in this function and this results in a gap or no more blocks come
+        // in, we'll notice via further checks in `#handleNewBlock`, or via our block timeout, respectively.
+
+        const blockNumber = parseBigInt(rpcBlock?.number ?? undefined)
+        if (!blockNumber) {
+            blockLogger.error("Received malformed block data, skipping.", rpcBlock)
             return
         }
+
+        if (Array.isArray(rpcBlock?.transactions)) {
+            // RPC block has transactions: normalize to a list of hashes
+            const txHashes = filterMap(rpcBlock.transactions, (tx: Hash | RpcTransaction) => {
+                if (typeof tx === "string") return tx
+                if (typeof tx.hash === "string") return tx.hash
+                return undefined
+            })
+            if (txHashes.length > 0) {
+                rpcBlock.transactions = txHashes
+                // Note that rpcBlock cannot throw if its input is and object.
+                // cast: allows `number` to be null
+                return await this.#handleNewBlock(formatBlock(rpcBlock) as Block)
+            }
+            // It may be that the block simplify has no transactions, but out of an abundance of caution, we'll try
+            // fetching the block anyway. If there's truly no transactions here, there will be no harm.
+        }
+
+        let block: Block | null = null
+        for (let i = 1; i <= 3; ++i) {
+            try {
+                // `includeTransactions: false` still gives us a list of transaction hashes
+                block = await this.#client.getBlock({ blockNumber, includeTransactions: false })
+                break
+            } catch {
+                await sleep(env.LINEAR_RETRY_DELAY * i)
+            }
+        }
+        await this.#handleNewBlock(block)
+    }
+
+    async #handleNewBlock(block: InputBlock | null, allowBackfill = true): Promise<void> {
+        // If we skip the block in this function and this results in a gap or no more blocks come
+        // in, we'll notice via further checks in here, or via our block timeout, respectively.
+
+        // Validate format
+        if (!block || isNullish(block.number) || isNullish(block.hash)) {
+            blockLogger.error("Received an invalid block from the watcher, skipping.", block)
+            return
+        }
+        assertType<Block>(block) // implied from above, TS not smart enough
 
         // Check for duplicates
         if (block.hash === this.#current?.hash) {
@@ -395,6 +466,7 @@ export class BlockService {
         if (this.#callbacks.size === 0) return
 
         async function runCallback(cb: (block: Block) => void | Promise<void>) {
+            assertType<Block>(block) // checked at top
             try {
                 await cb(block)
             } catch (e) {
