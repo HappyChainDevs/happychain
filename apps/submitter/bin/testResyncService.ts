@@ -2,24 +2,19 @@
 import { execSync, spawn } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
 import path from "node:path"
-import { type Hex, Logger, logLevel, sleep, tryCatch } from "@happy.tech/common"
-import { Anvil, type AnvilParams } from "@happy.tech/common/anvil"
+import { type Hex, sleep } from "@happy.tech/common"
+import { formatEther, formatGwei, parseGwei } from "viem"
+import { http, createPublicClient, createWalletClient } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-
-// >>> NOTE: This script doesn't work <<<
-// See "TODO This is the issue" below
 
 // =====================================================================================================================
 /**
  * This script tests the resync system by:
- * 1. Starting Anvil with a 2s block time and high base fee
- * 2. Sending multiple transactions with a low maxFeePerGas (preventing them from being included
- *    and keeping them stuck in the mempool) but a high maxPriorityFeePerGas (meaning they don't
- *    get instantly one-shotted by the resync routine, which will start with the onchain gas price).
- * 3. Starting the submitter and verifying the resync service cancels them.
- *
- * Note that Anvil will reject transactions with maxFeePerGas lower than the basefee, so we need to keep the initial
- * basefee low, submit the transactions, then immediately raise the basefee.
+ * 1. Connecting to the testnet.happy.tech RPC endpoint
+ * 2. Sending a few transactions with carefully tuned fees to stay in the mempool:
+ *    - maxFeePerGas just at the baseFee level (to be accepted by the node)
+ *    - maxPriorityFeePerGas set to 0 (to avoid being immediately included)
+ * 3. Starting the submitter and verifying the resync service cancels them
  *
  * This validates that we correctly:
  * - Detect nonce gap between latest and pending
@@ -29,139 +24,218 @@ import { privateKeyToAccount } from "viem/accounts"
 // =====================================================================================================================
 // CONFIGURATION
 
-const BLOCK_TIME = 2
-const NUM_TRANSACTIONS = 50
-const PRINT_ALL_ANVIL = false
-const PRINT_BLOCK_INFO = false
-const PRINT_NONCE_STATUS = false
+// Test configuration
+const NUM_CONFIRMED_TXS = 2 // Number of transactions that will be mined immediately
+const NUM_STUCK_TXS = 3 // Number of transactions to send with low priority fee
+const MONITOR_TIMEOUT = 30 * 1000 // 30 seconds timeout for monitoring
 
-// Gas parameters (see above)
-const INITIAL_BASE_FEE = 100n // low
-const RAISED_BASE_FEE = 10_000_000_000n // high
+// TODO prev code here
 
-// For maximum stress, this is the max the default config of the submitter is willing to pay.
-// This can't be higher than the basefee, or Anvil will reject the transaction.
-const STUCK_PRIORITY_FEE = 1000n
+// // Gas parameters (see above)
+// const INITIAL_BASE_FEE = 100n // low
+// const RAISED_BASE_FEE = 10_000_000_000n // high
+//
+// // For maximum stress, this is the max the default config of the submitter is willing to pay.
+// // This can't be higher than the basefee, or Anvil will reject the transaction.
+// const STUCK_PRIORITY_FEE = 1000n
+//
+// // Test executor account - use the first Anvil account.
+// const EXECUTOR_KEYS = (process.env.EXECUTOR_KEYS?.split(",") as Hex[]) ?? []
+// console.log(EXECUTOR_KEYS)
+// const executorAccount = privateKeyToAccount(EXECUTOR_KEYS[0])
+// console.log(executorAccount.address)
+//
+// const anvilParams = {
+//     blockTime: BLOCK_TIME,
+//     extraCliArgs: [`--base-fee=${INITIAL_BASE_FEE}`],
+//     logger: Logger.create("Anvil", { level: logLevel(process.env.LOG_LEVEL) }),
+//     stdoutFilter,
+//     stderrFilter: () => true,
+// } satisfies AnvilParams
+//
+// const anvil = new Anvil(anvilParams)
+//
+// function stdoutFilter(output: string) {
+//     // Filter out noisy logs but keep important ones
+//     const select =
+//         PRINT_ALL_ANVIL ||
+//         output.includes("Error") ||
+//         output.includes("Exception") ||
+//         output.includes("Starting") ||
+//         output.includes("Listening") ||
+//         output.includes("Mining") ||
+//         (output.includes("Block ") && PRINT_BLOCK_INFO)
+//     const exclude = output.includes("underpriced") || output.includes("already imported")
+//     return select && !exclude
 
-// Test executor account - use the first Anvil account.
-const EXECUTOR_KEYS = (process.env.EXECUTOR_KEYS?.split(",") as Hex[]) ?? []
-console.log(EXECUTOR_KEYS)
-const executorAccount = privateKeyToAccount(EXECUTOR_KEYS[0])
-console.log(executorAccount.address)
-
-const anvilParams = {
-    blockTime: BLOCK_TIME,
-    extraCliArgs: [`--base-fee=${INITIAL_BASE_FEE}`],
-    logger: Logger.create("Anvil", { level: logLevel(process.env.LOG_LEVEL) }),
-    stdoutFilter,
-    stderrFilter: () => true,
-} satisfies AnvilParams
-
-const anvil = new Anvil(anvilParams)
-
-function stdoutFilter(output: string) {
-    // Filter out noisy logs but keep important ones
-    const select =
-        PRINT_ALL_ANVIL ||
-        output.includes("Error") ||
-        output.includes("Exception") ||
-        output.includes("Starting") ||
-        output.includes("Listening") ||
-        output.includes("Mining") ||
-        (output.includes("Block ") && PRINT_BLOCK_INFO)
-    const exclude = output.includes("underpriced") || output.includes("already imported")
-    return select && !exclude
+// RPC endpoints from the .env file (defaults to testnet if not specified)
+const RPC_HTTP_URL = process.env.RPC_HTTP_URLS?.split(",")[0] ?? "https://rpc.testnet.happy.tech/http"
+const EXECUTOR_KEY = process.env.EXECUTOR_KEYS?.split(",")[0] ?? "" // Requires a funded key
+if (!EXECUTOR_KEY) {
+    throw new Error("No executor key found in env! Set EXECUTOR_KEYS")
 }
+
+const executorAccount = privateKeyToAccount(EXECUTOR_KEY as Hex)
+
+const publicClient = createPublicClient({
+    transport: http(RPC_HTTP_URL),
+})
+
+const walletClient = createWalletClient({
+    account: executorAccount,
+    transport: http(RPC_HTTP_URL),
+})
 
 // =====================================================================================================================
 // SEND UNDERPRICED TRANSACTIONS
 
-// Send multiple underpriced transactions and create a nonce gap
+/**
+ * Send multiple underpriced transactions to create a nonce gap that requires resync
+ * On testnet, we'll send:
+ * 1. A few transactions with normal fee that will be included
+ * 2. A few transactions with zero priority fee to create a stuck transaction gap
+ */
 async function sendUnderpricedTransactions(): Promise<void> {
-    // Helper function to format a hash for display.
     const formatHash = (hash: string) => `${hash.slice(0, 10)}...${hash.slice(-4)}`
+    const formatFee = (fee: bigint) => formatGwei(fee) + " gwei"
 
     console.log("\n\x1b[1m\x1b[34m═════════ CREATING NONCE GAP ═════════\x1b[0m")
 
-    // Get the current nonce before we begin
-    const startNonce = await anvil.public.getTransactionCount({
+    // Get current network state
+    const block = await publicClient.getBlock()
+    const baseFee = block.baseFeePerGas || parseGwei("1") // Default to 1 gwei if baseFee not available
+    const currentNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
+
+    console.log("\nCurrent network state:")
+    console.log(`- Current block:    ${block.number}`)
+    console.log(`- Current base fee: ${formatFee(baseFee)}`)
+    console.log(`- Starting nonce:   ${currentNonce}`)
+
+    // Base fee on testnet can be extremely low, so we need to handle that
+    console.log(`Note: Testnet base fee is extremely low: ${formatGwei(baseFee)} gwei`)
+
+    // For confirmed transactions: use the priority fee we want plus the base fee
+    const confirmedPriorityFee = baseFee // Very small priority fee that will work with low base fees
+    const confirmedMaxFee = baseFee + confirmedPriorityFee + (baseFee * 25n) / 100n // Base fee + priority + 25% buffer
+
+    // For stuck transactions: set priority fee to zero but ensure max fee covers base fee
+    const stuckPriorityFee = 0n
+    const stuckMaxFee = baseFee // Just enough to get accepted into mempool, but likely won't be mined
+
+    // Get the current nonce from the network before we start sending transactions
+    const startingNonce = await publicClient.getTransactionCount({
         address: executorAccount.address,
+        blockTag: "latest",
     })
+    console.log(`Starting nonce from network: ${startingNonce}`)
 
-    console.log(`Starting with nonce: ${startNonce}`)
+    // Step 1: Send transactions that will confirm quickly
+    console.log("\n1. Sending", NUM_CONFIRMED_TXS, "transactions that will be mined quickly...")
+    const confirmedHashes: Hex[] = []
+    let nextNonce = startingNonce
 
-    // Step 1: Send some transactions that WILL be mined to increase the nonce
-    const confirmedTxCount = 5
-    console.log(`1. Sending ${confirmedTxCount} transactions that will be mined (with adequate fees)...`)
-
-    for (let i = 0; i < 5; i++) {
-        const txHash = await anvil.wallet.sendTransaction({
-            to: executorAccount.address,
-            maxFeePerGas: 100_000_000_000n + INITIAL_BASE_FEE * 2n,
-            maxPriorityFeePerGas: 0n,
-        })
-        console.log(`Sent mineable tx ${i + 1}/${confirmedTxCount} with hash ${formatHash(txHash)}`)
+    try {
+        for (let i = 0; i < NUM_CONFIRMED_TXS; i++) {
+            const hash = await walletClient.sendTransaction({
+                chain: null,
+                to: executorAccount.address,
+                value: 0n,
+                nonce: nextNonce++, // Use explicit nonce and increment for next tx
+                maxFeePerGas: confirmedMaxFee,
+                maxPriorityFeePerGas: confirmedPriorityFee,
+            })
+            confirmedHashes.push(hash)
+            console.log(
+                `Sent confirmable tx ${i + 1}/${NUM_CONFIRMED_TXS} with hash ${formatHash(hash)} ` +
+                    `(maxFee: ${formatFee(confirmedMaxFee)}, priority: ${formatFee(confirmedPriorityFee)})`,
+            )
+        }
+    } catch (error) {
+        console.error(`Error sending confirmed transactions: ${error}`)
+        throw error
     }
 
-    await sleep(BLOCK_TIME * 1000) // wait one block time
+    // Wait for transactions to be included (approximately 1-2 block times)
+    console.log("\nWaiting for confirmed transactions to be mined...")
+    await sleep(6000) // ~ 3 blocks
 
-    // Check latest nonce after confirmed transactions
-    const minedCount = await anvil.public.getTransactionCount({
-        address: executorAccount.address,
-    })
-    if (minedCount !== confirmedTxCount)
-        throw Error(`Only  ${minedCount}/${confirmedTxCount} of the transactions were included.`)
+    // Check if transactions were included
+    const currentConfirmedNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
+    console.log(`Nonce before:   ${currentNonce}, after: ${currentConfirmedNonce}`)
 
-    // Step 2: Send transactions then raise base fee to make them stuck
-    console.log("\n2. Sending transactions then raising base fee)...")
-
-    const pendingTxCount = NUM_TRANSACTIONS - confirmedTxCount
-    for (let i = 0; i < pendingTxCount; i++) {
-        // Self-transfer with zero priority fee to ensure it gets stuck
-        const txHash = await anvil.wallet.sendTransaction({
-            to: executorAccount.address,
-            // maxFeePerGas: (RAISED_BASE_FEE * 98n) / 100n,
-            maxFeePerGas: RAISED_BASE_FEE + STUCK_PRIORITY_FEE,
-            maxPriorityFeePerGas: STUCK_PRIORITY_FEE, // high, so repricing won't be instant
-        })
-
-        console.log(`Sent stuck tx tx ${i + 1}/${pendingTxCount} with hash ${formatHash(txHash)}`)
+    if (currentConfirmedNonce < currentNonce + NUM_CONFIRMED_TXS) {
+        console.log("\n\x1b[43m\x1b[30m WARNING \x1b[0m Not all confirmed transactions were included yet.")
+        console.log("Waiting additional time for confirmations...")
+        await sleep(10000) // Wait additional 10 seconds
     }
 
-    anvil.test.setNextBlockBaseFeePerGas({ baseFeePerGas: RAISED_BASE_FEE })
+    // Step 2: Send transactions that should get stuck
+    console.log("\n2. Sending", NUM_STUCK_TXS, "transactions with zero priority fee (should get stuck)...")
 
-    // TODO This is the issue
-    console.log(await anvil.test.getTxpoolStatus()) // shows txs pending
-    await sleep(2000)
-    console.log(await anvil.test.getTxpoolStatus()) // and ... they're gone
-    // the rest fails because the nonce gap has disappeared (works without the sleep)
-    // bumping maxFeePerGas to `RAISED_BASE_FEE + STUCK_PRIORITY_FEE` makes all the tx include instantly
-
-    // Check nonces after sending all transactions
-    const latestNonce = await anvil.public.getTransactionCount({
+    // Double-check what the latest nonce is after our confirmed transactions
+    const updatedNonce = await publicClient.getTransactionCount({
         address: executorAccount.address,
+        blockTag: "latest",
     })
 
-    const pendingNonce = await anvil.public.getTransactionCount({
+    // nextNonce should already be set correctly from previous section
+    console.log(`Current nonce from chain: ${updatedNonce}, Next nonce to use: ${nextNonce}`)
+
+    // If somehow the chain nonce is higher than what we were tracking, update nextNonce
+    if (updatedNonce > nextNonce) {
+        console.log(`Adjusting nonce: ${nextNonce} -> ${updatedNonce}`)
+        nextNonce = updatedNonce
+    }
+
+    const stuckHashes: Hex[] = []
+
+    try {
+        for (let i = 0; i < NUM_STUCK_TXS; i++) {
+            const hash = await walletClient.sendTransaction({
+                chain: null,
+                to: executorAccount.address,
+                value: 0n,
+                nonce: nextNonce++, // Use explicit nonce and increment for next tx
+                maxFeePerGas: stuckMaxFee,
+                maxPriorityFeePerGas: stuckPriorityFee,
+            })
+            stuckHashes.push(hash)
+            console.log(
+                `Sent stuck tx ${i + 1}/${NUM_STUCK_TXS} with hash ${formatHash(hash)} ` +
+                    `(maxFee: ${formatFee(stuckMaxFee)}, priority: ${formatFee(stuckPriorityFee)})`,
+            )
+        }
+    } catch (error) {
+        console.error(`Error sending stuck transactions: ${error}`)
+        throw error
+    }
+
+    // Check nonces to verify we created a gap
+    const finalLatestNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
+    const pendingNonce = await publicClient.getTransactionCount({
         address: executorAccount.address,
         blockTag: "pending",
     })
+    const nonceDifference = pendingNonce - finalLatestNonce
 
-    const nonceDifference = pendingNonce - latestNonce
-
+    // Report the results
     console.log("\nCurrent state after sending transactions:")
-    console.log(`- Latest nonce: ${latestNonce}`)
-    console.log(`- Pending nonce: ${pendingNonce}`)
-    console.log(`- Nonce gap: ${nonceDifference} transactions in mempool`)
+    console.log(`- Latest nonce:  ${finalLatestNonce} (confirmed on chain)`)
+    console.log(`- Pending nonce: ${pendingNonce} (includes mempool)`)
+    console.log(`- Nonce gap:          ${nonceDifference} transactions in mempool`)
 
     // Validate that we created a nonce gap as expected
-    if (nonceDifference === pendingTxCount) {
+    if (nonceDifference === NUM_STUCK_TXS) {
         console.log(
             `\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32mCreated nonce gap of ${nonceDifference} transactions!\x1b[0m`,
         )
+
+        console.log("\nTransaction hashes:")
+        console.log("Confirmed:", confirmedHashes.map(formatHash).join(", "))
+        console.log("Stuck:", stuckHashes.map(formatHash).join(", "))
     } else {
         console.log(
-            `\n\x1b[41m\x1b[30m WARNING \x1b[0m \x1b[33mExpected gap of ${pendingTxCount}, but found ${nonceDifference}\x1b[0m`,
+            `\n\x1b[41m\x1b[30m WARNING \x1b[0m \x1b[33mExpected gap of ${NUM_STUCK_TXS}, but found ${nonceDifference}\x1b[0m`,
         )
     }
 }
@@ -177,17 +251,12 @@ function startSubmitter(): ChildProcess {
         // Ignore errors if no process exists
     }
 
-    console.log("Starting submitter service...")
-
-    console.log("\nEnvironment variables set for submitter:")
-    console.log("- EXECUTOR_KEYS:", process.env.EXECUTOR_KEYS)
-    console.log("- RPC_URLS:", process.env.RPC_URLS)
-    console.log("- CHAIN_ID:", process.env.CHAIN_ID)
+    console.log("\n\x1b[1m\x1b[34m═════════ STARTING SUBMITTER SERVICE ═════════\x1b[0m")
 
     // Start the submitter process using the Makefile's dev command
     const submitter = spawn("make", ["dev"], {
         cwd: path.join(__dirname, ".."),
-        env: process.env, // but .env file overrides this
+        env: process.env,
         stdio: ["ignore", "pipe", "pipe"],
     })
 
@@ -196,73 +265,63 @@ function startSubmitter(): ChildProcess {
         const output = data.toString().trim()
         if (output.includes("[ResyncService]")) {
             console.log(`\x1b[32m${output}\x1b[0m`) // Green for ResyncService
+        } else if (output.includes("alert") || output.includes("ALERT")) {
+            console.log(`\x1b[41m\x1b[37m${output}\x1b[0m`) // White on red background for alerts
         } else if (output.includes("Latest nonce") || output.includes("Pending nonce")) {
             console.log(`\x1b[33m${output}\x1b[0m`) // Yellow for nonce info
-        } else if (output.includes("priority fee") || output.includes("cancel")) {
-            console.log(`\x1b[36m${output}\x1b[0m`) // Cyan for priority fee/cancel actions
+        } else if (output.includes("nonce") || output.includes("Nonce")) {
+            console.log(`\x1b[36m${output}\x1b[0m`) // Cyan for other nonce messages
         } else {
-            console.log(`[Submitter] ${output}`)
+            console.log(output)
         }
     })
 
     submitter.stderr.on("data", (data) => {
-        console.error(`[Submitter Error] ${data.toString().trim()}`)
+        console.error(`\x1b[31m${data.toString().trim()}\x1b[0m`)
+    })
+
+    // Handle process exit
+    submitter.on("close", (code) => {
+        if (code !== 0) {
+            console.log(`\nSubmitter process exited with code ${code}`)
+        }
     })
 
     return submitter
 }
 
-// Monitor nonce changes to verify transaction cancellation
-async function monitorNonceChanges(): Promise<void> {
-    console.log("\x1b[1m\x1b[34m═════════ MONITORING NONCE CHANGES ═════════\x1b[0m")
+// =====================================================================================================================
+// MONITORING FUNCTIONS
+
+async function monitorNonceGap(): Promise<void> {
+    console.log("\n\x1b[1m\x1b[34m═════════ MONITORING NONCE GAP ═════════\x1b[0m")
 
     const startTime = Date.now()
-    const maxMonitorTime = 60 * 1000 // Monitor for up to 60 seconds
-    let lastPendingNonce = await anvil.public.getTransactionCount({
-        address: executorAccount.address,
-        blockTag: "pending",
-    })
 
-    // Monitor progress bar characters
-    const progressChars = ["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"]
-    let progressIndex = 0
-
-    while (Date.now() - startTime < maxMonitorTime) {
-        const latestNonce = await anvil.public.getTransactionCount({
+    while (Date.now() - startTime < MONITOR_TIMEOUT) {
+        const latestNonce = await publicClient.getTransactionCount({
             address: executorAccount.address,
         })
 
-        const pendingNonce = await anvil.public.getTransactionCount({
+        const pendingNonce = await publicClient.getTransactionCount({
             address: executorAccount.address,
             blockTag: "pending",
         })
 
-        // Update progress animation
-        progressIndex = (progressIndex + 1) % progressChars.length
-        const progressChar = progressChars[progressIndex]
+        const nonceDifference = pendingNonce - latestNonce
 
-        if (pendingNonce !== lastPendingNonce) {
+        const timeElapsed = Math.floor((Date.now() - startTime) / 1000)
+
+        const status = nonceDifference === 0 ? "\x1b[42m\x1b[30m RESOLVED \x1b[0m" : "\x1b[43m\x1b[30m WAITING  \x1b[0m"
+
+        console.log(
+            `${status} Time: ${timeElapsed}s | Latest: ${latestNonce} | Pending: ${pendingNonce} | Gap: ${nonceDifference}`,
+        )
+
+        if (nonceDifference === 0) {
             console.log(
-                `\x1b[33m${progressChar} Nonce change detected: pending nonce ${lastPendingNonce} → ${pendingNonce}\x1b[0m`,
+                "\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32mNonce gap resolved successfully by resync service!\x1b[0m",
             )
-            lastPendingNonce = pendingNonce
-        }
-
-        const gapSize = pendingNonce - latestNonce
-        if (PRINT_NONCE_STATUS)
-            console.log(`${progressChar} Nonces - Latest: ${latestNonce}, Pending: ${pendingNonce}, Gap: ${gapSize}`)
-
-        // If latest nonce caught up with pending nonce, ResyncService has successfully replaced all transactions
-        if (latestNonce === pendingNonce && latestNonce >= NUM_TRANSACTIONS) {
-            console.log(
-                "\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32m All transactions successfully processed! ResyncService is working correctly.\x1b[0m",
-            )
-            // Print a summary of what happened
-            console.log("\n\x1b[1m\x1b[34m═════════ RESYNC SERVICE TEST SUMMARY ═════════\x1b[0m")
-            console.log("✅ Created nonce gap with underpriced transactions")
-            console.log("✅ Detected gap between latest and pending nonce")
-            console.log("✅ Sent cancel transactions with higher priority fees")
-            console.log("✅ Successfully resolved all stuck transactions")
             return
         }
 
@@ -275,72 +334,52 @@ async function monitorNonceChanges(): Promise<void> {
     )
 }
 
-// =====================================================================================================================
 // START THE TEST
 
-// Main function to run the test
-async function runTest(): Promise<void> {
+async function run(): Promise<void> {
     console.log("\n\x1b[1m\x1b[34m═════════ RESYNC SERVICE TEST ═════════\x1b[0m")
     console.log("This test validates that the ResyncService properly:")
-    console.log("1. Detects transactions stuck in the mempool")
-    console.log("2. Sends cancel transactions with increasing priority fees")
-    console.log("3. Resolves nonce gaps so the submitter can operate normally")
-    // console.log(`4. Uses max priority fee of ${MAX_RESYNC_PRIORITY_FEE_GWEI} gwei (from env config)`)
     console.log(`Using account: ${executorAccount.address}`)
 
-    // Track processes to ensure cleanup
-    let submitter: ChildProcess | null = null
-
-    // Ensure we clean up on unexpected exits
-    const cleanup = () => {
-        console.log("\nCleaning up processes...")
-        tryCatch(() => submitter?.kill())
-        anvil.stop()
-    }
-
-    // Set up cleanup handlers
-    process.on("SIGINT", () => {
-        console.log("\nReceived interrupt signal")
-        cleanup()
-        process.exit(1)
-    })
-
     try {
-        anvil.killConflictingProcesses()
-        await anvil.start(5000)
+        console.log("\n\x1b[1m\x1b[34m═════════ TESTING RESYNC SERVICE ON TESTNET ═════════\x1b[0m")
+        console.log(`Connected to RPC: ${RPC_HTTP_URL}`)
 
-        // Send several underpriced transactions that will get stuck
+        // Test the account balance first
+        const balance = await publicClient.getBalance({ address: executorAccount.address })
+        console.log(`\nAccount balance: ${formatEther(balance)} ETH`)
+
+        if (balance < parseGwei("5000")) {
+            console.error(
+                "\n\x1b[41m\x1b[37m INSUFFICIENT FUNDS \x1b[0m Account has insufficient funds for testing. Please fund the account.",
+            )
+            return
+        }
+
+        // Send underpriced transactions to create a nonce gap
         await sendUnderpricedTransactions()
 
-        // Wait a bit to ensure transactions are in mempool
-        console.log("\nWaiting for transactions to be confirmed in mempool...")
-        await sleep(3000)
+        // Start the submitter service which should detect and fix the nonce gap
+        const submitter = startSubmitter()
 
-        // Start submitter (which will trigger ResyncService)
-        console.log("\nStarting submitter - ResyncService should run automatically on startup...")
-        submitter = startSubmitter()
+        // Wait a bit for the submitter to fully initialize
+        await sleep(5000)
 
-        // Give it some time to initialize
-        await sleep(1000)
+        // Monitor the nonce gap to see if the resync service resolves it
+        await monitorNonceGap()
 
-        // Monitor nonce changes to verify the ResyncService is working
-        await monitorNonceChanges()
+        // Cleanup: Stop the submitter service
+        console.log("\nStopping submitter service...")
+        submitter.kill()
 
-        // Clean up processes
-        console.log("\nTest completed! Cleaning up processes...")
-        cleanup()
-
-        console.log("\n\x1b[1m\x1b[34m═════════ TEST COMPLETE ═════════\x1b[0m")
-        process.exit(0)
+        console.log("\nTest completed successfully!")
     } catch (error) {
-        console.error("\n\x1b[41m\x1b[30m ERROR \x1b[0m Test failed:", error)
-        cleanup()
+        console.error(`\n\x1b[41m ERROR \x1b[0m ${error}`)
         process.exit(1)
     }
 }
 
-// Run the test
-runTest().catch((error) => {
+run().catch((error: Error) => {
     console.error("Unhandled error in test:", error)
     process.exit(1)
 })

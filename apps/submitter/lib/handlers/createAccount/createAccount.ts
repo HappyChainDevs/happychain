@@ -2,7 +2,7 @@ import { type Address, assertDef } from "@happy.tech/common"
 import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
-import { evmReceiptService } from "#lib/services"
+import { evmReceiptService, resyncAccount } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { config, publicClient } from "#lib/utils/clients"
@@ -30,7 +30,6 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
             return { status, salt, owner, address: predictedAddress }
         }
 
-        // TODO must resync nonce if this fails
         logger.trace("Sending account creation tx", predictedAddress)
         const hash = await walletClient.writeContract({
             account: accountDeployer,
@@ -49,6 +48,33 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         if (timedOut || cantFetch) {
             // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
             const error = "Timed out while waiting for receipt."
+
+            // Transaction might be stuck - trigger resync with targeted nonce
+            const nonce = await publicClient
+                .getTransaction({ hash })
+                .then((tx) => tx?.nonce)
+                .catch(() => undefined)
+
+            if (nonce !== undefined) {
+                logger.warn("Account creation tx appears stuck, attempting resync", {
+                    hash,
+                    nonce,
+                    account: accountDeployer.address,
+                })
+
+                try {
+                    // Resync the account targeting the specific nonce that's stuck
+                    await resyncAccount(accountDeployer, { targetNonce: nonce, verifyAfterSync: true })
+                    logger.info("Resync completed for stuck account creation tx", { hash, nonce })
+                } catch (resyncError) {
+                    logger.error("Failed to resync after account creation timeout", {
+                        hash,
+                        nonce,
+                        error: resyncError,
+                    })
+                }
+            }
+
             return { status: CreateAccount.Timeout, error, owner, salt }
         }
 
