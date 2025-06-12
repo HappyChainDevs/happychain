@@ -69,7 +69,17 @@ jobs:
 
               cat > .env <<-EOF
             export PRIVATE_KEY=${{ secrets.MONITOR_SERVICE_PRIVATE_KEY }}
-            ${{vars.MONITOR_SERVICE_ENV}}
+            export NODE_ENV=production
+            export BLOCK_TIME=2
+            export CHAIN_ID=216
+            export RPC_URL=https://rpc.testnet.happy.tech/http
+            export MONITOR_ADDRESSES=0xe8bd127b013600e5c6f864e5c07e918fa80bff89
+            export FUND_THRESHOLD=10000000000000000
+            export FUNDS_TO_SEND=10000000000000000
+            export TXM_DB_PATH=/home/monitor_service/txm.sqlite
+            export RPCS_TO_MONITOR=https://rpc.testnet.happy.tech/http,http://148.113.212.211:8545
+            export RPC_MONITOR_INTERVAL=1000
+            export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/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
             EOF
 
               npm rebuild
