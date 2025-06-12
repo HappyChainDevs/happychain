@@ -7,7 +7,7 @@ import {ExtensionType} from "boop/interfaces/Types.sol";
 // ENTRYPOINT EVENTS
 
 /**
- * This event is emitted by {core/EntryPoint.submit} just before executing a Boop, to delimit
+ * This event is emitted by {core/EntryPoint.submit} just after executing a Boop, to delimit
  * the Boop execution logs for easier indexing and improved visibility on block explorers.
  */
 event BoopExecutionCompleted();
