@@ -6,7 +6,7 @@ import { parseAbi } from "viem/utils"
 
 export const eventsAbi = parseAbi([
     // EntryPoint (cf. EventsAndErrors.sol)
-    "event BoopExecutionStarted()",
+    "event BoopExecutionCompleted()",
     "event BoopSubmitted(" +
         "    address account," +
         "    address dest," +
