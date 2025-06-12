@@ -107,6 +107,12 @@ export class SharedWorkerServer implements ServerInterface {
     private start(port: MessagePort) {
         this._ports.set(port, Date.now())
 
+        // We will send an initial un-requested 'pong' message to the client to indicate that the
+        // worker is ready immediately, and not wait for the client to send a 'ping' message.
+        // this is especially useful if the clients PING_INTERVAL_MS is set to a higher value
+        // and we don't want to wait until that interval's next tick before making requests
+        port.postMessage({ ts: Date.now(), command: "pong" })
+
         port.onmessage = async (event) => {
             const payload = parseClientPayload(event.data)
             if (!payload) {

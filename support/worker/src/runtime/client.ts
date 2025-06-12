@@ -1,9 +1,47 @@
-import type { RpcPayload } from "./payload"
+import type { RpcPayload, RpcRequestPayload } from "./payload"
 import { makeDispatchPayload, makePingPayload, makeRpcRequestPayload, parseServerPayload } from "./payload"
 import type { MessageCallback } from "./types"
 
 type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker
+
+/**
+ * Maximum number of pending RPC requests that can be queued,
+ * while the worker is unavailable.
+ */
+const MAX_QUEUE_LENGTH = 1000
+
+/**
+ * If a call hangs for longer than this time and has not recovered,
+ * it is considered dead. We will reject the call
+ */
+const MAX_WAIT_TIME_MS = 30_000
+
+/**
+ * The interval at which the client will send a 'ping' to the worker to check if it is still alive.
+ * If the worker does not respond with a 'pong' within 1000ms, it is considered momentarily dead.
+ * Whenever a pong is received, the client will flush the queue of pending RPC requests, and the
+ * worker will resume normal operation.
+ * A lower number will result in faster liveliness checks and faster recovery from connectivity
+ * issues, but will incur more CPU usage and overhead.
+ */
+const PING_INTERVAL_MS = 500
+
+/**
+ * On initial load we will set an arbitrarily high number for the ping counter. This must be higher
+ * than {@link MAX_MISSED_PINGS} so that on initial load, the worker is considered disconnected.
+ * then when the first pong is received, the counter is reset to 0, and the worker is considered
+ */
+const INITIAL_PING_COUNTER = 1_000_000 // start with a high number so that on load isConnected is false
+
+/**
+ * If more than this many pings is missed in a row, we will assume the worker is no longer connected
+ * and will begin queueing payloads rather than sending them immediately. This is incremented
+ * on 'ping', then set to zero on 'pong', so if under normal conditions, the pong counter will
+ * fluctuate between 0 and 1 and back to 0, with a round trip time of roughly 0-1ms. This occurs
+ * every {@link PING_INTERVAL_MS} milliseconds.
+ */
+const MAX_MISSED_PINGS = 1
 
 /**
  * See README.md for general context on the shared worker architecture.
@@ -33,6 +71,14 @@ export class SharedWorkerClient {
     // biome-ignore lint/suspicious/noExplicitAny: its a generic callback in use, type not needed here
     private messageCallbacks: MessageCallback<any>[] = []
 
+    // FIFO queue for pending RPC requests
+    // This does our best to ensure that calls are executed in the order they were made,
+    // however if a payload is sent while the worker is not connected, but we are not aware
+    // it could get re-queued after the livelyness timeout. this case has potential for
+    // payloads to be submitted out of order as it would be re-queued at the time of the timeout
+    // not when the payload was created.
+    private payloadQueue: RpcRequestPayload[] = []
+
     constructor(
         worker: WorkerUnion,
         private options: { name: string },
@@ -42,24 +88,47 @@ export class SharedWorkerClient {
         this.port.onmessage = this.handleMessage.bind(this)
     }
 
-    private pingCounter = 0
-    // if dead pings exceed 60 (30 seconds at 500ms pings), assume the worker is dead
-    private get isAssumedDead() {
-        return this.pingCounter > 60
+    // initialize pingCounter with a high number so that on load isConnected is
+    // computed to be false. It will be reset to zero when it receives the first pong.
+    private pingCounter = INITIAL_PING_COUNTER
+
+    // if dead pings exceed 1, we will assume connectivity issues, and start queueing payloads
+    // rather than sending them immediately. 'ping/pong' health checks are regularly sent to verify
+    // connectivity, and when connectivity is restored, the queue is flushed, and everything resumes \
+    // as normal
+    private get isConnected() {
+        return this.pingCounter <= MAX_MISSED_PINGS
     }
 
     private heartbeat() {
         // 'keep-alive' ping so the worker knows we are still connected
         setInterval(() => {
             const payload = makePingPayload()
-            const wasPreviouslyDead = this.isAssumedDead
+            const wasPreviouslyConnected = this.isConnected
             this.pingCounter++
             this.port.postMessage(payload)
-
-            if (!wasPreviouslyDead && this.isAssumedDead) {
+            if (wasPreviouslyConnected && !this.isConnected) {
                 console.warn(`SharedWorkerClient: [${this.options.name}] Appears offline or inaccessible.`)
             }
-        }, 500)
+        }, PING_INTERVAL_MS)
+    }
+
+    // we flush on every 'pong'. the isFlushing flag is used to prevent multiple parallel flushes
+    private isFlushing = false
+    private flushPayloadQueue() {
+        if (this.isFlushing) return
+        if (!this.payloadQueue.length) return
+        this.isFlushing = true
+        // Process all buffered RPC requests
+        while (this.payloadQueue.length > 0) {
+            if (!this.isConnected) {
+                this.isFlushing = false
+                return
+            }
+            const payload = this.payloadQueue.shift()
+            this.port.postMessage(payload)
+        }
+        this.isFlushing = false
     }
 
     private handleMessage = (event: MessageEvent) => {
@@ -71,25 +140,24 @@ export class SharedWorkerClient {
 
         switch (payload.command) {
             case "pong": {
-                // if we receive a pong, worker is alive and well, we can clear the map
-                // (likely the map only contains the last ping, but it could be more
-                // if there was a temporary disruption) Under normal conditions,
-                // this should take 0 or 1 ms. if the wait time has exceeded 1000ms,
-                // something may be wrong, and we will log the warning.
-                // Date.now() - payload.ts is effectively the round trip time of the ping/pong
-                const possibleDelay = Date.now() - payload.ts > 1000
-                if (!this.isAssumedDead && possibleDelay) {
+                // if we receive a pong, worker is alive and well, we can clear the counter
+                // Under normal conditions, around trip should take 0 or 1 ms. If the wait time has
+                // exceeded 2500ms, something may be wrong, If there is any queued payloads, we
+                // will log the warning. If there are none, then we will ignore the anomaly.
+                // Date.now() - payload.ts is effectively the round trip time of the ping/pong.
+                const delay = Date.now() - payload.ts
+                if (!this.isConnected && delay > 2_500 && this.payloadQueue.length) {
                     console.warn(
-                        `SharedWorkerClient: [${this.options.name}] pong received after ${Date.now() - payload.ts} delay`,
+                        `SharedWorkerClient: [${this.options.name}] delayed pong received after ${Date.now() - payload.ts} delay. Worker has recovered.`,
                     )
                 }
                 this.pingCounter = 0
+                this.flushPayloadQueue()
                 break
             }
             case "rpcResponse": {
                 const callback = this.callbacks.get(payload.data.id)
                 if (!callback) return
-
                 callback(payload.data)
                 this.callbacks.delete(payload.data.id)
                 break
@@ -129,31 +197,42 @@ export class SharedWorkerClient {
      */
     __defineFunction(name: string) {
         const rpcFunc = async <T>(...args: T[]) => {
-            // we can throw here. if the the heartbeat ping/pong interval ever succeeds,
-            // this will become false again, but in the meantime, faster feedback to the user
-            // is a better experience
-            if (this.isAssumedDead) {
-                throw new Error(`SharedWorkerClient: [${this.options.name}] appears dead or inaccessible`)
-            }
-
             const id = crypto.randomUUID()
             const payload = makeRpcRequestPayload(id, name, args)
             try {
                 return await new Promise((res, rej) => {
-                    const start = Date.now()
-                    const timeoutCheck = setInterval(() => {
-                        if (!this.isAssumedDead) return
-                        const duration = (Date.now() - start) / 1000
-                        clearInterval(timeoutCheck)
+                    if (this.payloadQueue.length >= MAX_QUEUE_LENGTH) {
                         return rej(
-                            `SharedWorkerClient: [${this.options.name}] RPC call timed out after ${duration} seconds`,
+                            new Error(
+                                `SharedWorkerClient: [${this.options.name}] RPC queue overflow (max ${MAX_QUEUE_LENGTH}). Dropping request.`,
+                            ),
                         )
-                    }, 2_000)
+                    }
+
+                    // if the call has not responded in a reasonable
+                    // amount of time, we will simply reject the call.
+                    const maxWaitTimeCheck = setTimeout(() => {
+                        this.callbacks.delete(id)
+                        return rej(
+                            new Error(
+                                `SharedWorkerClient: [${this.options.name}] RPC call timed out after ${MAX_WAIT_TIME_MS} ms`,
+                            ),
+                        )
+                    }, MAX_WAIT_TIME_MS)
+
                     this.callbacks.set(id, (result) => {
-                        clearInterval(timeoutCheck)
+                        // when callback is received, we can clear the rejection timeout
+                        clearTimeout(maxWaitTimeCheck)
                         return result.isError ? rej(result.args) : res(result.args)
                     })
-                    this.port.postMessage(payload)
+
+                    // if there is already a queue existing, we will rather enqueue it
+                    // instead of sending it, so that the order of execution is preserved.
+                    if (this.payloadQueue.length || !this.isConnected) {
+                        this.payloadQueue.push(payload)
+                    } else {
+                        this.port.postMessage(payload)
+                    }
                 })
             } catch (_e) {
                 if (!(_e instanceof Error) || !Error.captureStackTrace) throw _e
