@@ -61,6 +61,7 @@ jobs:
             NODE_ENV=production
             RPC_URLS=ws://localhost:8546,http://localhost:8545
             TRACES_ENDPOINT=http://localhost:4318/v1/traces
+            PROMETHEUS_PORT=9091
             EOF
               cd /home/submitter/build
               bun migrate.es.js
