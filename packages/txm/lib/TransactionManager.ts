@@ -316,7 +316,7 @@ export class TransactionManager {
         if (protocol.error) {
             throw protocol.error
         }
-        
+
         this.transportProtocol = protocol.result
 
         const retries = _config.rpc.retries || 2
