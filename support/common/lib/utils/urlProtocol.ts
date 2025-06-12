@@ -1,17 +1,23 @@
-import { type Result, err, ok } from "neverthrow"
+import type { UnionFill } from "../utils/types"
 
-export function getUrlProtocol(url: string): Result<"http" | "websocket", Error> {
+export function getUrlProtocol(url: string): UnionFill<{ result: "http" | "websocket" } | { error: Error }> {
     const parsedUrl = new URL(url)
 
     const protocol = parsedUrl.protocol.replace(":", "")
 
     if (protocol === "http" || protocol === "https") {
-        return ok("http")
+        return {
+            result: "http",
+        }
     }
 
     if (protocol === "ws" || protocol === "wss") {
-        return ok("websocket")
+        return {
+            result: "websocket",
+        }
     }
 
-    return err(new Error(`Protocol not supported: ${protocol}`))
+    return {
+        error: new Error(`Protocol not supported: ${protocol}`),
+    }
 }

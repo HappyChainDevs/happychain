@@ -46,42 +46,29 @@ export class RpcMonitor {
     private readonly rpcLocks: Record<string, boolean>
 
     constructor() {
-        this.rpcStatus = env.RPCS_TO_MONITOR.reduce(
-            (acc, rpcUrl) => {
-                acc[rpcUrl] = {
-                    isLive: {
-                        status: AlertStatus.NORMAL,
-                        changedAt: new Date(),
-                        unhealthyAt: undefined,
-                        healthyAt: undefined,
-                    },
-                    isSyncing: {
-                        status: AlertStatus.NORMAL,
-                        changedAt: new Date(),
-                        unhealthyAt: undefined,
-                        healthyAt: undefined,
-                    },
+        this.rpcStatus = {}
+        this.rpcClients = {}
+        this.rpcLocks = {}
+
+        for (const rpcUrl of env.RPCS_TO_MONITOR) {
+            this.rpcStatus[rpcUrl] = {
+                isLive: {
+                    status: AlertStatus.NORMAL,
+                    changedAt: new Date(),
+                    unhealthyAt: undefined,
+                    healthyAt: undefined,
+                },
+                isSyncing: {
+                    status: AlertStatus.NORMAL,
+                    changedAt: new Date(),
+                    unhealthyAt: undefined,
+                    healthyAt: undefined,
                 }
-                return acc
-            },
-            {} as Record<string, RpcStatus>,
-        )
+            }
 
-        this.rpcClients = env.RPCS_TO_MONITOR.reduce(
-            (acc, rpcUrl) => {
-                acc[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
-                return acc
-            },
-            {} as Record<string, PublicClient>,
-        )
-
-        this.rpcLocks = env.RPCS_TO_MONITOR.reduce(
-            (acc, rpcUrl) => {
-                acc[rpcUrl] = false
-                return acc
-            },
-            {} as Record<string, boolean>,
-        )
+            this.rpcClients[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
+            this.rpcLocks[rpcUrl] = false
+        }
     }
 
     async start() {
@@ -105,11 +92,6 @@ export class RpcMonitor {
         const viemClient = this.rpcClients[rpcUrl]
 
         try {
-            // Verify RPC endpoint availability by calling getChainId()
-            // This call throws an error if it fails, which is why we don't need to check its return value
-            // The error will be caught in the catch block where we'll mark the RPC as not live
-            await viemClient.getChainId()
-
             const block = await viemClient.getBlock({ blockTag: "latest" })
             const blockTimestampSeconds = block.timestamp
 
@@ -161,7 +143,7 @@ export class RpcMonitor {
             return {
                 status: AlertStatus.ALERTING,
                 changedAt: new Date(),
-                unhealthyAt: new Date(),
+                unhealthyAt: currentAlert.unhealthyAt,
                 healthyAt: undefined,
             }
         }

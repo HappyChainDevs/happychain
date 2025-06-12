@@ -313,11 +313,11 @@ export class TransactionManager {
 
         const protocol = getUrlProtocol(_config.rpc.url)
 
-        if (protocol.isErr()) {
+        if (protocol.error) {
             throw protocol.error
         }
-
-        this.transportProtocol = protocol.value
+        
+        this.transportProtocol = protocol.result
 
         const retries = _config.rpc.retries || 2
         const retryDelay = _config.rpc.retryDelay || 50
@@ -350,8 +350,8 @@ export class TransactionManager {
             name: "Unknown",
             rpcUrls: {
                 default: {
-                    http: protocol.value === "http" ? [_config.rpc.url] : [],
-                    webSocket: protocol.value === "websocket" ? [_config.rpc.url] : [],
+                    http: this.transportProtocol === "http" ? [_config.rpc.url] : [],
+                    webSocket: this.transportProtocol === "websocket" ? [_config.rpc.url] : [],
                 },
             },
             nativeCurrency: {
