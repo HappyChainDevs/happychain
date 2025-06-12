@@ -35,6 +35,26 @@ const envSchema = z.object({
         .transform((rpcs) => rpcs.map((rpc) => rpc as string)),
     RPC_MONITOR_INTERVAL: z.string().transform((value) => BigInt(value)),
     SLACK_WEBHOOK_URL: z.string().url(),
+    LOG_COLORS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
+    LOG_TIMESTAMPS: z
+        .string()
+        .default("true")
+        .transform((str) =>
+            (() => {
+                // biome-ignore format: terse
+                try { return Boolean(JSON.parse(str.toLowerCase())) } 
+                catch { return false }
+            })(),
+        ),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

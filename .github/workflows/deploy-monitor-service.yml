@@ -80,6 +80,8 @@ jobs:
             export RPCS_TO_MONITOR=https://rpc.testnet.happy.tech/http,http://148.113.212.211:8545
             export RPC_MONITOR_INTERVAL=1000
             export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/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
+            export LOG_COLORS=false
+            export LOG_TIMESTAMPS=false
             EOF
 
               npm rebuild
