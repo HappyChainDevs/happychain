@@ -45,9 +45,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * having a single argument with the struct — this enables better display on some block explorers
      * like Blockscout.
      *
-     * @dev It is crucial that the fields here be identical to those in the {interfaces/Types.Boop} struct. Because
-     * Solidity refuses to emit events with more than 15 arguments, we simply use the abi-encoding of the struct to emit
-     * this event.
+     * @dev It is crucial that the fields here be identical to those in the {interfaces/Types.Boop} struct.
      */
     event BoopSubmitted(
         address account,
@@ -196,8 +194,23 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         // ==========================================================================================
         // 5. Emit Boop Submitted
-
-        _emitBoopSubmitted(boop);
+        emit BoopSubmitted(
+            boop.account,
+            boop.dest,
+            boop.payer,
+            boop.value,
+            boop.nonceTrack,
+            boop.nonceValue,
+            boop.maxFeePerGas,
+            boop.submitterFee,
+            boop.gasLimit,
+            boop.validateGasLimit,
+            boop.validatePaymentGasLimit,
+            boop.executeGasLimit,
+            boop.callData,
+            boop.validatorData,
+            boop.extraData
+        );
 
         // ==========================================================================================
         // 6. Collect payment
@@ -333,23 +346,6 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
             status = CallStatus.EXECUTE_REVERTED;
-        }
-    }
-
-    /**
-     * Emits an {interfaces/EventsAndErrors.BoopSubmitted} event containing the struct. This
-     * needs assembly, as Solidity can handle max 15 arguments before running out of stack space
-     * (irrespective of context).
-     */
-    function _emitBoopSubmitted(Boop memory boop) internal {
-        // Structs are encoded as tuples, just like events, and the signature of the event matches
-        // that of the struct. The only difference is that the struct is prefixed with an offset.
-        bytes memory args = abi.encode(boop);
-        bytes32 topic = BoopSubmitted.selector;
-        assembly {
-            let data := add(args, 64) // skip bytes length and offset to struct
-            let size := sub(mload(args), 32) // length of the bytestring minus size of offset
-            log1(data, size, topic)
         }
     }
 }
