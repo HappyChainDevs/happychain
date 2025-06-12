@@ -34,8 +34,8 @@ import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 import type { EvmReceiptService } from "./EvmReceiptService"
 
-export const BOOP_STARTED_SELECTOR = getSelectorFromEventName("BoopExecutionStarted") as Hex
-export const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
+const BOOP_EXECUTION_COMPLETED_SELECTOR = getSelectorFromEventName("BoopExecutionCompleted") as Hex
+const BOOP_SUBMITTED_SELECTOR = getSelectorFromEventName("BoopSubmitted") as Hex
 
 type PendingBoopInfo = {
     count: number
@@ -317,26 +317,31 @@ export class BoopReceiptService {
     private filterLogs(logs: Log[], boopHash: Hash): BoopLog[] {
         let select = false
         const filteredLogs: BoopLog[] = []
+
         for (const log of logs) {
             const fromEntryPoint = log.address.toLowerCase() === deployment.EntryPoint.toLowerCase()
-            if (fromEntryPoint && log.topics[0] === BOOP_SUBMITTED_SELECTOR) {
-                const decodedLog = decodeEvent(log)
-                if (!decodedLog) throw new Error("Found BoopSubmitted event but could not decode")
-                const decodedHash = computeHash(decodedLog.args as Boop)
-                if (decodedHash === boopHash) {
-                    return filteredLogs
-                } else {
-                    select = false
-                    filteredLogs.length = 0
-                }
-            } else if (select) {
+            if (select && fromEntryPoint && log.topics[0] === BOOP_EXECUTION_COMPLETED_SELECTOR) {
+                return filteredLogs
+            }
+            if (select) {
                 const { address, topics, data } = log
                 filteredLogs.push({ address, topics, data })
-            } else if (fromEntryPoint && log.topics[0] === BOOP_STARTED_SELECTOR) {
-                select = true
+            } else if (fromEntryPoint && log.topics[0] === BOOP_SUBMITTED_SELECTOR) {
+                const decodedLog = decodeEvent(log)
+                if (!decodedLog) throw new Error("Found BoopSubmitted event but could not decode")
+
+                const decodedHash = computeHash(decodedLog.args as Boop)
+                if (decodedHash === boopHash) {
+                    select = true
+                }
             }
         }
-        return []
+        if (select) {
+            receiptLogger.warn(
+                `Boop ${boopHash} has a 'BoopSubmitted' event but no matching 'BoopExecutionCompleted' event in the transaction receipt.`,
+            )
+        }
+        return filteredLogs
     }
 }
 

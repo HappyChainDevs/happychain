@@ -10,7 +10,7 @@ import {ExtensionType} from "boop/interfaces/Types.sol";
  * This event is emitted by {core/EntryPoint.submit} just before executing a Boop, to delimit
  * the Boop execution logs for easier indexing and improved visibility on block explorers.
  */
-event BoopExecutionStarted();
+event BoopExecutionCompleted();
 
 /**
  * When the {interfaces/IAccount.execute} call succeeds but reports that the

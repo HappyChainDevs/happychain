@@ -7,7 +7,7 @@
 // Hardcoded mappings for special types in EventsAndErrors.sol
 const EVENTS_AND_ERRORS_MAPPINGS: Record<string, "event" | "error"> = {
     // Events
-    BoopExecutionStarted: "event",
+    BoopExecutionCompleted: "event",
     BoopSubmitted: "event",
     CallReverted: "event",
     ExecutionRejected: "event",

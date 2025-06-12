@@ -5,7 +5,7 @@ import {Encoding} from "boop/core/Encoding.sol";
 import {Staking} from "boop/core/Staking.sol";
 import {Utils} from "boop/core/Utils.sol";
 import {
-    BoopExecutionStarted,
+    BoopExecutionCompleted,
     CallReverted,
     ExecutionRejected,
     ExecutionReverted,
@@ -107,8 +107,27 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * implementations.
      */
     function submit(bytes calldata encodedBoop) external nonReentrant returns (EntryPointOutput memory output) {
+        
         uint256 gasStart = gasleft();
         Boop memory boop = Encoding.decode(encodedBoop);
+        emit BoopSubmitted(
+            boop.account,
+            boop.dest,
+            boop.payer,
+            boop.value,
+            boop.nonceTrack,
+            boop.nonceValue,
+            boop.maxFeePerGas,
+            boop.submitterFee,
+            boop.gasLimit,
+            boop.validateGasLimit,
+            boop.validatePaymentGasLimit,
+            boop.executeGasLimit,
+            boop.callData,
+            boop.validatorData,
+            boop.extraData
+        );
+
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
@@ -164,10 +183,6 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         // ==========================================================================================
         // 4. Execute the call
-
-        // Emit event to mark the start of Boop execution for log delimiting, using the hash of the encoded Boop
-        emit BoopExecutionStarted();
-
         bytes memory executeCallData = abi.encodeCall(IAccount.execute, (boop));
         uint256 gasBeforeExecute = gasleft();
         (bool success, bytes memory returnData) = boop.account.excessivelySafeCall(
@@ -193,24 +208,9 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 5. Emit Boop Submitted
-        emit BoopSubmitted(
-            boop.account,
-            boop.dest,
-            boop.payer,
-            boop.value,
-            boop.nonceTrack,
-            boop.nonceValue,
-            boop.maxFeePerGas,
-            boop.submitterFee,
-            boop.gasLimit,
-            boop.validateGasLimit,
-            boop.validatePaymentGasLimit,
-            boop.executeGasLimit,
-            boop.callData,
-            boop.validatorData,
-            boop.extraData
-        );
+        // 5. Emit Boop Completed
+        // Emit event to mark the completion of Boop execution for log delimiting, using the hash of the encoded Boop
+        emit BoopExecutionCompleted();
 
         // ==========================================================================================
         // 6. Collect payment
