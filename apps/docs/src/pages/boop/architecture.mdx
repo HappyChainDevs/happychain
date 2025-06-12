@@ -1,0 +1,73 @@
+---
+layout: doc
+showOutline: true
+---
+
+# Boop Architecture
+
+Check [the overviw](/index) for a quick intro to Boop. This documents details the architecture of the system.
+
+## Background
+
+The goal of an account abstraction system is very simple: a user wants to make transactions,
+but his account is a smart contract. In the Boop system, we call such transactions "boops".
+
+This immediately runs into a problem: a boop needs to be triggered by an EOA transaction, which has to pay fees.
+Ideally, we don't want the
+user to both maintain his smart account and an EOA to pay fees.
+
+To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user,
+and will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor
+the fees itself.
+
+In Boop, we call this relayer "the submitter". The equivalent role in ERC-4337 is the bundler.
+
+The Boop system involves the following "sites":
+
+- the user that wants to make transaction from his device
+- a submitter that front or sponsor the transaction costs
+- a blockchain where the operation happens (and more concretely, a blockhain node that the submitter talks to)
+
+On the blockchain itself, there are a few contracts involved:
+
+- The EntryPoint contract, that orchestrates boop execution
+- The user's account contract
+- (optionally) a Paymaster contract that pays for the user's transaction fees (refunding the submitter)
+
+## Example Flow: End-to-end Boop Execution
+
+Here's a diagram of how a Boop flow between the locations we mentionned in the previous section.
+
+![](/boop-execute.png)
+
+It's pretty simple:
+
+- The user talks sends an `execute` request to the submitter, to which a boop (transaction) is attached.
+- The submitter simulates this boop by sending an `eth_call` RPC request to a blockchain node.
+    - This step is not strictly necessary but it is usual: the submitter does not want to pay fees for a failing boop.
+    - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed not to provide fee
+      information and gas limits. Since we did not represent an earlier simulation by the user to get this information,
+      we'll assume that's the case in this example.
+    - The simulation result from the contract will provide appropriate gas limit values.
+- The submitter also needs to get the gas price, which we represented as an `eth_gasPrice` call on this diagram.
+  In practice, this is the same for all boops, and only needs to be done once per block for all boops. Since it's done
+  once we become aware of the block, it will never delay a boop either, which will need to wait for the next block for
+  inclusion.
+- If the simulation was successful, the submitter posts the boop onchain by making an EVM transaction carrying the boop
+  to the `EntryPoint` contract, calling its `submit` function. It then starts waiting for the receipt (represented here
+  by `eth_getTransactionReceipt`, but can also be a WebSocket subscription).
+- The boop is sent in an encoded (packed) format, so the firest thing the EntryPoint contract does is decode it.
+- The EntryPoint then performs certain validatons on the boop, most importantly it validates the Boop's nonce.
+- The EntryPoint calls the `validate` function of the user's account contract, passing it the boop. This function's role
+  is to validate that the boop is legit. The most common way to do this is to check that it was signed with an
+  authorized EOA, but any other scheme can be implement.
+- If validation is successful, the EntryPoint contract then calls the `execute` function of the user's account contract.
+  This function is responsible to acually carry out the intent of the boop — most likely that is making a call to
+  another target contract, and the boop structure contains fields dedicated to this.
+- In this scenario, the submitter sponsors the fee, so there isn't a need for fee payment logic.
+
+## Contracts Overview
+
+## Submitter Overview
+
+## Boop SDK Overview
