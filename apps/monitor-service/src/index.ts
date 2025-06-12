@@ -15,11 +15,11 @@ export class MonitorService {
     constructor() {
         const protocolResult = getUrlProtocol(env.RPC_URL)
 
-        if (protocolResult.isErr()) {
+        if (protocolResult.error) {
             throw protocolResult.error
         }
 
-        this.protocol = protocolResult.value
+        this.protocol = protocolResult.result
 
         this.viemClient = createViemPublicClient(env.CHAIN_ID, env.RPC_URL)
 

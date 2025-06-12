@@ -1,14 +1,15 @@
-import { getUrlProtocol } from "@happy.tech/common"
+import { getUrlProtocol } from "./urlProtocol"
+
 import { http, type PublicClient, type Transport, createPublicClient, defineChain, webSocket } from "viem"
 
 export function createViemPublicClient(chainId: number, rpcUrl: string): PublicClient {
     const protocolResult = getUrlProtocol(rpcUrl)
 
-    if (protocolResult.isErr()) {
+    if (protocolResult.error) {
         throw protocolResult.error
     }
 
-    const protocol = protocolResult.value
+    const protocol = protocolResult.result
 
     let transport: Transport
     if (protocol === "http") {
