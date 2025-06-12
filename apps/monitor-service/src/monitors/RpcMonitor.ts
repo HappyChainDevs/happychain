@@ -63,7 +63,7 @@ export class RpcMonitor {
                     changedAt: new Date(),
                     unhealthyAt: undefined,
                     healthyAt: undefined,
-                }
+                },
             }
 
             this.rpcClients[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
