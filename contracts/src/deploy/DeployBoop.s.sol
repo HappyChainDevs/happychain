@@ -15,7 +15,7 @@ import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {BaseDeployScript} from "src/deploy/BaseDeployScript.sol";
 
 contract DeployBoopContracts is BaseDeployScript {
-    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
+    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(1));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     uint256 public constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
     uint256 public constant PM_DEPOSIT = 10 ether;
