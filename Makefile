@@ -547,6 +547,7 @@ select-submitter:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,$(url))
 	$(call update_env,apps/submitter/.env,SUBMITTER_URL,$(url))
 	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,$(url))
+	$(call update_env,apps/docs/.env,HAPPY_SUBMITTER_URL,$(url))
 .PHONY: select-submitter
 
 select-iframe:
@@ -588,6 +589,10 @@ select-allowed-hosts:
 	$(call update_env,demos/react/.env,ALLOWED_HOSTS,$(urls))
 	$(call update_env,demos/vue/.env,ALLOWED_HOSTS,$(urls))
 .PHONY: select-allowed-hosts
+
+select-docs:
+	$(call update_env,apps/docs/.env,HAPPY_DOCS_URL,$(url))
+.PHONY: select-docs
 
 select-submitter-local:
 	make select-submitter url=http://localhost:3001
@@ -639,13 +644,25 @@ select-chain-prod:
 	make select-staging-contracts use=false
 .PHONY: select-chain-prod
 
-select-all-local: select-chain-local select-submitter-local select-iframe-local
+select-docs-local:
+	make select-docs url=http://localhost:4000
+.PHONY: select-docs-local
+
+select-docs-staging:
+	make select-docs url=https://docs-staging.happy.tech
+.PHONY: select-docs-staging
+
+select-docs-prod:
+	make select-docs url=https://docs.happy.tech
+.PHONY: select-docs-prod
+
+select-all-local: select-chain-local select-submitter-local select-iframe-local select-docs-local
 .PHONY: select-all-local
 
-select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging
+select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging select-docs-staging
 .PHONY: select-all-staging
 
-select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod
+select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod select-docs-prod
 .PHONY: select-all-prod
 
 select-iframe-dev-staging: select-all-staging select-iframe-local
