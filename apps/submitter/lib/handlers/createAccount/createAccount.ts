@@ -33,11 +33,11 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         // TODO must resync nonce if this fails
         logger.trace("Sending account creation tx", predictedAddress)
         const hash = await walletClient.writeContract({
+            account: accountDeployer,
             address: deployment.HappyAccountBeaconProxyFactory,
             abi: abis.HappyAccountBeaconProxyFactory,
             functionName: "createAccount",
             args: [salt, owner],
-            account: accountDeployer,
             gas: env.ACCOUNT_CREATION_GAS_LIMIT,
             // TODO validate that fees are not above the max
             ...getFees(),
