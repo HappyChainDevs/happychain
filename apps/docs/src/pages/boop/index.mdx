@@ -24,13 +24,13 @@ recover the account in case of key loss, as well as rotating the key in case it 
 (gas sponsorship), or for someone to front the fees, to be repaid in a different token (gas abstraction).
 
 - Better onboarding: it's possible to control a smart account via a
-social account (Google etc) or a passkey instead of a traditional EOA. If more security
+social account (Google, etc.) or a passkey instead of a traditional EOA. If more security
 becomes needed, the mechanism can be changed later or supplemented with a recovery mechanism.
 
 - Delegation and fine-grained permissions: smart accounts can delegate the authority of performing
 transaction on their behalf to third-parties or to mechanisms with different security characteristics, on
 the basis of validation logic in the account. Two mechanisms that enable this are session
-keys (authorized other keys to perform select operations on your behalf) and subaccounts
+keys (authorizing other keys to perform select operations on your behalf) and subaccounts
 (create secondary accounts authorized to draw some funds from the main account).
 
 - Plug'n'play extensibility: as hinted above, you can extend your smart account with extra capabilities by installing
@@ -39,7 +39,7 @@ extensions that follow the smart account's extension standard.
 ... and a few drawbacks:
 
 - Higher gas fees compared to EOAs.
-- Immature wallet support. But it's fully supported by the [Happy Wallet](/sdk)!
+- Immature wallet support - but it's fully supported by the [Happy Wallet](/sdk)!
 
 ## What is Boop?
 
@@ -54,7 +54,7 @@ Boop's design choices prioritize three goals:
 There's surprisingly little trade-offs involved. The main one compared to ERC-4337 is we have less restrictions aimed at
 preventing infrastructure operators from taking losses. This is generally not a problem in practice, but Boop is less
 well-suited if it is crucial to offer full and immediate support to unvetted account and paymaster implementations. It's
-also not a design goal of Boop to support an open mempool (though it's not particularly difficult to set one up, the
+also not a design goal of Boop to support an open mempool (though it's not particularly difficult to set one up - the
 open aspect brings up a lot of extra considerations).
 
 There are also some unexpected side effects of simplicity: Boop consumes less gas than ERC-4337 for the same operation,
@@ -82,7 +82,7 @@ Here are a few highlights of where Boop shines:
 
 ## Is it better than ERC-4337?
 
-It depends. But mostly yes =)
+It depends, but mostly yes =)
 
 See a [full comparison here](/boop/vs-4337).
 

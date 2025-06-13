@@ -5,24 +5,24 @@ showOutline: true
 
 # Boop Architecture
 
-Check [the overviw](/index) for a quick intro to Boop. This documents details the architecture of the system.
+Check [the overview](/index) for a quick intro to Boop. This documents details the architecture of the system.
 
 ## Background
 
 The goal of an account abstraction system is very simple: a user wants to make transactions,
-but his account is a smart contract. In the Boop system, we call such transactions "boops".
+but their account is a smart contract. In the Boop system, we call such transactions "boops".
 
 This immediately runs into a problem: a boop needs to be triggered by an EOA transaction, which has to pay fees.
 Ideally, we don't want the user to both maintain his smart account and an EOA to pay fees.
 
 To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user, and
 will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor the fees
-itself. In Boop, we call this relayer "the submitter".
+itself. In Boop, we call this relayer the "submitter".
 
 The Boop system involves the following "sites":
 
-- the user that wants to make transaction from his device
-- a submitter that front or sponsor the transaction costs
+- the user that wants to make transaction from their device
+- a submitter that fronts or sponsors the transaction costs
 - a blockchain where the operation happens (and more concretely, a blockhain node that the submitter talks to)
 
 On the blockchain itself, there are a few contracts involved:
@@ -38,16 +38,16 @@ Finally, there are three options for who *actually* pays the fees (i.e. refunds 
 
 ## Example Flow: End-to-end Boop Execution
 
-Here's a diagram of how a Boop flows between the locations we mentionned in the previous section.
-In particular, this is an `execute` endpoint request to the submitter, for a submitter-sponsored boop.
+Here's a diagram of how a Boop flows between the locations we mentioned in the previous section.
+In particular, this is an `execute` endpoint request to the submitter (for a submitter-sponsored boop).
 
 ![](/boop-execute.png)
 
-- The user talks sends an `execute` request to the submitter, to which a boop (transaction) is attached.
+- The user sends an `execute` request to the submitter, to which a boop (transaction) is attached.
 
 - The submitter simulates this boop by sending an `eth_call` RPC request to a blockchain node.
 
-    - This step is not strictly necessary but it is usual: the submitter does not want to pay fees for a failing boop.
+    - This step is not strictly necessary but it is ideal: the submitter does not want to pay fees for a failing boop.
 
     - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed to omit fee
       information and gas limits — and this is the case here.
@@ -62,13 +62,13 @@ In particular, this is an `execute` endpoint request to the submitter, for a sub
   to the `EntryPoint` contract, calling its `submit` function. It then starts waiting for the receipt (represented here
   by `eth_getTransactionReceipt`, but can also be a WebSocket subscription).
 
-- The boop is sent in an encoded (packed) format, so the firest thing the EntryPoint contract does is decode it.
+- The boop is sent in an encoded (packed) format, so the first thing the EntryPoint contract does is decode it.
 
 - The EntryPoint then performs certain validatons on the boop, most importantly it validates the Boop's nonce.
 
 - The EntryPoint calls the `validate` function of the user's account contract, passing it the boop. This function's role
-  is to validate that the boop is legit. The most common way to do this is to check that it was signed with an
-  authorized EOA, but any other scheme can be implement.
+  is to validate that the boop is legitimate. The most common way to do this is to check that it was signed with an
+  authorized EOA, but any other scheme can be implemented.
 
 - If validation is successful, the EntryPoint contract then calls the `execute` function of the user's account contract.
   This function is responsible to acually carry out the intent of the boop — most likely that is making a call to
@@ -115,13 +115,13 @@ changing the implementation address in the beacon. This is of course not suitale
 On mainnet, every account will be deployed behind a [UUPS proxy].
 
 In both cases, we have a factory contract that handles deploying these proxies, and the factory records the address in
-an [account registy]. This is an important technique, as it is the only way to ascertain the implementation used by an
+an [account registry]. This is an important technique, as it is the only way to ascertain the implementation used by an
 account, which can be useful as malicious account implemention can attempt to [grief] the submitter.
 
 [grief]: /boop/submitter#griefing-protection
 
 Note that if the accounts are upgreadable by their owner (as our UUPS proxies are), it is important to deregister the
-account from the registry when they independently upgrade. Also note our current implementation doesn't do this (but is
+account from the registry when they independently upgrade. Also note our current implementation doesn't do this (but this
 isn't used at the moment, as we are still on the testnet beacon proxies).
 
 You can check out our proxies, factories and registry contracts [here][deployment-contracts].
@@ -145,14 +145,14 @@ on the [REST API page](/boop/rest).
 
 [submitter]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter
 
-- `/api/v1/accounts/create` — deploys a new account given an owner EOA and a salt
+- `/api/v1/accounts/create` — deploys a new account given an owner EOA and a salt.
 
 - `/api/v1/boop/simulate` — simulates the provided boop and returns the simulation result: sucess or failure (+ reason),
   estimated gas limits, whether some information is missing to pass validation, ...
 
-- `/api/v1/boop/submit` — submits the provided boop to the blockchain, returning the boop hash if successful
+- `/api/v1/boop/submit` — submits the provided boop to the blockchain, returning the boop hash if successful.
 
-- `/api/v1/boop/waitForReceipt` — waits for the receipt of the given boop hash to be available and returns it
+- `/api/v1/boop/waitForReceipt` — waits for the receipt of the given boop hash to be available and returns it.
 
 - `/api/v1/boop/execute` — basically `submit` and `waitForReceipt` wrapped into one — this is what we recommend using
   for optimal latency.
