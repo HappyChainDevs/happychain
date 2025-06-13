@@ -213,30 +213,34 @@ export function outputForExecuteError(
                 error: "The call made by the account's `execute` function reverted.\n" + tryParsing,
             }
         case Onchain.ExecuteRejected: {
+            let output: OnchainErrorOutput
             const decodedReason = decodeRawError(revertData)
             if (decodedReason?.errorName === "InvalidExtensionValue")
-                return {
+                output = {
                     status: Onchain.InvalidExtensionValue,
                     error: "The account's `execute` function rejected the call because an extension value in the extraData is invalid.",
                 }
-            if (decodedReason?.errorName === "ExtensionNotRegistered")
-                return {
+            else if (decodedReason?.errorName === "ExtensionNotRegistered")
+                output = {
                     status: Onchain.ExtensionNotRegistered,
                     error: "The account's `execute` function rejected the call because the `extraData` specified an extension that was not registered on the account.",
                 }
-            if (decodedReason?.errorName)
-                return {
+            else if (decodedReason?.errorName)
+                output = {
                     status,
                     revertData,
                     error:
                         `The account's \`execute\` function rejected the call with reason: ${decodedReason.errorName}.\n` +
                         `${tryParsing}\n${unexpectedDecode}`,
                 }
-            return {
-                status: Onchain.ExecuteRejected,
-                revertData,
-                error: "The account's `execute` function rejected the call.\n" + tryParsing,
-            }
+            else
+                output = {
+                    status: Onchain.ExecuteRejected,
+                    revertData,
+                    error: "The account's `execute` function rejected the call.\n" + tryParsing,
+                }
+            notePossibleMisbehaviour(boop, output, simulation)
+            return output
         }
         case Onchain.ExecuteReverted: {
             let output: OnchainErrorOutput

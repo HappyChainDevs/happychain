@@ -100,7 +100,7 @@ async function simulate(
             ? outputForRevertError(entryPoint, boop, boopHash, revert.decoded, "simulation")
             : outputForGenericError(error)
 
-        notePossibleMisbehaviour(boop, output)
+        notePossibleMisbehaviour(boop, output, "simulation")
         return output
     }
 }
