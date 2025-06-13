@@ -1,0 +1,227 @@
+---
+layout: doc
+showOutline: true
+---
+
+# Boop Contracts Documentation
+
+This documents the functionality of the Boop stack contracts. The [contracts source code][source] is extremely well documented & readable,
+and should be considered as the canonical specification for behaviour. This page extracts the essential information in a
+single place for convenience, and adds a few system-level notes.
+
+[source]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/
+
+Please checkout the [Contracts Overview][overview] of the Architecture page for background information. We reprodue the
+diagram from that section below for context.
+
+[overview]: /boop/architecture#contracts-overview
+
+![](/contracts-overview.png)
+
+## Boop Structure
+
+This structure represent a boop (a smart transaciton in the Boop stack). The following excerpt is copied from the
+[Types.sol] file.
+
+[Types.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/Types.sol
+
+```solidity
+struct Boop {
+    // Account initiating the boop
+    address account;
+
+    // Destination address for the call carried by the boop
+    address dest;
+
+    // Fee payer. This can be:
+    //   1. the account (if it's a self-paying transaction)
+    //   2. an external paymaster contract (implementing {IPaymaster})
+    //   3. 0x0...0: payment by a sponsoring submitter
+    address payer;
+
+    // Amount of gas tokens (in wei) to transfer to {dest}
+    uint256 value;
+
+    // Nonces are ordered within tracks;
+    // there is no ordering constraintacross tracks
+    uint192 nonceTrack;
+
+    // Nonce sequence number within the nonce track
+    uint64 nonceValue;
+
+    // Maximum fee per gas unit paid by the payer
+    uint256 maxFeePerGas;
+
+    // Flat fee in gas token wei for the submitter
+    //   - The submitter requests this on top of gas payment. This can be
+    //     use to cover extra costs (e.g., DA costs on rollups, server
+    //     costs), or as profit.
+    //   - Acts as a rebate when negative (e.g., to refund part of the
+    //     intrinsic transaction cost if the submitter batches multiple
+    //     boops together). In no case does this lead to the submitter
+    //     transferring funds to accounts.
+    int256 submitterFee;
+
+    // Global gas limit (maximum gas the account or paymaster will pay for)
+    uint32 gasLimit;
+
+    // Gas limit for {interfaces/IAccount.validate}
+    uint32 validateGasLimit;
+
+    // Gas limit for {interfaces/IPaymaster.validatePayment}
+    uint32 validatePaymentGasLimit;
+
+    // Gas limit for {interfaces/IAccount.execute}
+    uint32 executeGasLimit;
+
+    // Call data for the call carried by the boop
+    bytes callData;
+
+    // Extra data for validation (e.g., signatures)
+    bytes validatorData;
+
+    // Extra dictionary-structured data for extensions
+    bytes extraData;
+}
+```
+
+### Encoding
+
+We typically expect that the operation carried out by an account is a call or send to another address, and the fields
+in the `Boop` structure (`dest`, `value`, `callData`) reflect this — this is however not mandatory, it's up to the
+account implemenation on how to interpret these values. We might refer to "the call carried (or made) by the boop"
+in the rest of the documentation.
+
+To save on calldata costs, boops are packed tightly when submitted to the chain. The first thing the EntryPoint contract
+does is unpack them into the struct shown above. You can read about the encoding logic in the [`Encoding.sol`
+file][Encoding.sol], which you can vendor if you need to encode/decode boops on the chain yourself. Our JavaScript/TypeScript
+[Client SDK](/boop/sdk) expose [`decodeBoop`] and [`encodeBoop`] functions that do the same.
+
+[Encoding.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/Encoding.sol
+[`decodeBoop`]: /boop/sdk/api/functions/decodeBoop
+[`encodeBoop`]: /boop/sdk/api/functions/encodeBoop
+
+The `extraData` field encodes a key-value dictionary as a series of tightly-packed `[key, length, data]` triplets, where
+the key and the length are 3 bytes, while the data has `length` size. You can use `getExtraData` from
+[`Utils.sol`][Utils.sol] to read from the dictionary on the contract size. Our JavaScript/TypeScript [Client
+SDK](/boop/sdk) exposes an [`encodeExtraData`] function to create extra data from a client.
+
+[Utils.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/Encoding.sol
+[`encodeExtraData`]: /boop/sdk/api/functions/encodeExtraData
+
+### Boop Hash
+
+Just like an EVM transaction ban be identified by its hash, so can a Boop. The boop hash is straightforwarly computed as
+the hash of its packed encoding with the chain id appended. However, for boops whose fees are not paid by the account
+itself, the fee amounts and gas limits are zeroed and the `validatorData` field is set to zero-length before computing
+the hash.
+
+Zeroing the fees and gas limits allows the submitter to set the fees for the boop (saving network roundtrips, especially
+in case the user would have to sign over these values before properly submitting), and potentially change them as
+network condition evolve, while the boop preserves a stale identity. Emptying `validatorData` enables it to carry a
+signature over the boop hash to be verified, or even short-lived authorization data that could change with retries. If
+validation needs access to extra data that must be part of the boop's identity, it can be included in the `extraData`
+dictionary.
+
+The [Boop Client SDK](/boop/sdk) exposes an [`computeBoopHash`] function to compute a Boop's hash. You can see how this
+computation is done on the contract side in the `validate` function of our [`HappyAccount`][HappyAccount] account
+implementation.
+
+[HappyAccount]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccount.sol
+
+## EntryPoint Contract
+
+Any boop being send must transit via the `submit` function of the `EntryPoint` contract. Its code can be
+[found here][entrypoint-source].
+
+[entrypoint-source]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
+
+Note that `submit` can be called at the top-level of an EVM transaction, but it can also be called by other smart
+accounts! This can be notably used to enable boop batching between multiple users (though note that once a boop is
+public, anybody can resubmit it independently).
+
+At a high level, this function performs the following tasks:
+
+1. Validate the gas price, check the paymaster's staking balance (if a paymaster is specified), validate and update the
+account nonce.
+
+2. Call the account to validate the boop. (`IAccount.validate`, see below)
+
+3. Call the paymaster to validate payment if a paymaster is specified. (`IPaymaster.validatePayment`, see below)
+
+4. Call the account to execute the call specified by the boop. (`IAccount.execute`, see below)
+
+5. Collect payment from the paymaster or account, if the transaction is not sponsored by the submitter.
+Payment is taken from the paymaster's stake or solicited from the account by calling `IAccount.payout`.
+
+The EntryPoint has special provisions for simulation. If simulated with an EVM transaction sender (`tx.origin`) with
+the zero address, the `submit` function will enter simulation mode omit certain checks (gas price & nonce) and will not
+use the provided gas limits. It will also return data that includes useful information (for instance, if the nonce
+validation failed because of a future nonce, as well as estimated gas limits). This enables us to get all the information
+we need to validation a boop and "fill in" missing values like gas limits in a single call to the blockchain node.
+
+## Account Contract
+
+The user can use any account implementation of his choice that implement the [`IAccount`][IAccount] interface. We
+provide our own [`HappyAccount`][HappyAccount] compliant implementation — note that despite the name, the implementation
+is not HappyChain-specific.
+
+[IAccount]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
+
+Here are the core functions the account must implement, refer to [interface][iaccount-source] for more details, including
+support for [EIP-1271 contract signatures][eip1271]
+
+[eip1271]:https://eips.ethereum.org/EIPS/eip-1271
+
+- `validate(Boop)` — validates whether the boop is authorized by the account, returning a success code or an error code depending.
+  A common way to validate validity is to verify a EOA signature included in the boop's `validationData` field. Because
+  this signature must in some circumstances sign over the gas values, it would sometimes fail during simulation. In those
+  cases, `validate` can return `UnknownDuringSimulation` in simulation mode to let the EntryPoint proceed with execution.
+
+- `execute(Boop)` — This executes the operation specified by the boop. The function returns a structure indicating the
+  outcome: whether the operation succeeded, reverted, or whether the account rejected the operation (typically because
+  of malformed data). Since the function is not allowed revert, if it calls external contracts that may revert, it must
+  catch the revert.
+
+- `payout(amount)` — This functions pays the entrypoint the given amount in wei — it's implementation should strictly be
+  `payable(tx.origin).call{value: amount}("");`.
+
+These functions share a few more things in common:
+
+- They can only be called by the EntryPoint, but are not allowed to otherwise revert.
+
+- They should consume roughly the same amount of gas during simulation as they do during actual onchain execution (as
+the gas limits are estimated from the simulation run).
+
+## Paymaster Contract
+
+Paymasters are contracts that can pay transactions fees (to the submitter, which fronts them) on behalf of accounts.
+Any account can use paymasters, which are specified in the `payer` field of the `Boop` structure.
+
+Paymaster contracts must implement the [`IPaymaster`][IPaymaster] interface.
+
+We provide an example implementation, the [`HappyPaymaster`][HappyPaymaster]. This implementation is relatively specific
+to the HappyChain use case giving *every* user a 24-hours budget that streams back over time.
+
+[IPaymaster]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IPaymaster.sol
+[HappyPaymaster]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyPaymaster.sol
+
+To preserve Boop's good latency properties, we advise against using the "signing paymasters" that are popular with
+ERC-4337 account abstract. Those have you do incur an network roundtrip to collect a signature from a paymaster EOA
+which is then verified by the paymaster contract. Instead, we recommend to register your users in your paymaster
+contracts and perform all your checks onchain — at least on chains where gas costs allow it.
+
+A paymaster only needs to implement a single method — `validatePayment(Boop)`. Its role is to ensure that the paymaster
+does authorize payment of the fees of the given boop. The interface of this function is identical to `IAccount.validate`,
+so refer to the account section or the source code for more information.
+
+## Bundling
+
+Boop does not build in support for bundling multiple boops from different account. However this can be trivially
+achieved, since a smart contract can call into the EntryPoint and every boop is given its own gas limit. This is
+currently not a priority feature, but reach out at hello@happy.tech if interested.
+
+Multiple boops from a single account can be bundled via the `BatchCallExecutor` extension — however this is something
+initiated by the user — the submitter requires no awareness of it.
+
+TODO link to extension

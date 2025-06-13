@@ -96,7 +96,15 @@ export default defineConfig({
                     link: "/boop/architecture",
                 },
                 {
-                    text: "Client SDK",
+                    text: "Boop Contracts",
+                    link: "/boop/contracts",
+                },
+                {
+                    text: "Boop Submitter",
+                    link: "/boop/submitter",
+                },
+                {
+                    text: "Boop Client SDK",
                     items: [
                         {
                             text: "Getting Started",
@@ -107,14 +115,6 @@ export default defineConfig({
                             link: "/boop/sdk/api",
                         },
                     ],
-                },
-                {
-                    text: "Boop Submitter",
-                    link: "/boop/submitter",
-                },
-                {
-                    text: "Boop Contracts",
-                    link: "/boop/contracts",
                 },
                 {
                     text: "REST API",

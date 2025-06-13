@@ -1,0 +1,162 @@
+---
+layout: doc
+showOutline: true
+---
+
+# Boop Submitter
+
+Please checkout the [Submitter Overview][overview] of the Architecture page for background information.
+
+As a reminder, the role of the submitter is to make EVM transaction to send boops to the chain, either sponsoring fees,
+or fronting them, to be repaid by the account or by a paymaster contract.
+
+The submitter implementation maintained by Happy Devs exposes the following endpoints, see the [overview] for a short
+description and the [REST API reference](/boop/rest) for a full specification.
+
+- `/api/v1/accounts/create`
+- `/api/v1/boop/simulate`
+- `/api/v1/boop/submit`
+- `/api/v1/boop/waitForReceipt`
+- `/api/v1/boop/execute`
+- `/api/v1/boop/getState`
+- `/api/v1/boop/getPending`
+
+## Boop Lifecycle
+
+When the sumitter receives a boop for onchain submission (`submit` or `execute`), the boop goes through the following
+stages:
+
+1. First, the boop is simulated. If the results indicates it is ready for submission, it will move to that stage
+   immediately.
+
+2. Otherwise, if the only issue with the boop is that its nonce is not current with the latest block, we will check to
+   see if we have already submitted the preceding boops. If so, we can proceed with submission, otherwise we wait until
+   that is the case or a timeout occurs. In those cases, we say the boop is "blocked".
+
+   If the boop is not ready for submission for other reasons, an error is returned to the user.
+
+3. We submit the boop to the chain, then move to wait for the receipt. We say that the boop is "pending" — this is an
+   internal term, i.e. `getPending` returns both boops that are "blocked" and "pending", as well as those that are in
+   between these two states.
+
+   If the `submit` endpoint invoked was submit, we return the [boop hash] to the user at this stage. If it was `execute`,
+   we keep waiting.
+
+   Depending on its configuration, the submitter may attempt to resubmit the boop if it's not included fast enough. If will
+   resimulate before doing this, and if the boop is sponsored, it will also update its fees (while keeping the same [boop
+   hash]).
+
+[boop hash]: /boop/contracts#boop-hash
+
+4. We wait for the receipt to come in. A few things can happen here:
+
+    1. The boop executes successfully, and we return a successful receipt to the user.
+
+    2. The boop is included onchain, but does not succeed. This can happen if the call specified by the boop reverts.
+       In those cases, fees are still paid, and the account nonce is incremented. We return a failed receipt to the user.
+
+    3. The EVM call made by the submitter to submit the boop is included onchain but reverts. If the submitter
+       implementation is correct, this is not supposed to happen and indicates faulty or malicious account or paymaster
+       implementations. An error is returned to the user, and the submitter will record the problem and act on it according to
+       its policies (see the [Griefing Protection](#griefing-protection) section below).
+
+    4. The submitter internal timeout for the receipt triggers, and moves towards cancelling its EVM transacton (which it
+       needs to do to unblock the EOA that submitted the boop). We return an error to the user, but it's still technically
+       possible for the boop to be included onchain (scenarios 1 & 2). A further call to `getState` or `waitForReceipt` can be
+       used to ascertain if the boop might still land onchain.
+
+    5. The operation's timeout triggers while waiting for the receipt. Depending on submitter configuration, all the
+       other scenarios might still be possible, but the user will only see a timeout error. Same remedy as in scenario (3).
+
+Of course, many of these things can fail, in which the user also gets an error back.
+
+As you can see, receipts work essentially the same ways as they do for transactions on the EVM: a receipt is emitted if
+the boop lands onchain, regardless of whether it is successful or not. A receipt is however not emitted if the EVM
+transaction carrying it lands onchain but fails itself.
+
+## The Submitter as Boop Indexer
+
+Boop are identified by their [boop hash]. You cannot query a blockchain nodes about boops directly — you need to query
+the submitter via `getState` or `waitForReceipt`.
+
+Our submitter implementation saves all the receipts of the boops it submits itself.
+
+It should be very rare, but it's currently possible for the submitter to "lose" a receipt, if it moves to cancel a
+transaction sending a boop, but it gets included onchain anyway. We will fix this shortly.
+
+## Running & Configuring the Submitter
+
+See the [github repo][submitter-package] on how to get started running the submitter.
+
+[submitter-package]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter
+
+The submitte comes with a plethora of configuration options which are controlled via environment variable (which you can
+defined in the submitter's `.env` file), which are specified in the following schemas:
+
+- [App] — configure keys, output, external services (traces & metrics), ...
+- [Deployment] — configure chain & contracts to use
+- [Limits] — configure maximum for user specified timeouts, capacity limits, max cache sizes, ...
+- [Tuning] — configure timeouts, delays, retries, ...
+- [Gas] — configure parameters related to gas limits & fees
+
+[App]: https://github.com/HappyChainDevs/happychain/blob/master/apps/submitter/lib/env/schemas/app.ts
+[Deployment]: https://github.com/HappyChainDevs/happychain/blob/master/apps/submitter/lib/env/schemas/deployment.ts
+[Limits]: https://github.com/HappyChainDevs/happychain/blob/master/apps/submitter/lib/env/schemas/limits.ts
+[Tuning]: https://github.com/HappyChainDevs/happychain/blob/master/apps/submitter/lib/env/schemas/tuning.ts
+[Gas]: https://github.com/HappyChainDevs/happychain/blob/master/apps/submitter/lib/env/schemas/gas.ts
+
+## Griefing Protection
+
+Because the submitter fronts the blockchain fees for boops, it is vulnerable to griefing from malicious parties.
+
+## Malicious Invalidations
+
+The most problematic form of griefing is when a malicious account or paymaster can validate successfully during
+simulation but revert during onchain execution — for account this also extends to payment. This causes the transaction
+to be included onchain and fees to be charged to the submitter, but because of the rejected validation, no fees are paid
+back to it.
+
+To protect themselves against these attacks, submitters have a few options:
+
+1. Only limit themselves to known account implementations. This can only be achieved with the use of an account registry,
+  as described in the section on [Accout Deployment] of the Architecture page. Note that this registry does not
+  necessarily need to live onchain. Also note that allowing arbitrary validator extension invalidate this protection, and
+  they must be similarly vetted.
+
+[Account Deployment]: /boop/architecture#account-deployment
+
+TODO link to validator extensions
+
+2. Adopt an out-of-protocol staking system that the submitter can use to compensate its losses from misbehaving accounts
+   or paymasters.
+
+3. Adopt a reputation system where they refuse to serve accounts or paymasters that have reached a set quota of
+  misbehaviour. This is ultimately not foolproof as it's always possible to deploy new accounts and paymasters, but such a
+  system at least guarantee a minimum cost to the attacker. The implementation has [policy code][policies] that can be tweaked to
+  deal with this.
+
+[policies]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter/lib/policies
+
+4. Rate limit the number of boops and gas in flight per account, and the total amount of boops and gas in flight. While
+   not a solution by itself, this bounds losses per unit of time. This is highly complementary with (3).
+
+We believe that option (1) is likely to be the dominant one, where submitters serve the accounts they deployed on behalf
+of their users, or their clients' users.
+
+Only options (1) and (5), the most restrictive, offer a complete solution. The combination of options (3) and (4)
+probably provide adequate protection on a low-fee blockchain, with option (2) adding even more protection, at the cost
+of complexity and requiring access to a node's tracing API.
+
+Note that we do not consider the measure outlined in [EIP-7562], which consists of restriction the state the account and
+paymaster validation is allowed to touch. This is because the Boop system makes it trivial (for its own benefit) to
+differentiate between simulation and actual execution by checking `tx.origin`. [EIP-7562]: https://eip.tools/eip/7562
+
+## Other forms of griefing
+
+If an account or paymaster lacks funds to pay for a boop's fees, this will be caught during simulation. If these
+balances were to change between simulation and execution, the check arrives relatively early during onchain execution,
+limiting sequencer loss. The misbehaviour can then be reported and handled via [custom policies][policies].
+
+Paymasters are required to "stake" (deposit) funds with the entry point for a certain duration. These funds are used to
+pay the submitter. The submitter can monitor the remaining stake amount and duration and refuse to service paymaster
+when these values fall below a certain threshold. This is a planned feature in our submitter.
