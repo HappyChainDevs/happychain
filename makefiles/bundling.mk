@@ -29,7 +29,8 @@ reset-dev:
 	@make setup-symlinks
 .PHONY: reset-dev
 
-dev: node_modules reset-dev ## Symlinks source code entries into 'dist'
+## Symlinks source code entries into 'dist'
+dev: node_modules reset-dev
 .PHONY: dev
 
 # Sets up the symlink necessary for vite dev to work across the monorepo, but only if a build is not present.

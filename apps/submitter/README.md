@@ -1,67 +1,65 @@
 # Submitter Service
 
-The Submitter service handles blockchain transaction submission and management. It provides a robust
-API for processing transactions with features like nonce tracking, gas estimation, and transaction
-monitoring. While initially developed for Happy Wallet, it can be integrated with any system
-requiring blockchain transaction management.
+The Boop submitter service exposes a REST API to send boops to the an EVM blockchain and query their status.
+It either sponsors blockchain fees, or fronts them, to be repaid by the account or by a paymaster contract.
+
+For more information, see the [documentation](https://docs.happy.tech/boop/submitter).
 
 ## Quick Start
 
-1. Install dependencies:
+First, set up the monorepo as per the [top-level README](../../README.md).
+
+To run against a local devnet:
+
 ```sh
-make setup
+cp -n .env.example .env
+make test # make sure everything is working properly
+(cd ../.. && make select-all-local) # ensure env vars are configured for devnet
+make migrate # setup up database
+make start-anvil # starts Anvil devnet in the background
+make deploy-contracts # deploy Boop & mock contracts for testing
+make dev # start development server
+make kill-anvil # when you're done
 ```
 
-2. Set up the database:
+Running against HappyChain Sepolia:
+
 ```sh
-make migrate
+cp -n .env.example .env
+# configure keys in .env and make sure they are funded
+make test # make sure everything is working properly
+make migrate # set up database
+make test # make sure everything is working properly
+make dev # start development server
 ```
 
-3. Start development server:
-```sh
-make dev
-```
-
-## Development Commands
-
-### Database Management
-- `make migrate` - Run all pending migrations
-- `make migrate-fresh` - Reset database and run all migrations
-- `make rollback` - Revert last migration
-
-### Server Operations
-- `make dev` - Start development server with hot reload
-- `make routes` - List all available API endpoints
-
-### Testing
-- `make test` - Run all tests
-- `make test.watch` - Run tests in watch mode
+Run `make help` for a list of useful commands.
 
 ## Project Structure
 
 ```
 submitter/
-├── .config/          # Configuration files for Kysely setup
-├── migrations/       # Database migrations (timestamp ordered)
-└── src/
-    ├── clients/      # API clients and interfaces
-    ├── database/     # Database connections and repositories
-    ├── errors/       # Error definitions and handling
-    ├── handlers/     # API route handlers
-    ├── routes/       # API endpoint definitions
-    ├── services/     # Business logic services
-    ├── tests/        # End-to-end and integration tests
-    ├── tmp/          # Temporary spec interfaces
-    ├── utils/        # Helper functions and utilities
-    └── validation/   # Data validation utils
+├── bin/                # Misc useful scripts
+└── lib/
+  ├── server/         # API endpoint definitions
+  ├── handlers/       # API route handlers
+  ├── clients/        # API clients and interfaces
+  ├── services/       # Business logic services
+  ├── database/       # Database connection, configuration & types
+  │ └── migrations/   # Database migrations (timestamp ordered)
+  ├── env/            # Environment variable definitions for submitter configuration
+  ├── policies/       # Configurable submitter policies
+  ├── types/          # Shared type definitions
+  ├── utils/          # Helper functions and utilities
+  │ ├── boop/         # ... to work with boops
+  │ ├── parsing/      # ... to parse EVM events and errors
+  │ ├── test/         # ... for testing
+  │ └── validation/   # ... for data validation
+  ├── telemetry/      # Telemetry configuration (traces & metrics)
+  └── cli/            # CLI tool (used in Makefile commands)
 ```
 
 ## API Documentation
 
-The service exposes RESTful endpoints for:
-- Account Creation
-- Transaction submission
-- Transaction status monitoring
-- Gas price estimation
-
-View all endpoints with `make routes`
+See https://docs.happy.tech/boop/rest
+Or if running the docs (`apps/docs`) locally: http://localhost:4000/boop/rest (the submitter needs to be running)

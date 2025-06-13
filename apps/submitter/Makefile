@@ -24,10 +24,10 @@ define setup-test-env
   	$(eval export EXECUTOR_KEYS=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
   	$(eval export PRIVATE_KEY_ACCOUNT_DEPLOYER=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80) \
   	if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi; \
-	./dist/cli migrate latest;
+	./bin/cli.ts migrate latest;
 endef
 
-dev: node_modules reset-dev
+dev: node_modules reset-dev ## Start development server
 	@NODE_ENV=development bun --bun --watch lib/index.ts;
 .PHONY: dev
 
@@ -36,33 +36,34 @@ prod: build ## Start the local dev server for development
 .PHONY: prod
 
 migrate: ## Runs latest migrations
-	@./dist/cli migrate latest
+	@bun run lib/cli migrate latest
 .PHONY: migrate
 
 db-types: ## Generate TS types for DB
-	@./dist/cli db-types
+	@./bin/cli.ts db-types
 .PHONY: db-types
 
 migrate-fresh: ## Deletes database and starts fresh
 	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
-	@./dist/cli migrate latest
+	@./bin/cli.ts migrate latest
 .PHONY: migrate-fresh
 
-migrate-rollback: ## Rollsback latest migrations
-	@./dist/cli migrate down
+migrate-rollback: ## Rolls back latest migrations
+	@./bin/cli.ts migrate down
 .PHONY: rollback
 
-routes: ## Display all available routes
-	@./dist/cli routes
+## Display all available routes
+# TODO: This is borked — the block service will exit the process before we can print the routes.
+#       Fix by adding a `start` function to active services and starting them in `index.ts`.
+#		- `apiClient.ts` needs to be updated to pull from index.ts instead of servers.ts
+#		- `resyncAll` call needs to move to `index.ts`
+routes:
+	@./bin/cli.ts routes
 .PHONY: routes
 
 latency: ## Benchmark latency
 	bun ./bin/benchmarkLatency.ts;
 .PHONY: latency
-
-test-resync: ## Test resync service
-	bun ./bin/testResyncService.ts;
-.PHONY: test-resync
 
 args ?= --bail
 
@@ -92,20 +93,14 @@ test: ## Run the submitter tests — runs Anvil and deploys contracts if not alr
 	$(call test-shared)
 .PHONY: test
 
-test-fast:
+test.fast:
 	$(call set_automine,true)
 	$(call test-shared)
-.PHONY: test-fast
-
-test.fast: test-fast # alt, I keep making this mistake
 .PHONY: test.fast
 
-test-slow:
+test.slow: ## Runs the tests with a 2s block interval
 	$(call set_automine,false)
 	$(call test-shared)
-.PHONY: test-slow
-
-test.slow: test-slow # alt, I keep making this mistake
 .PHONY: test.slow
 
 test-run-anvil:
@@ -113,19 +108,22 @@ test-run-anvil:
 	@$(call test-run-anvil-shared)
 .PHONY: test-run-anvil
 
-test.watch: ## Run the submitter tests in Watch mode
+test.watch: ## Run the submitter tests in watch mode
 	@make test args=--watch;
 .PHONY: test.watch
 
-start-anvil: ## Start anvil
+# Start anvil
+start-anvil:
 	@cd ../../contracts && make anvil-background
 .PHONY: start-anvil
 
-kill-anvil: ## Kill an existing Anvil process running at $ANVIL_PORT
+# Kill an existing Anvil process running at $ANVIL_PORT
+kill-anvil:
 	@cd ../../contracts && make kill-anvil
 .PHONY: kill-anvil
 
-deploy-contracts: ## Deploys the supporting contracts for testing
+# Deploys the supporting contracts for testing
+deploy-contracts:
 	@cd ../../contracts && CONFIG=LOCAL make deploy-boop
 	@cd ../../contracts && CONFIG=LOCAL make deploy-mocks
 .PHONY: deploy-contracts
@@ -134,8 +132,5 @@ setup-symlinks::
 	@if ! [ -r ./dist/client.es.js ]; then \
   		ln -sf ../lib/client.ts ./dist/client.es.js; \
   		ln -sf ../lib/client.ts ./dist/client.es.d.ts; \
-	fi
-	@if ! [ -r ./dist/cli ]; then \
-  		ln -sf ../bin/cli.ts ./dist/cli; \
 	fi
 .PHONY: setup-symlinks
