@@ -1,0 +1,59 @@
+# Boop vs ERC-4337
+
+Here's a short comparison of Boop and ERC-4337 strength and weaknesses.
+
+Note: smart account transactions are called "boops" in the Boop stack, and "user operations" (or "user ops") in
+ERC-4337, but we use the term "transaction" here.
+
+- Latency
+    - Simulation
+        - Boop enables really low latency by enabling the submitter to set the fees for transactions it sponsors itself, and
+          for transactions sponsored by paymasters (who need to validate that fees are set adequately). For instance, this means
+          that for signature validation, account owner won't see the fee values.
+        - ERC-4337 requires an additional network roundtrip to fetch the fees.
+    - Paymaster
+        - Boop encourages the use of onchain paymasters to avoid an additional roundtrip to a signing paymaster service,
+          whereas that is the standard for sponsoring paymasters in ERC-4337 — who is still capable of also handling
+          fully onchain paymasters.
+- Balance fragmentation
+    - Boop does not require users to stake with the EntryPoint to pay for transaction fees for non-sponsored
+      transactions, whereas ERC-4337 does.
+- Complexity
+    - ERC-4337's contracts are much more complex than the Boop contracts.
+      This is subjective, but form your own opinion: [Boop contracts], [ERC-4337 contracts]
+- Extensions
+    - Boop has a well-specified and simple extension system.
+    - ERC-4337 has two competing extension systems ([ERC-7579], [ERC-6900]) the most popular of which (7579) is poorly
+      specified, and has multiple incompatible vendor implementations.
+- Adoption
+    - Boop just came out.
+    - ERC-4337 is fairly widely adopted.
+- Audits
+    - ERC-4337 contracts have been audited by OpenZeppelin.
+    - Boop has not been audited yet.
+- Wallet Support
+    - Wallet for support ERC-4337 is relatively spotty — with [Ambire] being seemingly the only "real" wallet (i.e. not
+      tied to single app) you can install start using today.
+    - The [Happy Wallet] is powered by Boop, but only runs on the HappyChain testnet today.
+- Gas Costs
+    - Boop is marginally cheaper than most ERC-4337 contract implementations on a 1-1 basis.
+    - ERC-4337 supports bundling its transactions, whereas Boop doesn't yet, which makes it then marginally cheaper than Boop.
+- Griefing Protection
+    - Boop offers less griefing protection than ERC-4337 — this is unavoidable to avoid user balance fragmentation
+      (see above).
+    - ERC-4337 outlines a complex set of griefing protection measures in [ERC-7562], but not all major bundlers implement them.
+- Mempool
+    - Boop does not ship mempool logic. It is less well-suited for an open mempool in particular. Setup up a private mempool
+      is not too complicated but not implemented.
+    - One of ERC-4337's goal is the establishment of a fully open shared mempool, and this is implement in a number
+      of ERC-4337 bundlers.
+
+[Boop contracts]: https://github.com/HappyChainDevs/happychain/tree/master/contracts/src/boop
+[ERC-4337 contracts]: https://github.com/eth-infinitism/account-abstraction/tree/develop/contracts
+[ERC-7562]: https://eip.tools/eip/7562
+[ERC-7579]: https://eip.tools/eip/7579
+[ERC-6900]: https://eip.tools/eip/6900
+[Ambire]: https://www.ambire.com/
+[Happy Wallet]: /sdk
+
+TODO extension links

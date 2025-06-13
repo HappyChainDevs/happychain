@@ -13,14 +13,11 @@ The goal of an account abstraction system is very simple: a user wants to make t
 but his account is a smart contract. In the Boop system, we call such transactions "boops".
 
 This immediately runs into a problem: a boop needs to be triggered by an EOA transaction, which has to pay fees.
-Ideally, we don't want the
-user to both maintain his smart account and an EOA to pay fees.
+Ideally, we don't want the user to both maintain his smart account and an EOA to pay fees.
 
-To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user,
-and will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor
-the fees itself.
-
-In Boop, we call this relayer "the submitter". The equivalent role in ERC-4337 is the bundler.
+To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user, and
+will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor the fees
+itself. In Boop, we call this relayer "the submitter".
 
 The Boop system involves the following "sites":
 
@@ -32,42 +29,144 @@ On the blockchain itself, there are a few contracts involved:
 
 - The EntryPoint contract, that orchestrates boop execution
 - The user's account contract
-- (optionally) a Paymaster contract that pays for the user's transaction fees (refunding the submitter)
+- (optionally) a paymaster contract that pays for the user's transaction fees (refunding the submitter)
+
+Finally, there are three options for who *actually* pays the fees (i.e. refunds the submitter):
+- The account pays its account itself, in which case the `payer` boop field will be set to the account's address.
+- The submitter sponsors the boop, in which case the `payer` field is set to the zero address. No refund need to occur.
+- A paymaster contract sponsors the boop, in which case the `payer` field is set to its address.
 
 ## Example Flow: End-to-end Boop Execution
 
-Here's a diagram of how a Boop flow between the locations we mentionned in the previous section.
+Here's a diagram of how a Boop flows between the locations we mentionned in the previous section.
+In particular, this is an `execute` endpoint request to the submitter, for a submitter-sponsored boop.
 
 ![](/boop-execute.png)
 
-It's pretty simple:
-
 - The user talks sends an `execute` request to the submitter, to which a boop (transaction) is attached.
+
 - The submitter simulates this boop by sending an `eth_call` RPC request to a blockchain node.
+
     - This step is not strictly necessary but it is usual: the submitter does not want to pay fees for a failing boop.
-    - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed not to provide fee
-      information and gas limits. Since we did not represent an earlier simulation by the user to get this information,
-      we'll assume that's the case in this example.
+
+    - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed to omit fee
+      information and gas limits — and this is the case here.
+
     - The simulation result from the contract will provide appropriate gas limit values.
+
 - The submitter also needs to get the gas price, which we represented as an `eth_gasPrice` call on this diagram.
   In practice, this is the same for all boops, and only needs to be done once per block for all boops. Since it's done
-  once we become aware of the block, it will never delay a boop either, which will need to wait for the next block for
-  inclusion.
+  once we become aware of the block, it will never delay a boop, which needs to wait for the next block for inclusion.
+
 - If the simulation was successful, the submitter posts the boop onchain by making an EVM transaction carrying the boop
   to the `EntryPoint` contract, calling its `submit` function. It then starts waiting for the receipt (represented here
   by `eth_getTransactionReceipt`, but can also be a WebSocket subscription).
+
 - The boop is sent in an encoded (packed) format, so the firest thing the EntryPoint contract does is decode it.
+
 - The EntryPoint then performs certain validatons on the boop, most importantly it validates the Boop's nonce.
+
 - The EntryPoint calls the `validate` function of the user's account contract, passing it the boop. This function's role
   is to validate that the boop is legit. The most common way to do this is to check that it was signed with an
   authorized EOA, but any other scheme can be implement.
+
 - If validation is successful, the EntryPoint contract then calls the `execute` function of the user's account contract.
   This function is responsible to acually carry out the intent of the boop — most likely that is making a call to
   another target contract, and the boop structure contains fields dedicated to this.
+
 - In this scenario, the submitter sponsors the fee, so there isn't a need for fee payment logic.
 
 ## Contracts Overview
 
+Boop execution (besides any call that would be specified by the boop itself) involve two or three contracts:
+
+- The [`EntryPoint`] contract, that orchestrates the execution of the boop.
+- An account contract implementing [`IAccount`], which validates and excutes the boop.
+- An optional paymaster contract (specified in the `payer` field of the boop) implementing [`IPaymaster`], which pays
+  the boop's fees (to the submitter, which fronts the blockchain fees and may charge his own fee).
+
+[`EntryPoint`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
+[`IAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
+[`IPaymaster`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IPaymaster.sol
+
+Here's a diagram that shows the interaction between those:
+
+![](/contracts-overview.png)
+
+There are three possible flows:
+
+- When the submitter pays for the fees (`boop.payer === address(0)`), then only the black lines are followed.
+- If the account pays for the boop (`boop.payer === boop.account`), follow the black and green lines.
+- If a paymaster pays for the boop, (`boop.payer` contains paymaster address), follow the black and blue lines.
+
+For more details about how the Boop contract function and can be implemented, refer to the [Boop
+Contracts](/boop/contracts) section.
+
+## Account Deployment
+
+Unlike ERC-4337, the Boop contracts make no special provision for account deployment. They have to be deployed in
+advance, prior to the first boop being submitted to the account.
+
+Our submitter implementation (see below) enables deploying accounts on behalf of users.
+
+On testnet, we deploy every account behind a [beacon proxy], this enables us to upgrade all the accounts at once by
+changing the implementation address in the beacon. This is of course not suitale for mainnet deployments!
+
+On mainnet, every account will be deployed behind a [UUPS proxy].
+
+In both cases, we have a factory contract that handles deploying these proxies, and the factory records the address in
+an [account registy]. This is an important technique, as it is the only way to ascertain the implementation used by an
+account, which can be useful as malicious account implemention can attempt to [grief] the submitter.
+
+[grief]: /boop/submitter#griefing-protection
+
+Note that if the accounts are upgreadable by their owner (as our UUPS proxies are), it is important to deregister the
+account from the registry when they independently upgrade. Also note our current implementation doesn't do this (but is
+isn't used at the moment, as we are still on the testnet beacon proxies).
+
+You can check out our proxies, factories and registry contracts [here][deployment-contracts].
+
+[beacon proxy]: https://www.rareskills.io/post/beacon-proxy
+[UUPS proxy]: https://eip.tools/eip/1822
+[account registry]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccountRegistry.sol
+[deployment-contracts]: https://github.com/HappyChainDevs/happychain/tree/master/contracts/src/boop/happychain
+
 ## Submitter Overview
 
-## Boop SDK Overview
+The submitter is the entity that submits boops to the blockchain, either sponsoring the fees needed to do so, or
+fronting them, to be repaid by the account itself or by a paymaster. Users can also submit boops directly, but they will
+need a funded EOA to pay the blockchain fees.
+
+The Boop contracts don't need a standard submitter to be used, anybody can come up with their own implementation.
+
+Happy Devs however maintains an [open-source submitter implementation][submitter], which exposes a REST API to
+submit boops and query boop-related information. Below is an overview of the exposed endpoints, which a fully specified
+on the [REST API page](/boop/rest).
+
+[submitter]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter
+
+- `/api/v1/accounts/create` — deploys a new account given an owner EOA and a salt
+
+- `/api/v1/boop/simulate` — simulates the provided boop and returns the simulation result: sucess or failure (+ reason),
+  estimated gas limits, whether some information is missing to pass validation, ...
+
+- `/api/v1/boop/submit` — submits the provided boop to the blockchain, returning the boop hash if successful
+
+- `/api/v1/boop/waitForReceipt` — waits for the receipt of the given boop hash to be available and returns it
+
+- `/api/v1/boop/execute` — basically `submit` and `waitForReceipt` wrapped into one — this is what we recommend using
+  for optimal latency.
+
+- `/api/v1/boop/getState` — returns a instant snapshot of the current state of the boop with the given boop hash, this
+  can return a simulation result, a receipt, or an indication that the boop is not currently being processed by the
+  submitter and that no receipt is available for it.
+
+- `/api/v1/boop/getPending` — returns all boops being processed for a given account, i.e. all the boops that are
+  awaiting either being submitted to the chain, or for their receipt to be available.
+
+Our JavaScript/TypeScript [Boop Client SDK](/boop/sdk) provides typed functions to easily make calls to our submitter
+implementation (or to any other implementation that exposes the same REST API).
+
+To learn more about the submitter implementation, refer to the [Boop Submitter](/boop/submitter) section.
+
+## Boop Client SDK Overview

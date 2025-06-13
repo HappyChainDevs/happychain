@@ -1,0 +1,4 @@
+:root {
+    /* Don't emphasize code text. */
+    --vocs-color_codeInlineText: var(--vocs-color_text) !important;
+}

@@ -7,6 +7,8 @@ showOutline: true
 
 ![](/cat-boop.jpg)
 
+Boop is an EVM account abstraction stack that prioritizes low latency, user experience, and simplicity.
+
 ## What is account abstraction?
 
 Account abstraction means making "the user account" a smart contract instead
@@ -49,10 +51,11 @@ Boop's design choices prioritize three goals:
 - Keep the system as simple as possible without compromising on its power.
 - Great user and developer experience.
 
-There's surprisingly little trade-offs involved. The main one compared to ERC-4337 is
-we have less restrictions aimed at preventing infrastructure operators from taking
-losses. In practice, both ERC-4337 and Boop need to rely on reputation heuristics and paymaster staking
-— we just systematize this and make the system simpler in the process.
+There's surprisingly little trade-offs involved. The main one compared to ERC-4337 is we have less restrictions aimed at
+preventing infrastructure operators from taking losses. This is generally not a problem in practice, but Boop is less
+well-suited if it is crucial to offer full and immediate support to unvetted account and paymaster implementations. It's
+also not a design goal of Boop to support an open mempool (though it's not particularly difficult to set one up, the
+open aspect brings up a lot of extra considerations).
 
 There are also some unexpected side effects of simplicity: Boop consumes less gas than ERC-4337 for the same operation,
 even though minimizing gas use wasn't one of our primary goals.
@@ -76,6 +79,12 @@ Here are a few highlights of where Boop shines:
   can be compatible between multiple account implementations.
 
 - Top-notch documentation ✨
+
+## Is it better than ERC-4337?
+
+It depends. But mostly yes =)
+
+See a [full comparison here](/boop/vs-4337).
 
 ## What about EIP-7702?
 
