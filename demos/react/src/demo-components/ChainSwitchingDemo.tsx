@@ -1,9 +1,10 @@
 import { happyChainSepolia } from "@happy.tech/core"
 import { toast } from "sonner"
 import { gnosis } from "viem/chains"
+import GnosisLogo from "../assets/gnosis-logo.svg"
 import { walletClient } from "../clients"
 
-const ChainSwitchingDemo = () => {
+export const ChainSwitchingDemo = () => {
     async function addChain() {
         await walletClient.addChain({ chain: gnosis })
         toast.success(`Chain details added: ${gnosis.id}.`)
@@ -30,39 +31,51 @@ const ChainSwitchingDemo = () => {
     }
 
     return (
-        <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
+        <div className="flex flex-col gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Chain Switching</div>
 
-            <button type="button" onClick={addChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Add Gnosis
-            </button>
+            <div className="grid grid-cols-1 gap-4">
+                <button
+                    type="button"
+                    onClick={addChain}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    Add Gnosis
+                </button>
 
-            <button
-                type="button"
-                onClick={addConflictedChain}
-                className="rounded-lg bg-sky-300 p-2 shadow-xl text-center"
-            >
-                Add "Gnosis 2"
-                <small className="block text-sm text-gray-700">(creates conflict)</small>
-            </button>
+                <button
+                    type="button"
+                    onClick={addConflictedChain}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    Add "Gnosis 2"
+                    <small className="text-sm text-gray-700">(creates conflict)</small>
+                </button>
 
-            <button
-                type="button"
-                onClick={() => switchChain(gnosis.id)}
-                className="rounded-lg bg-sky-300 p-2 shadow-xl"
-            >
-                Switch to Gnosis
-            </button>
+                <button
+                    type="button"
+                    onClick={() => switchChain(gnosis.id)}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    Switch to Gnosis
+                </button>
 
-            <button
-                type="button"
-                onClick={() => switchChain(happyChainSepolia.id)}
-                className="rounded-lg bg-sky-300 p-2 shadow-xl"
-            >
-                Switch to HappyChain Sepolia
-            </button>
+                <button
+                    type="button"
+                    onClick={() => switchChain(happyChainSepolia.id)}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img
+                        src={"https://iframe.happy.tech/images/happychainLogoSimple.png"}
+                        alt="HappyChain Logo"
+                        className="inline-block ml-2 h-6 w-6"
+                    />
+                    Switch to HappyChain Sepolia
+                </button>
+            </div>
         </div>
     )
 }
-
-export default ChainSwitchingDemo
