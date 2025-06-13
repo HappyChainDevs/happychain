@@ -3,7 +3,7 @@ import type { Account, Hash } from "viem"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { getMinFee } from "#lib/utils/gas"
+import { getLastBaseFee, getMinFee } from "#lib/utils/gas"
 import { resyncLogger } from "#lib/utils/logger"
 import { accountDeployer, executorAccounts } from "./evmAccounts"
 
@@ -26,75 +26,33 @@ export async function resyncAllAccounts(): Promise<void> {
 }
 
 /**
- * Resyncs the given account so that its "included nonce" matches its "pending nonce". or a specific target nonce.
- * If {@link options} is provided, will re-query the pending nonce after resyncing to check if it didn't move
+ * Resyncs the given account so that its "included nonce" matches its "pending nonce",
+ * or a specific target nonce provided in {@link targetNonce}.
+ *
+ * If {@link resync} is true, will re-query the pending nonce after resyncing to check if it didn't move
  * ahead or if the initial pending nonce wasn't outdated, and if so will resync again (just once).
- * @param account The account to resync
- * @param options Optional configuration for the resync operation or "recheck" for backward compatibility
  */
-export async function resyncAccount(account: Account, options?: ResyncOptions): Promise<void> {
-    let targetNonce: number | undefined = undefined
-    let resync = false
-
-    if (options) {
-        targetNonce = options.targetNonce
-        resync = options.resync ?? false
-    }
-
-    return resyncAccountInternal({
-        account,
-        targetNonce,
-        resync,
-    })
-}
-
-async function resyncAccountInternal({
-    account,
-    targetNonce,
-    resync = false,
-}: {
-    account: Account
-    targetNonce?: number
-    resync?: boolean
-}): Promise<void> {
+export async function resyncAccount(account: Account, { targetNonce, resync }: ResyncOptions): Promise<void> {
     const address = account.address
     const initialDelay = 500
     const maxDelay = 8000
+
     let attempt = 0
-
-    // === Get initial included and pending nonces ===
-
     let included: number
     let pending: number
 
     while (true) {
         try {
             included = await publicClient.getTransactionCount({ address })
-
-            // Get target nonce (either provided or from network)
-            if (targetNonce !== undefined) {
-                // No need to sync if included nonce already matches or exceeds target
-                if (included >= targetNonce) {
-                    resyncLogger.info(`Account ${address} already synced to nonce ${targetNonce}`)
-                    return
-                }
-                pending = targetNonce
-            } else {
-                // Get pending nonce from network
-                const pendingCount = await publicClient.getTransactionCount({ address, blockTag: "pending" })
-
-                // No need to sync if included nonce already matches pending
-                if (included >= pendingCount) {
-                    resyncLogger.info(`Account ${address} already synced (${included} >= ${pendingCount})`)
-                    return
-                }
-                pending = pendingCount
+            pending = targetNonce ?? (await publicClient.getTransactionCount({ address, blockTag: "pending" }))
+            if (included >= pending) {
+                resyncLogger.trace(`Account ${address} already synced (${included} >= ${pending})`)
+                return
             }
-            // Exit the retry loop once we have valid nonces
             break
         } catch (error) {
-            const delay = Math.max(maxDelay, initialDelay * 2 ** attempt++)
-            resyncLogger.error(`Error during resync routine, waiting ${delay}ms and retrying`, error)
+            const delay = Math.min(maxDelay, initialDelay * 2 ** attempt++)
+            resyncLogger.trace(`Error during resync routine, waiting ${delay}ms and retrying`, error)
             await sleep(delay)
         }
     }
@@ -105,7 +63,7 @@ async function resyncAccountInternal({
     const unsubscribe = blockService.onBlock(async () => {
         const { value, error } = await tryCatchAsync<number, Error>(publicClient.getTransactionCount({ address }))
         if (error) {
-            resyncLogger.error("Error fetching nonce", address, error)
+            resyncLogger.warn("Error fetching nonce", address, error)
         } else {
             nonceStream.push(value)
         }
@@ -114,19 +72,14 @@ async function resyncAccountInternal({
     // === Send cancel transactions until included nonce catches up with pending nonce ===
 
     function updateGasPrice(): void {
-        // First increase the priority fee (tip), but don't exceed the maximum
         maxPriorityFeePerGas = bigIntMin(env.MAX_PRIORITY_FEE, maxPriorityFeePerGas * 2n)
 
-        // Calculate a new base fee that's at least sufficient to cover the network fee + our priority fee
-        const currentMinimumFee = getMinFee() // current network base fee
+        const currentMinFee = getMinFee() - env.INITIAL_PRIORITY_FEE
 
         // EIP-1559: maxFeePerGas must be >= (base fee + priority fee)
         // Double the maxFeePerGas, but ensure it's at least covering current network fee + our priority fee
         // and don't exceed our configured maximum
-        maxFeePerGas = bigIntMin(
-            env.MAX_BASEFEE,
-            bigIntMax(currentMinimumFee + maxPriorityFeePerGas, maxFeePerGas * 2n),
-        )
+        maxFeePerGas = bigIntMin(env.MAX_BASEFEE, bigIntMax(currentMinFee + maxPriorityFeePerGas, maxFeePerGas * 2n))
 
         // Extra safety check - if for some reason maxPriorityFeePerGas > maxFeePerGas, adjust maxFeePerGas
         if (maxPriorityFeePerGas > maxFeePerGas) {
@@ -169,14 +122,14 @@ async function resyncAccountInternal({
                 const nonce = await Promise.race([nonceStream.consume(), sleep(env.RECEIPT_TIMEOUT)])
                 if (!nonce) break
                 if (nonce > included)
-                    resyncLogger.trace(`Resyncing account (2) ${address}, included: ${included}, pending: ${pending}`)
+                    resyncLogger.trace(`Resyncing account (2) ${address}, included: ${nonce}, pending: ${pending}`)
                 included = nonce
 
                 if (included >= pending) {
                     resyncLogger.info("Resync complete", account)
                     unsubscribe()
-                    // Verify nonce alignment after syncing if requested
-                    if (resync) await resyncAccount(account) // No resync to prevent infinite recursion
+                    // Optionally recheck that the pending nonce didn't move forward while we resynced.
+                    if (resync) await resyncAccount(account, { resync: false }) // To prevent infinite recursion
                     return
                 }
             }
@@ -188,76 +141,44 @@ async function resyncAccountInternal({
             const alreadyKnown = msg?.includes("transaction already imported")
             const priceMaxedOut = maxFeePerGas >= env.MAX_BASEFEE && maxPriorityFeePerGas >= env.MAX_PRIORITY_FEE
 
-            const delay = Math.max(maxDelay, initialDelay * 2 ** attempt++)
+            const delay = Math.min(maxDelay, initialDelay * 2 ** attempt++)
             if (!underpriced && !alreadyKnown)
-                resyncLogger.error(`Error during resync routine, waiting ${delay}ms and retrying`, error)
+                resyncLogger.warn(`Error during resync routine, waiting ${delay}ms and retrying`, error)
 
             if (priceMaxedOut) {
-                // Check if the network base fee is higher than our configured maximum
-                const checkNetworkFees = async () => {
+                // We now detect if the network base fee exceeds our maximum
+                // In either case, we continue looping as the base fee might reduce in future blocks
+                const checkNetworkFeeExceedsMax = () => {
                     try {
-                        const block = await publicClient.getBlock()
-                        const currentBaseFee = block.baseFeePerGas || 0n
-
-                        if (currentBaseFee > env.MAX_BASEFEE) {
-                            return {
-                                networkFeeTooHigh: true,
-                                currentBaseFee,
-                            }
-                        }
-                        return { networkFeeTooHigh: false }
+                        const currentBaseFee = getLastBaseFee()
+                        return currentBaseFee > env.MAX_BASEFEE ? currentBaseFee : false
                     } catch (_e) {
-                        // If we can't get the block, assume it's not a network fee issue
-                        return { networkFeeTooHigh: false }
+                        // If we can't get the fee, assume it's not a network fee issue
+                        return false
                     }
                 }
 
                 // Check if this is due to network fees being too high
-                void checkNetworkFees().then(({ networkFeeTooHigh, currentBaseFee }) => {
-                    const baseMsg =
-                        "Reached max gas limits and couldn't close nonce gap. " +
-                        `Waiting ${delay}ms and retrying. ` +
-                        `Latest nonce: ${included}, Target nonce: ${pending}`
-
-                    if (networkFeeTooHigh && currentBaseFee) {
-                        const networkFeeMsg = `${baseMsg}\nCurrent network base fee (${currentBaseFee}) exceeds configured maximum (${env.MAX_BASEFEE})`
-                        resyncLogger.warn(networkFeeMsg)
-
-                        // Log a critical alert for network fee exceeding our maximum
-                        const alertDetails = {
-                            level: "critical",
-                            address: address.toString(),
-                            includedNonce: included,
-                            pendingNonce: pending,
-                            message: "Network base fee exceeds configured maximum",
-                            details: {
-                                currentBaseFee: currentBaseFee.toString(),
-                                maxBaseFee: env.MAX_BASEFEE.toString(),
-                                maxPriorityFee: env.MAX_PRIORITY_FEE.toString(),
-                            },
-                        }
-                        resyncLogger.error("ALERT: Network base fee exceeds maximum", alertDetails)
-                        // TODO: Integrate with your production alerting system
-                    } else {
-                        // This is likely due to competing transactions with higher fees
-                        resyncLogger.warn(baseMsg)
-
-                        // Log a warning alert for stuck transactions
-                        const alertDetails = {
-                            level: "warning",
-                            address: address.toString(),
-                            includedNonce: included,
-                            pendingNonce: pending,
-                            message: "Transactions stuck despite maximum gas price",
-                            details: {
-                                maxBaseFee: env.MAX_BASEFEE.toString(),
-                                maxPriorityFee: env.MAX_PRIORITY_FEE.toString(),
-                            },
-                        }
-                        resyncLogger.error("ALERT: Transactions stuck despite maximum gas price", alertDetails)
-                        // TODO: Integrate with your production alerting system
-                    }
-                })
+                const currentBaseFee = checkNetworkFeeExceedsMax()
+                const block = blockService.getCurrentBlock()
+                if (currentBaseFee) {
+                    resyncLogger.error(
+                        "Failed to close nonce gap. Network base fee exceeds maximum.",
+                        address,
+                        included,
+                        pending,
+                        { currentBaseFee, maxBaseFee: env.MAX_BASEFEE, blockNumber: block?.number },
+                    )
+                } else {
+                    // This is likely due to competing transactions with higher fees
+                    resyncLogger.error(
+                        "Failed to close nonce gap despite maximum gas price.",
+                        address,
+                        included,
+                        pending,
+                        { blockNumber: block?.number },
+                    )
+                }
             } else {
                 updateGasPrice()
             }
@@ -265,5 +186,5 @@ async function resyncAccountInternal({
             // Don't sleep if the transaction is underpriced and we haven't maxed out the gas price yet.
             if (!underpriced || priceMaxedOut) await sleep(delay)
         }
-    } // end while loop
+    }
 }

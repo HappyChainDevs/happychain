@@ -236,6 +236,10 @@ async function monitorNonceGap(): Promise<void> {
 
             const nonceGap = pendingNonce - latestNonce
 
+            console.log("\nLatest nonce:", latestNonce)
+            console.log("Pending nonce:", pendingNonce)
+            console.log("Nonce gap:", nonceGap)
+
             if (nonceGap === 0) {
                 console.log("\n\x1b[42m\x1b[30m SUCCESS \x1b[0m Nonce gap resolved successfully!")
                 return

@@ -2,7 +2,7 @@ import { type Address, assertDef } from "@happy.tech/common"
 import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
-import { evmReceiptService, resyncAccount } from "#lib/services"
+import { evmReceiptService, replaceTransaction } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { config, publicClient } from "#lib/utils/clients"
@@ -31,6 +31,8 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         }
 
         logger.trace("Sending account creation tx", predictedAddress)
+
+        const { maxFeePerGas, maxPriorityFeePerGas } = getFees()
         const hash = await walletClient.writeContract({
             account: accountDeployer,
             address: deployment.HappyAccountBeaconProxyFactory,
@@ -38,8 +40,9 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
             functionName: "createAccount",
             args: [salt, owner],
             gas: env.ACCOUNT_CREATION_GAS_LIMIT,
-            // TODO validate that fees are not above the max
-            ...getFees(),
+            maxFeePerGas: maxFeePerGas > env.MAX_BASEFEE ? env.MAX_BASEFEE : maxFeePerGas,
+            maxPriorityFeePerGas:
+                maxPriorityFeePerGas > env.MAX_PRIORITY_FEE ? env.MAX_PRIORITY_FEE : maxPriorityFeePerGas,
         })
 
         logger.trace("Waiting for account creation tx inclusion", predictedAddress, hash)
@@ -50,29 +53,21 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
             const error = "Timed out while waiting for receipt."
 
             // Transaction might be stuck - trigger resync with targeted nonce
-            const nonce = await publicClient
-                .getTransaction({ hash })
-                .then((tx) => tx?.nonce)
-                .catch(() => undefined)
+            const tx = await publicClient.getTransaction({ hash }).catch(() => undefined)
 
-            if (nonce !== undefined) {
-                logger.warn("Account creation tx appears stuck, attempting resync", {
-                    hash,
-                    nonce,
-                    account: accountDeployer.address,
+            if (tx?.nonce !== undefined) {
+                logger.warn("Initiating transaction replacement for stuck account creation tx", { predictedAddress })
+
+                // Replace transaction asynchronously without awaiting completion
+                replaceTransaction(accountDeployer, {
+                    originalTx: {
+                        evmTxHash: hash,
+                        nonce: tx?.nonce,
+                        maxFeePerGas: tx?.maxFeePerGas ?? 0n,
+                        maxPriorityFeePerGas: tx?.maxPriorityFeePerGas ?? 0n,
+                    },
+                    recheck: true,
                 })
-
-                try {
-                    // Resync the account targeting the specific nonce that's stuck
-                    await resyncAccount(accountDeployer, { targetNonce: nonce, resync: true })
-                    logger.info("Resync completed for stuck account creation tx", { hash, nonce })
-                } catch (resyncError) {
-                    logger.error("Failed to resync after account creation timeout", {
-                        hash,
-                        nonce,
-                        error: resyncError,
-                    })
-                }
             }
 
             return { status: CreateAccount.Timeout, error, owner, salt }
