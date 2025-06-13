@@ -294,6 +294,8 @@ export class BoopReceiptService {
             revertData = error.revertData ?? "0x"
         }
 
+        if (status !== Onchain.Success) notePossibleMisbehaviour(boop, { status, error: description })
+
         const receipt = {
             boopHash,
             entryPoint: evmTxReceipt.to as Address, // will be populated, our receipts are not contract deployments
@@ -348,3 +350,6 @@ function getEntryPointStatusFromEventName(eventName: string): OnchainStatus | un
             return Onchain.ExecuteReverted
     }
 }
+
+const x = 3
+void x

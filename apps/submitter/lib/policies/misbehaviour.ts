@@ -16,6 +16,17 @@ function notePossibleMisbehaviour(boop: Boop, output: SimulateOutput, simulation
     // biome-ignore format: indent comments
     switch (output.status) {
 
+        // === REJECTIONS ===
+
+        case Onchain.ExecuteRejected:
+            // This is okay during simulation, not okay during execution — the conditions shouldn't change.
+        case Onchain.ValidationRejected:
+            // This is okay during simulation, but shouldn't happen too often during execution — as this causes
+            // losses to the submitter. Watch this for sign of griefing.
+        case Onchain.PaymentValidationRejected:
+            // This is okay during simulation, but shouldn't happen too often during execution — as this causes
+            // losses to the submitter. Watch this for sign of griefing.
+
         // === REVERTS ===
 
         case Onchain.ValidationReverted:
