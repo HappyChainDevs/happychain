@@ -14,8 +14,8 @@ export async function processCmd(argv: string[]) {
             try {
                 const { routesCommand } = await import("./commands/routes")
                 routesCommand({ values, positionals, command })
-            } catch {
-                console.error("Error loading routes command. Ensure 'zod-openapi' is installed.")
+            } catch (e) {
+                console.error("Error loading routes command.", e)
                 process.exit(1)
             }
             break

@@ -55,6 +55,9 @@ export const appSchema = z.object({
         z.enum(["OFF", "TRACE", "INFO", "WARN", "ERROR"]).default("INFO"),
     ),
 
+    /**
+     * Whether to emit colored log output.
+     */
     LOG_COLORS: z
         .string()
         .default("true")
@@ -65,6 +68,10 @@ export const appSchema = z.object({
                 catch { return false }
             })(),
         ),
+
+    /**
+     * Whether to emit timestamps in logs (e.g. disable when running with systemd, which already adds timestamps)
+     */
     LOG_TIMESTAMPS: z
         .string()
         .default("true")
@@ -92,8 +99,8 @@ export const appSchema = z.object({
     DATABASE_URL: z.string(),
 
     /**
-     * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time, but skipping some tests
-     * that are timing-dependent.
+     * If true, runs the tests with an auto-mining Anvil, greatly lowering their run time.
+     * It is still beneficial to run the tests with an interval, to catch some issues that only show up in that scenario.
      */
     AUTOMINE_TESTS: z
         .string()
@@ -101,7 +108,7 @@ export const appSchema = z.object({
         .transform((str) => str !== "false" && str !== "0"),
 
     /**
-     * The endpoint to send traces to.
+     * The endpoint to send traces to (e.g. Grafana Tempo endpoint).
      */
     TRACES_ENDPOINT: z.string().optional(),
 
