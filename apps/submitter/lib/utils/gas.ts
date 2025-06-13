@@ -43,7 +43,12 @@ export function getMinFee(replacedTx?: EvmTxInfo): bigint {
     return bigIntMax(maxFeePerGas, minReplacementFee)
 }
 
-function getLastBaseFee(): bigint {
+/**
+ * Returns the base fee from the most recent block.
+ * @throws Error if the block has missing fee information
+ * @returns The base fee per gas from the latest block
+ */
+export function getLastBaseFee(): bigint {
     const lastBlock = blockService.getCurrentBlock()
     const baseFee = lastBlock.baseFeePerGas ?? getProp(lastBlock, "gasPrice", "bigint")
     if (!baseFee) throw Error("Error fetching the fees: the RPC sent a block with missing fee information")
