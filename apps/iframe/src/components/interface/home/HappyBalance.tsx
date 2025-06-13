@@ -1,14 +1,18 @@
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { useBalance } from "wagmi"
+import { FieldLoader } from "#src/components/loaders/FieldLoader"
 import { walletOpenSignalAtom } from "#src/state/interfaceState"
 import { userAtom } from "#src/state/user"
 import { formatUserBalance } from "#src/utils/formatUserBalance"
-import { FieldLoader } from "#src/components/loaders/FieldLoader"
 
 export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
-    const { data: balance, isLoading, refetch } = useBalance({
+    const {
+        data: balance,
+        isLoading,
+        refetch,
+    } = useBalance({
         address: user?.address,
         query: { enabled: !!user?.address },
     })
