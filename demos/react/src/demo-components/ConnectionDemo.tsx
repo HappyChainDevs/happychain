@@ -2,7 +2,7 @@ import { connect, disconnect } from "@happy.tech/core"
 import { ConnectButton, useHappyWallet } from "@happy.tech/react"
 import { toast } from "sonner"
 
-const ConnectionDemo = () => {
+export const ConnectionDemo = () => {
     const { user } = useHappyWallet()
 
     async function toggleUserConnection() {
@@ -18,8 +18,8 @@ const ConnectionDemo = () => {
         <div className="rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
             <div className="text-lg font-bold">Connection Methods</div>
 
-            <div className="flex gap-4">
-                <div className="flex flex-col h-full justify-between">
+            <div className="flex flex-wrap sm:flex-nowrap gap-4">
+                <div className="flex w-full sm:w-auto flex-col h-full justify-between">
                     <button
                         type="button"
                         onClick={toggleUserConnection}
@@ -30,7 +30,7 @@ const ConnectionDemo = () => {
                     <small>Custom Button</small>
                 </div>
 
-                <span className="border border-gray-200/35" />
+                <span className="border border-gray-200/35 hidden sm:block" />
 
                 <div className="flex flex-col h-full justify-between">
                     <ConnectButton />
@@ -40,5 +40,3 @@ const ConnectionDemo = () => {
         </div>
     )
 }
-
-export default ConnectionDemo
