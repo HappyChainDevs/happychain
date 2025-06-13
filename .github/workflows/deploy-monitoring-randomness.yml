@@ -71,8 +71,8 @@ jobs:
             export RPC_URL=wss://rpc.testnet.happy.tech/ws
             export CHAIN_ID=216
             export RANDOM_CONTRACT_ADDRESS=0xd7dafcdC292906540Cc3357E9fD913390256b978
-            export LOG_COLORS=false
-            export LOG_TIMESTAMPS=false
+            export LOG_COLORS=true
+            export LOG_TIMESTAMPS=true
             EOF
 
               npm rebuild
