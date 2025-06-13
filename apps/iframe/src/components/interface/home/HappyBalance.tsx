@@ -4,10 +4,11 @@ import { useBalance } from "wagmi"
 import { walletOpenSignalAtom } from "#src/state/interfaceState"
 import { userAtom } from "#src/state/user"
 import { formatUserBalance } from "#src/utils/formatUserBalance"
+import { FieldLoader } from "#src/components/loaders/FieldLoader"
 
 export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
-    const { data: balance, refetch } = useBalance({
+    const { data: balance, isLoading, refetch } = useBalance({
         address: user?.address,
         query: { enabled: !!user?.address },
     })
@@ -21,10 +22,10 @@ export const HappyBalance = () => {
 
     return (
         <div className="mx-auto">
-            <p className="gap-2 text-3xl items-center leading-none flex tabular-nums">
-                <span className="font-bold">{formattedBalance}</span>
+            <span className="gap-2 text-3xl items-center leading-none flex tabular-nums">
+                {isLoading ? <FieldLoader size="md" /> : <span className="font-bold">{formattedBalance}</span>}
                 <span className="text-[0.675em] font-medium">$HAPPY</span>
-            </p>
+            </span>
         </div>
     )
 }
