@@ -14,8 +14,8 @@ import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
 import { config } from "#lib/utils/clients"
 import {
+    apiClient,
     assertMintLog,
-    client,
     createMintBoop,
     createSmartAccount,
     fundAccount,
@@ -60,7 +60,7 @@ describe("submitter_execute", () => {
             // before mining the next block
             setTimeout(() => testClient.mine({ blocks: 1 }), env.STUCK_TX_WAIT_TIME + 250)
 
-            const result = await client.api.v1.boop.execute
+            const result = await apiClient.api.v1.boop.execute
                 .$post({ json: { boop: serializeBigInt(signedTx) } })
                 .then((a) => a.json())
 
@@ -88,7 +88,7 @@ describe("submitter_execute", () => {
                 maxFeePerGas: 2_000_000_000n,
             }
             const signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as unknown as ExecuteSuccess
             const afterBalance = await getMockTokenBalance(account)
             expect(result.status).toBe(200)
@@ -106,7 +106,7 @@ describe("submitter_execute", () => {
             }
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
-            const results = (await client.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateError>
+            const results = (await apiClient.api.v1.boop.execute.$post(json)) as ClientResponse<SimulateError>
             const response = (await results.json()) as ExecuteError
             expect(response.status).toBe(SubmitterError.InvalidValues)
             expect(response.stage).toBe("simulate")
@@ -116,7 +116,7 @@ describe("submitter_execute", () => {
 
     describe("payer", () => {
         it("proper response structure (mint tokens success)", async () => {
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as unknown as ExecuteSuccess
             expect(result.status).toBe(200)
             expect(response.status).toBe(Onchain.Success)
@@ -157,7 +157,7 @@ describe("submitter_execute", () => {
         it("mints tokens (payer)", async () => {
             const beforeBalance = await getMockTokenBalance(account)
 
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenBalance(account)
             assertMintLog(response.receipt, account)
@@ -171,7 +171,7 @@ describe("submitter_execute", () => {
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             assertMintLog(response.receipt, account)
             const afterBalance = await getMockTokenBalance(account)
@@ -185,7 +185,7 @@ describe("submitter_execute", () => {
             unsignedTx.executeGasLimit = 8_000_000
             unsignedTx.gasLimit = 10_000_000
             signedTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenBalance(account)
             assertMintLog(response.receipt, account)
@@ -199,11 +199,11 @@ describe("submitter_execute", () => {
             // this is to ensure that the nonce value is above `0` so that we don't fail for having a
             // _negative_ nonce
             const tx1 = await sign(createMintBoop({ account, nonceValue, nonceTrack }))
-            await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx1) } })
+            await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx1) } })
 
             // mints a different amount of tokens, computes a difference hash, same nonce though
             const jsonTx = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 5n * 10n ** 18n }))
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as ExecuteError
             expect(result.status).toBe(400)
             expect(response.stage).toBe("simulate")
@@ -215,9 +215,9 @@ describe("submitter_execute", () => {
             const jsonTx1 = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 10n ** 18n }))
             const jsonTx2 = await sign(createMintBoop({ account, nonceValue, nonceTrack, amount: 2000n ** 18n }))
 
-            const result1 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx1) } })
+            const result1 = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx1) } })
             // again with same nonce, will fail
-            const result2 = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx2) } })
+            const result2 = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx2) } })
             const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
             expect(response1.error).toBeUndefined()
             expect(response2.error).toBeDefined()
@@ -233,7 +233,7 @@ describe("submitter_execute", () => {
                 nonceValue: 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000)),
             }
             const jsonTx = await sign(unsignedTx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
             expect(response.status).toBe(SubmitterError.NonceTooFarAhead)
             expect(result.status).toBe(422)
@@ -248,7 +248,7 @@ describe("submitter_execute", () => {
             }
 
             const jsonTx = await sign(tx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
             expect(response.status).toBe(Onchain.PaymentValidationReverted)
@@ -269,7 +269,7 @@ describe("submitter_execute", () => {
                     args: [],
                 }),
             })
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
 
             expect(response.error).toBeDefined()
@@ -285,7 +285,7 @@ describe("submitter_execute", () => {
             })
 
             const jsonTx = await sign(tx)
-            const result = await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
+            const result = await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(jsonTx) } })
             const response = (await result.json()) as any
             expect(response.error).toBeDefined()
             expect(result.status).toBe(422)
@@ -306,7 +306,7 @@ describe("submitter_execute", () => {
             )
 
             const results = await Promise.all(
-                boops.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
+                boops.map((tx) => apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
             ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
             expect(results).toHaveLength(count)
             results.forEach((r, i) => {

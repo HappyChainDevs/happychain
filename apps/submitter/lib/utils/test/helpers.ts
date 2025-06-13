@@ -10,10 +10,10 @@ import { findExecutionAccount } from "#lib/services/evmAccounts" // no barrel: d
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { client } from "#lib/utils/test/client"
+import { apiClient } from "#lib/utils/test/apiClient"
 
 export async function createSmartAccount(owner: Address): Promise<Address> {
-    const response = await client.api.v1.accounts.create
+    const response = await apiClient.api.v1.accounts.create
         .$post({ json: { owner, salt: "0x1" } }) //
         .then((a) => a.json())
     if (response.status !== CreateAccount.Success) {

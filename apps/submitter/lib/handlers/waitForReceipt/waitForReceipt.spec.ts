@@ -5,7 +5,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { Boop } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
-import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { apiClient, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { WaitForReceipt, type WaitForReceiptError, type WaitForReceiptSuccess } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -33,9 +33,9 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
         // submit transaction and wait to complete
-        await client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
+        await apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(signedTx) } })
 
-        const state = (await client.api.v1.boop.receipt[":boopHash"]
+        const state = (await apiClient.api.v1.boop.receipt[":boopHash"]
             .$get({ param: { boopHash }, query: { timeout: 0 } })
             .then((a) => a.json())) as WaitForReceiptSuccess
 
@@ -48,13 +48,13 @@ describe("submitter_receipt", () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, signedTx)
 
         // Submit transaction but don't wait for inclusion.
-        await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
+        await apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
 
         const [_stateSimulated, stateResolved] = await Promise.all([
-            client.api.v1.boop.receipt[":boopHash"]
+            apiClient.api.v1.boop.receipt[":boopHash"]
                 .$get({ param: { boopHash }, query: { timeout: 100 } }) // return near immediately
                 .then((a) => a.json() as any as WaitForReceiptError),
-            client.api.v1.boop.receipt[":boopHash"]
+            apiClient.api.v1.boop.receipt[":boopHash"]
                 .$get({ param: { boopHash }, query: { timeout: 2100 } }) // wait 2 seconds to get next block
                 .then((a) => a.json() as any as WaitForReceiptSuccess),
         ])
@@ -65,7 +65,7 @@ describe("submitter_receipt", () => {
     })
     it("should reject immediately if the boop isn't known", async () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, unsignedTx)
-        const result = await client.api.v1.boop.receipt[":boopHash"].$get({
+        const result = await apiClient.api.v1.boop.receipt[":boopHash"].$get({
             param: { boopHash },
             query: { timeout: 2000 },
         })

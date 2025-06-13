@@ -5,7 +5,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment, env } from "#lib/env"
 import { GetPending, type GetPendingSuccess } from "#lib/handlers/getPending/types"
 import type { Boop } from "#lib/types"
-import { client, createMintBoop, createSmartAccount, getNonce, signBoop, withInterval } from "#lib/utils/test"
+import { apiClient, createMintBoop, createSmartAccount, getNonce, signBoop, withInterval } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -40,10 +40,10 @@ describe("submitter_pending", () => {
         )
 
         await Promise.all(
-            transactions.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
+            transactions.map((tx) => apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
-        const pending = (await client.api.v1.boop.pending[":account"]
+        const pending = (await apiClient.api.v1.boop.pending[":account"]
             .$get({ param: { account: account } })
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
@@ -71,10 +71,10 @@ describe("submitter_pending", () => {
 
         // wait for execution, so nothing should pend
         await Promise.all(
-            transactions.map((tx) => client.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
+            transactions.map((tx) => apiClient.api.v1.boop.execute.$post({ json: { boop: serializeBigInt(tx) } })),
         )
 
-        const pending = (await client.api.v1.boop.pending[":account"]
+        const pending = (await apiClient.api.v1.boop.pending[":account"]
             .$get({ param: { account: account } })
             .then((a) => a.json())) as GetPendingSuccess
         expect(pending.status).toBe(GetPending.Success)
@@ -84,7 +84,7 @@ describe("submitter_pending", () => {
         // But then check that the pend goes away.
         if (pending.pending.length > 0) {
             await sleep(1000)
-            const pending = (await client.api.v1.boop.pending[":account"]
+            const pending = (await apiClient.api.v1.boop.pending[":account"]
                 .$get({ param: { account: account } })
                 .then((a) => a.json())) as GetPendingSuccess
             expect(pending.status).toBe(GetPending.Success)

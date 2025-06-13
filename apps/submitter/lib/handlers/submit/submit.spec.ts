@@ -9,7 +9,7 @@ import { env } from "#lib/env"
 import type { SubmitError, SubmitSuccess } from "#lib/handlers/submit"
 import { type Boop, type BoopReceipt, Onchain, SubmitterError } from "#lib/types"
 import { publicClient } from "#lib/utils/clients"
-import { assertMintLog, client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { apiClient, assertMintLog, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)
@@ -33,7 +33,7 @@ describe("submitter_submit", () => {
     })
 
     it("submits 'mint token' tx successfully.", async () => {
-        const result = await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
+        const result = await apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         const response = (await result.json()) as unknown as SubmitSuccess
         expect(result.status).toBe(200)
         expect(response.status).toBe(Onchain.Success)
@@ -42,7 +42,7 @@ describe("submitter_submit", () => {
 
     it("rejects submission with the same nonce but different content", async () => {
         // First submit a transaction
-        const firstResult = await client.api.v1.boop.submit.$post({
+        const firstResult = await apiClient.api.v1.boop.submit.$post({
             json: { boop: serializeBigInt(signedTx) },
         })
         const firstResponse = (await firstResult.json()) as unknown as SubmitSuccess
@@ -60,7 +60,7 @@ describe("submitter_submit", () => {
         const signedDifferentTx = await signBoop(testAccount, differentTx)
 
         // Try to submit the second transaction
-        const secondResult = await client.api.v1.boop.submit.$post({
+        const secondResult = await apiClient.api.v1.boop.submit.$post({
             json: { boop: serializeBigInt(signedDifferentTx) },
         })
         const secondResponse = (await secondResult.json()) as unknown as SubmitError
@@ -86,13 +86,13 @@ describe("submitter_submit", () => {
         )
 
         const submitResults = await Promise.all(
-            boops.map((tx) => client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
+            boops.map((tx) => apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const receipts = await Promise.all(
             submitResults.map((a) => {
                 if (a.status !== Onchain.Success) return { status: a.status }
-                return client.api.v1.boop.receipt[":boopHash"].$get({
+                return apiClient.api.v1.boop.receipt[":boopHash"].$get({
                     param: { boopHash: a.boopHash },
                     query: { timeout: 10_000 },
                 })
