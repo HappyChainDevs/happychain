@@ -1,13 +1,19 @@
 #!/usr/bin/env bun
-import { execSync, spawn } from "node:child_process"
-import type { ChildProcess } from "node:child_process"
-import path from "node:path"
 import { type Hex, sleep } from "@happy.tech/common"
-import { formatEther, formatGwei, parseGwei } from "viem"
-import { http, createPublicClient, createWalletClient } from "viem"
+import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
+import { happyChainSepolia } from "@happy.tech/wallet-common"
+import {
+    http,
+    type Account,
+    type WalletClient,
+    createPublicClient,
+    createWalletClient,
+    encodeFunctionData,
+    formatEther,
+    parseGwei,
+} from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 
-// =====================================================================================================================
 /**
  * This script tests the resync system by:
  * 1. Connecting to the testnet.happy.tech RPC endpoint
@@ -21,13 +27,17 @@ import { privateKeyToAccount } from "viem/accounts"
  * - Send cancel transactions for the gap
  * - Ramp up the base and priority fee for cancellations
  */
-// =====================================================================================================================
-// CONFIGURATION
 
 // Test configuration
-const NUM_CONFIRMED_TXS = 2 // Number of transactions that will be mined immediately
-const NUM_STUCK_TXS = 3 // Number of transactions to send with low priority fee
-const MONITOR_TIMEOUT = 30 * 1000 // 30 seconds timeout for monitoring
+const NUM_STUCK_TXS = 10 // Number of stuck transactions with 0 priority fee
+const BLOCK_GAS_LIMIT = 30_000_000 // Estimated block gas limit (30M)
+const TX_GAS_AMOUNT = 1_200_000n // Target gas usage per transaction
+const NUM_BLOCKS_TO_FILL = 20 // Number of blocks worth of transactions to send
+const MONITOR_TIMEOUT = 60_000 // 60 seconds timeout for monitoring
+
+// Use floor calculation to ensure we can fit this many txs per block
+const TXS_PER_BLOCK = Math.floor(Number(BLOCK_GAS_LIMIT) / Number(TX_GAS_AMOUNT))
+const NUM_BLOCK_FILLING_TXS = TXS_PER_BLOCK * NUM_BLOCKS_TO_FILL
 
 // TODO prev code here
 
@@ -70,309 +80,370 @@ const MONITOR_TIMEOUT = 30 * 1000 // 30 seconds timeout for monitoring
 
 // RPC endpoints from the .env file (defaults to testnet if not specified)
 const RPC_HTTP_URL = process.env.RPC_HTTP_URLS?.split(",")[0] ?? "https://rpc.testnet.happy.tech/http"
-const EXECUTOR_KEY = process.env.EXECUTOR_KEYS?.split(",")[0] ?? "" // Requires a funded key
-if (!EXECUTOR_KEY) {
-    throw new Error("No executor key found in env! Set EXECUTOR_KEYS")
+
+// Key setup - main executor key and block filler key
+const EXECUTOR_KEY = process.env.EXECUTOR_KEYS?.split(",")[0]
+const BLOCK_FILLER_KEY = process.env.EXECUTOR_KEYS?.split(",")[1]
+
+if (!EXECUTOR_KEY || !BLOCK_FILLER_KEY) {
+    throw new Error("Executor keys not found in environment variables")
 }
 
+console.log("\n⚠️  IMPORTANT: Using test accounts - ensure they're funded on testnet")
+console.log(`- Executor account: will send ${NUM_STUCK_TXS} stuck transactions to simulate resync`)
+console.log(
+    `- Block filler account: will send ${NUM_BLOCK_FILLING_TXS} transactions (${NUM_BLOCKS_TO_FILL} blocks worth of gas)`,
+)
+console.log(`  Each transaction will burn approximately ${TX_GAS_AMOUNT.toLocaleString()} gas units`)
+
 const executorAccount = privateKeyToAccount(EXECUTOR_KEY as Hex)
+const blockFillerAccount = privateKeyToAccount(BLOCK_FILLER_KEY as Hex)
+
+const executorWalletClient = createWalletClient({
+    account: executorAccount,
+    transport: http(RPC_HTTP_URL),
+})
+
+const blockFillerWalletClient = createWalletClient({
+    account: blockFillerAccount,
+    transport: http(RPC_HTTP_URL),
+})
 
 const publicClient = createPublicClient({
     transport: http(RPC_HTTP_URL),
 })
 
-const walletClient = createWalletClient({
-    account: executorAccount,
-    transport: http(RPC_HTTP_URL),
-})
-
-// =====================================================================================================================
-// SEND UNDERPRICED TRANSACTIONS
-
 /**
- * Send multiple underpriced transactions to create a nonce gap that requires resync
- * On testnet, we'll send:
- * 1. A few transactions with normal fee that will be included
- * 2. A few transactions with zero priority fee to create a stuck transaction gap
+ * Prepare a raw transaction to burn a specified amount of gas using the MockGasBurner contract
+ * @returns The signed transaction raw bytes
  */
-async function sendUnderpricedTransactions(): Promise<void> {
-    const formatHash = (hash: string) => `${hash.slice(0, 10)}...${hash.slice(-4)}`
-    const formatFee = (fee: bigint) => formatGwei(fee) + " gwei"
-
-    console.log("\n\x1b[1m\x1b[34m═════════ CREATING NONCE GAP ═════════\x1b[0m")
-
-    // Get current network state
-    const block = await publicClient.getBlock()
-    const baseFee = block.baseFeePerGas || parseGwei("1") // Default to 1 gwei if baseFee not available
-    const currentNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
-
-    console.log("\nCurrent network state:")
-    console.log(`- Current block:    ${block.number}`)
-    console.log(`- Current base fee: ${formatFee(baseFee)}`)
-    console.log(`- Starting nonce:   ${currentNonce}`)
-
-    // Base fee on testnet can be extremely low, so we need to handle that
-    console.log(`Note: Testnet base fee is extremely low: ${formatGwei(baseFee)} gwei`)
-
-    // For confirmed transactions: use the priority fee we want plus the base fee
-    const confirmedPriorityFee = baseFee // Very small priority fee that will work with low base fees
-    const confirmedMaxFee = baseFee + confirmedPriorityFee + (baseFee * 25n) / 100n // Base fee + priority + 25% buffer
-
-    // For stuck transactions: set priority fee to zero but ensure max fee covers base fee
-    const stuckPriorityFee = 0n
-    const stuckMaxFee = baseFee // Just enough to get accepted into mempool, but likely won't be mined
-
-    // Get the current nonce from the network before we start sending transactions
-    const startingNonce = await publicClient.getTransactionCount({
-        address: executorAccount.address,
-        blockTag: "latest",
-    })
-    console.log(`Starting nonce from network: ${startingNonce}`)
-
-    // Step 1: Send transactions that will confirm quickly
-    console.log("\n1. Sending", NUM_CONFIRMED_TXS, "transactions that will be mined quickly...")
-    const confirmedHashes: Hex[] = []
-    let nextNonce = startingNonce
-
-    try {
-        for (let i = 0; i < NUM_CONFIRMED_TXS; i++) {
-            const hash = await walletClient.sendTransaction({
-                chain: null,
-                to: executorAccount.address,
-                value: 0n,
-                nonce: nextNonce++, // Use explicit nonce and increment for next tx
-                maxFeePerGas: confirmedMaxFee,
-                maxPriorityFeePerGas: confirmedPriorityFee,
-            })
-            confirmedHashes.push(hash)
-            console.log(
-                `Sent confirmable tx ${i + 1}/${NUM_CONFIRMED_TXS} with hash ${formatHash(hash)} ` +
-                    `(maxFee: ${formatFee(confirmedMaxFee)}, priority: ${formatFee(confirmedPriorityFee)})`,
-            )
-        }
-    } catch (error) {
-        console.error(`Error sending confirmed transactions: ${error}`)
-        throw error
-    }
-
-    // Wait for transactions to be included (approximately 1-2 block times)
-    console.log("\nWaiting for confirmed transactions to be mined...")
-    await sleep(6000) // ~ 3 blocks
-
-    // Check if transactions were included
-    const currentConfirmedNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
-    console.log(`Nonce before:   ${currentNonce}, after: ${currentConfirmedNonce}`)
-
-    if (currentConfirmedNonce < currentNonce + NUM_CONFIRMED_TXS) {
-        console.log("\n\x1b[43m\x1b[30m WARNING \x1b[0m Not all confirmed transactions were included yet.")
-        console.log("Waiting additional time for confirmations...")
-        await sleep(10000) // Wait additional 10 seconds
-    }
-
-    // Step 2: Send transactions that should get stuck
-    console.log("\n2. Sending", NUM_STUCK_TXS, "transactions with zero priority fee (should get stuck)...")
-
-    // Double-check what the latest nonce is after our confirmed transactions
-    const updatedNonce = await publicClient.getTransactionCount({
-        address: executorAccount.address,
-        blockTag: "latest",
+async function prepareBurnGasTransaction({
+    walletClient,
+    account,
+    gasToBurn,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    nonce,
+    gas,
+}: {
+    walletClient: WalletClient
+    account: Account
+    gasToBurn: bigint
+    maxFeePerGas: bigint
+    maxPriorityFeePerGas: bigint
+    nonce: number
+    gas: bigint
+}): Promise<{ serializedTx: Hex; nonce: number; isStuck: boolean }> {
+    // Prepare a contract transaction request
+    const txRequest = await walletClient.prepareTransactionRequest({
+        account,
+        chain: happyChainSepolia,
+        to: deployment.MockGasBurner,
+        data: encodeFunctionData({
+            abi: abis.MockGasBurner,
+            functionName: "burnGas",
+            args: [gasToBurn],
+        }),
+        nonce,
+        gas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
     })
 
-    // nextNonce should already be set correctly from previous section
-    console.log(`Current nonce from chain: ${updatedNonce}, Next nonce to use: ${nextNonce}`)
-
-    // If somehow the chain nonce is higher than what we were tracking, update nextNonce
-    if (updatedNonce > nextNonce) {
-        console.log(`Adjusting nonce: ${nextNonce} -> ${updatedNonce}`)
-        nextNonce = updatedNonce
-    }
-
-    const stuckHashes: Hex[] = []
-
-    try {
-        for (let i = 0; i < NUM_STUCK_TXS; i++) {
-            const hash = await walletClient.sendTransaction({
-                chain: null,
-                to: executorAccount.address,
-                value: 0n,
-                nonce: nextNonce++, // Use explicit nonce and increment for next tx
-                maxFeePerGas: stuckMaxFee,
-                maxPriorityFeePerGas: stuckPriorityFee,
-            })
-            stuckHashes.push(hash)
-            console.log(
-                `Sent stuck tx ${i + 1}/${NUM_STUCK_TXS} with hash ${formatHash(hash)} ` +
-                    `(maxFee: ${formatFee(stuckMaxFee)}, priority: ${formatFee(stuckPriorityFee)})`,
-            )
-        }
-    } catch (error) {
-        console.error(`Error sending stuck transactions: ${error}`)
-        throw error
-    }
-
-    // Check nonces to verify we created a gap
-    const finalLatestNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
-    const pendingNonce = await publicClient.getTransactionCount({
-        address: executorAccount.address,
-        blockTag: "pending",
+    // Sign the transaction
+    const serializedTx = await walletClient.signTransaction({
+        ...txRequest,
+        chain: happyChainSepolia,
     })
-    const nonceDifference = pendingNonce - finalLatestNonce
 
-    // Report the results
-    console.log("\nCurrent state after sending transactions:")
-    console.log(`- Latest nonce:  ${finalLatestNonce} (confirmed on chain)`)
-    console.log(`- Pending nonce: ${pendingNonce} (includes mempool)`)
-    console.log(`- Nonce gap:          ${nonceDifference} transactions in mempool`)
-
-    // Validate that we created a nonce gap as expected
-    if (nonceDifference === NUM_STUCK_TXS) {
-        console.log(
-            `\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32mCreated nonce gap of ${nonceDifference} transactions!\x1b[0m`,
-        )
-
-        console.log("\nTransaction hashes:")
-        console.log("Confirmed:", confirmedHashes.map(formatHash).join(", "))
-        console.log("Stuck:", stuckHashes.map(formatHash).join(", "))
-    } else {
-        console.log(
-            `\n\x1b[41m\x1b[30m WARNING \x1b[0m \x1b[33mExpected gap of ${NUM_STUCK_TXS}, but found ${nonceDifference}\x1b[0m`,
-        )
+    // Return the serialized transaction and metadata
+    return {
+        serializedTx,
+        nonce,
+        isStuck: maxPriorityFeePerGas === 0n,
     }
 }
 
 // =====================================================================================================================
-// START SUBMITTER SERVICE
+// MAIN TEST FUNCTIONS
 
-function startSubmitter(): ChildProcess {
-    // Kill any existing submitter process
+/**
+ * Send block-filling transactions and stuck transactions, then run resync
+ * 1. Send block-filling transactions from the block filler key to fill blocks
+ * 2. Send transactions with zero priority fee from executor to create stuck txs
+ * 3. Call resyncAccount on the executor account to verify it resolves the nonce gap
+ */
+async function runResyncTest(): Promise<void> {
     try {
-        execSync('pkill -f "node --loader ts-node/esm/transpile-only index.ts"', { stdio: "ignore" })
-    } catch {
-        // Ignore errors if no process exists
+        // const formatHash = (hash: string) => `${hash.slice(0, 10)}...${hash.slice(-4)}`
+        // const formatFee = (fee: bigint) => formatGwei(fee) + " gwei"
+
+        console.log("\n\x1b[1m\x1b[34m═════════ RESYNC SERVICE TEST ═════════\x1b[0m")
+
+        // Get current network state
+        const block = await publicClient.getBlock()
+        const baseFee = block.baseFeePerGas || parseGwei("1") // Default to 1 gwei if baseFee not available
+
+        // Get starting nonces for both accounts (both latest and pending)
+        const [executorLatestNonce, executorPendingNonce, fillerLatestNonce, fillerPendingNonce] = await Promise.all([
+            publicClient.getTransactionCount({ address: executorAccount.address }),
+            publicClient.getTransactionCount({
+                address: executorAccount.address,
+                blockTag: "pending",
+            }),
+            publicClient.getTransactionCount({ address: blockFillerAccount.address }),
+            publicClient.getTransactionCount({
+                address: blockFillerAccount.address,
+                blockTag: "pending",
+            }),
+        ])
+
+        console.log("\nCurrent network state:")
+        console.log(`- Current block:            ${block.number}`)
+        console.log(`- Current base fee:         ${baseFee}`)
+        console.log(`- Executor latest nonce:    ${executorLatestNonce}`)
+        console.log(
+            `- Executor pending nonce:   ${executorPendingNonce} (gap: ${executorPendingNonce - executorLatestNonce > 0 ? executorPendingNonce - executorLatestNonce : 0})`,
+        )
+        console.log(`- Block filler latest nonce: ${fillerLatestNonce}`)
+        console.log(
+            `- Block filler pending nonce: ${fillerPendingNonce} (gap: ${fillerPendingNonce - fillerLatestNonce > 0 ? fillerPendingNonce - fillerLatestNonce : 0})`,
+        )
+
+        // For block filling transactions: higher priority fee to ensure they're mined
+        const fillerPriorityFee = baseFee
+
+        // For stuck transactions: set priority fee to zero but ensure max fee covers base fee
+        const stuckPriorityFee = 0n
+
+        try {
+            // Step 1: Prepare interleaved transactions - mix block-filling and stuck txs
+            console.log(
+                `\n1. Preparing ${NUM_BLOCK_FILLING_TXS} block-filling and ${NUM_STUCK_TXS} stuck transactions...`,
+            )
+
+            // Get the starting nonce for both accounts
+            const currentBlockFillerNonce = await publicClient.getTransactionCount({
+                address: blockFillerAccount.address,
+            })
+            console.log(`Block filler starting nonce: ${currentBlockFillerNonce}`)
+
+            const currentExecutorNonce = await publicClient.getTransactionCount({
+                address: executorAccount.address,
+            })
+            console.log(`Executor starting nonce: ${currentExecutorNonce}`)
+
+            // First prepare all raw transactions
+            const stuckRawTxs: { serializedTx: Hex; nonce: number; isStuck: boolean }[] = []
+            const blockFillerRawTxs: { serializedTx: Hex; nonce: number; isStuck: boolean }[] = []
+
+            // Prepare block filler transactions in parallel
+            console.log(`Preparing ${NUM_BLOCK_FILLING_TXS} block-filling transactions in parallel...`)
+            const blockFillerPromises = Array.from({ length: NUM_BLOCK_FILLING_TXS }, (_, i) =>
+                prepareBurnGasTransaction({
+                    walletClient: blockFillerWalletClient,
+                    account: blockFillerAccount,
+                    gasToBurn: TX_GAS_AMOUNT,
+                    maxFeePerGas: baseFee * 2n,
+                    maxPriorityFeePerGas: fillerPriorityFee,
+                    nonce: currentBlockFillerNonce + i,
+                    gas: TX_GAS_AMOUNT + 42000n,
+                }),
+            )
+
+            // Prepare stuck transactions in parallel
+            console.log(`Preparing ${NUM_STUCK_TXS} stuck transactions with zero priority fee in parallel...`)
+            const stuckTxPromises = Array.from({ length: NUM_STUCK_TXS }, (_, i) =>
+                prepareBurnGasTransaction({
+                    walletClient: executorWalletClient,
+                    account: executorAccount,
+                    gasToBurn: TX_GAS_AMOUNT,
+                    maxFeePerGas: baseFee + baseFee / 2n,
+                    maxPriorityFeePerGas: stuckPriorityFee,
+                    nonce: currentExecutorNonce + i,
+                    gas: TX_GAS_AMOUNT + 42000n,
+                }),
+            )
+
+            // Wait for all transactions to be prepared
+            const [blockFillerResults, stuckTxResults] = await Promise.all([
+                Promise.all(blockFillerPromises),
+                Promise.all(stuckTxPromises),
+            ])
+
+            // Store the results
+            blockFillerRawTxs.push(...blockFillerResults)
+            stuckRawTxs.push(...stuckTxResults)
+
+            // Interleave all transactions for sending
+            const allRawTxs: { serializedTx: Hex; nonce: number; isStuck: boolean }[] = []
+
+            // First batch of block-filling transactions (2/3 of total)
+            const firstBatchCount = Math.floor(NUM_BLOCK_FILLING_TXS * 0.7)
+            console.log(`\nInterleaving transactions: First ${firstBatchCount} block-filling transactions...`)
+            for (let i = 0; i < firstBatchCount; i++) {
+                allRawTxs.push(blockFillerRawTxs[i])
+            }
+
+            // Add all stuck transactions in the middle
+            console.log(`Adding all ${stuckRawTxs.length} stuck transactions...`)
+            stuckRawTxs.forEach((tx) => allRawTxs.push(tx))
+
+            // Add remaining block-filling transactions
+            console.log(`Adding remaining ${blockFillerRawTxs.length - firstBatchCount} block-filling transactions...`)
+            for (let i = firstBatchCount; i < blockFillerRawTxs.length; i++) {
+                allRawTxs.push(blockFillerRawTxs[i])
+            }
+
+            // Now send all raw transactions in parallel, in random order
+            console.log(`\nSending ${allRawTxs.length} raw transactions in parallel...`)
+
+            // Send all transactions in parallel and collect their hashes
+            const sendTxPromises = allRawTxs.map((tx) =>
+                publicClient.sendRawTransaction({
+                    serializedTransaction: tx.serializedTx,
+                }),
+            )
+
+            // Wait for all transactions to be sent and collect their hashes
+            const _txHashes = await Promise.all(sendTxPromises)
+
+            // Check nonces to verify we created a gap
+            const latestNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
+            const pendingNonce = await publicClient.getTransactionCount({
+                address: executorAccount.address,
+                blockTag: "pending",
+            })
+            const nonceDifference = pendingNonce - latestNonce
+
+            // Report the results
+            console.log("\nCurrent state after sending transactions:")
+            console.log(`- Latest nonce:  ${latestNonce} (confirmed on chain)`)
+            console.log(`- Pending nonce: ${pendingNonce} (includes mempool)`)
+            console.log(`- Nonce gap:     ${nonceDifference} transactions in mempool`)
+
+            // Validate that we created a nonce gap as expected
+            if (nonceDifference === NUM_STUCK_TXS) {
+                console.log(
+                    `\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32mCreated nonce gap of ${nonceDifference} transactions!\x1b[0m`,
+                )
+                // console.log("\nStuck transaction hashes:")
+                // console.log(stuckHashes.join(", "))
+            } else {
+                console.log(
+                    `\n\x1b[43m\x1b[30m WARNING \x1b[0m \x1b[33mExpected gap of ${NUM_STUCK_TXS}, but found ${nonceDifference}\x1b[0m`,
+                )
+                if (nonceDifference === 0) {
+                    console.log("No nonce gap detected. Transactions may have been mined already.")
+                    return
+                }
+            }
+
+            // Step 5: Now call the actual resyncAccount function to resolve the nonce gap
+            console.log("\n\x1b[1m\x1b[34m═════════ RUNNING RESYNC ═════════\x1b[0m")
+            console.log("Calling resyncAccount on executor account...")
+
+            // Start monitoring the nonce gap in parallel with resync
+            console.log("\nStarting nonce gap monitor while resync is in progress...")
+            const monitorPromise = monitorNonceGap()
+
+            try {
+                // Import the actual resyncAccount function
+                const { resyncAccount } = await import("../lib/services/resync.js")
+
+                // Run resync in parallel with monitoring
+                const resyncPromise = resyncAccount(executorAccount, { resync: true })
+
+                // Wait for both to complete or either to fail
+                await Promise.all([
+                    resyncPromise.then(() => console.log("Resync completed successfully")),
+                    monitorPromise,
+                ])
+            } catch (error) {
+                console.error("Error during resync or monitoring:", error)
+                throw error
+            }
+        } catch (error) {
+            console.error(`Error in test: ${error}`)
+            throw error
+        }
+    } catch (error) {
+        console.error(`Error in runResyncTest: ${error}`)
     }
-
-    console.log("\n\x1b[1m\x1b[34m═════════ STARTING SUBMITTER SERVICE ═════════\x1b[0m")
-
-    // Start the submitter process using the Makefile's dev command
-    const submitter = spawn("make", ["dev"], {
-        cwd: path.join(__dirname, ".."),
-        env: process.env,
-        stdio: ["ignore", "pipe", "pipe"],
-    })
-
-    // Highlight different service logs with colors
-    submitter.stdout.on("data", (data) => {
-        const output = data.toString().trim()
-        if (output.includes("[ResyncService]")) {
-            console.log(`\x1b[32m${output}\x1b[0m`) // Green for ResyncService
-        } else if (output.includes("alert") || output.includes("ALERT")) {
-            console.log(`\x1b[41m\x1b[37m${output}\x1b[0m`) // White on red background for alerts
-        } else if (output.includes("Latest nonce") || output.includes("Pending nonce")) {
-            console.log(`\x1b[33m${output}\x1b[0m`) // Yellow for nonce info
-        } else if (output.includes("nonce") || output.includes("Nonce")) {
-            console.log(`\x1b[36m${output}\x1b[0m`) // Cyan for other nonce messages
-        } else {
-            console.log(output)
-        }
-    })
-
-    submitter.stderr.on("data", (data) => {
-        console.error(`\x1b[31m${data.toString().trim()}\x1b[0m`)
-    })
-
-    // Handle process exit
-    submitter.on("close", (code) => {
-        if (code !== 0) {
-            console.log(`\nSubmitter process exited with code ${code}`)
-        }
-    })
-
-    return submitter
 }
 
 // =====================================================================================================================
 // MONITORING FUNCTIONS
 
+/**
+ * Monitor the nonce gap to see if it gets resolved
+ * @returns Promise that resolves when the nonce gap is resolved or timeout is reached
+ */
 async function monitorNonceGap(): Promise<void> {
     console.log("\n\x1b[1m\x1b[34m═════════ MONITORING NONCE GAP ═════════\x1b[0m")
 
-    const startTime = Date.now()
+    try {
+        const startTime = Date.now()
 
-    while (Date.now() - startTime < MONITOR_TIMEOUT) {
-        const latestNonce = await publicClient.getTransactionCount({
-            address: executorAccount.address,
-        })
+        while (Date.now() - startTime < MONITOR_TIMEOUT) {
+            // Check if nonce gap is resolved
+            const latestNonce = await publicClient.getTransactionCount({ address: executorAccount.address })
+            const pendingNonce = await publicClient.getTransactionCount({
+                address: executorAccount.address,
+                blockTag: "pending",
+            })
 
-        const pendingNonce = await publicClient.getTransactionCount({
-            address: executorAccount.address,
-            blockTag: "pending",
-        })
+            const nonceGap = pendingNonce - latestNonce
 
-        const nonceDifference = pendingNonce - latestNonce
+            if (nonceGap === 0) {
+                console.log("\n\x1b[42m\x1b[30m SUCCESS \x1b[0m Nonce gap resolved successfully!")
+                return
+            }
 
-        const timeElapsed = Math.floor((Date.now() - startTime) / 1000)
-
-        const status = nonceDifference === 0 ? "\x1b[42m\x1b[30m RESOLVED \x1b[0m" : "\x1b[43m\x1b[30m WAITING  \x1b[0m"
-
-        console.log(
-            `${status} Time: ${timeElapsed}s | Latest: ${latestNonce} | Pending: ${pendingNonce} | Gap: ${nonceDifference}`,
-        )
-
-        if (nonceDifference === 0) {
-            console.log(
-                "\n\x1b[42m\x1b[30m SUCCESS \x1b[0m \x1b[32mNonce gap resolved successfully by resync service!\x1b[0m",
-            )
-            return
+            await sleep(1000)
         }
 
-        // Wait before checking again
-        await sleep(1000)
+        console.log("\n\x1b[43m\x1b[30m TIMEOUT \x1b[0m Monitoring timed out, nonce gap may still exist.")
+    } catch (error) {
+        console.error("Error in monitorNonceGap:", error)
     }
-
-    console.log(
-        "\n\x1b[41m\x1b[30m TIMEOUT \x1b[0m \x1b[31m Monitor timeout reached. Not all transactions were processed.\x1b[0m",
-    )
 }
 
 // START THE TEST
 
 async function run(): Promise<void> {
-    console.log("\n\x1b[1m\x1b[34m═════════ RESYNC SERVICE TEST ═════════\x1b[0m")
-    console.log("This test validates that the ResyncService properly:")
-    console.log(`Using account: ${executorAccount.address}`)
-
     try {
-        console.log("\n\x1b[1m\x1b[34m═════════ TESTING RESYNC SERVICE ON TESTNET ═════════\x1b[0m")
-        console.log(`Connected to RPC: ${RPC_HTTP_URL}`)
+        console.log("\n\x1b[1m\x1b[34m══════════ RESYNC SERVICE TEST ══════════\x1b[0m")
+        console.log("This test validates that the ResyncService properly resolves nonce gaps with stuck transactions")
+        console.log(`Using executor account: ${executorAccount.address}`)
+        console.log(`Using block filler account: ${blockFillerAccount.address}`)
 
-        // Test the account balance first
-        const balance = await publicClient.getBalance({ address: executorAccount.address })
-        console.log(`\nAccount balance: ${formatEther(balance)} ETH`)
+        try {
+            console.log("\n\x1b[1m\x1b[34m══════════ TESTING RESYNC SERVICE ON TESTNET ══════════\x1b[0m")
+            console.log(`Connected to RPC: ${RPC_HTTP_URL}`)
 
-        if (balance < parseGwei("5000")) {
-            console.error(
-                "\n\x1b[41m\x1b[37m INSUFFICIENT FUNDS \x1b[0m Account has insufficient funds for testing. Please fund the account.",
-            )
-            return
+            // Test the account balance first
+            const executorBalance = await publicClient.getBalance({ address: executorAccount.address })
+            const fillerBalance = await publicClient.getBalance({ address: blockFillerAccount.address })
+
+            console.log(`\nExecutor account balance: ${formatEther(executorBalance)} ETH`)
+            console.log(`Block filler balance: ${formatEther(fillerBalance)} ETH`)
+
+            if (executorBalance < parseGwei("5000") || fillerBalance < parseGwei("5000")) {
+                console.error(
+                    "\n\x1b[41m\x1b[37m INSUFFICIENT FUNDS \x1b[0m One or both accounts have insufficient funds for testing. Please fund the accounts.",
+                )
+                return
+            }
+
+            // Run the main test
+            await runResyncTest()
+
+            console.log("\nTest completed successfully!")
+        } catch (error) {
+            console.error(`\n\x1b[41m ERROR \x1b[0m ${error}`)
+            process.exit(1)
         }
-
-        // Send underpriced transactions to create a nonce gap
-        await sendUnderpricedTransactions()
-
-        // Start the submitter service which should detect and fix the nonce gap
-        const submitter = startSubmitter()
-
-        // Wait a bit for the submitter to fully initialize
-        await sleep(5000)
-
-        // Monitor the nonce gap to see if the resync service resolves it
-        await monitorNonceGap()
-
-        // Cleanup: Stop the submitter service
-        console.log("\nStopping submitter service...")
-        submitter.kill()
-
-        console.log("\nTest completed successfully!")
     } catch (error) {
         console.error(`\n\x1b[41m ERROR \x1b[0m ${error}`)
         process.exit(1)
