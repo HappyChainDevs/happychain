@@ -1,6 +1,6 @@
 import type { Address, Hex } from "@happy.tech/common"
 import { concat, encodeDeployData, encodeFunctionData, getAddress, keccak256 } from "viem"
-import { abis } from "../../deployments/anvil/happy-aa/abis"
+import { abis } from "../../deployments/anvil/boop/abis"
 import { ERC1967_CREATION_CODE } from "./creationCode/ERC1967Code"
 
 /**
@@ -23,7 +23,7 @@ export function getAddressERC1967(
 ): Address {
     // Step 1: Create initialization data for the proxy
     const initData = encodeFunctionData({
-        abi: abis.ScrappyAccount,
+        abi: abis.HappyAccountImpl,
         functionName: "initialize",
         args: [owner],
     })

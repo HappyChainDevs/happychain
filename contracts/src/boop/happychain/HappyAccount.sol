@@ -160,10 +160,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
             }
 
             bytes memory signature = boop.validatorData;
-            boop.validatorData = ""; // set to "" to get the hash
-            address signer =
-                keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().tryRecover(signature);
-            boop.validatorData = signature; // revert back to original value
+            address signer = Utils.boopHash(boop).tryRecover(signature);
 
             validationResult = signer == owner()
                 ? bytes4(0)

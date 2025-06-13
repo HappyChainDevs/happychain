@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {Encoding} from "boop/core/Encoding.sol";
 import {Boop} from "boop/interfaces/Types.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
 library Utils {
+    using ECDSA for bytes32;
+    using Encoding for Boop;
     /**
      * Returns an overestimate of the size of a submitter transaction sending this boop directly
      * to {EntryPoint.submit}, without an access list.
      */
+
     function estimateSubmitterTxSize(Boop memory boop) internal pure returns (uint256) {
         // forgefmt: disable-next-item
         return 280 // maximum size of tx with an empty access list, exclusive boop encoding
@@ -82,5 +87,26 @@ library Utils {
         }
 
         return (false, new bytes(0));
+    }
+
+    /**
+     * @dev Computes the EIP-191 signed message hash for a boop
+     * @param boop The boop to compute the hash for (validatorData field will be ignored)
+     * @return The EIP-191 signed message hash for the boop
+     */
+    function boopHash(Boop memory boop) internal view returns (bytes32) {
+        // Store original validatorData
+        bytes memory originalValidatorData = boop.validatorData;
+
+        // Set validatorData to empty for hashing
+        boop.validatorData = "";
+
+        // Compute the hash
+        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
+
+        // Restore original validatorData
+        boop.validatorData = originalValidatorData;
+
+        return hash;
     }
 }
