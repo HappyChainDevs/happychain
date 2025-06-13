@@ -5,13 +5,13 @@ showOutline: true
 
 # Boop Contracts Documentation
 
-This documents the functionality of the Boop stack contracts. The [contracts source code][source] is extremely well documented & readable,
-and should be considered as the canonical specification for behaviour. This page extracts the essential information in a
+This documents the functionality of the Boop stack contracts. The [contracts' source code][source] is extremely well documented & readable,
+and should be considered as the canonical specification for their behaviour. This page extracts the essential information in a
 single place for convenience, and adds a few system-level notes.
 
 [source]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/
 
-Please checkout the [Contracts Overview][overview] of the Architecture page for background information. We reprodue the
+Please checkout the [Contracts Overview][overview] of the Architecture page for background information. We reproduce the
 diagram from that section below for context.
 
 [overview]: /boop/architecture#contracts-overview
@@ -20,7 +20,7 @@ diagram from that section below for context.
 
 ## Boop Structure
 
-This structure represent a boop (a smart transaciton in the Boop stack). The following excerpt is copied from the
+This structure represents a boop (a smart transaction in the Boop stack). The following excerpt is copied from the
 [Types.sol] file.
 
 [Types.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/Types.sol
@@ -111,19 +111,19 @@ SDK](/boop/sdk) exposes an [`encodeExtraData`] function to create extra data fro
 
 ### Boop Hash
 
-Just like an EVM transaction ban be identified by its hash, so can a Boop. The boop hash is straightforwarly computed as
-the hash of its packed encoding with the chain id appended. However, for boops whose fees are not paid by the account
+Just like an EVM transaction ban be identified by its hash, so can a Boop. The boop hash is straightforwardly computed as
+the hash of its packed encoding with the chain ID appended. However, for boops whose fees are not paid by the account
 itself, the fee amounts and gas limits are zeroed and the `validatorData` field is set to zero-length before computing
 the hash.
 
 Zeroing the fees and gas limits allows the submitter to set the fees for the boop (saving network roundtrips, especially
 in case the user would have to sign over these values before properly submitting), and potentially change them as
-network condition evolve, while the boop preserves a stale identity. Emptying `validatorData` enables it to carry a
+network conditions evolve, while the boop preserves a stale identity. Emptying `validatorData` enables it to carry a
 signature over the boop hash to be verified, or even short-lived authorization data that could change with retries. If
 validation needs access to extra data that must be part of the boop's identity, it can be included in the `extraData`
 dictionary.
 
-The [Boop Client SDK](/boop/sdk) exposes an [`computeBoopHash`] function to compute a Boop's hash. You can see how this
+The [Boop Client SDK](/boop/sdk) exposes a [`computeBoopHash`] function to compute a Boop's hash. You can see how this
 computation is done on the contract side in the `validate` function of our [`HappyAccount`][HappyAccount] account
 implementation.
 
@@ -131,7 +131,7 @@ implementation.
 
 ## EntryPoint Contract
 
-Any boop being send must transit via the `submit` function of the `EntryPoint` contract. Its code can be
+Any boop being sent must transit via the `submit` function of the `EntryPoint` contract. Its code can be
 [found here][entrypoint-source].
 
 [entrypoint-source]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
@@ -142,20 +142,20 @@ public, anybody can resubmit it independently).
 
 At a high level, this function performs the following tasks:
 
-1. Validate the gas price, check the paymaster's staking balance (if a paymaster is specified), validate and update the
+1. Validates the gas price, checks the paymaster's staking balance (if a paymaster is specified), validates and updates the
 account nonce.
 
-2. Call the account to validate the boop. (`IAccount.validate`, see below)
+2. Calls the account to validate the boop. (`IAccount.validate`, see below)
 
-3. Call the paymaster to validate payment if a paymaster is specified. (`IPaymaster.validatePayment`, see below)
+3. Calls the paymaster to validate payment if a paymaster is specified. (`IPaymaster.validatePayment`, see below)
 
-4. Call the account to execute the call specified by the boop. (`IAccount.execute`, see below)
+4. Calls the account to execute the call specified by the boop. (`IAccount.execute`, see below)
 
-5. Collect payment from the paymaster or account, if the transaction is not sponsored by the submitter.
+5. Collects payment from the paymaster or account, if the transaction is not sponsored by the submitter.
 Payment is taken from the paymaster's stake or solicited from the account by calling `IAccount.payout`.
 
 The EntryPoint has special provisions for simulation. If simulated with an EVM transaction sender (`tx.origin`) with
-the zero address, the `submit` function will enter simulation mode omit certain checks (gas price & nonce) and will not
+the zero address, the `submit` function will enter simulation mode, omit certain checks (gas price & nonce) and will not
 use the provided gas limits. It will also return data that includes useful information (for instance, if the nonce
 validation failed because of a future nonce, as well as estimated gas limits). This enables us to get all the information
 we need to validation a boop and "fill in" missing values like gas limits in a single call to the blockchain node.
@@ -168,7 +168,7 @@ is not HappyChain-specific.
 
 [IAccount]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
 
-Here are the core functions the account must implement, refer to [interface][iaccount-source] for more details, including
+Here are the core functions the account must implement, refer to [interface][IAccount] for more details, including
 support for [EIP-1271 contract signatures][eip1271]
 
 [eip1271]:https://eips.ethereum.org/EIPS/eip-1271
@@ -207,7 +207,7 @@ to the HappyChain use case giving *every* user a 24-hours budget that streams ba
 [HappyPaymaster]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyPaymaster.sol
 
 To preserve Boop's good latency properties, we advise against using the "signing paymasters" that are popular with
-ERC-4337 account abstract. Those have you do incur an network roundtrip to collect a signature from a paymaster EOA
+ERC-4337 account abstraction. Those have you incur an network roundtrip to collect a signature from a paymaster EOA
 which is then verified by the paymaster contract. Instead, we recommend to register your users in your paymaster
 contracts and perform all your checks onchain — at least on chains where gas costs allow it.
 

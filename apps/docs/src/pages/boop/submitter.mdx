@@ -5,7 +5,7 @@ showOutline: true
 
 # Boop Submitter
 
-Please checkout the [Submitter Overview][overview] of the Architecture page for background information.
+Please checkout the [Submitter Overview](/boop/architecture#submitter-overview) of the Architecture page for background information.
 
 As a reminder, the role of the submitter is to make EVM transaction to send boops to the chain, either sponsoring fees,
 or fronting them, to be repaid by the account or by a paymaster contract.
@@ -23,7 +23,7 @@ description and the [REST API reference](/boop/rest) for a full specification.
 
 ## Boop Lifecycle
 
-When the sumitter receives a boop for onchain submission (`submit` or `execute`), the boop goes through the following
+When the submitter receives a boop for onchain submission (`submit` or `execute`), the boop goes through the following
 stages:
 
 1. First, the boop is simulated. If the results indicates it is ready for submission, it will move to that stage
@@ -42,7 +42,7 @@ stages:
    If the `submit` endpoint invoked was submit, we return the [boop hash] to the user at this stage. If it was `execute`,
    we keep waiting.
 
-   Depending on its configuration, the submitter may attempt to resubmit the boop if it's not included fast enough. If will
+   Depending on its configuration, the submitter may attempt to resubmit the boop if it's not included fast enough. It will
    resimulate before doing this, and if the boop is sponsored, it will also update its fees (while keeping the same [boop
    hash]).
 
@@ -90,7 +90,7 @@ See the [github repo][submitter-package] on how to get started running the submi
 
 [submitter-package]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter
 
-The submitte comes with a plethora of configuration options which are controlled via environment variable (which you can
+The submitter comes with a plethora of configuration options which are controlled via environment variable (which you can
 defined in the submitter's `.env` file), which are specified in the following schemas:
 
 - [App] — configure keys, output, external services (traces & metrics), ...
