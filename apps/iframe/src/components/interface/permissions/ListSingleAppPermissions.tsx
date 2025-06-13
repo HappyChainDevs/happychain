@@ -1,5 +1,4 @@
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react"
-import { useCallback, useState } from "react"
 import type { Address } from "viem"
 import { Switch } from "#src/components/primitives/toggle-switch/Switch"
 import { Permissions } from "#src/constants/permissions"
@@ -7,9 +6,9 @@ import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/co
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import {
     type AppPermissions,
-    type SessionKeyRequest,
     type WalletPermission,
     grantPermissions,
+    hasPermissions,
     revokePermissions,
 } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
@@ -19,68 +18,53 @@ interface ListItemProps {
     permission: WalletPermission
 }
 
+const onSwitchToggle = (e: SwitchCheckedChangeDetails, allSessionKeys: string[], permission: WalletPermission) => {
+    const app = permission.invoker
+    const isSessionKey = permission.parentCapability === Permissions.SessionKey
+
+    if (!isSessionKey) {
+        // No caveat to worry about for now.
+        if (e.checked) grantPermissions(app, permission.parentCapability)
+        else revokePermissions(app, permission.parentCapability)
+    }
+
+    // We will loop through all session keys here, not just active ones, so that we can
+    // re-enable all, after disabling all.
+    for (const target of allSessionKeys) {
+        if (e.checked) {
+            grantPermissions(app, { [Permissions.SessionKey]: { target } })
+        } else {
+            // The sessions keys will be unregistered onchain when transitioning away from
+            // the page (cf. transition handler in `__root.tsx`). This avoids sending
+            // redundant transactions if permissions are being toggled on and off.
+            //
+            // This is not 100% optimal, e.g. the user can toggle off the session keys and then
+            // exit the page, causing the session keys to be deleted locally but not unregistered
+            // onchain. This is generally safe — the session key will be lost (deleted) so unusable
+            // despite being allowed onchain. This can only be a safety issues if the session keys
+            // are stolen, but if that is possible, then we have much bigger problems to worry about.
+
+            revokePermissions(app, { [Permissions.SessionKey]: { target } })
+        }
+    }
+}
+
 const ListItem = ({ permission }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker)
 
-    // Cache the initial list of all session keys, so that they remained displayed even after we turn some of them off.
-    const [allSessionKeys] = useState(() => {
-        if (permission.parentCapability !== Permissions.SessionKey) return []
-        return permission.caveats.map((c) => c.value as Address)
-    })
+    const allSessionKeys =
+        permission?.parentCapability === Permissions.SessionKey ? permission.caveats.map((c) => c.value as Address) : []
 
-    // These are the contract target that have active session keys. We maintain those in React state so that we can
-    // toggle them back. In particular this is important when toggling the entire session key category on and off.
-    const [activeSessionKeys, setActiveSessionKeys] = useState(() => {
-        if (permission.parentCapability !== Permissions.SessionKey) return []
-        return permission.caveats.map((c) => c.value as Address)
-    })
-
-    const addActiveSessionKey = useCallback((app: AppURL, request: SessionKeyRequest) => {
-        const target = request[Permissions.SessionKey].target
-        setActiveSessionKeys((prev) => [...prev, target])
-        grantPermissions(app, request)
-    }, [])
-
-    const removeActiveSessionKey = useCallback((app: AppURL, request: SessionKeyRequest) => {
-        const target = request[Permissions.SessionKey].target
-        setActiveSessionKeys((prev) => prev.filter((t) => t !== target))
-        revokePermissions(app, request)
-    }, [])
-
-    const onSwitchToggle = (e: SwitchCheckedChangeDetails) => {
-        const app = permission.invoker
-        const isSessionKey = permission.parentCapability === Permissions.SessionKey
-
-        if (!isSessionKey) {
-            // No caveat to worry about for now.
-            if (e.checked) grantPermissions(app, permission.parentCapability)
-            else revokePermissions(app, permission.parentCapability)
-        }
-
-        for (const target of activeSessionKeys) {
-            if (e.checked) {
-                grantPermissions(app, { [Permissions.SessionKey]: { target } })
-            } else {
-                // The sessions keys will be unregistered onchain when transitioning away from
-                // the page (cf. transition handler in `__root.tsx`). This avoids sending
-                // redundant transactions if permissions are being toggled on and off.
-                //
-                // This is not 100% optimal, e.g. the user can toggle off the session keys and then
-                // exit the page, causing the session keys to be deleted locally but not unregistered
-                // onchain. This is generally safe — the session key will be lost (deleted) so unusable
-                // despite being allowed onchain. This can only be a safety issues if the session keys
-                // are stolen, but if that is possible, then we have much bigger problems to worry about.
-
-                revokePermissions(app, { [Permissions.SessionKey]: { target } })
-            }
-        }
-    }
+    // These are the active contract target that have active session keys.
+    const activeSessionKeys = allSessionKeys.filter((target) =>
+        hasPermissions(permission.invoker, { [Permissions.SessionKey]: { target } }),
+    )
 
     return (
         <div className="w-full">
             <Switch
                 checked={hasPermission}
-                onCheckedChange={onSwitchToggle}
+                onCheckedChange={(e) => onSwitchToggle(e, allSessionKeys, permission)}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse text-base-content dark:text-neutral-content"
                 switchLabel={
                     permissionDescriptions?.[permission.parentCapability as PermissionDescriptionIndex] ?? "---"
@@ -96,8 +80,6 @@ const ListItem = ({ permission }: ListItemProps) => {
                             appURL={permission.invoker}
                             contract={target}
                             key={`${permission.parentCapability}-${target}`}
-                            addActiveSessionKey={addActiveSessionKey}
-                            removeActiveSessionKey={removeActiveSessionKey}
                         />
                     ))}
                 </div>
@@ -112,14 +94,14 @@ interface ListDappPermissionsProps {
 }
 
 export const ListSingleAppPermissions = ({ appURL, items }: ListDappPermissionsProps) => {
-    if (Object.keys(items).length === 0)
+    const permissionNames = Object.keys(items)
+
+    if (permissionNames.length === 0)
         return (
             <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-base-content/50">
                 You did not grant any permission to this app.
             </p>
         )
-
-    const permissionNames = Object.keys(items)
 
     // Display connection permission first.
     const permissionsList: (readonly [string, WalletPermission])[] = [
