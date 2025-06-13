@@ -64,7 +64,7 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
 
                 try {
                     // Resync the account targeting the specific nonce that's stuck
-                    await resyncAccount(accountDeployer, { targetNonce: nonce, verifyAfterSync: true })
+                    await resyncAccount(accountDeployer, { targetNonce: nonce, resync: true })
                     logger.info("Resync completed for stuck account creation tx", { hash, nonce })
                 } catch (resyncError) {
                     logger.error("Failed to resync after account creation timeout", {

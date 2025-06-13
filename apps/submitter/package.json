@@ -29,6 +29,7 @@
     },
     "devDependencies": {
         "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/wallet-common": "workspace:0.1.0",
         "@happy.tech/configs": "workspace:0.1.0",
         "@happy.tech/happybuild": "workspace:0.1.1",
         "@types/bun": "^1.2.4",

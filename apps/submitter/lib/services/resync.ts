@@ -11,7 +11,7 @@ type ResyncOptions = {
     /** Target nonce to sync up to. If not provided, will use pending nonce from the network */
     targetNonce?: number
     /** Whether to verify nonce alignment after completing sync */
-    verifyAfterSync?: boolean
+    resync?: boolean
 }
 
 /**
@@ -21,7 +21,7 @@ export async function resyncAllAccounts(): Promise<void> {
     resyncLogger.info("Startup: resyncing all accounts")
     let accounts: Account[] = executorAccounts
     if (!accounts.map((it) => it.address).includes(accountDeployer.address)) accounts = [accountDeployer, ...accounts]
-    await Promise.all(accounts.map((account) => resyncAccount(account, { verifyAfterSync: true })))
+    await Promise.all(accounts.map((account) => resyncAccount(account, { resync: true })))
     resyncLogger.info("Completed startup account resync")
 }
 
@@ -34,28 +34,28 @@ export async function resyncAllAccounts(): Promise<void> {
  */
 export async function resyncAccount(account: Account, options?: ResyncOptions): Promise<void> {
     let targetNonce: number | undefined = undefined
-    let verifyAfterSync = false
+    let resync = false
 
     if (options) {
         targetNonce = options.targetNonce
-        verifyAfterSync = options.verifyAfterSync ?? false
+        resync = options.resync ?? false
     }
 
     return resyncAccountInternal({
         account,
         targetNonce,
-        verifyAfterSync,
+        resync,
     })
 }
 
 async function resyncAccountInternal({
     account,
     targetNonce,
-    verifyAfterSync = false,
+    resync = false,
 }: {
     account: Account
     targetNonce?: number
-    verifyAfterSync?: boolean
+    resync?: boolean
 }): Promise<void> {
     const address = account.address
     const initialDelay = 500
@@ -176,9 +176,7 @@ async function resyncAccountInternal({
                     resyncLogger.info("Resync complete", account)
                     unsubscribe()
                     // Verify nonce alignment after syncing if requested
-                    if (verifyAfterSync) {
-                        await resyncAccount(account) // No verifyAfterSync to prevent infinite recursion
-                    }
+                    if (resync) await resyncAccount(account) // No resync to prevent infinite recursion
                     return
                 }
             }
