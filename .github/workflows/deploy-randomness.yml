@@ -71,9 +71,20 @@ jobs:
 
               cat > .env <<-EOF
             export PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
-            export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
-            export RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
-            export ${{vars.RANDOMNESS_ENV}}
+            export TXM_DB_PATH=/home/randomness/txm.sqlite
+            export RANDOMNESS_DB_PATH=/home/randomness/randomness.sqlite
+            export RANDOM_CONTRACT_ADDRESS=0xd7dafcdC292906540Cc3357E9fD913390256b978
+            export PRECOMMIT_DELAY=20
+            export POST_COMMIT_MARGIN=10
+            export BLOCK_TIME=2
+            export RPC_URL=https://rpc.testnet.happy.tech/http
+            export EVM_DRAND_GENESIS_TIMESTAMP_SECONDS=1727521075
+            export EVM_DRAND_PERIOD_SECONDS=3
+            export EVM_DRAND_MARGIN=10
+            export EVM_DRAND_URL=https://api.drand.sh/v2/beacons/evmnet
+            export HAPPY_GENESIS_TIMESTAMP_SECONDS=1741715688
+            export CHAIN_ID=216
+            export OTEL_EXPORTER_OTLP_ENDPOINT=http://148.113.212.211:4318/v1/traces
             export LOG_COLORS=false
             export LOG_TIMESTAMPS=false
             EOF
