@@ -109,7 +109,7 @@ export const gasSchema = z.object({
      * Gas limit for the account creation call, avoiding a chain roundtrip for simulation.
      * Defaults to 300k.
      *
-     * Our last measurement (07 Jun 2025) is 246493 gas used.
+     * Our last measurement (14 Jun 2025, Prague hard fork) is 246_493 gas used.
      */
     ACCOUNT_CREATION_GAS_LIMIT: z.coerce.bigint().positive().default(300_000n),
 })

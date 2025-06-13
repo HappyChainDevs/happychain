@@ -1,11 +1,11 @@
-# Full reference
-# https://book.getfoundry.sh/reference/config/
+# Full reference: https://getfoundry.sh/config/reference/README/
+# Defaults: https://getfoundry.sh/config/reference/default-config/
 
 [profile.default]
 # The default profile is always applied, even if a specific profile is specified.
 
-# For Cancun hardfork + enables transient variables support.
-solc_version = "0.8.28"
+# For Prague hardfork + enables transient variables support.
+solc_version = "0.8.30"
 
 optimizer = true
 optimizer_runs = 20000
@@ -13,8 +13,7 @@ via_ir = true
 
 ignored_warnings_from = ["node_modules", "lib", "src/deploy", "src/scripts", "src/test"]
 
-# Forge targets Paris by default.
-evm_version = "cancun"
+evm_version = "prague"
 
 # Needed to write from the deploy scripts.
 fs_permissions = [
