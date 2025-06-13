@@ -10,7 +10,7 @@ import type { ExecuteSuccess } from "#lib/handlers/execute"
 import type { Boop } from "#lib/types"
 import { Onchain } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
-import { client, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import { apiClient, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
 import { GetState, type GetStateError, type GetStateReceipt, type GetStateSimulated } from "./types"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -36,12 +36,12 @@ describe("submitter_state", () => {
 
     it("fetches state of recent tx", async () => {
         // submit all transactions, but only wait for the first to complete
-        const response = (await client.api.v1.boop.execute
+        const response = (await apiClient.api.v1.boop.execute
             .$post({ json: { boop: serializeBigInt(signedTx) } })
             .then((a) => a.json())) as ExecuteSuccess
         expect(response.status).toBe(Onchain.Success)
         expect(response.receipt).toBeDefined()
-        const state = (await client.api.v1.boop.state[":boopHash"]
+        const state = (await apiClient.api.v1.boop.state[":boopHash"]
             .$get({ param: { boopHash: response.receipt.boopHash } })
             .then((a) => a.json())) as GetStateReceipt
         expect(state.status).toBe(GetState.Receipt)
@@ -50,7 +50,7 @@ describe("submitter_state", () => {
     })
 
     it("fetches state of an unknown tx", async () => {
-        const state = (await client.api.v1.boop.state[":boopHash"]
+        const state = (await apiClient.api.v1.boop.state[":boopHash"]
             .$get({ param: { boopHash: account } })
             .then((a) => a.json())) as GetStateError
         expect(state.status).toBe(GetState.UnknownBoop)
@@ -63,11 +63,11 @@ describe("submitter_state", () => {
         const boopHash = computeBoopHash(env.CHAIN_ID, futureSignedTx)
 
         // submit transaction, but don't wait for it to complete
-        const blockedTx = client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
+        const blockedTx = apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(futureSignedTx) } })
 
         await sleep(100)
 
-        const state = (await client.api.v1.boop.state[":boopHash"]
+        const state = (await apiClient.api.v1.boop.state[":boopHash"]
             .$get({ param: { boopHash } })
             .then((a) => a.json())) as GetStateSimulated
 
@@ -75,7 +75,7 @@ describe("submitter_state", () => {
         expect(state.simulation).toBeDefined()
         expect((state as any).receipt).toBeUndefined()
 
-        await client.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
+        await apiClient.api.v1.boop.submit.$post({ json: { boop: serializeBigInt(signedTx) } })
         await blockedTx // wait for the transaction to complete so CI isn't grumpy
     })
 })
