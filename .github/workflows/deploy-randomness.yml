@@ -85,8 +85,8 @@ jobs:
             export HAPPY_GENESIS_TIMESTAMP_SECONDS=1741715688
             export CHAIN_ID=216
             export OTEL_EXPORTER_OTLP_ENDPOINT=http://148.113.212.211:4318/v1/traces
-            export LOG_COLORS=false
-            export LOG_TIMESTAMPS=false
+            export LOG_COLORS=true
+            export LOG_TIMESTAMPS=true
             EOF
 
               npm rebuild
