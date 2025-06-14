@@ -1,17 +1,24 @@
-import { Stream, getProp, sleep, tryCatchAsync } from "@happy.tech/common"
+import { type Optional, Stream, getProp, sleep, tryCatchAsync } from "@happy.tech/common"
 import { Logger } from "@happy.tech/common"
 import type { Account } from "viem"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
 import type { EvmTxInfo } from "#lib/types"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { getMinFee } from "#lib/utils/gas"
+import { getFees } from "#lib/utils/gas"
 
 const replaceLogger = Logger.create("ReplaceTransaction")
 
 export type ReplaceTxOptions = {
-    originalTx: EvmTxInfo
+    evmTxInfo: Optional<EvmTxInfo, "evmTxHash">
+    // TODO we don't need this
     recheck?: boolean
+}
+
+function getMinFee() {
+    // TODO tmp get rid of this
+    const { minBlockFee } = getFees()
+    return minBlockFee ?? 1000n
 }
 
 /**
@@ -20,9 +27,9 @@ export type ReplaceTxOptions = {
  * only targets a single nonce (useful for account creation or other specific transactions).
  */
 export async function replaceTransaction(account: Account, options: ReplaceTxOptions): Promise<void> {
-    const { originalTx, recheck = false } = options
+    const { evmTxInfo, recheck = false } = options
     const address = account.address
-    const nonce = options.originalTx.nonce
+    const nonce = options.evmTxInfo.nonce
     const initialDelay = 500
     const maxDelay = 8000
     let attempt = 0
@@ -47,12 +54,12 @@ export async function replaceTransaction(account: Account, options: ReplaceTxOpt
         let maxFeePerGas: bigint
         let maxPriorityFeePerGas: bigint
 
-        if (originalTx?.maxFeePerGas && originalTx?.maxPriorityFeePerGas) {
+        if (evmTxInfo?.maxFeePerGas && evmTxInfo?.maxPriorityFeePerGas) {
             maxPriorityFeePerGas =
-                (originalTx.maxPriorityFeePerGas * (100n + env.INITIAL_RESYNC_FEE_BUMP_PERCENT)) / 100n
+                (evmTxInfo.maxPriorityFeePerGas * (100n + env.INITIAL_RESYNC_FEE_BUMP_PERCENT)) / 100n
 
             const minFee = getMinFee() - env.INITIAL_PRIORITY_FEE + maxPriorityFeePerGas
-            maxFeePerGas = (originalTx.maxFeePerGas * (100n + env.INITIAL_RESYNC_FEE_BUMP_PERCENT)) / 100n
+            maxFeePerGas = (evmTxInfo.maxFeePerGas * (100n + env.INITIAL_RESYNC_FEE_BUMP_PERCENT)) / 100n
 
             maxFeePerGas = maxFeePerGas > minFee ? maxFeePerGas : minFee
         } else {

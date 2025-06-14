@@ -9,6 +9,9 @@ export class EvmNonceManager {
     #nonces = new HappyMap<Address, number>()
     #mutexes = new HappyMap<Address, Mutex>()
 
+    private constructor() {}
+    static instance = new EvmNonceManager()
+
     /**
      * Gets the local view of the EOA address nonce, fetching it from the chain if it's not already available, then
      * increments the local view.
@@ -16,16 +19,16 @@ export class EvmNonceManager {
      * @throws GetTransactionCountErrorType if failing to fetch the nonce onchain
      */
     async consume(address: Address): Promise<number> {
-        const nonce = this.#nonces.get(address)
-        if (nonce) return nonce
         const mutex = this.#mutexes.getOrSet(address, new Mutex())
-        return await mutex.locked(() =>
-            this.#nonces.getOrSetAsync(address, async () => {
-                console.trace() // TODO delete
-                const nonce = await publicClient.getTransactionCount({ address })
-                return nonce + 1
-            }),
-        )
+        return await mutex.locked(async () => {
+            let nonce = this.#nonces.get(address)
+            if (!nonce)
+                nonce = await this.#nonces.getOrSetAsync(address, async () => {
+                    return await publicClient.getTransactionCount({ address })
+                })
+            this.#nonces.set(address, nonce + 1)
+            return nonce
+        })
     }
 
     /**

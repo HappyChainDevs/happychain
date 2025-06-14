@@ -46,7 +46,12 @@ export const SubmitterError = {
      * The boop got rejected because the maxFeePerGas (either explicitly specified by the sender
      * or computed from the network) was higher than what the submitter was willing to accept.
      */
-    GasPriceTooHigh: "onchainGasPriceTooHigh",
+    GasPriceTooHigh: "submitterGasPriceTooHigh",
+
+    /**
+     * The boop was rejected because the provided submitter fee is too low.
+     */
+    SubmitterFeeTooLow: "submitterSubmitterFeeTooLow",
 } as const
 
 /**

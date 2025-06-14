@@ -9,11 +9,13 @@ import { BoopNonceManager } from "./BoopNonceManager"
 import { BoopReceiptService } from "./BoopReceiptService"
 import { BoopStore } from "./BoopStore"
 import { DatabaseService } from "./DatabaseService"
+import { EvmNonceManager } from "./EvmNonceManager"
 
 //=== Services ==================================================================================
 
 export const dbService = new DatabaseService(db)
 
+export const evmNonceManager = EvmNonceManager.instance
 export const boopNonceManager = new BoopNonceManager()
 export const boopStore = new BoopStore()
 export const simulationCache = new LruCache<Hash, SimulateOutput>({
@@ -26,6 +28,6 @@ export const boopReceiptService = new BoopReceiptService(evmReceiptService)
 
 export type { WaitForInclusionArgs } from "./BoopReceiptService"
 export { computeHash } from "../utils/boop/computeHash"
-export { findExecutionAccount, evmNonceManager } from "./evmAccounts"
+export { findExecutionAccount } from "./evmAccounts"
 export { resyncAccount, resyncAllAccounts } from "./resync"
 export { replaceTransaction } from "./replaceTransaction"

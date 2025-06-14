@@ -3,7 +3,7 @@ import type { Account, Hash } from "viem"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { getMinFee } from "#lib/utils/gas"
+import { getFees } from "#lib/utils/gas"
 import { resyncLogger } from "#lib/utils/logger"
 import { accountDeployer, executorAccounts } from "./evmAccounts"
 
@@ -61,6 +61,13 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
     })
 
     // === Send cancel transactions until included nonce catches up with pending nonce ===
+
+    function getMinFee() {
+        // The block did not have fee info. This will probably never happen, pick 1000 wei as an arbitrary starting point
+        // for now. TODO fix this in the block service
+        const { minBlockFee } = getFees()
+        return minBlockFee ?? 1000n
+    }
 
     function updateGasPrice(): void {
         maxPriorityFeePerGas = bigIntMin(env.MAX_PRIORITY_FEE, maxPriorityFeePerGas * 2n)

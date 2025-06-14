@@ -164,8 +164,9 @@ export class BoopReceiptService {
         // 2. Retry failed, switch to cancellation.
         receiptLogger.warn(`Retry failed, cancelling: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`, output)
         const account = findExecutionAccount(sub.boop)
-        // TODO validate that fees are not above the max
-        const partialEvmTxInfo = { nonce: tx.nonce, ...getFees(tx) } satisfies Omit<EvmTxInfo, "evmTxHash">
+        const { fees } = getFees(sub.boopHash, tx)
+        // TODO error in getFees in unhandled
+        const partialEvmTxInfo = { nonce: tx.nonce, ...fees! } satisfies Omit<EvmTxInfo, "evmTxHash">
         try {
             // We identify cancel transaction by making them self-sends.
             const evmTxHash = await walletClient.sendTransaction({

@@ -10,7 +10,7 @@ import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, CallStatus, Onchain, type OnchainStatus, SubmitterError } from "#lib/types"
 import { encodeBoop } from "#lib/utils/boop"
 import { publicClient } from "#lib/utils/clients"
-import { getFees, getMinFee } from "#lib/utils/gas"
+import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { getRevertError } from "#lib/utils/parsing"
 import type { SimulateInput, SimulateOutput, SimulateSuccess } from "./types"
@@ -48,11 +48,11 @@ async function simulate(
             : Promise.resolve(null)
 
         const [{ result: entryPointOutput }, balance] = await Promise.all([simulatePromise, balancePromise])
-        const status = getEntryPointStatusFromCallStatus(entryPointOutput.callStatus)
+        const entryPointStatus = getEntryPointStatusFromCallStatus(entryPointOutput.callStatus)
 
-        if (status !== Onchain.Success)
+        if (entryPointStatus !== Onchain.Success)
             // EntryPoint.submit succeeded, but the execution failed.
-            return outputForExecuteError(boop, status, entryPointOutput.revertData, "simulation")
+            return outputForExecuteError(boop, entryPointStatus, entryPointOutput.revertData, "simulation")
 
         // === Construct output values ===
 
@@ -60,8 +60,15 @@ async function simulate(
         // Instead if the provided values are invalid, an error output is returned (or a boolean flag set for fees).
         // This happens in `validateGasInput`, and here for the boolean flags.
 
-        const minFee = getMinFee()
-        const maxFeePerGas = boop.maxFeePerGas || getFees().maxFeePerGas
+        const { minFee, fees, error, status } = getFees()
+        // We need the gas price for checks, but couldn't get it.
+        if (status === SubmitterError.UnexpectedError) return { status, error: error.message }
+        const maxFeePerGas = boop.maxFeePerGas || fees.maxFeePerGas
+
+        const submitterFee = selfPaying ? boop.submitterFee : boop.submitterFee || getSubmitterFee(boop)
+        const rejection = boop.submitterFee ? validateSubmitterFee(boop) : undefined
+        if (rejection) return { status: SubmitterError.SubmitterFeeTooLow, error: rejection }
+
         const output = {
             ...entryPointOutput,
             status: Onchain.Success,
@@ -71,7 +78,7 @@ async function simulate(
             validatePaymentGas: boop.validatePaymentGasLimit || applyGasMargin(entryPointOutput.validatePaymentGas),
             executeGas: boop.executeGasLimit || applyGasMargin(entryPointOutput.executeGas),
             maxFeePerGas,
-            submitterFee: selfPaying ? boop.submitterFee : boop.submitterFee || getSubmitterFee(boop),
+            submitterFee,
             feeTooLowDuringSimulation: minFee > maxFeePerGas,
             feeTooHighDuringSimulation: maxFeePerGas > env.MAX_BASEFEE,
         } satisfies SimulateSuccess
