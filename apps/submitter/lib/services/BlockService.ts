@@ -10,8 +10,8 @@ import {
     promiseWithResolvers,
     sleep,
     tryCatchAsync,
+    waitForCondition,
 } from "@happy.tech/common"
-import { waitForCondition } from "@happy.tech/wallet-common"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"

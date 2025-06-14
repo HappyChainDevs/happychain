@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import { type Hex, sleep } from "@happy.tech/common"
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
-import { happyChainSepolia } from "@happy.tech/wallet-common"
 import {
     http,
     type Account,
@@ -13,6 +12,7 @@ import {
     parseGwei,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import { happychainTestnet } from "viem/chains"
 import { resyncAccount } from "#lib/services/resync"
 
 /**
@@ -119,7 +119,7 @@ async function prepareBurnGasTx({
     return walletClient.signTransaction(
         await walletClient.prepareTransactionRequest({
             account,
-            chain: happyChainSepolia,
+            chain: happychainTestnet,
             to: deployment.MockGasBurner,
             data: encodeFunctionData({
                 abi: abis.MockGasBurner,
