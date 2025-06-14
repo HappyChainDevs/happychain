@@ -107,7 +107,6 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * implementations.
      */
     function submit(bytes calldata encodedBoop) external nonReentrant returns (EntryPointOutput memory output) {
-        
         uint256 gasStart = gasleft();
         Boop memory boop = Encoding.decode(encodedBoop);
         emit BoopSubmitted(

@@ -16,6 +16,8 @@ interface LruCacheEntry<T> {
 export class LruCache<K, V> {
     readonly #max: number
     readonly #maxAge: number
+    // Note: JS maps iterate their entries in order of insertion, but setting an existing key does not update this
+    // order, the key needs to be deleted then re-inserted.
     readonly #map: Map<K, LruCacheEntry<V>>
     #pruneInterval: NodeJS.Timeout | null = null
 
@@ -28,11 +30,12 @@ export class LruCache<K, V> {
 
     // --- Core Methods ---
 
-    // Peek without revalidating or updating LRU order
+    /** Peek without updating age or LRU ordering. */
     peek(key: K): V | undefined {
         return this.get(key, false)
     }
 
+    /** Set a key-value mapping, updating the LRU order of the key to last, and resetting the key's age. */
     set(key: K, content: V): this {
         if (!this.has(key)) {
             // cache will grow
@@ -53,6 +56,7 @@ export class LruCache<K, V> {
         }
 
         const expires = this.#maxAge > 0 ? this.#maxAge + Date.now() : false
+        this.#map.delete(key) // Necessary to update LRU ordering
         this.#map.set(key, { expires, content })
         return this
     }
