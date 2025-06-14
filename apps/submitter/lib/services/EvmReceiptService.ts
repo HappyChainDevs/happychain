@@ -7,7 +7,7 @@ import {
     sleep,
     tryCatchAsync,
 } from "@happy.tech/common"
-import type { TransactionReceipt } from "viem"
+import type { GetTransactionReceiptErrorType, TransactionReceipt } from "viem"
 import { env } from "#lib/env"
 import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
@@ -83,7 +83,7 @@ export class EvmReceiptService {
     }
 
     /** Helper that attempts fetching a receipt and returns the result as a {@link Result}. */
-    async #fetchReceipt(hash: Hash): Promise<Result<TransactionReceipt, unknown>> {
+    async #fetchReceipt(hash: Hash): Promise<Result<TransactionReceipt, GetTransactionReceiptErrorType>> {
         return await tryCatchAsync(publicClient.getTransactionReceipt({ hash }))
     }
 
