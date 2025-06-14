@@ -1,7 +1,7 @@
 import { BoopClient, CreateAccount, computeBoopHash } from "@happy.tech/boop-sdk"
 import { delayed, stringify } from "@happy.tech/common"
 import { type PrivateKeyAccount, generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { createAndSignMintBoop } from "#lib/utils/test/helpers" // no barrel: don't start services
+import { createAndSignMintBoop } from "#lib/utils/test/helpers" // no barrel import: don't start services
 
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
@@ -46,13 +46,13 @@ async function run({
             const boopHash = computeBoopHash(216n, tx)
             const stringBoop = `(nonce ${nonceValue} — ${boopHash})`
             try {
-                const { status, receipt, description } = await boopClient.execute({ boop: tx })
+                const { status, receipt, error } = await boopClient.execute({ boop: tx })
                 Status = status
                 if (receipt) {
                     EvmTxHash = receipt.evmTxHash
                     console.log(`Success ${stringBoop}: https://explorer.testnet.happy.tech/tx/${EvmTxHash}`)
                 } else {
-                    console.error(`Error ${stringBoop}: ${description}`)
+                    console.error(`Error ${stringBoop}: ${error}`)
                 }
             } catch (error) {
                 console.error(`Non-response error ${stringBoop}: ${stringify(error)} — THIS SHOULD NOT HAPPEN`)
