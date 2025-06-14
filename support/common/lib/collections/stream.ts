@@ -232,7 +232,7 @@ export class Stream<T extends Exclude<unknown, undefined>> implements AsyncItera
      * Returns a stream of promise results (resolved or rejected with assumed rejection type `Err`),
      * wrapped in a {@link Result}, in settlement order. The streams closes after all the promises settle.
      */
-    static of<U, Err = unknown>(...promises: Promise<U>[]): Stream<Result<U, Err>> {
+    static of<U, Err extends object = object>(...promises: Promise<U>[]): Stream<Result<U, Err>> {
         const stream = new Stream<Result<U, Err>>()
         promises.forEach(async (promise) => stream.push(await tryCatchAsync(promise)))
         void Promise.allSettled(promises).then(() => stream.close())

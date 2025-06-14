@@ -1,17 +1,30 @@
 import { type Lazy, force } from "./functions"
-import type { UnionFill } from "./types"
 
 export function unknownToError(u: unknown): Error {
     return u instanceof Error ? u : new Error(JSON.stringify(u, null, 2))
 }
 
-export type Result<T, E> = UnionFill<{ value: T } | { error: E }>
+/**
+ * Discriminated union between a value and an error.
+ *
+ * The error type `E` must be an object and is assumed to be `object` by default.
+ * This enables the following pattern:
+ * ```
+ * const { value, error } = result
+ * if (!error) doSomething(value) // typed as T
+ * ```
+ *
+ * The object bound makes sure the flow typing works properly, as other types can be falsy (0, "", [], ...).
+ *
+ * You can reproduce this pattern for custom shapes with {@link UnionFill}.
+ */
+export type Result<T, E extends object = object> = { value: T; error?: undefined } | { value?: undefined; error: E }
 
 /**
  * Returns `{ result: fn(), error: undefined }` if no exception is
  * thrown, and `{ error, result: undefined }` otherwise.
  */
-export function tryCatch<T, E = unknown>(fn: () => T): Result<T, E> {
+export function tryCatch<T, E extends object = object>(fn: () => T): Result<T, E> {
     // biome-ignore format: terse
     try { return { value: fn() } }
     catch (e) { return { error: e as E } }
@@ -21,7 +34,7 @@ export function tryCatch<T, E = unknown>(fn: () => T): Result<T, E> {
  * Returns `{ result: fn(), error: undefined }` if no exception is
  * thrown, and `{ error, result: undefined }` otherwise.
  */
-export async function tryCatchAsync<T, E = unknown>(promise: Lazy<Promise<T>>): Promise<Result<T, E>> {
+export async function tryCatchAsync<T, E extends object = object>(promise: Lazy<Promise<T>>): Promise<Result<T, E>> {
     // biome-ignore format: terse
     try { return { value: await force(promise) } }
     catch (e) { return { error: e as E } }
