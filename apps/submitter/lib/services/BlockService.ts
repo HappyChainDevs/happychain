@@ -134,6 +134,8 @@ export class BlockService {
         /** Get latest block from all RPCs. */
         async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<InputBlock>[]> {
             const promises = rpcUrls.map((url) => createClient(url, timeout).getBlock({ includeTransactions: false }))
+            // Note that if a WebSocket RPC is down, some exceptions can escape to the top-level here.
+            // Nothing we can do about it, Viem doesn't catch them. It's benign however.
             return await Promise.allSettled(promises)
         }
 
