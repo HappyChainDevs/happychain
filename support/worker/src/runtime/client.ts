@@ -12,10 +12,9 @@ type PortUnion = SharedWorker["port"] | Worker
 const MAX_QUEUE_LENGTH = 1000
 
 /**
- * If a call hangs for longer than this time and has not recovered,
- * it is considered dead. We will reject the call
+ * If a call hangs for longer than this time and has not recovered, it is considered dead and we reject the call.
  */
-const MAX_WAIT_TIME_MS = 30_000
+const MAX_WAIT_TIME_MS = 15_000
 
 /**
  * The interval at which the client will send a 'ping' to the worker to check if it is still alive.
@@ -26,13 +25,6 @@ const MAX_WAIT_TIME_MS = 30_000
  * issues, but will incur more CPU usage and overhead.
  */
 const PING_INTERVAL_MS = 500
-
-/**
- * On initial load we will set an arbitrarily high number for the ping counter. This must be higher
- * than {@link MAX_MISSED_PINGS} so that on initial load, the worker is considered disconnected.
- * then when the first pong is received, the counter is reset to 0, and the worker is considered
- */
-const INITIAL_PING_COUNTER = 1_000_000 // start with a high number so that on load isConnected is false
 
 /**
  * If more than this many pings is missed in a row, we will assume the worker is no longer connected
@@ -74,7 +66,7 @@ export class SharedWorkerClient {
     // FIFO queue for pending RPC requests
     // This does our best to ensure that calls are executed in the order they were made,
     // however if a payload is sent while the worker is not connected, but we are not aware
-    // it could get re-queued after the livelyness timeout. this case has potential for
+    // it could get re-queued after the liveness timeout. This case has potential for
     // payloads to be submitted out of order as it would be re-queued at the time of the timeout
     // not when the payload was created.
     private payloadQueue: RpcRequestPayload[] = []
@@ -88,14 +80,13 @@ export class SharedWorkerClient {
         this.port.onmessage = this.handleMessage.bind(this)
     }
 
-    // initialize pingCounter with a high number so that on load isConnected is
-    // computed to be false. It will be reset to zero when it receives the first pong.
-    private pingCounter = INITIAL_PING_COUNTER
+    // Initialize with a high number so that on load isConnected is computed to be false.
+    // It will be reset to zero when it receives the first pong.
+    private pingCounter = 1_000_000
 
-    // if dead pings exceed 1, we will assume connectivity issues, and start queueing payloads
-    // rather than sending them immediately. 'ping/pong' health checks are regularly sent to verify
-    // connectivity, and when connectivity is restored, the queue is flushed, and everything resumes \
-    // as normal
+    // If dead pings exceed 1, we will assume connectivity issues, and start queueing payloads rather than sending them
+    // immediately. 'ping/pong' health checks are regularly sent to verify connectivity, and when connectivity is
+    // restored, the queue is flushed, and everything resumes as normal.
     private get isConnected() {
         return this.pingCounter <= MAX_MISSED_PINGS
     }
