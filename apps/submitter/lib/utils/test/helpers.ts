@@ -5,23 +5,10 @@ import type { PrivateKeyAccount } from "viem"
 import { decodeEventLog, zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import { abis, deployment, env } from "#lib/env"
-import { CreateAccount } from "#lib/handlers/createAccount"
 import { findExecutionAccount } from "#lib/services/evmAccounts" // no barrel: don't start services
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
 import { publicClient, walletClient } from "#lib/utils/clients"
-import { apiClient } from "#lib/utils/test/apiClient"
-
-export async function createSmartAccount(owner: Address): Promise<Address> {
-    const response = await apiClient.api.v1.accounts.create
-        .$post({ json: { owner, salt: "0x1" } }) //
-        .then((a) => a.json())
-    if (response.status !== CreateAccount.Success) {
-        console.error(response)
-        throw new Error("could not create account")
-    }
-    return response.address
-}
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
