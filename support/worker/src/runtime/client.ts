@@ -58,10 +58,11 @@ const MAX_MISSED_PINGS = 1
 export class SharedWorkerClient {
     readonly port: PortUnion
 
-    private callbacks = new Map<string, (payload: RpcPayload) => void>()
+    // Callbacks to execute whenever responses to calls come in from the worker.
+    private responseCallbacks = new Map<string, (payload: RpcPayload) => void>()
 
-    // biome-ignore lint/suspicious/noExplicitAny: its a generic callback in use, type not needed here
-    private messageCallbacks: MessageCallback<any>[] = []
+    // Callbacks invoked when the worker broadcasts a message to its clients.
+    private messageCallbacks: MessageCallback<unknown>[] = []
 
     // FIFO queue for pending RPC requests
     // This does our best to ensure that calls are executed in the order they were made,
@@ -76,8 +77,18 @@ export class SharedWorkerClient {
         private options: { name: string },
     ) {
         this.port = "port" in worker ? worker.port : worker
-        this.heartbeat()
         this.port.onmessage = this.handleMessage.bind(this)
+
+        // 'keep-alive' ping so the worker knows we are still connected
+        setInterval(() => {
+            const payload = makePingPayload()
+            const wasPreviouslyConnected = this.isConnected
+            this.pingCounter++
+            this.port.postMessage(payload)
+            if (wasPreviouslyConnected && !this.isConnected) {
+                console.warn(`SharedWorkerClient: [${this.options.name}] Appears offline or inaccessible.`)
+            }
+        }, PING_INTERVAL_MS)
     }
 
     // Initialize with a high number so that on load isConnected is computed to be false.
@@ -89,19 +100,6 @@ export class SharedWorkerClient {
     // restored, the queue is flushed, and everything resumes as normal.
     private get isConnected() {
         return this.pingCounter <= MAX_MISSED_PINGS
-    }
-
-    private heartbeat() {
-        // 'keep-alive' ping so the worker knows we are still connected
-        setInterval(() => {
-            const payload = makePingPayload()
-            const wasPreviouslyConnected = this.isConnected
-            this.pingCounter++
-            this.port.postMessage(payload)
-            if (wasPreviouslyConnected && !this.isConnected) {
-                console.warn(`SharedWorkerClient: [${this.options.name}] Appears offline or inaccessible.`)
-            }
-        }, PING_INTERVAL_MS)
     }
 
     // we flush on every 'pong'. the isFlushing flag is used to prevent multiple parallel flushes
@@ -131,26 +129,22 @@ export class SharedWorkerClient {
 
         switch (payload.command) {
             case "pong": {
-                // if we receive a pong, worker is alive and well, we can clear the counter
-                // Under normal conditions, around trip should take 0 or 1 ms. If the wait time has
-                // exceeded 2500ms, something may be wrong, If there is any queued payloads, we
-                // will log the warning. If there are none, then we will ignore the anomaly.
-                // Date.now() - payload.ts is effectively the round trip time of the ping/pong.
-                const delay = Date.now() - payload.ts
-                if (!this.isConnected && delay > 2_500 && this.payloadQueue.length) {
-                    console.warn(
-                        `SharedWorkerClient: [${this.options.name}] delayed pong received after ${Date.now() - payload.ts} delay. Worker has recovered.`,
-                    )
+                const roundtripTime = Date.now() - payload.ts
+                if (!this.isConnected && roundtripTime > 2_500 && this.payloadQueue.length) {
+                    // Under normal conditions, a pong comes in within 1ms.
+                    // If it exceeds the max wait time and we have pending messages, we log the anomaly.
+                    const msg = `SharedWorkerClient: [${this.options.name}] delayed pong received after ${Date.now() - payload.ts} delay. Worker has recovered.`
+                    console.warn(msg)
                 }
                 this.pingCounter = 0
                 this.flushPayloadQueue()
                 break
             }
             case "rpcResponse": {
-                const callback = this.callbacks.get(payload.data.id)
+                const callback = this.responseCallbacks.get(payload.data.id)
                 if (!callback) return
                 callback(payload.data)
-                this.callbacks.delete(payload.data.id)
+                this.responseCallbacks.delete(payload.data.id)
                 break
             }
             case "dispatch":
@@ -174,9 +168,7 @@ export class SharedWorkerClient {
                     if (msg.startsWith("sending msg, ") || msg.startsWith("reading msg, ")) break
                 }
 
-                if (fn && typeof fn === "function") {
-                    fn(...payload.data)
-                }
+                if (fn && typeof fn === "function") fn(...payload.data)
                 break
             }
         }
@@ -193,25 +185,18 @@ export class SharedWorkerClient {
             try {
                 return await new Promise((res, rej) => {
                     if (this.payloadQueue.length >= MAX_QUEUE_LENGTH) {
-                        return rej(
-                            new Error(
-                                `SharedWorkerClient: [${this.options.name}] RPC queue overflow (max ${MAX_QUEUE_LENGTH}). Dropping request.`,
-                            ),
-                        )
+                        const msg = `SharedWorkerClient: [${this.options.name}] RPC queue overflow (max ${MAX_QUEUE_LENGTH}). Dropping request.`
+                        return rej(Error(msg))
                     }
 
-                    // if the call has not responded in a reasonable
-                    // amount of time, we will simply reject the call.
+                    // Reject the call if it does not answer in a reasonable amount of time.
                     const maxWaitTimeCheck = setTimeout(() => {
-                        this.callbacks.delete(id)
-                        return rej(
-                            new Error(
-                                `SharedWorkerClient: [${this.options.name}] RPC call timed out after ${MAX_WAIT_TIME_MS} ms`,
-                            ),
-                        )
+                        this.responseCallbacks.delete(id)
+                        const msg = `SharedWorkerClient: [${this.options.name}] RPC call timed out after ${MAX_WAIT_TIME_MS} ms`
+                        return rej(Error(msg))
                     }, MAX_WAIT_TIME_MS)
 
-                    this.callbacks.set(id, (result) => {
+                    this.responseCallbacks.set(id, (result) => {
                         // when callback is received, we can clear the rejection timeout
                         clearTimeout(maxWaitTimeCheck)
                         return result.isError ? rej(result.args) : res(result.args)
@@ -243,10 +228,10 @@ export class SharedWorkerClient {
     }
 
     /**
-     * Listen for incoming messages sent from the {@link SharedWorkerServer} toa all clients via
+     * Listen for incoming messages sent from the {@link SharedWorkerServer} to all clients via
      * his {@link SharedWorkerServer.broadcast} method.
      */
-    addMessageListener<T>(fn: MessageCallback<T>) {
+    addMessageListener(fn: MessageCallback<unknown>) {
         this.messageCallbacks.push(fn)
     }
 
