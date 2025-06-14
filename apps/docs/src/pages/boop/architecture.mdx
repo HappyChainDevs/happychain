@@ -17,7 +17,7 @@ Ideally, we don't want the user to both maintain his smart account and an EOA to
 
 To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user, and
 will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor the fees
-itself. In Boop, we call this relayer the "submitter".
+itself. In Boop, we call this relayer "the submitter".
 
 The Boop system involves the following "sites":
 
@@ -39,7 +39,7 @@ Finally, there are three options for who *actually* pays the fees (i.e. refunds 
 ## Example Flow: End-to-end Boop Execution
 
 Here's a diagram of how a Boop flows between the locations we mentioned in the previous section.
-In particular, this is an `execute` endpoint request to the submitter (for a submitter-sponsored boop).
+In particular, this is an `execute` endpoint request to the submitter, for a submitter-sponsored boop.
 
 ![](/boop-execute.png)
 
@@ -47,7 +47,7 @@ In particular, this is an `execute` endpoint request to the submitter (for a sub
 
 - The submitter simulates this boop by sending an `eth_call` RPC request to a blockchain node.
 
-    - This step is not strictly necessary but it is ideal: the submitter does not want to pay fees for a failing boop.
+    - This step is not strictly necessary but it is usual: the submitter does not want to pay fees for a failing boop.
 
     - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed to omit fee
       information and gas limits — and this is the case here.
