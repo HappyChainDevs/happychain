@@ -46,30 +46,31 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         })
 
         logger.trace("Waiting for account creation tx inclusion", predictedAddress, hash)
-        const { receipt, timedOut, cantFetch } = await evmReceiptService.waitForReceipt(hash, env.RECEIPT_TIMEOUT)
+        const { receipt } = await evmReceiptService.waitForReceipt(hash, env.RECEIPT_TIMEOUT)
 
-        if (timedOut || cantFetch) {
-            // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
-            const error = "Timed out while waiting for receipt."
+        if (!receipt) {
+            const info = { hash, predictedAddress, account: accountDeployer.address }
+            logger.warn("Account creation tx appears stuck, attempting resync", info)
 
             // Transaction might be stuck - trigger resync with targeted nonce
             const tx = await publicClient.getTransaction({ hash }).catch(() => undefined)
 
-            if (tx?.nonce !== undefined) {
-                logger.warn("Initiating transaction replacement for stuck account creation tx", { predictedAddress })
+            if (!tx?.nonce) throw Error("tmp")
 
-                // Replace transaction asynchronously without awaiting completion
-                replaceTransaction(accountDeployer, {
-                    originalTx: {
-                        evmTxHash: hash,
-                        nonce: tx?.nonce,
-                        maxFeePerGas: tx?.maxFeePerGas ?? 0n,
-                        maxPriorityFeePerGas: tx?.maxPriorityFeePerGas ?? 0n,
-                    },
-                    recheck: true,
-                })
-            }
-
+            // Replace transaction asynchronously without awaiting completion
+            replaceTransaction(accountDeployer, {
+                originalTx: {
+                    evmTxHash: hash,
+                    nonce: tx?.nonce,
+                    maxFeePerGas: tx?.maxFeePerGas ?? 0n,
+                    maxPriorityFeePerGas: tx?.maxPriorityFeePerGas ?? 0n,
+                },
+                recheck: true,
+            })
+            logger.info("Resync completed for stuck account creation tx", info)
+            // Can be either a timeout or a failure to fetch the receipt.
+            // Can't fetch should be rare, the cure is the same, pretend it's a timeout.
+            const error = "Timed out while waiting for receipt."
             return { status: CreateAccount.Timeout, error, owner, salt }
         }
 
