@@ -17,7 +17,7 @@ import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop, updateBoopFromSimulation } from "#lib/utils/boop"
 import { walletClient } from "#lib/utils/clients"
-import { getFees, getMinFee } from "#lib/utils/gas"
+import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
@@ -107,25 +107,14 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 // since, or this may be a replacement submit, which wasn't taken into account by simulation.
 
                 const account = findExecutionAccount(boop)
-                const fees = getFees(replacedTx)
-                const minFee = getMinFee(replacedTx)
-
-                if (fees.maxFeePerGas > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
-                    if (minFee > env.MAX_BASEFEE || fees.maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
-                        const error =
-                            "The gas price (either supplied by the sender or computed from the network) " +
-                            "exceeds the submitter's max price."
-                        return { status: SubmitterError.GasPriceTooHigh, stage: "submit", error }
-                    }
-                    logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", boopHash)
-                    fees.maxFeePerGas = minFee
-                }
+                const { fees, minFee, minBlockFee, status, error } = getFees(boopHash, replacedTx)
+                if (error) return { status, stage: "submit", error: error.message }
 
                 if (simulation.maxFeePerGas < minFee) {
                     if (!ogBoop.maxFeePerGas) {
-                        // This is a sponsored boop, we can freely change the fee.
+                        // This is a sponsored boop with no explicit gas price, we can freely change it.
                         boop.maxFeePerGas = fees.maxFeePerGas
-                    } else if (replacedTx && simulation.maxFeePerGas >= getMinFee()) {
+                    } else if (replacedTx && simulation.maxFeePerGas >= minBlockFee) {
                         // The EVM tx gas price can be higher than the boop gas price. Because the gas is only required
                         // to be higher because of replacement, but the excess base fee is refunded, this shouldn't
                         // incur a loss to the submitter. The increase in priority fee is assumed to be negligible.
@@ -146,13 +135,7 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 // === Submit onchain ===
 
                 const partialEvmTxInfo: Omit<EvmTxInfo, "evmTxHash"> = {
-                    nonce:
-                        replacedTx?.nonce ??
-                        (await evmNonceManager.consume({
-                            address: account.address,
-                            chainId: env.CHAIN_ID,
-                            client: walletClient,
-                        })),
+                    nonce: replacedTx?.nonce ?? (await evmNonceManager.consume(account.address)),
                     ...fees,
                 }
 

@@ -33,6 +33,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.InvalidExtensionValue:
         case Onchain.ExecuteRejected:
         case SubmitterError.InvalidValues:
+        case SubmitterError.SubmitterFeeTooLow:
             return [response, 400] // Bad Request
         case Onchain.InsufficientStake:
         case Onchain.PayoutFailed:

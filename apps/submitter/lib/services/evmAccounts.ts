@@ -1,6 +1,5 @@
-import { type Account, type PrivateKeyAccount, createNonceManager } from "viem"
+import type { Account, PrivateKeyAccount } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { jsonRpc } from "viem/nonce"
 import { env } from "#lib/env"
 import { ExecutorCacheService } from "#lib/services/ExecutorCacheService"
 import { traceFunction } from "#lib/telemetry/traces"
@@ -8,11 +7,7 @@ import type { Boop } from "#lib/types"
 import { computeHash } from "#lib/utils/boop/computeHash"
 import { logger } from "#lib/utils/logger"
 
-export const evmNonceManager = createNonceManager({ source: jsonRpc() })
-
-export const executorAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) =>
-    privateKeyToAccount(key, { nonceManager: evmNonceManager }),
-)
+export const executorAccounts: PrivateKeyAccount[] = env.EXECUTOR_KEYS.map((key) => privateKeyToAccount(key))
 const executorService = new ExecutorCacheService(executorAccounts)
 
 export const defaultAccount: Account = executorAccounts[0]
@@ -27,7 +22,7 @@ function findExecutionAccount(tx?: Boop): Account {
 function getAccountDeployer(): Account {
     if (env.PRIVATE_KEY_ACCOUNT_DEPLOYER) {
         try {
-            return privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER, { nonceManager: evmNonceManager })
+            return privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
         } catch (error) {
             logger.warn(
                 "Failed to parse PRIVATE_KEY_ACCOUNT_DEPLOYER. Falling back to default execution account.",

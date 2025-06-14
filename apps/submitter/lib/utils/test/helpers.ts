@@ -5,10 +5,13 @@ import type { PrivateKeyAccount } from "viem"
 import { decodeEventLog, zeroAddress } from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import { abis, deployment, env } from "#lib/env"
-import { findExecutionAccount } from "#lib/services/evmAccounts" // no barrel: don't start services
 import type { Boop, BoopReceipt } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
 import { publicClient, walletClient } from "#lib/utils/clients"
+
+// no barrel import: don't start service
+import { EvmNonceManager } from "#lib/services/EvmNonceManager"
+import { findExecutionAccount } from "#lib/services/evmAccounts"
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
@@ -118,10 +121,16 @@ export function assertMintLog(receipt: BoopReceipt, smartAccount: Address) {
 
 /**
  * Fund the given account with 1 Ether.
+ *
  * Exported from the index to avoid pulling business logic into helpers.ts, so that we can use it for scripts, etc.
  */
 export async function fundAccount(address: Address) {
     const executor = findExecutionAccount(/* Default Execution Account */)
-    const hash = await walletClient.sendTransaction({ account: executor, to: address, value: parseEther("1") })
+    const hash = await walletClient.sendTransaction({
+        account: executor,
+        to: address,
+        value: parseEther("1"),
+        nonce: await EvmNonceManager.instance.consume(executor.address),
+    })
     await publicClient.waitForTransactionReceipt({ hash })
 }

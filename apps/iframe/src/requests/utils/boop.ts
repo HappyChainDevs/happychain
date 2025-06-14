@@ -283,6 +283,7 @@ function translateBoopError(output: Outputs): HappyRpcError {
         case Onchain.GasPriceTooLow:
         case SubmitterError.GasPriceTooHigh:
         case SubmitterError.InvalidValues:
+        case SubmitterError.SubmitterFeeTooLow:
             return new EIP1474InvalidInput(output.error, output)
         case Onchain.ValidationRejected:
         case Onchain.PaymentValidationRejected:
