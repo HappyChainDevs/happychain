@@ -76,10 +76,6 @@ export class BlockService {
     /** Timeout for receiving a block. Private so it can be disabled in tests. */
     private blockTimeout: Timer | undefined = undefined
 
-    constructor() {
-        void this.#startBlockWatcher()
-    }
-
     // =================================================================================================================
     // PUBLIC METHODS
 
@@ -236,7 +232,7 @@ export class BlockService {
     // =================================================================================================================
     // BLOCK MONITORING
 
-    async #startBlockWatcher(): Promise<void> {
+    async start(): Promise<void> {
         // Generic logic — first retry is instant, then `initialRetryDelay` with exponential backoff up
         // to `maxRetryDelay` with a max of `maxAttempts` attempts.
         // However, default values only retries once without delay, otherwise we'd rather move on to another RPC than

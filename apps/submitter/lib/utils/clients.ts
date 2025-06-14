@@ -80,7 +80,8 @@ function shouldThrow(err: Error): boolean {
     if (msg.includes("replacement transaction underpriced")) return true
     if (msg.includes("Insufficient funds")) return true
 
-    // This happens when resyncing and we reach max fees, ignore for `testResync.ts`.
+    // This happens when resyncing and we reach max fees, ignore for `testResync.ts`, but don't ignore in general,
+    // in case a RPC is dysfunctional and we would benefit from sending the tx through another RPC.
     if (env.NODE_ENV === "development" && msg.includes("transaction already imported")) return true
 
     // This gets handled in the receipt service.

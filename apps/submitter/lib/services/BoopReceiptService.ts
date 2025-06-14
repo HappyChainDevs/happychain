@@ -355,6 +355,3 @@ function getEntryPointStatusFromEventName(eventName: string): OnchainStatus | un
             return Onchain.ExecuteReverted
     }
 }
-
-const x = 3
-void x

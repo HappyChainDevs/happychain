@@ -63,3 +63,5 @@ submitter/
 
 See https://docs.happy.tech/boop/rest
 Or if running the docs (`apps/docs`) locally: http://localhost:4000/boop/rest (the submitter needs to be running)
+
+You can display all available routes by running `make routes`.

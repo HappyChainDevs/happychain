@@ -11,14 +11,11 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { env, isProduction } from "#lib/env"
-import { resyncAllAccounts } from "#lib/services"
 import { instrumentHttpMiddleware } from "#lib/telemetry/traces"
 import { logJSONResponseMiddleware, logger } from "#lib/utils/logger"
 import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
-
-await resyncAllAccounts()
 
 // Create the app but don't configure routes yet - we'll do that after resync
 const app = new Hono()
