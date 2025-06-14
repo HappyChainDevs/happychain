@@ -30,7 +30,6 @@ export class EvmReceiptService {
 
     constructor(blockService: BlockService) {
         this.#blockService = blockService
-        this.start()
     }
 
     start() {

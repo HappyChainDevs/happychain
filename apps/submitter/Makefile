@@ -52,12 +52,7 @@ migrate-rollback: ## Rolls back latest migrations
 	@./bin/cli.ts migrate down
 .PHONY: rollback
 
-## Display all available routes
-# TODO: This is borked — the block service will exit the process before we can print the routes.
-#       Fix by adding a `start` function to active services and starting them in `index.ts`.
-#		- `apiClient.ts` needs to be updated to pull from index.ts instead of servers.ts
-#		- `resyncAll` call needs to move to `index.ts`
-routes:
+routes: ## Display all available routes
 	@./bin/cli.ts routes
 .PHONY: routes
 
