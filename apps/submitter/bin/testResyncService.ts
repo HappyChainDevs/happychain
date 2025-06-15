@@ -15,6 +15,8 @@ import { privateKeyToAccount } from "viem/accounts"
 import { happychainTestnet } from "viem/chains"
 import { resyncAccount } from "#lib/services/resync"
 
+// TODO — this script is a WIP!
+
 /**
  * This script tests the {@link resyncAccount} function by:
  * 1. Connecting to the testnet.happy.tech RPC endpoint
@@ -32,47 +34,6 @@ const MONITOR_TIMEOUT = 60_000
 
 const TXS_PER_BLOCK = Math.floor(BLOCK_GAS_LIMIT / Number(TX_GAS_AMOUNT))
 const NUM_BLOCK_FILLING_TXS = TXS_PER_BLOCK * NUM_BLOCKS_TO_FILL
-
-// TODO prev code here
-
-// // Gas parameters (see above)
-// const INITIAL_BASE_FEE = 100n // low
-// const RAISED_BASE_FEE = 10_000_000_000n // high
-//
-// // For maximum stress, this is the max the default config of the submitter is willing to pay.
-// // This can't be higher than the basefee, or Anvil will reject the transaction.
-// const STUCK_PRIORITY_FEE = 1000n
-//
-// // Test executor account - use the first Anvil account.
-// const EXECUTOR_KEYS = (process.env.EXECUTOR_KEYS?.split(",") as Hex[]) ?? []
-// console.log(EXECUTOR_KEYS)
-// const executorAccount = privateKeyToAccount(EXECUTOR_KEYS[0])
-// console.log(executorAccount.address)
-//
-// const anvilParams = {
-//     blockTime: BLOCK_TIME,
-//     extraCliArgs: [`--base-fee=${INITIAL_BASE_FEE}`],
-//     logger: Logger.create("Anvil", { level: logLevel(process.env.LOG_LEVEL) }),
-//     stdoutFilter,
-//     stderrFilter: () => true,
-// } satisfies AnvilParams
-//
-// const anvil = new Anvil(anvilParams)
-//
-// function stdoutFilter(output: string) {
-//     // Filter out noisy logs but keep important ones
-//     const select =
-//         PRINT_ALL_ANVIL ||
-//         output.includes("Error") ||
-//         output.includes("Exception") ||
-//         output.includes("Starting") ||
-//         output.includes("Listening") ||
-//         output.includes("Mining") ||
-//         (output.includes("Block ") && PRINT_BLOCK_INFO)
-//     const exclude = output.includes("underpriced") || output.includes("already imported")
-//     return select && !exclude
-
-// RPC endpoints from the .env file (defaults to testnet if not specified)
 
 const RPC_HTTP_URL = process.env.RPC_HTTP_URLS?.split(",")[0] ?? "https://rpc.testnet.happy.tech/http"
 
@@ -215,7 +176,7 @@ async function run(): Promise<void> {
         )
 
         console.log("\n\x1b[1m\x1b[34m═════════ RUNNING RESYNC ═════════\x1b[0m")
-        await Promise.all([resyncAccount(executorAccount, { resync: true }), monitorNonceGap()])
+        await Promise.all([resyncAccount(executorAccount, "recheck"), monitorNonceGap()])
     } catch (error) {
         console.error(`Error in test: ${error}`)
         process.exit(1)
