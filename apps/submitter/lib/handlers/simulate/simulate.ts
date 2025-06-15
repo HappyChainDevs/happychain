@@ -60,9 +60,7 @@ async function simulate(
         // Instead if the provided values are invalid, an error output is returned (or a boolean flag set for fees).
         // This happens in `validateGasInput`, and here for the boolean flags.
 
-        const { minFee, fees, error, status } = getFees()
-        // We need the gas price for checks, but couldn't get it.
-        if (status === SubmitterError.UnexpectedError) return { status, error: error.message }
+        const { minFee, fees } = getFees() // ignore `error` (fee too high) on purpose
         const maxFeePerGas = boop.maxFeePerGas || fees.maxFeePerGas
 
         const submitterFee = selfPaying ? boop.submitterFee : boop.submitterFee || getSubmitterFee(boop)

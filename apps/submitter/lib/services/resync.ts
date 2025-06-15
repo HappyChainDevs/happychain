@@ -62,16 +62,10 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
 
     // === Send cancel transactions until included nonce catches up with pending nonce ===
 
-    function getMinFee() {
-        // The block did not have fee info. This will probably never happen, pick 1000 wei as an arbitrary starting point
-        // for now. TODO fix this in the block service
-        const { minBlockFee } = getFees()
-        return minBlockFee ?? 1000n
-    }
-
     function updateGasPrice(): void {
         maxPriorityFeePerGas = bigIntMin(env.MAX_PRIORITY_FEE, maxPriorityFeePerGas * 2n)
-        const minFee = getMinFee() - env.INITIAL_PRIORITY_FEE + maxPriorityFeePerGas
+        const { minBlockFee } = getFees()
+        const minFee = minBlockFee - env.INITIAL_PRIORITY_FEE + maxPriorityFeePerGas
         maxFeePerGas = bigIntMin(env.MAX_BASEFEE, bigIntMax(minFee, maxFeePerGas * 2n))
         resyncLogger.trace(`Updated fees: maxFeePerGas=${maxFeePerGas}, maxPriorityFeePerGas=${maxPriorityFeePerGas}`)
     }
@@ -79,7 +73,8 @@ export async function resyncAccount(account: Account, recheck?: "recheck") {
     // Start with double the current base fee (+ margin) & base priority fee.
     // It's okay to go big on the base fee since the excess is refunded.
     // For the priority fee, at 15% bump rate (the default), it would take 5 retries for it to exceed doubling.
-    let maxFeePerGas = bigIntMin(env.MAX_BASEFEE, getMinFee() * 2n)
+    const { minBlockFee } = getFees()
+    let maxFeePerGas = bigIntMin(env.MAX_BASEFEE, minBlockFee * 2n)
     let maxPriorityFeePerGas = env.INITIAL_PRIORITY_FEE
     attempt = 0
 
