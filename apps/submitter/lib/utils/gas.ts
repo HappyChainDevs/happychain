@@ -1,7 +1,7 @@
-import { type UnionFill, bigIntMax, getProp } from "@happy.tech/common"
+import { bigIntMax } from "@happy.tech/common"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
-import type { EvmTxInfo, SubmitterError } from "#lib/types"
+import type { EvmTxInfo } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 
 export type Fees = {
@@ -52,9 +52,8 @@ const origin = "(either supplied by the sender or computed from the network)"
  * If a {@link logCtx} is provided, then we log when returning successfully but applying {@link env.MIN_BASEFEE_MARGIN}
  * instead of {@link env.BASEFEE_MARGIN}. The value is also passed to the log call.
  */
-export function getFees(logCtx?: unknown, replacedTx?: EvmTxInfo): FeeResult {
-    const lastBlock = blockService.getCurrentBlock()
-    const lastBaseFee = lastBlock.baseFeePerGas ?? lastBlock.gasPrice
+export function getFees(logCtx?: unknown, replacedTx?: Omit<EvmTxInfo, "evmTxHash">): FeeResult {
+    const lastBaseFee = getLatestBaseFee()
 
     // The +1 below guarantee we don't get rounding error if margins are configured to be the exact max inter-block fee
     // rise or replacement bump margins.
@@ -68,8 +67,10 @@ export function getFees(logCtx?: unknown, replacedTx?: EvmTxInfo): FeeResult {
         ? addPercent(replacedTx.maxPriorityFeePerGas, env.FEE_BUMP_PERCENT)
         : 0n
     const maxPriorityFeePerGas = bigIntMax(env.INITIAL_PRIORITY_FEE, replacementPriorityFee)
-    const minFee = bigIntMax(minBlockBaseFee, replacementBaseFee) + maxPriorityFeePerGas
-    const maxFeePerGas = bigIntMax(blockBaseFee, replacementBaseFee) + maxPriorityFeePerGas
+    const minBaseFee = bigIntMax(minBlockBaseFee, replacementBaseFee)
+    const baseFee = bigIntMax(blockBaseFee, replacementBaseFee)
+    const minFee = minBaseFee + maxPriorityFeePerGas
+    const maxFeePerGas = baseFee + maxPriorityFeePerGas
     const fees = { maxFeePerGas, maxPriorityFeePerGas }
 
     if (maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
@@ -77,15 +78,23 @@ export function getFees(logCtx?: unknown, replacedTx?: EvmTxInfo): FeeResult {
         return { fees, minFee, minBlockFee, error }
     }
 
-    if (maxFeePerGas > env.MAX_BASEFEE) {
-        if (minFee > env.MAX_BASEFEE) {
-            const error = `The maxFeePerGas ${origin} exceeds the submitter's max price.`
+    if (baseFee > env.MAX_BASEFEE) {
+        if (minBaseFee > env.MAX_BASEFEE) {
+            const error = `The baseFee ${origin} exceeds the submitter's max price.`
             return { fees, minFee, minBlockFee, error }
         }
 
-        if (logCtx) logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", logCtx)
+        if (logCtx) logger.info("The baseFee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", logCtx)
         fees.maxFeePerGas = minFee
     }
 
     return { fees, minFee, minBlockFee }
+}
+
+/**
+ * Return the baseFee from the latest block.
+ */
+export function getLatestBaseFee(): bigint {
+    const lastBlock = blockService.getCurrentBlock()
+    return lastBlock.baseFeePerGas ?? lastBlock.gasPrice
 }

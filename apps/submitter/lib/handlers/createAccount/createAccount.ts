@@ -73,14 +73,12 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         return { status: CreateAccount.Success, owner, salt, address }
     } catch (error) {
         if (evmTxInfo) {
-            // TODO maybe do something with the logging
             // The nonce has been consumed. A transaction must occur with that nonce because other other transactions
             // might have been queued behind it.
             const hash = evmTxInfo.evmTxHash
             const info = { hash, predictedAddress, account: accountDeployer.address }
             logger.warn("Account creation tx appears stuck, attempting resync", info)
-            replaceTransaction(accountDeployer, { evmTxInfo, recheck: true })
-            logger.info("Resync completed for stuck account creation tx", info)
+            replaceTransaction(accountDeployer, evmTxInfo)
         }
 
         if (error === WaitForReceiptError) {
