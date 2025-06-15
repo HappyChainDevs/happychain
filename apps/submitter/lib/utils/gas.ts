@@ -1,7 +1,7 @@
 import { type UnionFill, bigIntMax, getProp } from "@happy.tech/common"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
-import { type EvmTxInfo, SubmitterError } from "#lib/types"
+import type { EvmTxInfo, SubmitterError } from "#lib/types"
 import { logger } from "#lib/utils/logger"
 
 export type Fees = {
@@ -9,18 +9,13 @@ export type Fees = {
     maxPriorityFeePerGas: bigint
 }
 
-export type FeeInfo = {
+// biome-ignore format: pretty
+export type FeeResult = {
     fees: Fees
     minFee: bigint
     minBlockFee: bigint
+    error?: string
 }
-
-// biome-ignore format: pretty
-export type FeeResult = UnionFill<
-    | FeeInfo
-    | { status: typeof SubmitterError.UnexpectedError, error: Error }
-    | { status: typeof SubmitterError.GasPriceTooHigh, error: Error } & FeeInfo
->
 
 function addPercent(num: bigint, percent: bigint): bigint {
     // The +1 below guarantee we don't get rounding error, which could cause errors if margins are configured to their
@@ -30,17 +25,14 @@ function addPercent(num: bigint, percent: bigint): bigint {
 
 const origin = "(either supplied by the sender or computed from the network)"
 
-// TODO Get rid of the network error by being more stringent in the block service, refusing to acknowledge blocks
-//      without fee info — this should probably never happen and should be caught at the most upstream.
-
 /**
  * Returns all necessary fee information, optionally taking into account the need to replace another transaction
  * (specified as {@link replacedTx}.
  *
- * If there is no network error and the compute fee does not exceed maximum thresholds, returns an object with a {@link
- * Fees}-valued `fees` key that can be directly spliced into a Viem call, as well as `minFee` and `minBlockFee` keys
- * that indicates the absolute lowest `maxFeePerGas` the sequencer is willing to accept (`minFee` takes the replacement
- * tx into account, while `minBlockFee` doesn't. In that case:
+ * If the computed fees does not exceed maximum thresholds, returns an object with a {@link Fees}-valued `fees` key that
+ * can be directly spliced into a Viem call, as well as `minFee` and `minBlockFee` keys that indicates the absolute
+ * lowest `maxFeePerGas` the sequencer is willing to accept (`minFee` takes the replacement tx into account, while
+ * `minBlockFee` doesn't. In that case:
  *
  * - `fees.maxFeePerGas` is computed by applying {@link env.BASEFEE_MARGIN} on top of the latest block basefee. If
  * that exceeds {@link env.MAX_BASEFEE}, it applies the lower {@link env.MIN_BASEFEE_MARGIN} instead. If a replaced
@@ -53,23 +45,16 @@ const origin = "(either supplied by the sender or computed from the network)"
  * priority fee bumped by {@link env.FEE_BUMP_PERCENT}.
  *
  * If however `fees.maxFeePerGas` and `fees.maxPriorityFeePerGas` computed in this way would exceed {@link
- * env.MAX_BASEFEE} or {@link env.MAX_PRIORITY_FEE} (respectively), then returns a `status` of {@link
- * SubmitterError.GasPriceTooHigh} and an {@link Error} object with an appropriate message. The invalid `fees` and
- * `minFee` (computed as in the regular case) are also included. Note that in this case `fees.maxFeePerGas === minFee`.
- *
- * If there is an network error fetching the fees, returns with a `status` of {@link SubmitterError.UnexpectedError} and
- * an {@link Error} object with an appropriate message.
+ * env.MAX_BASEFEE} or {@link env.MAX_PRIORITY_FEE} (respectively), then returns `error` with an appropriate message.
+ * The invalid `fees` and `minFee` (computed as in the regular case) are also included. Note that in this case
+ * `fees.maxFeePerGas === minFee`.
  *
  * If a {@link logCtx} is provided, then we log when returning successfully but applying {@link env.MIN_BASEFEE_MARGIN}
  * instead of {@link env.BASEFEE_MARGIN}. The value is also passed to the log call.
  */
 export function getFees(logCtx?: unknown, replacedTx?: EvmTxInfo): FeeResult {
     const lastBlock = blockService.getCurrentBlock()
-    const lastBaseFee = lastBlock.baseFeePerGas ?? getProp(lastBlock, "gasPrice", "bigint")
-    if (!lastBaseFee) {
-        const error = Error("Block information did not contain the base fee")
-        return { status: SubmitterError.UnexpectedError, error }
-    }
+    const lastBaseFee = lastBlock.baseFeePerGas ?? lastBlock.gasPrice
 
     // The +1 below guarantee we don't get rounding error if margins are configured to be the exact max inter-block fee
     // rise or replacement bump margins.
@@ -88,14 +73,14 @@ export function getFees(logCtx?: unknown, replacedTx?: EvmTxInfo): FeeResult {
     const fees = { maxFeePerGas, maxPriorityFeePerGas }
 
     if (maxPriorityFeePerGas > env.MAX_PRIORITY_FEE) {
-        const error = Error(`The maxPriorityFeePerGas ${origin} exceeds the submitter's max price.`)
-        return { fees, minFee, minBlockFee, error, status: SubmitterError.GasPriceTooHigh }
+        const error = `The maxPriorityFeePerGas ${origin} exceeds the submitter's max price.`
+        return { fees, minFee, minBlockFee, error }
     }
 
     if (maxFeePerGas > env.MAX_BASEFEE) {
         if (minFee > env.MAX_BASEFEE) {
-            const error = Error(`The maxFeePerGas ${origin} exceeds the submitter's max price.`)
-            return { fees, minFee, minBlockFee, error, status: SubmitterError.GasPriceTooHigh }
+            const error = `The maxFeePerGas ${origin} exceeds the submitter's max price.`
+            return { fees, minFee, minBlockFee, error }
         }
 
         if (logCtx) logger.info("Basefee is above MAX_BASEFEE, falling back to MIN_BASEFEE_MARGIN", logCtx)

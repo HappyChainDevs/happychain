@@ -5,7 +5,7 @@ import { outputForGenericError } from "#lib/handlers/errors"
 import { evmNonceManager, evmReceiptService, replaceTransaction } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
-import type { EvmTxInfo } from "#lib/types"
+import { type EvmTxInfo, SubmitterError } from "#lib/types"
 import { config, publicClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
@@ -33,8 +33,8 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
             return { status, salt, owner, address: predictedAddress }
         }
 
-        const { fees, error, status } = getFees({ predictedAddress })
-        if (error) return { status, error: error.message, owner, salt }
+        const { fees, error } = getFees({ predictedAddress })
+        if (error) return { status: SubmitterError.GasPriceTooHigh, error, owner, salt }
         const nonce = await evmNonceManager.consume(accountDeployer.address)
         evmTxInfo = { nonce, ...fees }
 

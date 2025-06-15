@@ -3,15 +3,14 @@ import {
     type Hash,
     Mutex,
     type RejectType,
-    assertType,
     filterMap,
-    isNullish,
     parseBigInt,
     promiseWithResolvers,
     sleep,
     tryCatchAsync,
     waitForCondition,
 } from "@happy.tech/common"
+import { ArkErrors, type } from "arktype"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
@@ -19,6 +18,7 @@ import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
+import { Bytes } from "#lib/utils/validation/ark"
 
 /**
  * Type of block we get from Viem's `getBlock` — made extra permissive for safety,
@@ -28,22 +28,24 @@ type InputBlock = {
     number: bigint | null | undefined
     hash: Hash | null | undefined
     transactions: Hash[]
-    // This is supposed to be there, and the submitter won't work if it isn't, though we don't validate it yet.
-    // (though we support gasPrice being there instead in gas.ts)
-    baseFeePerGas: bigint | null | undefined
+    baseFeePerGas?: bigint | null | undefined
+    gasPrice?: bigint | null | undefined
 }
+
+// biome-format ignore: pretty
+const checkBlock = type(
+    { number: "bigint", hash: Bytes, transactions: Bytes.array() },
+    "&",
+    type({ baseFeePerGas: "bigint", "gasPrice?": "undefined" }, "|", {
+        "baseFeePerGas?": "undefined",
+        gasPrice: "bigint",
+    }),
+)
 
 /**
  * Type of block that we expose to subscribers via {@link BlockService.onBlock}.
  */
-export type Block = {
-    number: bigint
-    hash: Hash
-    transactions: Hash[]
-    // This is supposed to be there, and the submitter won't work if it isn't, though we don't validate it yet.
-    // (though we support gasPrice being there instead in gas.ts)
-    baseFeePerGas: bigint | null | undefined
-}
+export type Block = typeof checkBlock.infer
 
 // Note there is an extra block type: `RpcBlock` from Viem representing an raw block from RPC, which we get on
 // our WebSocket subscription. We normalize those to `InputBlock`.
@@ -138,7 +140,7 @@ export class BlockService {
         /** Can be applied to {@link pingRpcsForBlock} result to select successful calls. */
         function isSuccess(result: PromiseSettledResult<InputBlock>): result is PromiseFulfilledResult<Block> {
             if (result.status !== "fulfilled") return false
-            return typeof result.value.number === "bigint" && typeof result.value.hash === "string"
+            return !(checkBlock(result.value) instanceof ArkErrors)
         }
 
         // === Find live RPCs ===
@@ -311,7 +313,7 @@ export class BlockService {
             } else {
                 pollingTimer = setInterval(async () => {
                     // biome-ignore format: terse
-                    try { void this.#handleNewBlock(await this.#client.getBlock()) }
+                    try { void this.#handleNewBlock(await this.#client.getBlock({ includeTransactions: false })) }
                     catch (e) { reject(e) }
                 }, pollingInterval)
             }
@@ -375,13 +377,14 @@ export class BlockService {
                 rpcBlock.transactions = txHashes
                 // Note that rpcBlock cannot throw if its input is and object.
                 // cast: allows `number` to be null
-                return await this.#handleNewBlock(formatBlock(rpcBlock) as Block)
+                await this.#handleNewBlock(formatBlock(rpcBlock) as Block)
+                return
             }
             // It may be that the block simplify has no transactions, but out of an abundance of caution, we'll try
             // fetching the block anyway. If there's truly no transactions here, there will be no harm.
         }
 
-        let block: Block | null = null
+        let block: InputBlock | null = null
         for (let i = 1; i <= 3; ++i) {
             try {
                 // `includeTransactions: false` still gives us a list of transaction hashes
@@ -394,23 +397,26 @@ export class BlockService {
         await this.#handleNewBlock(block)
     }
 
-    async #handleNewBlock(block: InputBlock | null, allowBackfill = true): Promise<void> {
+    /**
+     * Called upon getting a new block. Returns true if the block was successfully handled, false if it gets skipped.
+     * This never throws.
+     */
+    async #handleNewBlock(inputBlock: InputBlock | null, allowBackfill = true): Promise<boolean> {
         // If we skip the block in this function and this results in a gap or no more blocks come
         // in, we'll notice via further checks in here, or via our block timeout, respectively.
 
-        // Validate format
-        if (!block || isNullish(block.number) || isNullish(block.hash)) {
-            blockLogger.error("Received an invalid block from the watcher, skipping.", block)
-            return
+        const block = checkBlock(inputBlock)
+        if (block instanceof ArkErrors) {
+            blockLogger.error("Received an invalid block from the watcher, skipping.", inputBlock, block)
+            return false
         }
-        assertType<Block>(block) // implied from above, TS not smart enough
 
         // Check for duplicates
         if (block.hash === this.#current?.hash) {
             // Don't warn when polling, since this is expected to happen all the time.
             if (this.#client.transport.type === "webSocket")
                 blockLogger.warn(`Received duplicate block ${block.number}, skipping.`)
-            return
+            return false
         }
 
         // otherwise it's the very first block after starting
@@ -424,7 +430,7 @@ export class BlockService {
                 // If we can't fill the gap, skip this block and move onto the next RPC.
                 if (allowBackfill && !(await this.#backfill(curNum + 1n, block.number - 1n))) {
                     this.#skipToNextClient("Couldn't fill block gap.")
-                    return
+                    return false
                 }
             }
 
@@ -445,7 +451,7 @@ export class BlockService {
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
                     // We don't clear the block timeout as we're not making progress.
-                    return
+                    return false
                 }
             }
         }
@@ -463,21 +469,23 @@ export class BlockService {
         this.#startBlockTimeout()
         currentBlockGauge.record(Number(this.#current.number))
         blockLogger.trace(`Processing new block: ${this.#current.number} / ${this.#current.hash}`)
-        if (this.#callbacks.size === 0) return
+        if (this.#callbacks.size === 0) return true
 
-        async function runCallback(cb: (block: Block) => void | Promise<void>) {
-            assertType<Block>(block) // checked at top
+        // biome-ignore format: terse
+        await Promise.all(Array.from(this.#callbacks).map(async (callback) => {
             try {
-                await cb(block)
+                return await callback(block)
             } catch (e) {
                 blockLogger.error(`Error in callback for block ${block.number} (hash: ${block.hash})`, e)
             }
-        }
-
-        await Promise.all(Array.from(this.#callbacks).map(runCallback))
+        }))
+        return true
     }
 
-    /** Backfills blocks with numbers in [from, to] (inclusive). */
+    /**
+     * Backfills blocks with numbers in [from, to] (inclusive).
+     * Returns true iff the backfill is successful for the entire range.
+     */
     async #backfill(from: bigint, to: bigint): Promise<boolean> {
         // Cap backfill to max allowed, we won't be seeing the other blocks, but given what
         // the submitter uses this for, we don't care, the boops will be long timed out.
@@ -502,7 +510,7 @@ export class BlockService {
                     if (!block) throw "Block was undefined" // this shouldn't happen
                     // Disallow recursive backfills. This should never happen,
                     // but might be theoretically possible with reorgs.
-                    await this.#handleNewBlock(block, false)
+                    if (!(await this.#handleNewBlock(block, false))) throw "Block was skipped."
                 } catch (e) {
                     blockLogger.error(`Error fetching block ${blockNumber}. Stopping fill for this gap.`, e)
                     return false

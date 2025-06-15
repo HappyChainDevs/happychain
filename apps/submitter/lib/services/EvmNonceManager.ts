@@ -23,9 +23,9 @@ export class EvmNonceManager {
         return await mutex.locked(async () => {
             let nonce = this.#nonces.get(address)
             if (!nonce)
-                nonce = await this.#nonces.getOrSetAsync(address, async () => {
-                    return await publicClient.getTransactionCount({ address })
-                })
+                nonce = await this.#nonces.getOrSetAsync(address, async () =>
+                    publicClient.getTransactionCount({ address }),
+                )
             this.#nonces.set(address, nonce + 1)
             return nonce
         })

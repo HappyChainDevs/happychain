@@ -107,8 +107,8 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 // since, or this may be a replacement submit, which wasn't taken into account by simulation.
 
                 const account = findExecutionAccount(boop)
-                const { fees, minFee, minBlockFee, status, error } = getFees(boopHash, replacedTx)
-                if (error) return { status, stage: "submit", error: error.message }
+                const { fees, minFee, minBlockFee, error } = getFees(boopHash, replacedTx)
+                if (error) return { status: SubmitterError.GasPriceTooHigh, stage: "submit", error }
 
                 if (simulation.maxFeePerGas < minFee) {
                     if (!ogBoop.maxFeePerGas) {

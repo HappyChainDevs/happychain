@@ -1,4 +1,4 @@
-import { type Hex, parseBigInt } from "@happy.tech/common"
+import { type Hex, type UnionFill, parseBigInt } from "@happy.tech/common"
 import { ArkErrors } from "arktype"
 import { isProduction } from "#lib/env"
 
