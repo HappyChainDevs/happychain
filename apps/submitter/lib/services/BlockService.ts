@@ -32,14 +32,18 @@ type InputBlock = {
     gasPrice?: bigint | null | undefined
 }
 
-// biome-format ignore: pretty
-const checkBlock = type(
-    { number: "bigint", hash: Bytes, transactions: Bytes.array() },
-    "&",
-    type({ baseFeePerGas: "bigint", "gasPrice?": "undefined" }, "|", {
-        "baseFeePerGas?": "undefined",
-        gasPrice: "bigint",
-    }),
+// biome-ignore format: pretty
+const checkBlock = type({
+        number: "bigint",
+        hash: Bytes,
+        transactions: Bytes.array(),
+        // These fields should be present, but they're not crucial to good operation, so optional.
+        "gasUsed?": "bigint",
+        "gasLimit?": "bigint",
+    },
+    "&", type(
+        { baseFeePerGas: "bigint", "gasPrice?": "undefined" }, "|",
+        { "baseFeePerGas?": "undefined", gasPrice: "bigint" }),
 )
 
 /**

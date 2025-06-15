@@ -118,3 +118,14 @@ export function isEmpty(obj: object, strict?: "strict"): boolean {
         return true
     }
 }
+
+/**
+ * Picks the given keys from the object.
+ *
+ * e.g. `pick({ a: 1, b: 2, c: 3 }, "a", "b")` returns `{ a: 1, b: 2 }`
+ */
+export function pick<T, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> {
+    const result = {} as Pick<T, K>
+    for (const key of keys) result[key] = obj[key]
+    return result
+}

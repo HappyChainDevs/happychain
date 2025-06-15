@@ -63,13 +63,6 @@ export const gasSchema = z.object({
     MAX_PRIORITY_FEE: z.coerce.bigint().nonnegative().default(1000n),
 
     /**
-     * Initial percentage to bump fees by when starting resync for a stuck transaction.
-     * This is additive, so the default value of 100 means doubling the original fee.
-     * Used for the first attempt before falling back to FEE_BUMP_PERCENT for subsequent tries.
-     */
-    INITIAL_RESYNC_FEE_BUMP_PERCENT: z.coerce.bigint().nonnegative().default(100n),
-
-    /**
      * Gas reserved for entrypoint execution when validating gas values before simulation.
      *
      * The default value is 70k, which is the approx overhead we see for entrypoint execution on tests.

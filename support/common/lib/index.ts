@@ -100,7 +100,7 @@ export { binaryPartition, partition, filterMap } from "./utils/iterables"
 export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
 export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
 export { Mutex } from "./utils/mutex"
-export { getProp, hasDefinedKey, hasKey, hasOwnKey, ifDef, isEmpty } from "./utils/objects"
+export { getProp, hasDefinedKey, hasKey, hasOwnKey, ifDef, isEmpty, pick } from "./utils/objects"
 export {
     promiseWithResolvers,
     delayed,

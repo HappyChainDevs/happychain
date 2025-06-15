@@ -1,7 +1,7 @@
 import type { Hash } from "@happy.tech/common"
 import { trace } from "@opentelemetry/api"
 import { type BaseError, InsufficientFundsError } from "viem"
-import { abis, deployment, env } from "#lib/env"
+import { abis, deployment } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
 import { simulate } from "#lib/handlers/simulate"
 import type { WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
