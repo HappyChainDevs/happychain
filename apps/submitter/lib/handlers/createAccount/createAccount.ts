@@ -6,7 +6,7 @@ import { evmNonceManager, evmReceiptService, replaceTransaction } from "#lib/ser
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type EvmTxInfo, SubmitterError } from "#lib/types"
-import { config, publicClient } from "#lib/utils/clients"
+import { config, isNonceTooLowError, publicClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
@@ -72,6 +72,8 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         logger.trace("Successfully created account", address, owner, salt)
         return { status: CreateAccount.Success, owner, salt, address }
     } catch (error) {
+        if (isNonceTooLowError(error)) evmNonceManager.resyncIfTooLow(accountDeployer.address)
+
         if (evmTxInfo) {
             // The nonce has been consumed. A transaction must occur with that nonce because other other transactions
             // might have been queued behind it.

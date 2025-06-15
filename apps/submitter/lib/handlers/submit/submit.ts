@@ -13,10 +13,11 @@ import {
     evmNonceManager,
     findExecutionAccount,
 } from "#lib/services"
+import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop, updateBoopFromSimulation } from "#lib/utils/boop"
-import { walletClient } from "#lib/utils/clients"
+import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
@@ -162,6 +163,8 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 const receiptPromise = boopReceiptService.waitForInclusion(args)
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
+                if (isNonceTooLowError(error)) evmNonceManager.resyncIfTooLow(accountDeployer.address)
+
                 if ((error as BaseError)?.walk((e) => e instanceof InsufficientFundsError)) {
                     return {
                         status: SubmitterError.UnexpectedError,
