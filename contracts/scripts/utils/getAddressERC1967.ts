@@ -4,7 +4,7 @@ import { abis } from "../../deployments/anvil/boop/abis"
 import { ERC1967_CREATION_CODE } from "./creationCode/ERC1967Code"
 
 /**
- * Predicts the address of an ERC1967 proxy that will be deployed by the ScrappyAccountFactory
+ * Predicts the address of an ERC1967 proxy that will be deployed by the HappyAccountBeaconProxyFactory
  * @param salt The deployment salt
  * @param owner The owner address for initialization
  * @param accountImplementation The address of the account implementation contract

@@ -18,6 +18,9 @@ abstract contract HappyAccountFactoryBase {
     /// Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
 
+    /// Error thrown when the predicted address starts with 0xef
+    error AddressStartsWith0xef();
+
     /// Emitted when deploying an account.
     event Deployed(address account, address owner);
 
@@ -88,10 +91,17 @@ abstract contract HappyAccountFactoryBase {
     // INTERNAL FUNCTIONS
 
     /// @dev Predicts the address where a HappyAccount would be deployed, given the combined salt, and contract code.
+    /// @dev Checks if the generated address starts with 0xef and reverts if it does.
     function _getAddress(bytes32 salt, bytes memory contractCode) internal view returns (address) {
-        return address(
+        address predictedAddress = address(
             uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(contractCode)))))
         );
+
+        if (uint8(bytes1(bytes20(predictedAddress))) == 0xef) {
+            revert AddressStartsWith0xef();
+        }
+
+        return predictedAddress;
     }
 
     /// @dev Prepares the contract creation code for a proxy contract.

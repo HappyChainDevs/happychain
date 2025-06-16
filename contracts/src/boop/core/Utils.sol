@@ -92,20 +92,59 @@ library Utils {
     /**
      * @dev Computes the EIP-191 signed message hash for a boop
      * @param boop The boop to compute the hash for (validatorData field will be ignored)
+     * @param restore Whether to restore the original values after computing the hash
      * @return The EIP-191 signed message hash for the boop
      */
-    function boopHash(Boop memory boop) internal view returns (bytes32) {
-        // Store original validatorData
-        bytes memory originalValidatorData = boop.validatorData;
-
+    function boopHash(Boop memory boop, bool restore) internal view returns (bytes32) {
         // Set validatorData to empty for hashing
+        bytes memory originalValidatorData = boop.validatorData;
         boop.validatorData = "";
 
-        // Compute the hash
+        // Store the original gas values
+        uint32 originalGasLimit = 0;
+        uint32 originalValidateGasLimit = 0;
+        uint32 originalValidatePaymentGasLimit = 0;
+        uint32 originalExecuteGasLimit = 0;
+        uint256 originalMaxFeePerGas = 0;
+        int256 originalSubmitterFee = 0;
+
+        // If not self-paying, zero out the gas values
+        bool isSelfPaying = boop.payer == boop.account;
+        if (!isSelfPaying) {
+            // Only store the original gas values if we're restoring
+            if (restore) {
+                originalGasLimit = boop.gasLimit;
+                originalValidateGasLimit = boop.validateGasLimit;
+                originalValidatePaymentGasLimit = boop.validatePaymentGasLimit;
+                originalExecuteGasLimit = boop.executeGasLimit;
+                originalMaxFeePerGas = boop.maxFeePerGas;
+                originalSubmitterFee = boop.submitterFee;
+            }
+
+            boop.gasLimit = 0;
+            boop.validateGasLimit = 0;
+            boop.validatePaymentGasLimit = 0;
+            boop.executeGasLimit = 0;
+            boop.maxFeePerGas = 0;
+            boop.submitterFee = 0;
+        }
+
         bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
 
-        // Restore original validatorData
-        boop.validatorData = originalValidatorData;
+        // Restore the original values if requested
+        if (restore) {
+            boop.validatorData = originalValidatorData;
+
+            // Only restore gas values if they were zeroed out (not self-paying)
+            if (!isSelfPaying) {
+                boop.gasLimit = originalGasLimit;
+                boop.validateGasLimit = originalValidateGasLimit;
+                boop.validatePaymentGasLimit = originalValidatePaymentGasLimit;
+                boop.executeGasLimit = originalExecuteGasLimit;
+                boop.maxFeePerGas = originalMaxFeePerGas;
+                boop.submitterFee = originalSubmitterFee;
+            }
+        }
 
         return hash;
     }

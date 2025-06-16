@@ -147,20 +147,12 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
                 }
             }
         } else {
-            if (boop.payer != address(this)) {
-                // The boop is not self-paying.
-                // The signer does not sign over these fields to avoid extra network roundtrips
-                // validation policy falls to the paymaster or the sponsoring submitter.
-                boop.gasLimit = 0;
-                boop.validateGasLimit = 0;
-                boop.validatePaymentGasLimit = 0;
-                boop.executeGasLimit = 0;
-                boop.maxFeePerGas = 0;
-                boop.submitterFee = 0;
-            }
-
+            // Get the signature from the boop's validatorData
             bytes memory signature = boop.validatorData;
-            address signer = Utils.boopHash(boop).tryRecover(signature);
+
+            // Call boopHash with restore=false since we don't need to restore the values after
+            // since we're only using the hash for signature verification
+            address signer = Utils.boopHash(boop, false).tryRecover(signature);
 
             validationResult = signer == owner()
                 ? bytes4(0)
