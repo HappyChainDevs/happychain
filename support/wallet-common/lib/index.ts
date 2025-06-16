@@ -17,10 +17,6 @@ export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 // services
 export { EventBus, EventBusMode } from "./services/eventBus"
 
-// utils
-export { waitForCondition } from "./utils/waitForCondition"
-export { shortenAddress } from "./utils/shortenAddress"
-
 // === TYPES =======================================================================================
 
 export type { Chain, ChainBlockExplorer, ChainContract, ChainRpcUrls, ChainNativeCurrency } from "./chains/viem"
@@ -37,6 +33,7 @@ export type {
     RPCMethods,
     HappyMethods,
 } from "./interfaces/eip1193"
+export { HappyMethodNames } from "./interfaces/eip1193"
 export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
 
 export type {

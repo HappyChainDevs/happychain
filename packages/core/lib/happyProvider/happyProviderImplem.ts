@@ -1,4 +1,11 @@
-import { type TaggedLogger, type UUID, createUUID, happyProviderInfo, injectedProviderInfo } from "@happy.tech/common"
+import {
+    type TaggedLogger,
+    type UUID,
+    createUUID,
+    happyProviderInfo,
+    injectedProviderInfo,
+    waitForCondition,
+} from "@happy.tech/common"
 import {
     AuthState,
     type EIP1193RequestParameters,
@@ -17,7 +24,6 @@ import {
     SafeEventEmitter,
     WalletDisplayAction,
     WalletType,
-    waitForCondition,
 } from "@happy.tech/wallet-common"
 import { announceProvider, createStore } from "mipd"
 import type { EIP1193Provider } from "viem"

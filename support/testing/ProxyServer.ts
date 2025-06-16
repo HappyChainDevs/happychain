@@ -1,7 +1,7 @@
 import type { Server } from "node:http"
 import type { Http2SecureServer, Http2Server } from "node:http2"
 import { type Logger, type TaggedLogger, stringify } from "@happy.tech/common"
-import { waitForCondition } from "@happy.tech/wallet-common"
+import { waitForCondition } from "@happy.tech/common"
 import { serve } from "@hono/node-server"
 import { createNodeWebSocket } from "@hono/node-ws"
 import { Hono } from "hono"

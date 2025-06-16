@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/wallet-common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
 import { type SendBoopArgs, sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"

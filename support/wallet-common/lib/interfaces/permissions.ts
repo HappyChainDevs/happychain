@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/wallet-common"
 import type { EIP1193Parameters } from "viem"
 
 // https://eips.ethereum.org/EIPS/eip-1474

@@ -1,5 +1,11 @@
-import { HappyMethodNames, decodeUrlSafeBase64 } from "@happy.tech/common"
-import { EIP1193UserRejectedRequestError, Msgs, type PopupMsgs, serializeRpcError } from "@happy.tech/wallet-common"
+import { decodeUrlSafeBase64 } from "@happy.tech/common"
+import {
+    EIP1193UserRejectedRequestError,
+    HappyMethodNames,
+    Msgs,
+    type PopupMsgs,
+    serializeRpcError,
+} from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"

@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/wallet-common"
 import { Permissions } from "./permissions"
 
 export const requestLabels = {

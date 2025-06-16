@@ -2,7 +2,7 @@
 import "./web3auth/polyfill"
 
 import type { Address } from "@happy.tech/common"
-import { waitForCondition } from "@happy.tech/wallet-common"
+import { waitForCondition } from "@happy.tech/common"
 import { COREKIT_STATUS, type JWTLoginParams } from "@web3auth/mpc-core-kit"
 import { web3Auth } from "./web3auth/mpc-core-kit"
 import { ethereumSigningProvider } from "./web3auth/signingProvider"

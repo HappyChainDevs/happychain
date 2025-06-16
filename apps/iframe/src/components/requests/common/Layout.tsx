@@ -1,4 +1,4 @@
-import { shortenAddress } from "@happy.tech/wallet-common"
+import { shortenAddress } from "@happy.tech/common"
 import { cva } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import type { PropsWithChildren } from "react"

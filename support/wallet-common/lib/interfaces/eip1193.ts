@@ -1,6 +1,12 @@
-import type { Address, HappyMethodNames } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import type { Abi, EIP1193EventMap, EIP1193Parameters, PublicRpcSchema, WalletRpcSchema } from "viem"
 import type { HappyUser } from "./happyUser"
+
+export enum HappyMethodNames {
+    USER = "happy_user",
+    LOAD_ABI = "happy_loadAbi",
+    REQUEST_SESSION_KEY = "happy_requestSessionKey",
+}
 
 export type RecordAbiPayload = {
     address: Address

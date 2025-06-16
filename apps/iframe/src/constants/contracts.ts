@@ -1,10 +1,11 @@
+import { shortenAddress } from "@happy.tech/common"
 import {
     abis as boopStagingAbis,
     deployment as boopStagingDeployment,
 } from "@happy.tech/contracts/boop-staging/sepolia"
 import { abis as boopAnvilAbis, deployment as boopAnvilDeployment } from "@happy.tech/contracts/boop/anvil"
 import { abis as boopSepoliaAbis, deployment as boopSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
-import { anvil, happyChainSepolia, shortenAddress } from "@happy.tech/wallet-common"
+import { anvil, happyChainSepolia } from "@happy.tech/wallet-common"
 import { type Address, isAddressEqual } from "viem"
 
 // Default chain ID, used for deployment addresses and ABIs. The iframe might (or might not — unsupported)

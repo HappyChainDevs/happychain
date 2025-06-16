@@ -1,5 +1,5 @@
 import { Onchain } from "@happy.tech/boop-sdk"
-import { shortenAddress } from "@happy.tech/wallet-common"
+import { shortenAddress } from "@happy.tech/common"
 import {
     ArrowUpIcon,
     LightningIcon,

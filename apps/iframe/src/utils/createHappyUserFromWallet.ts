@@ -1,5 +1,5 @@
-import type { Address } from "@happy.tech/common"
-import { type HappyUser, WalletType, shortenAddress } from "@happy.tech/wallet-common"
+import { type Address, shortenAddress } from "@happy.tech/common"
+import { type HappyUser, WalletType } from "@happy.tech/wallet-common"
 import { getBoopAccountAddress } from "#src/connections/boopAccount"
 
 export async function createHappyUserFromWallet(providerId: string, address: Address): Promise<HappyUser> {

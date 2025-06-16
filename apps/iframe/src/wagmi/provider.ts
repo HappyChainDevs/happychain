@@ -1,12 +1,6 @@
-import type { UUID } from "@happy.tech/common"
+import { type UUID, waitForCondition } from "@happy.tech/common"
 import type { EIP1193RequestParameters } from "@happy.tech/wallet-common"
-import {
-    AuthState,
-    BasePopupProvider,
-    EIP1193UserRejectedRequestError,
-    WalletType,
-    waitForCondition,
-} from "@happy.tech/wallet-common"
+import { AuthState, BasePopupProvider, EIP1193UserRejectedRequestError, WalletType } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { addBanner } from "#src/state/banner"
 import { getCurrentChain } from "#src/state/chains"
