@@ -7,9 +7,17 @@ import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
 import { useConnection } from "./useConnection"
 
-export type ConnectButtonProps = { disableStyles?: boolean | string }
+type ConnectButtonProps = { disableStyles: boolean }
 
-export function Badge({ disableStyles = false }: ConnectButtonProps) {
+export function BadgeWithStyles() {
+    return <Badge disableStyles={false} />
+}
+
+export function BadgeWithoutStyles() {
+    return <Badge disableStyles={true} />
+}
+
+function Badge({ disableStyles }: ConnectButtonProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
 
     const { connecting, connect, open } = useConnection()
@@ -22,15 +30,12 @@ export function Badge({ disableStyles = false }: ConnectButtonProps) {
 
     return (
         <div>
-            {
-                // biome-ignore format: readability
-                (typeof disableStyles === "boolean" ? (disableStyles) : disableStyles !== "false")
-                  ? undefined
-                  : <style>
-                      {propertyStyles}
-                      {badgeStyles}
-                  </style>
-            }
+            {disableStyles ? undefined : (
+                <style>
+                    {propertyStyles}
+                    {badgeStyles}
+                </style>
+            )}
             <button
                 type="button"
                 className={`${!connected ? `${state} animated` : state} happychain-badge`}

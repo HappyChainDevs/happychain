@@ -22,7 +22,7 @@ export type LoadHappyWalletOptions = {
     /**
      * Disable default styles on the connect badge
      */
-    overrideBadgeStyles?: boolean
+    disableStyles?: boolean
 }
 
 /**
@@ -64,7 +64,7 @@ export function unloadHappyWallet() {
 function registerWallet(opts: LoadHappyWalletOptions) {
     if (!customElements.get("happy-wallet")) {
         define(HappyWallet, "happy-wallet", [], { shadow: true })
-        void defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
+        void defineBadgeComponent("happychain-connect-button", opts.disableStyles)
     }
 
     if (document.querySelector("happy-wallet")) return // wallet already exists

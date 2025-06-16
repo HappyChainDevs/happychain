@@ -1,5 +1,4 @@
 /** @jsxImportSource preact */
-export type { ConnectButtonProps } from "./badge"
 
 function setStyles(stylesId: string, css: string) {
     const prev = document.head.querySelector(`#${stylesId}`)
@@ -14,20 +13,21 @@ function setStyles(stylesId: string, css: string) {
     }
 }
 
-export async function defineBadgeComponent(componentName = "happychain-connect-button", overrideStyles = true) {
-    const [{ Badge }, { default: register }, { default: css }] = await Promise.all([
+export async function defineBadgeComponent(componentName = "happychain-connect-button", disableShadowDOM = false) {
+    const [{ BadgeWithStyles, BadgeWithoutStyles }, { default: register }, { default: css }] = await Promise.all([
         import("./badge"),
         import("preact-custom-element"),
+        // See note in property.css as to why this is needed
         import("./styles/property.css?inline"),
     ])
 
     // we can't create custom properties within the shadow dom,
     // so we will create outside here and append
-    if (!overrideStyles) {
-        setStyles("happychain-inline-styles", css)
-    }
+    if (!disableShadowDOM) setStyles("happychain-inline-styles", css)
 
-    if (!customElements.get(componentName)) {
-        register(Badge, componentName, ["disable-styles"], { shadow: !overrideStyles })
-    }
+    // can't re-define a custom element, so we check if it exists
+    if (customElements.get(componentName)) return
+
+    if (disableShadowDOM) register(BadgeWithoutStyles, componentName, [], { shadow: false })
+    else register(BadgeWithStyles, componentName, [], { shadow: true })
 }

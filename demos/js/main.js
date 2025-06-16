@@ -9,7 +9,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-loadHappyWallet({ chainId: import.meta.env.VITE_CHAIN_ID, overrideBadgeStyles: true })
+loadHappyWallet({ chainId: import.meta.env.VITE_CHAIN_ID, disableStyles: true })
 
 const ethersProvider = new BrowserProvider(happyProvider)
 
