@@ -46,7 +46,12 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await submit(input)
-            const [body, code] = makeResponse(output)
+            const [body, code, headers] = makeResponse(output)
+            if (headers) {
+                Object.entries(headers).forEach(([key, value]) => {
+                    c.header(key, value)
+                })
+            }
             validateOutput(body, submitOutputValidation, "submit response")
             return c.json(body, code)
         },
@@ -58,7 +63,12 @@ export default new Hono()
         async (c) => {
             const input = c.req.valid("json")
             const output = await execute(input)
-            const [body, code] = makeResponse(output)
+            const [body, code, headers] = makeResponse(output)
+            if (headers) {
+                Object.entries(headers).forEach(([key, value]) => {
+                    c.header(key, value)
+                })
+            }
             validateOutput(body, executeOutputValidation, "execute response")
             return c.json(body, code)
         },

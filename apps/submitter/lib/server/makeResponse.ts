@@ -1,4 +1,5 @@
 import { type BigIntSerialized, serializeBigInt } from "@happy.tech/common"
+import type { ResponseHeader } from "hono/utils/headers"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 import { CreateAccount, type CreateAccountStatus } from "#lib/handlers/createAccount"
 import type { ExecuteStatus } from "#lib/handlers/execute"
@@ -18,7 +19,9 @@ type Status =
     | WaitForReceiptStatus
     | GetPendingStatus
 
-export function makeResponse<T extends { status: Status }>(output: T): [BigIntSerialized<T>, ContentfulStatusCode] {
+export function makeResponse<T extends { status: Status }>(
+    output: T,
+): [BigIntSerialized<T>, ContentfulStatusCode, { [K in ResponseHeader]?: string }?] {
     const response = serializeBigInt(output)
     switch (output.status) {
         case Onchain.Success:
@@ -74,8 +77,7 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case SubmitterError.TransactionManagementError:
             return [response, 500] // Internal Server Error
         case SubmitterError.OverCapacity:
-            // TODO set Retry-After HTTP header
-            return [response, 503] // Service Unavailable
+            return [response, 503, { "Retry-After": "10" }] // Service Unavailable
         case SubmitterError.ClientError:
             throw new Error("BUG: makeResponse") // only thrown client-side
         default: {
