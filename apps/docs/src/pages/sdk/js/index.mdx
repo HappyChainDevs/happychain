@@ -227,9 +227,8 @@ is automatically added to the page when you call [`loadHappyWallet`].
 To display a connection button, you can use the `happychain-connect-button` [Web Component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components).
 The button turns into a badge displaying the username and avatar after connecting.
 
-If you would like to customize the look, the default styles can be completely disabled by passing 
-the `disable-styles`  property to the component, and setting `overrideBadgeStyles` to true 
-in [`loadHappyWallet`].
+If you would like to customize the look, the default styles can be completely disabled by setting 
+`disableStyles` to true in [`loadHappyWallet`] and defining your own styles using regular css.
 
 [`loadHappyWallet`]: /sdk/js/api/functions/loadHappyWallet
 
@@ -240,7 +239,7 @@ in [`loadHappyWallet`].
 ```
 
 ```html [Custom Style] twolash
-<happychain-connect-button disable-styles></happychain-connect-button>
+<happychain-connect-button></happychain-connect-button>
 ```
 
 :::
