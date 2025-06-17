@@ -35,6 +35,7 @@ export type Alert = AlertNormal | AlertAlerting | AlertRecovering
 type RpcStatus = {
     isLive: Alert
     isSyncing: Alert
+    latestBlock: number
 }
 
 export const NotSyncingSecondsThreshold = 8n
@@ -64,6 +65,7 @@ export class RpcMonitor {
                     unhealthyAt: undefined,
                     healthyAt: undefined,
                 },
+                latestBlock: 0,
             }
 
             this.rpcClients[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
@@ -100,6 +102,8 @@ export class RpcMonitor {
             if (gap > NotSyncingSecondsThreshold) {
                 isSyncing = false
             }
+
+            this.rpcStatus[rpcUrl].latestBlock = Number(block.number)
         } catch (_error) {
             isLive = false
         }
@@ -107,14 +111,14 @@ export class RpcMonitor {
         this.rpcStatus[rpcUrl].isLive = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isLive,
             isLive,
-            `❗️❗️ RPC ${rpcUrl} is not live`,
-            `✅✅ RPC ${rpcUrl} is now live again`,
+            `❗️❗️ RPC ${rpcUrl} is not live. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
+            `✅✅ RPC ${rpcUrl} is now live again. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
         )
         this.rpcStatus[rpcUrl].isSyncing = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isSyncing,
             isSyncing,
-            `❗️❗️ RPC ${rpcUrl} is not syncing`,
-            `✅✅ RPC ${rpcUrl} is now syncing again`,
+            `❗️❗️ RPC ${rpcUrl} is not syncing. Stuck at block ${this.rpcStatus[rpcUrl].latestBlock}`,
+            `✅✅ RPC ${rpcUrl} is now syncing again. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
         )
 
         this.rpcLocks[rpcUrl] = false
@@ -131,7 +135,7 @@ export class RpcMonitor {
             newCheck === false
         ) {
             if (currentAlert.status === AlertStatus.NORMAL) {
-                await sendSlackMessageToAlertChannel(alertingMessage)
+                await sendSlackMessageToAlertChannel(`[${new Date().toISOString()}] ${alertingMessage}`)
                 return {
                     status: AlertStatus.ALERTING,
                     changedAt: new Date(),
@@ -164,7 +168,9 @@ export class RpcMonitor {
         ) {
             const alertingTimeSeconds = (currentAlert.healthyAt.getTime() - currentAlert.unhealthyAt.getTime()) / 1000
 
-            await sendSlackMessageToAlertChannel(`${recoveredMessage} - Alert duration: ${alertingTimeSeconds}s`)
+            await sendSlackMessageToAlertChannel(
+                `[${new Date().toISOString()}] ${recoveredMessage} - Alert duration: ${alertingTimeSeconds}s`,
+            )
 
             return {
                 status: AlertStatus.NORMAL,
