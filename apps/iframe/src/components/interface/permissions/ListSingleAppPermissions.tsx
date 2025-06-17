@@ -3,14 +3,8 @@ import type { Address } from "viem"
 import { Switch } from "#src/components/primitives/toggle-switch/Switch"
 import { Permissions } from "#src/constants/permissions"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
-import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import {
-    type AppPermissions,
-    type WalletPermission,
-    grantPermissions,
-    hasPermissions,
-    revokePermissions,
-} from "#src/state/permissions"
+import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
+import type { AppPermissions, PermissionsRequest, WalletPermission } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { SessionKeyCheckbox } from "./SessionKeyCheckbox"
 
@@ -18,21 +12,26 @@ interface ListItemProps {
     permission: WalletPermission
 }
 
-const onSwitchToggle = (e: SwitchCheckedChangeDetails, allSessionKeys: string[], permission: WalletPermission) => {
-    const app = permission.invoker
+const onSwitchToggle = (
+    e: SwitchCheckedChangeDetails,
+    allSessionKeys: string[],
+    permission: WalletPermission,
+    grant: (permissionRequest: PermissionsRequest) => void,
+    revoke: (permissionRequest: PermissionsRequest) => void,
+) => {
     const isSessionKey = permission.parentCapability === Permissions.SessionKey
 
     if (!isSessionKey) {
         // No caveat to worry about for now.
-        if (e.checked) grantPermissions(app, permission.parentCapability)
-        else revokePermissions(app, permission.parentCapability)
+        if (e.checked) grant(permission.parentCapability)
+        else revoke(permission.parentCapability)
     }
 
     // We will loop through all session keys here, not just active ones, so that we can
     // re-enable all, after disabling all.
     for (const target of allSessionKeys) {
         if (e.checked) {
-            grantPermissions(app, { [Permissions.SessionKey]: { target } })
+            grant({ [Permissions.SessionKey]: { target } })
         } else {
             // The sessions keys will be unregistered onchain when transitioning away from
             // the page (cf. transition handler in `__root.tsx`). This avoids sending
@@ -44,27 +43,30 @@ const onSwitchToggle = (e: SwitchCheckedChangeDetails, allSessionKeys: string[],
             // despite being allowed onchain. This can only be a safety issues if the session keys
             // are stolen, but if that is possible, then we have much bigger problems to worry about.
 
-            revokePermissions(app, { [Permissions.SessionKey]: { target } })
+            revoke({ [Permissions.SessionKey]: { target } })
         }
     }
 }
 
 const ListItem = ({ permission }: ListItemProps) => {
-    const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker)
+    const { grant, revoke, has } = useLocalPermissionChanges()
 
     const allSessionKeys =
         permission?.parentCapability === Permissions.SessionKey ? permission.caveats.map((c) => c.value as Address) : []
 
     // These are the active contract target that have active session keys.
-    const activeSessionKeys = allSessionKeys.filter((target) =>
-        hasPermissions(permission.invoker, { [Permissions.SessionKey]: { target } }),
-    )
+    const activeSessionKeys = allSessionKeys.filter((target) => has({ [Permissions.SessionKey]: { target } }))
+
+    const checked =
+        permission.parentCapability === "happy_sessionKey"
+            ? has(permission.parentCapability) && activeSessionKeys.length > 0
+            : has(permission.parentCapability)
 
     return (
         <div className="w-full">
             <Switch
-                checked={hasPermission}
-                onCheckedChange={(e) => onSwitchToggle(e, allSessionKeys, permission)}
+                checked={checked}
+                onCheckedChange={(e) => onSwitchToggle(e, allSessionKeys, permission, grant, revoke)}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse text-base-content dark:text-neutral-content"
                 switchLabel={
                     permissionDescriptions?.[permission.parentCapability as PermissionDescriptionIndex] ?? "---"
@@ -76,11 +78,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                         {activeSessionKeys.length} contract{activeSessionKeys.length > 1 && "s"} approved:
                     </p>
                     {allSessionKeys.map((target) => (
-                        <SessionKeyCheckbox
-                            appURL={permission.invoker}
-                            contract={target}
-                            key={`${permission.parentCapability}-${target}`}
-                        />
+                        <SessionKeyCheckbox contract={target} key={`${permission.parentCapability}-${target}`} />
                     ))}
                 </div>
             )}

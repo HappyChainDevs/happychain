@@ -4,18 +4,17 @@ import { useMemo } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import { grantPermissions, revokePermissions } from "#src/state/permissions"
-import type { AppURL } from "#src/utils/appURL"
+import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
 
 interface SessionKeyContractProps {
-    appURL: AppURL
     contract: Address
 }
 
-export const SessionKeyCheckbox = ({ appURL, contract }: SessionKeyContractProps) => {
+export const SessionKeyCheckbox = ({ contract }: SessionKeyContractProps) => {
     // Initial state is whether the permission is granted or not.
     const permissionRequest = useMemo(() => ({ [Permissions.SessionKey]: { target: contract } }), [contract])
-    const checked = useHasPermissions(permissionRequest, appURL)
+    const checked = useHasPermissions(permissionRequest)
+    const { grant, revoke, has } = useLocalPermissionChanges()
 
     return (
         <Checkbox.Root
@@ -24,8 +23,8 @@ export const SessionKeyCheckbox = ({ appURL, contract }: SessionKeyContractProps
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
                 // in the atom to be used in the revokeSessionKey call
-                if (e.checked) grantPermissions(appURL, permissionRequest)
-                else revokePermissions(appURL, permissionRequest)
+                if (e.checked) grant(permissionRequest)
+                else revoke(permissionRequest)
             }}
         >
             <Checkbox.Label className="font-mono block overflow-hidden text-ellipsis">{contract}</Checkbox.Label>

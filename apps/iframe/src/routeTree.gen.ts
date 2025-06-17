@@ -55,7 +55,7 @@ const EmbedPermissionsIndexLazyRoute =
     path: '/permissions/',
     getParentRoute: () => EmbedLazyRoute,
   } as any).lazy(() =>
-    import('./routes/embed/permissions.index.lazy').then((d) => d.Route),
+    import('./routes/embed/permissions/index.lazy').then((d) => d.Route),
   )
 const EmbedPermissionsAppURLLazyRoute =
   EmbedPermissionsAppURLLazyRouteImport.update({
@@ -63,7 +63,7 @@ const EmbedPermissionsAppURLLazyRoute =
     path: '/permissions/$appURL',
     getParentRoute: () => EmbedLazyRoute,
   } as any).lazy(() =>
-    import('./routes/embed/permissions.$appURL.lazy').then((d) => d.Route),
+    import('./routes/embed/permissions/$appURL.lazy').then((d) => d.Route),
   )
 
 export interface FileRoutesByFullPath {
