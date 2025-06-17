@@ -24,6 +24,9 @@ fs_permissions = [
 # Formatter Options
 line_width = 120
 
+# Fuzzing settings
+fail_on_revert = true
+
 [profile.upgrade]
 # Flags needed for OpenZeppelin upgrade validation.
 ffi = true

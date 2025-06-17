@@ -102,6 +102,10 @@ test-gas: ## Runs test and generate a gas report
 	forge test --gas-report
 .PHONY: test-gas
 
+test-fuzz:
+	forge test --match-test test_fuzz_NoLeading0xEF --fuzz-runs 100000
+.PHONY: test-fuzz
+
 ####################################################################################################
 # Boop Unit Tests
 

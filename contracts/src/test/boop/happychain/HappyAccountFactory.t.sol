@@ -86,6 +86,22 @@ contract HappyAccountFactoryTest is Test {
         assertEq(_getOwner(firstDeployed), _getOwner(secondDeployed), "Both accounts should be owned by OWNER");
     }
 
+    // solhint-disable-next-line func-name-mixedcase
+    function test_fuzz_NoLeading0xEF(address owner, bytes32 salt) public {
+        vm.assume(owner != address(0));
+        // skip if already deployed
+        address predicted = factory.getAddress(salt, owner);
+        vm.assume(!_hasCode(predicted));
+
+        address deployed = factory.createAccount(salt, owner);
+
+        // invariants
+        bytes memory code = deployed.code;
+        assertGt(code.length, 0, "deployed contract must have code");
+        // EIP-3541 guard: first byte must not be 0xEF
+        assertTrue(uint8(code[0]) != 0xef, "byte-code starts with 0xEF");
+    }
+
     // ====================================================================================================
     // HELPER FUNCTIONS
 
