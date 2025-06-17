@@ -5,10 +5,12 @@ showOutline: true
 
 # Boop Submitter
 
-Please checkout the [Submitter Overview](/boop/architecture#submitter-overview) section of the Architecture page for background information.
+Please checkout the [Submitter Overview][overview] section of the Architecture page for background information.
+
+[overview]: /boop/architecture#submitter-overview
 
 As a reminder, the role of the submitter is to make EVM transaction to send boops to the chain, either sponsoring fees,
-or fronting them, to be repaid by the account or by a paymaster contract.
+or fronting them to be repaid by the account or by a paymaster.
 
 The submitter implementation maintained by Happy Devs exposes the following endpoints, see the [overview] for a short
 description and the [REST API reference](/boop/rest) for a full specification.
@@ -31,7 +33,7 @@ stages:
 
 2. Otherwise, if the only issue with the boop is that its nonce is not current with the latest block, we will check to
    see if we have already submitted the preceding boops. If so, we can proceed with submission, otherwise we wait until
-   that is the case or a timeout occurs. In those cases, we say the boop is "blocked".
+   that is the case or a timeout occurs. In we wait, we say the boop is "blocked".
 
    If the boop is not ready for submission for other reasons, an error is returned to the user.
 
@@ -39,8 +41,8 @@ stages:
    internal term, i.e. `getPending` returns both boops that are "blocked" and "pending", as well as those that are in
    between these two states.
 
-   If the `submit` endpoint invoked was submit, we return the [boop hash] to the user at this stage. If it was `execute`,
-   we keep waiting.
+   If the `submit` endpoint invoked, we return the [boop hash] to the user at this stage. If it was `execute`, we keep
+   waiting.
 
    Depending on its configuration, the submitter may attempt to resubmit the boop if it's not included fast enough. It will
    resimulate before doing this, and if the boop is sponsored, it will also update its fees (while keeping the same [boop
@@ -56,7 +58,7 @@ stages:
        In those cases, fees are still paid, and the account nonce is incremented. We return a failed receipt to the user.
 
     3. The EVM call made by the submitter to submit the boop is included onchain but reverts. If the submitter
-       implementation is correct, this is not supposed to happen and indicates faulty or malicious account or paymaster
+       implementation is correct, this is not supposed to happen and indicates faulty/malicious account or paymaster
        implementations. An error is returned to the user, and the submitter will record the problem and act on it according to
        its policies (see the [Griefing Protection](#griefing-protection) section below).
 
@@ -66,13 +68,13 @@ stages:
        used to ascertain if the boop might still land onchain.
 
     5. The operation's timeout triggers while waiting for the receipt. Depending on submitter configuration, all the
-       other scenarios might still be possible, but the user will only see a timeout error. Same remedy as in scenario (3).
+       other scenarios might still be possible, but the user will only see a timeout error. Same remedy as in scenario (4).
 
 Of course, many of these things can fail, in which the user also gets an error back.
 
 As you can see, receipts work essentially the same ways as they do for transactions on the EVM: a receipt is emitted if
-the boop lands onchain, regardless of whether it is successful or not. A receipt is however not emitted if the EVM
-transaction carrying it lands onchain but fails itself.
+the boop lands onchain and the nonce is incremented, regardless of whether it is successful or not. A receipt is however
+not emitted if the EVM transaction carrying it lands onchain but fails itself.
 
 ## The Submitter as Boop Indexer
 
@@ -109,31 +111,31 @@ defined in the submitter's `.env` file), which are specified in the following sc
 
 Because the submitter fronts the blockchain fees for boops, it is vulnerable to griefing from malicious parties.
 
-## Malicious Invalidations
+### Malicious Invalidations
 
 The most problematic form of griefing is when a malicious account or paymaster can validate successfully during
-simulation but revert during onchain execution — for account this also extends to payment. This causes the transaction
-to be included onchain and fees to be charged to the submitter, but because of the rejected validation, no fees are paid
-back to it.
+simulation but revert during onchain execution — for account this also extends to payment (the `payout` function). This
+causes the transaction to be included onchain and fees to be charged to the submitter, but because of the rejected
+validation/payout, no fees are paid back to it.
 
 To protect themselves against these attacks, submitters have a few options:
 
 1. Only limit themselves to known account implementations. This can only be achieved with the use of an account registry,
-  as described in the section on [Accout Deployment] of the Architecture page. Note that this registry does not
-  necessarily need to live onchain. Also note that allowing arbitrary validator extension invalidate this protection, and
-  they must be similarly vetted.
+   as described in the section on [Accout Deployment] of the Architecture page. Note that this registry does not
+   necessarily need to live onchain. Also note that allowing arbitrary [validator extensions][extensions] invalidate this
+   protection, and they must be similarly vetted.
 
 [Account Deployment]: /boop/architecture#account-deployment
 
-TODO link to validator extensions
+[extensions]: /boop/extensions
 
 2. Adopt an out-of-protocol staking system that the submitter can use to compensate its losses from misbehaving accounts
    or paymasters.
 
 3. Adopt a reputation system where they refuse to serve accounts or paymasters that have reached a set quota of
-  misbehaviour. This is ultimately not foolproof as it's always possible to deploy new accounts and paymasters, but such a
-  system at least guarantee a minimum cost to the attacker. The implementation has [policy code][policies] that can be tweaked to
-  deal with this.
+   misbehaviour. This is ultimately not foolproof as it's always possible to deploy new accounts and paymasters, but such a
+   system at least guarantee a minimum cost to the attacker. The implementation has [policy code][policies] that can be
+   tweaked to deal with this.
 
 [policies]: https://github.com/HappyChainDevs/happychain/tree/master/apps/submitter/lib/policies
 
@@ -150,12 +152,15 @@ Note that we do not consider the measure outlined in [EIP-7562], which consists 
 paymaster validation is allowed to touch. This is because the Boop system makes it trivial (for its own benefit) to
 differentiate between simulation and actual execution by checking `tx.origin`. [EIP-7562]: https://eip.tools/eip/7562
 
-## Other forms of griefing
+### Other forms of griefing
 
-If an account or paymaster lacks funds to pay for a boop's fees, this will be caught during simulation. If these
-balances were to change between simulation and execution, the check arrives relatively early during onchain execution,
-limiting sequencer loss. The misbehaviour can then be reported and handled via [custom policies][policies].
+If an account or paymaster lacks funds to pay for a boop's fees, this will be caught during simulation.
 
-Paymasters are required to "stake" (deposit) funds with the entry point for a certain duration. These funds are used to
-pay the submitter. The submitter can monitor the remaining stake amount and duration and refuse to service paymaster
-when these values fall below a certain threshold. This is a planned feature in our submitter.
+If these balances were to change between simulation and execution, this can also cause submitter losses. For accounts,
+the same remedies as for malicious invalidation apply.
+
+Paymasters, on the other hand, are required to "stake" (deposit) funds with the entry point for a certain duration.
+These funds are used to pay the submitter. The submitter can monitor the remaining stake amount and duration and refuse
+to service paymaster when these values fall below a certain threshold. This is a planned feature in our submitter.
+
+In both cases, the misbehaviour can then be reported and handled via [custom policies][policies].

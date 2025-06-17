@@ -4,7 +4,10 @@ import { defineConfig } from "vocs"
 export default defineConfig({
     rootDir: "src",
     title: "HappyChain Docs 🤠",
+    logoUrl: "/happychain-logotype.png",
+    ogImageUrl: "https://vocs.dev/api/og?logo=%logo&title=%title&description=%description",
     iconUrl: "/happyicon.png",
+    aiCta: true,
     vite: {
         envPrefix: "HAPPY_",
         envDir: __dirname,
@@ -88,7 +91,7 @@ export default defineConfig({
             collapsed: false,
             items: [
                 {
-                    text: "Overview",
+                    text: "Introduction",
                     link: "/boop",
                 },
                 {
@@ -96,15 +99,19 @@ export default defineConfig({
                     link: "/boop/architecture",
                 },
                 {
-                    text: "Boop Contracts",
+                    text: "Contracts",
                     link: "/boop/contracts",
                 },
                 {
-                    text: "Boop Submitter",
+                    text: "Extensions",
+                    link: "/boop/extensions",
+                },
+                {
+                    text: "Submitter",
                     link: "/boop/submitter",
                 },
                 {
-                    text: "Boop Client SDK",
+                    text: "Client SDK",
                     items: [
                         {
                             text: "Getting Started",

@@ -7,7 +7,8 @@ import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
 /**
- * Options for the {@link loadHappyWallet} function.
+ * Options for the [`loadHappyWallet`](/sdk/js/api/functions/loadHappyWallet) function as well as React and Vue
+ * providers/plugins.
  */
 export type LoadHappyWalletOptions = {
     /**

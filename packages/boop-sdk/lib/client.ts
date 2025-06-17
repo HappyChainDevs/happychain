@@ -1,7 +1,8 @@
-import { type Address, type Hash, type Hex, serializeBigInt } from "@happy.tech/common"
+import { type Address, type Hash, type Hex, type Override, serializeBigInt } from "@happy.tech/common"
 import {
     type Boop,
     type BoopReceipt,
+    type BoopWithOptionalFields,
     type CreateAccountInput,
     type CreateAccountOutput,
     type ExecuteInput,
@@ -28,6 +29,10 @@ import { env } from "./env"
 import type { GetNonceInput, GetNonceOutput } from "./types/GetNonce"
 import { ApiClient } from "./utils/apiClient"
 import { getNonce } from "./utils/getNonce"
+
+export type SubmitClientInput = Override<SubmitInput, { boop: BoopWithOptionalFields }>
+export type ExecuteClientInput = Override<ExecuteInput, { boop: BoopWithOptionalFields }>
+export type SimulateClientInput = Override<SimulateInput, { boop: BoopWithOptionalFields }>
 
 export type BoopClientConfig = {
     submitterUrl: string
@@ -90,7 +95,7 @@ export class BoopClient {
      * impose additional restrictions, such as requesting a higher submitterFee for the replacement
      * transaction.
      */
-    async submit(data: SubmitInput): Promise<SubmitOutput> {
+    async submit(data: SubmitClientInput): Promise<SubmitOutput> {
         const response = await this.#client.post("/api/v1/boop/submit", serializeBigInt(data))
         return this.#getSubmitOutput(response)
     }
@@ -108,7 +113,7 @@ export class BoopClient {
      * The submitter is nonce-aware and will buffer up to a certain amount of boop per nonce track,
      * depending on its configuration. It will submit boop whenever their nonces becomes eligible.
      */
-    async execute(data: ExecuteInput): Promise<ExecuteOutput> {
+    async execute(data: ExecuteClientInput): Promise<ExecuteOutput> {
         const response = await this.#client.post("/api/v1/boop/execute", serializeBigInt(data))
         return this.#getExecuteOutput(response)
     }
@@ -182,7 +187,7 @@ export class BoopClient {
     }
 
     /** {@inheritDoc encodeBoop} */
-    encode(boop: Boop): Hex {
+    encode(boop: BoopWithOptionalFields): Hex {
         return encodeBoop(boop)
     }
 
@@ -192,7 +197,7 @@ export class BoopClient {
     }
 
     /** {@inheritDoc computeBoopHash} */
-    computeBoopHash(chainId: number, boop: Boop): Hash {
+    computeBoopHash(chainId: number, boop: BoopWithOptionalFields): Hash {
         return computeBoopHash(chainId, boop)
     }
 

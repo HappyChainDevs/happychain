@@ -41,6 +41,9 @@ export type {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
+    EIP1474ErrorCodes,
+    HappyRpcError,
+    EthereumRpcError,
 } from "@happy.tech/wallet-common"
 
 export { createHappyPublicClient, createHappyWalletClient } from "./viem"

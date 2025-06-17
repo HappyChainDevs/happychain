@@ -4,8 +4,8 @@ export type HappyUser = {
     /** Connection provider ("rabby", "metamask", "google", ...) */
     provider: string
 
-    /** Type of the controlling EOA (Social, Injected) */
-    type: WalletType
+    /** Type of the controlling EOA (Social, Injected) — constants available in {@link WalletType} */
+    type: "social" | "injected"
 
     // USER DETAILS
 

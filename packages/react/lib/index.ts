@@ -4,4 +4,14 @@ export {
     type HappyWalletProviderProps,
 } from "./components/HappyWalletProvider"
 export { ConnectButton, type ConnectButtonProps } from "./components/Badge"
-export type { HappyProvider, LoadHappyWalletOptions, HappyUser } from "@happy.tech/core"
+export type {
+    HappyProvider,
+    LoadHappyWalletOptions,
+    HappyUser,
+    WalletType,
+    HappyRpcError,
+    EIP1193ErrorCodes,
+    EIP1474ErrorCodes,
+    ProviderRpcError,
+    EthereumRpcError,
+} from "@happy.tech/core"

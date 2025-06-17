@@ -4,7 +4,7 @@ import { type Boop, type BoopLog, type BoopReceipt, Onchain } from "#lib/types"
 import { Address, Bytes, Hash, Int256, UInt32, UInt256 } from "./ark"
 
 export const SBoop = type({
-    "+": "reject", // TODO does this work?
+    "+": "reject",
     account: Address,
     dest: Address,
     payer: Address,

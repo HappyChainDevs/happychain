@@ -1,3 +1,6 @@
+import { entries } from "./records"
+import type { Override } from "./types"
+
 type TypeMap = {
     boolean: boolean
     number: number
@@ -128,4 +131,40 @@ export function pick<T, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> {
     const result = {} as Pick<T, K>
     for (const key of keys) result[key] = obj[key]
     return result
+}
+
+/**
+ * The type of `T` where all potentially undefined members have been made optional.
+ */
+export type UndefinedAsOptional<T extends object> = {
+    [K in keyof T as undefined extends T[K] ? never : K]: T[K]
+} & {
+    [K in keyof T as undefined extends T[K] ? K : never]?: T[K]
+}
+
+/**
+ * Returns a copy of {@link value} with all undefined-valued properties removed, and types it as a version
+ * of the type where all possibly-undefined properties are optional.
+ */
+export function makeUndefinedOptional<T extends object>(value: T): UndefinedAsOptional<T> {
+    const result = {} as T
+    for (const [k, v] of entries(value)) if (v !== undefined) result[k] = v
+    return result as UndefinedAsOptional<T>
+}
+
+/**
+ * Return a new object that merges the properties from {@link a} and {@link b}, with the properties of {@link b}
+ * overriding those of {@link a} whenever there is a conflict.
+ */
+export function merge<A extends object, B extends object>(a: A, b: B): Override<A, B> {
+    return { ...a, ...b }
+}
+
+/**
+ * A version of {@link Object.assign} that asserts the new type of {@link target} after assigning the properties
+ * of {@link source} to it.
+ */
+// @ts-ignore We have to bring the big hammer for this one.
+export function assign<T extends object, S extends object>(target: T, source: S): asserts target is Override<T, S> {
+    Object.assign(target, source)
 }

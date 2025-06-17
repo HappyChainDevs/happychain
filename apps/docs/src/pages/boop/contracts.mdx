@@ -3,6 +3,8 @@ layout: doc
 showOutline: true
 ---
 
+import { ModeImage } from "#src/components/ModeImage.js"
+
 # Boop Contracts Documentation
 
 This documents the functionality of the Boop stack contracts. The [contracts' source code][source] is extremely well documented & readable,
@@ -16,7 +18,7 @@ diagram from that section below for context.
 
 [overview]: /boop/architecture#contracts-overview
 
-![](/contracts-overview.png)
+<ModeImage lightSrc="/contracts-overview.png" darkSrc="/contracts-overview-dark.png" />
 
 ## Boop Structure
 
@@ -87,15 +89,15 @@ struct Boop {
 
 ### Encoding
 
-We typically expect that the operation carried out by an account is a call or send to another address, and the fields
-in the `Boop` structure (`dest`, `value`, `callData`) reflect this — this is however not mandatory, it's up to the
-account implemenation on how to interpret these values. We might refer to "the call carried (or made) by the boop"
-in the rest of the documentation.
+We typically expect that the operation carried out by an account is a call or send to another address, and the fields in
+the `Boop` structure (`dest`, `value`, `callData`) reflect this — this is however not mandatory, it's up to the account
+implemenation how to interpret these values. We might refer to "the call carried (or made) by the boop" in the rest of
+the documentation.
 
 To save on calldata costs, boops are packed tightly when submitted to the chain. The first thing the EntryPoint contract
 does is unpack them into the struct shown above. You can read about the encoding logic in the [`Encoding.sol`
-file][Encoding.sol], which you can vendor if you need to encode/decode boops on the chain yourself. Our JavaScript/TypeScript
-[Client SDK](/boop/sdk) expose [`decodeBoop`] and [`encodeBoop`] functions that do the same.
+file][Encoding.sol], which you can vendor if you need to encode/decode boops on the chain yourself. Our [client
+SDK](/boop/sdk) expose [`decodeBoop`] and [`encodeBoop`] functions that do the same from JavaScript or TypeScript.
 
 [Encoding.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/Encoding.sol
 [`decodeBoop`]: /boop/sdk/api/functions/decodeBoop
@@ -103,31 +105,33 @@ file][Encoding.sol], which you can vendor if you need to encode/decode boops on 
 
 The `extraData` field encodes a key-value dictionary as a series of tightly-packed `[key, length, data]` triplets, where
 the key and the length are 3 bytes, while the data has `length` size. You can use `getExtraData` from
-[`Utils.sol`][Utils.sol] to read from the dictionary on the contract size. Our JavaScript/TypeScript [Client
-SDK](/boop/sdk) exposes an [`encodeExtraData`] function to create extra data from a client.
+[`Utils.sol`][Utils.sol] to read from the dictionary on the contract size. Our [client SDK](/boop/sdk) exposes an
+[`encodeExtraData`] function to create extra data from JavaScript or TypeScript.
 
 [Utils.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/Encoding.sol
 [`encodeExtraData`]: /boop/sdk/api/functions/encodeExtraData
 
 ### Boop Hash
 
-Just like an EVM transaction ban be identified by its hash, so can a Boop. The boop hash is straightforwardly computed as
-the hash of its packed encoding with the chain ID appended. However, for boops whose fees are not paid by the account
-itself, the fee amounts and gas limits are zeroed and the `validatorData` field is set to zero-length before computing
-the hash.
+Just like EVM transactions, boops are identified by their hashes. The boop hash is straightforwardly computed as the
+hash of its packed encoding with the chain ID appended. However, for boops whose fees are not paid by the account
+itself, the fee amounts and gas limits are zeroed before computing the hash. The `validatorData` field is set to
+zero-length before computing the hash in all cases.
 
 Zeroing the fees and gas limits allows the submitter to set the fees for the boop (saving network roundtrips, especially
 in case the user would have to sign over these values before properly submitting), and potentially change them as
 network conditions evolve, while the boop preserves a stale identity. Emptying `validatorData` enables it to carry a
 signature over the boop hash to be verified, or even short-lived authorization data that could change with retries. If
-validation needs access to extra data that must be part of the boop's identity, it can be included in the `extraData`
+validation needs access to extra data that must be part of the boop's identity, it can be included in the [`extraData`]
 dictionary.
 
-The [Boop Client SDK](/boop/sdk) exposes a [`computeBoopHash`] function to compute a Boop's hash. You can see how this
-computation is done on the contract side in the `validate` function of our [`HappyAccount`][HappyAccount] account
-implementation.
+[`extraData`]: #encoding
 
-[HappyAccount]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccount.sol
+The Boop [client SDK](/boop/sdk) exposes a [`computeBoopHash`] function to compute a Boop's hash. You can see how this
+computation is done on the contract side in the `validate` function of our [`HappyAccount`] account implementation.
+
+[`HappyAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccount.sol
+[`computeBoopHash`]: /boop/sdk/api/functions/computeBoopHash
 
 ## EntryPoint Contract
 
@@ -137,38 +141,56 @@ Any boop being sent must transit via the `submit` function of the `EntryPoint` c
 [entrypoint-source]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
 
 Note that `submit` can be called at the top-level of an EVM transaction, but it can also be called by other smart
-accounts! This can be notably used to enable boop batching between multiple users (though note that once a boop is
-public, anybody can resubmit it independently).
+accounts! This can be notably used to enable boop batching across multiple accounts (though note that once a boop is
+public, anybody can resubmit it independently, and there is no atomicity guarantees in any case).
 
 At a high level, this function performs the following tasks:
 
-1. Validates the gas price, checks the paymaster's staking balance (if a paymaster is specified), validates and updates the
+1. It validates the gas price, checks the paymaster's staking balance (if a paymaster is specified), validates and updates the
 account nonce.
 
-2. Calls the account to validate the boop. (`IAccount.validate`, see below)
+2. It calls the account to validate the boop. (`IAccount.validate`, see below)
 
-3. Calls the paymaster to validate payment if a paymaster is specified. (`IPaymaster.validatePayment`, see below)
+3. It calls the paymaster to validate payment if a paymaster is specified. (`IPaymaster.validatePayment`, see below)
 
-4. Calls the account to execute the call specified by the boop. (`IAccount.execute`, see below)
+4. It calls the account to execute the call specified by the boop. (`IAccount.execute`, see below). It is possible the
+   call carried by the boop will fail — however `execute` itself is not allowed to fail. Even if the carried call fails,
+   execution proceeds, fees are paid and the nonce is incremented. This mimics the behaviour of EVM transactions, and
+   ensures that submitters are not on the hook for reverts in arbitrary external contracts.
 
-5. Collects payment from the paymaster or account, if the transaction is not sponsored by the submitter.
-Payment is taken from the paymaster's stake or solicited from the account by calling `IAccount.payout`.
+5. It collects payment from the paymaster or account if the transaction is not sponsored by the submitter. Payment is
+   taken from the paymaster's stake or solicited from the account by calling `IAccount.payout`.
 
-The EntryPoint has special provisions for simulation. If simulated with an EVM transaction sender (`tx.origin`) with
-the zero address, the `submit` function will enter simulation mode, omit certain checks (gas price & nonce) and will not
-use the provided gas limits. It will also return data that includes useful information (for instance, if the nonce
-validation failed because of a future nonce, as well as estimated gas limits). This enables us to get all the information
-we need to validation a boop and "fill in" missing values like gas limits in a single call to the blockchain node.
+The `EntryPoint` has special provisions for simulation. If simulated with an EVM transaction sender (`tx.origin`) with the
+zero address, the `submit` function will enter simulation mode, omit certain checks (gas price & nonce) and will not use
+the provided gas limits. It will also return data that includes useful information (for instance, if the nonce
+validation failed because of a future nonce, as well as estimated gas limits). This enables us to get all the
+information we need to validate a boop and "fill in" missing values like gas limits in a single call to the blockchain
+node.
+
+Finally, the `EntryPoint` manages the deposits of paymasters, which are used to pay back submitters. This is implemented
+in [`Staking.sol`].
+
+[`Staking.sol`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/Staking.sol
+
+## The `BoopSubmitted` Event
+
+If a boop is successfully included onchain (nonce incremented), a `BoopSubmitted` event is emitted from the EVM
+transaction that carries it. Its topics include all the field in the boop, and it can be used for indexing boops.
+
+It also conveniently shows up at the top of the logs list on block explorers, and is a great way to get some level of
+observability for boops without needing any custom block explorer support.
 
 ## Account Contract
 
-The user can use any account implementation of his choice that implement the [`IAccount`][IAccount] interface. We
-provide our own [`HappyAccount`][HappyAccount] compliant implementation — note that despite the name, the implementation
-is not HappyChain-specific.
+The user can use any account implementation of his choice that implement the [`IAccount`] or
+[`IExtensibleAccount`] interface. We provide our own [`HappyAccount`] compliant
+implementation — note that despite the name, the implementation is not HappyChain-specific.
 
-[IAccount]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
+[`IAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
+[`IExtensibleAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IExtensibleAccount.sol
 
-Here are the core functions the account must implement, refer to [interface][IAccount] for more details, including
+Here are the core functions the account must implement, refer to [interface][`IAccount`] for more details, including
 support for [EIP-1271 contract signatures][eip1271]
 
 [eip1271]:https://eips.ethereum.org/EIPS/eip-1271
@@ -179,9 +201,9 @@ support for [EIP-1271 contract signatures][eip1271]
   cases, `validate` can return `UnknownDuringSimulation` in simulation mode to let the EntryPoint proceed with execution.
 
 - `execute(Boop)` — This executes the operation specified by the boop. The function returns a structure indicating the
-  outcome: whether the operation succeeded, reverted, or whether the account rejected the operation (typically because
-  of malformed data). Since the function is not allowed revert, if it calls external contracts that may revert, it must
-  catch the revert.
+  outcome: whether the operation succeeded, reverted, or whether the account rejected the operation (typically because of
+  malformed data). Since the function is not allowed to revert, it must catch reverts if calling external contracts that
+  may revert. As indicated earlier, even if the call fails, fees will be paid and the nonce will be incremented.
 
 - `payout(amount)` — This functions pays the entrypoint the given amount in wei — it's implementation should strictly be
   `payable(tx.origin).call{value: amount}("");`.
@@ -193,9 +215,14 @@ These functions share a few more things in common:
 - They should consume roughly the same amount of gas during simulation as they do during actual onchain execution (as
 the gas limits are estimated from the simulation run).
 
+To support [account extensions][extensions], accounts should implement [`IExtensibleAccount`] which extends [`IAccount`]
+with extension-related functions. See [the Extensions page][extensions] for more information.
+
+[extensions]: /boop/extensions
+
 ## Paymaster Contract
 
-Paymasters are contracts that can pay transactions fees (to the submitter, which fronts them) on behalf of accounts.
+Paymasters are contracts that can pay transaction fees to the submitter (which fronts them) on behalf of accounts.
 Any account can use paymasters, which are specified in the `payer` field of the `Boop` structure.
 
 Paymaster contracts must implement the [`IPaymaster`][IPaymaster] interface.
@@ -218,10 +245,12 @@ so refer to the account section or the source code for more information.
 ## Bundling
 
 Boop does not build in support for bundling multiple boops from different account. However this can be trivially
-achieved, since a smart contract can call into the EntryPoint and every boop is given its own gas limit. This is
-currently not a priority feature, but reach out at hello@happy.tech if interested.
+achieved at the contract level — for instance via a [multicall] — since a smart contract can call into the EntryPoint
+and every boop is given its own gas limit. It is a more involved feature at the submitter level. This is currently not a
+priority feature, but reach out at hello@happy.tech if interested.
 
-Multiple boops from a single account can be bundled via the `BatchCallExecutor` extension — however this is something
+Multiple boops from a single account can be bundled via the [`BatchCallExecutor` extension][batch-calls] — however this is something
 initiated by the user — the submitter requires no awareness of it.
 
-TODO link to extension
+[batch-calls]: /boop/extensions#using-the-batchcallexecutor
+[multicall]: https://github.com/mds1/multicall3

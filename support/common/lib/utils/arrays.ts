@@ -3,7 +3,7 @@
  *
  * Besides use as a constructor, it's also suitable to:
  * - filter out undefined/null elements from an existing array: `array(...myArray)`
- * - include an element in an array
+ * - include an element in an array only if it is defined: `[1, ...array(nullOrNumber)]`
  */
 export function array<T>(...array: (T | undefined | null)[]): T[] {
     return array.filter((it) => it !== undefined && it !== null)

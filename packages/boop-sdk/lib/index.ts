@@ -1,5 +1,5 @@
 export { BoopClient } from "./client"
-export type { BoopClientConfig } from "./client"
+export type { BoopClientConfig, SimulateClientInput, SubmitClientInput, ExecuteClientInput } from "./client"
 
 export { ExtensionType, encodeExtraData, ExtraDataKey, type ExtraData } from "./boops"
 
@@ -33,6 +33,7 @@ export {
     // Generic
     //
     type Boop,
+    type BoopWithOptionalFields,
     type BoopReceipt,
     type BoopLog,
     type EntryPointOutput,

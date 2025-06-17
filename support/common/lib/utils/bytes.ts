@@ -26,7 +26,9 @@ export function toBytes(data: string | bigint | number | undefined, bytes: numbe
 }
 
 /**
- * Prefixes the data with a 4 byte length, and returns the full string
+ * Returns a copy of the data prefixed with its length in bytes (we assume hex encoding, so dividing the length of
+ * {@link data} by 2 after optionally stripping "0x"), encoded over {@link lengthBytes} bytes (defaults to 4).
+ *
  * e.g. toDynamicLengthBytes('ff')  => '00000001ff'
  * e.g. toDynamicLengthBytes('fff') => '000000020fff'
  */

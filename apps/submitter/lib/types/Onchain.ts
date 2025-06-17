@@ -125,8 +125,8 @@ export const Onchain = {
 export const { Success, ...OnchainFail } = Onchain
 
 /**
- * {@inheritDoc Onchain}
- * cf. {@link SubmitterError}
+ * @inheritDoc Onchain
+ * cf. {@link Onchain}
  */
 export type OnchainStatus = (typeof Onchain)[keyof typeof Onchain]
 
