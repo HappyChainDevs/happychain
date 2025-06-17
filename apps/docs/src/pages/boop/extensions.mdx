@@ -7,27 +7,27 @@ showOutline: true
 
 Boop supports two kind of extensions: validation extensions and execution extensions.
 
-- Validation extension are triggered at the account's discretion in his [`validate(Boop)`][account-overview] function.
-  They enable permissioning certain operations differently. Validation extension implement their own version of
+- Validation extensions are triggered at the account's discretion in the [`validate(Boop)`][account-overview] function.
+  They enable permissioning certain operations differently. Validation extensions implement their own version of
   `validate(Boop)`, with the same signature and specification.
 
 [account-overview]: /boop/contracts#account-contract
 
-- Execution extensions are triggered at the account's discretion in his [`execute(Boop)`][account-overview] function.
-  They enable customizing how certain operations are run. Execution extension implement their own version of
+- Execution extensions are triggered at the account's discretion in the [`execute(Boop)`][account-overview] function.
+  They enable customizing how certain operations are run. Execution extensions implement their own version of
   `execution(Boop)`, with the same signature and specification.
 
-A typical account implementationg like the [`HappyAccount`] will have a standard validation and execution path,
+A typical account implementation like the [`HappyAccount`] will have a standard validation and execution path,
 usually verifying some kind of signature for validation and carrying off the call specified in the boop's `dest`,
-`callData` and `value` fields for execution. Extensions allows it to do different things in certain cases.
+`callData` and `value` fields for execution. Extensions allow it to do different things in certain cases.
 
 [`HappyAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccount.sol
 
 We currently maintain two extensions:
 
 - The [`SessionKeyValidator`] enables account to authorize transactions to specific addresses to be signed by another EOA.
-  We use this to implement [session keys] in the [Happy Wallet], enable a user to authorize an app to make transactions on
-  his behalf, but the principle can be using for any kind of simple delegation with target address as the single criteria.
+  We use this to implement [session keys] in the [Happy Wallet], enabling a user to authorize an app to make transactions on
+  their behalf, but the principle can be using for any kind of simple delegation with a given target address as the singular criteria.
 
 - The [`BatchCallExecutor`] enables batching multiple contract calls or transfers into a single Boop. It's the equivalent
   of a [multicall], but more powerful as the `msg.sender` on these calls will be account itself, just like for a normal
@@ -46,7 +46,7 @@ See the sections below on [using the `SessionKeyValidator`][using-session-key] a
 
 ## Accepting Extensions
 
-To support extensions, an account must implement [`IExtensibleAccount`] instead of [`IAccount`] (which it extends).
+To support extensions, an account must implement [`IExtensibleAccount`] instead of [`IAccount`] (which the former extends).
 See the [`HappyAccount`] for an example of this.
 
 [`IExtensibleAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IExtensibleAccount.sol
@@ -94,7 +94,7 @@ is reserved to specify the address of a custom executor.
 [`ICustomExecutor`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/ICustomExecutor.sol
 
 During `validate` and `execute` respectively, the account should look up if these keys exist, and use the address to
-make a call to the `validate` or `executed` function of the extension, respectively.
+make a call to the `validate` or `execute` function of the extension, respectively.
 
 Of note, it's possible to specify garbled values for the reserved keys (i.e. not exactly 20 bytes) or addresses that are
 not registered extensions. We provide the standard `InvalidExtensionValue` and `ExtensionNotRegistered` errors so that
@@ -108,7 +108,7 @@ Extension contracts themselves should implement the [`ICustomValidator`] or [`IC
 interfaces are straightforward: they must respectively implement a `validate(Boop)` or `execute(Boop)` function, whose
 signature and behaviour should be identical to the corresponding function in [the account itself][account-overview].
 
-An execution extension can make calls on behalf of the account by calling ` executeCallFromExecutor` on the account.
+An execution extension can make calls on behalf of the account by calling `executeCallFromExecutor` on the account.
 
 See the [`SessionKeyValidator`] and [`BatchCallExecutor`] extensions source code for implementation examples.
 
@@ -122,7 +122,7 @@ See the [`SessionKeyValidator`] and [`BatchCallExecutor`] extensions source code
    signing key and the authorized target address. This *must* be sent as a boop, as it registers the key for `msg.sender`.
 
 3. You can now send boops with `dest` as the authorized target address. Specify the session key validator address as the
-   value for `ICustomValidator.VALIDATOR_KEY` (`0x000001`). The account will use the session key contract to validator the
+   value for `ICustomValidator.VALIDATOR_KEY` (`0x000001`). The account will use the session key contract to validate the
    call.
 
 4. You can remove a session key by calling `removeSessionKey` on the validator, and you can uninstall the extension via
@@ -148,14 +148,14 @@ Happy Wallet will automatically route them to use the registered session key.
    `ICustomExecutor.EXECUTOR_KEY` (`0x000001`) `extraData` key. The calls you want to make should be encoded as a tightly
    packed array of [`CallInfo`][Types.sol] structure (`address dest`, `uint256 value`, `bytes callData`) \*, and provided
    as the value for the ` BatchCallExecutor.BATCH_CALL_INFO_KEY` (`0x000100`) `extraData` key. The `dest`, `value` and
-   `callData` fields of the boopt itself are ignored and should be zeroed/empty.
+   `callData` fields of the boop itself are ignored and should be zeroed/empty.
 
    \* The memory layout for batching calls is: 20 bytes for the first destination, 32 bytes for the first value, 32 bytes
    for the calldata size of the first calldata, then the first calldata bytes, then repeat for the second batched call and
    onwards. The total length is encoded in the `extraData` key length.
 
    Note: in the future we may change the length of `CallInfo` size to be encoded on 3 bytes instead of 32, since the total
-   length of an `extraData` key's value is encoded on 3 bytes anyway (allowing for up to 16MB values, which is more than
+   length of an `extraData` key's value is encoded on 3 bytes anyway (allowing for up to 16MB values, which is more than a
    node will accept today anyway).
 
 3. You can uninstall the extension via `removeExtension` on the account.

@@ -94,7 +94,7 @@ This is the traditional flow that web3 users are familiar with.
 > built-in account abstraction support at the UI level, and so the usual transaction request is replaced by a
 > signing request over a byte string representing a boop. It's not ideal to not
 > know what you are signing, and so we will display our own pre-confirmation popup before routing
-> the user to his injected wallet.
+> the user to their injected wallet.
 
 ### Social Wallet — Deriving a Private Key
 
@@ -139,14 +139,14 @@ When using the social wallet, the mechanism for handling requests involves three
 
 The use of an iframe is required for security reasons: the local browser storage associated with the
 iframe's domain holds the local share, which should not accessible to third-party applications. The
-iframe code also holds user information (like his social account name) that he might not want to
+iframe code also holds user information (like their social account name) that he might not want to
 automatically share with the application — an explicit authorization by connecting to the
 application is required.
 
 > Depending on which social wallet provider we end up using, the local share might actually be
 > stored in another iframe, nested inside the Happy Account iframe.
 
-The iframe also enables to user to log in only once to his social account, then to connect to any
+The iframe also enables to user to log in only once to their social account, then to connect to any
 app by simply clicking a confirmation button in the popup.
 
 The use of a popup is required for anything that requires the user's approval (connecting to an app,
@@ -208,7 +208,7 @@ lives in `@happy.tech/wallet-common`.
 
 There are two separate concepts here:
 
-1. *Authentication* refers to the user being logged into his Happy Account in the iframe.
+1. *Authentication* refers to the user being logged into their Happy Account in the iframe.
 2. *Connection* refers to the user connecting the app to the Happy Account.
 
 This is very analogous to how Metamask & co. work: authentication is akin to selecting an account
