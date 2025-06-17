@@ -63,7 +63,7 @@ export async function delayed<T>(timeout: number, value: Lazy<MaybePromise<T>>):
 export async function waitForCondition(condition: Fn, timeoutMs = 30_000, intervalMs = 50): Promise<void> {
     if (await condition()) return
     const pwr = Promise.withResolvers()
-    const interval = setInterval(async () => (await condition()) && pwr.resolve(), intervalMs)
+    const interval = setInterval(async () => (await condition()) && pwr.resolve(undefined), intervalMs)
     try {
         await Promise.race([pwr.promise, sleep(timeoutMs)])
     } finally {

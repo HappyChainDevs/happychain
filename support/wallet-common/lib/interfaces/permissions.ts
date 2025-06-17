@@ -3,6 +3,18 @@ import type { EIP1193Parameters } from "viem"
 
 // https://eips.ethereum.org/EIPS/eip-1474
 
+// Disabled - These are 'disabled' methods. they are added here so that the user is not presented
+// with a confirmation screen, and 'permissionless' requests will directly throw an error if they
+// are called. To enable the popup for these methods, remove them here (they should already be present
+// in the unsafeList)
+const disabledInProdList = import.meta.env.PROD
+    ? [
+          "wallet_addEthereumChain", // https://eips.ethereum.org/EIPS/eip-3085
+          "wallet_switchEthereumChain", // https://eips.ethereum.org/EIPS/eip-3326
+          "wallet_updateEthereumChain", // https://eips.ethereum.org/EIPS/eip-2015
+      ]
+    : []
+
 /**
  * This is the list of methods that will never require a user confirmation.
  * Most such as eth_chainId are fully public RPC calls.
@@ -10,6 +22,8 @@ import type { EIP1193Parameters } from "viem"
  * Some such as wallet_revokePermissions don't make sense if a user isn't connected, but are still safe to call.
  */
 const safeList = new Set([
+    ...disabledInProdList,
+
     // happychain methods
     HappyMethodNames.USER, // => returns the current connected user if permissions are granted and user is connected
 
