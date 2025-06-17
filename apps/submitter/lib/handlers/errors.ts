@@ -101,7 +101,7 @@ export function outputForRevertError(
                         error: "Account rejected the boop because it requested an extension that was not registered.",
                     }
                 case "UnknownDuringSimulation": {
-                    logger.error("escaped UnknownDuringSimulation — BIG BUG")
+                    logger.error("escaped UnknownDuringSimulation — this is an account bug")
                 }
             }
 
@@ -146,7 +146,7 @@ export function outputForRevertError(
                     }
                 }
                 case "UnknownDuringSimulation": {
-                    logger.error("escaped UnknownDuringSimulation — BIG BUG")
+                    logger.error("escaped UnknownDuringSimulation — this is a paymaster bug")
                 }
             }
             return {
