@@ -255,7 +255,7 @@ type PermissionRequestEntry = {
 /**
  * Converts a permission spec into an array of permission request entries.
  */
-function permissionRequestEntries(permissions: PermissionsRequest): PermissionRequestEntry[] {
+export function permissionRequestEntries(permissions: PermissionsRequest): PermissionRequestEntry[] {
     const entries: [string, { [caveatType: string]: unknown }][] =
         typeof permissions === "string" //
             ? [[permissions, {}]]
