@@ -275,7 +275,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
     /**
      * This function abstracts common boilerplate for calling {IAccount.validate} and
-     * [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment).
+     * {IPaymaster.validatePayment}.
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
