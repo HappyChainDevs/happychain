@@ -85,7 +85,7 @@ export class HappyProviderImplem extends SafeEventEmitter implements HappyProvid
 
     private user: HappyUser | undefined
     private authState: AuthState = AuthState.Initializing
-    private lastConnectedType: WalletType | undefined
+    private lastConnectedType: WalletType[keyof WalletType] | undefined
 
     private iframeMsgBus: EventBus<MsgsFromWallet, MsgsFromApp>
 

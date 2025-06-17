@@ -1,11 +1,11 @@
 import type { Hex } from "@happy.tech/common"
 import { toBytes, toDynamicLengthBytes } from "@happy.tech/common"
-import type { Boop } from "#lib/types"
+import type { BoopWithOptionalFields } from "#lib/types"
 
 /**
  * Encodes a Boop into the encoded {@link Hex} form for onchain submission.
  */
-export function encodeBoop_noTrace(boop: Boop): Hex {
+export function encodeBoop_noTrace(boop: BoopWithOptionalFields): Hex {
     // Static fields
     const accountHex = boop.account.slice(2)
     const destHex = boop.dest.slice(2)

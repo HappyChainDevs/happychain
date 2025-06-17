@@ -1,6 +1,6 @@
 import { type Hash, getProp } from "@happy.tech/common"
 import { encodePacked, keccak256 } from "viem/utils"
-import type { Boop, BoopGasInfo } from "#lib/types"
+import type { Boop, BoopGasInfo, BoopWithOptionalFields } from "#lib/types"
 import { encodeBoop_noTrace } from "#lib/utils/boop/encodeBoop"
 
 export const zeroGasData = {
@@ -15,9 +15,9 @@ export const zeroGasData = {
 /**
  * Computes a boop hash, which is compute over a Boop and the chain ID.
  */
-export function computeBoopHash_noTrace(chainId: bigint | number, boop: Boop): Hash {
+export function computeBoopHash_noTrace(chainId: bigint | number, boop: BoopWithOptionalFields): Hash {
     // Don't include validator data in the signature so that pre & post signing are the same.
-    const boopToHash: Boop = { ...boop, validatorData: "0x" }
+    const boopToHash = { ...boop, validatorData: "0x" }
 
     if (boop.payer === boop.account) {
         // For self-paying boops, all fields have to be specified!
@@ -30,5 +30,5 @@ export function computeBoopHash_noTrace(chainId: bigint | number, boop: Boop): H
         Object.assign(boopToHash, zeroGasData)
     }
 
-    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop_noTrace(boopToHash), BigInt(chainId)]))
+    return keccak256(encodePacked(["bytes", "uint"], [encodeBoop_noTrace(boopToHash as Boop), BigInt(chainId)]))
 }

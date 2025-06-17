@@ -3,6 +3,9 @@
     "private": true,
     "version": "0.2.0",
     "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
     "devDependencies": {
         "@happy.tech/boop-sdk": "workspace:0.0.0",
         "@happy.tech/configs": "workspace:0.1.0",

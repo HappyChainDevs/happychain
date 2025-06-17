@@ -43,12 +43,13 @@ We use the [viem](https://viem.sh) library to provide auxiliary functions.
 
 ```ts twoslash
 // NOTE: The types work in Typescript, but twoslash can't puzzle them output, so we have to help it A LOT.
-import type { UnionFill, Address, Hex } from "@happy.tech/common"
-import  type { Boop, CreateAccountInput, ExecuteInput } from "@happy.tech/boop-sdk"
+import type { UnionFill, Address, Hash } from "@happy.tech/common"
 // ---cut---
-import { BoopClient } from "@happy.tech/boop-sdk"
+import {BoopClient, Onchain } from "@happy.tech/boop-sdk"
+import type { BoopWithOptionalFields } from "@happy.tech/boop-sdk"
 import { encodeFunctionData, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { happychainTestnet } from "viem/chains"
 import { parseAbi } from "viem/utils"
 
 const ownerPrivateKey = generatePrivateKey()
@@ -63,18 +64,21 @@ const boopClient = new BoopClient({
 })
 // ---cut-start---
 }
-type BoopReceipt = {}
 type CreateAccountInput = {}
-type ExecuteInput = {}
-type CreateAccountOutput = UnionFill<{ address: Address } | { description: string }>
-type ExecuteOutput = UnionFill<{ receipt: BoopReceipt } | { description: string }>
+type ExecuteClientInput = {}
+type OnchainStatus = {}
+type BoopReceipt = { status: OnchainStatus }
+type CreateAccountOutput = UnionFill<{ address: Address } | { error: string }>
+type ExecuteOutput = UnionFill<{ receipt: BoopReceipt } | { error: string }>
+// type ExecuteOutput = { receipt: BoopReceipt, error: undefined } | { error: string, receipt: undefined }
 const boopClient = {
     createAccount(input: CreateAccountInput): CreateAccountOutput { return null as any },
-    encode(boop: Boop): Hex { return null as any},
-    execute(input: ExecuteInput): ExecuteOutput { return null as any },
+    computeBoopHash(chainId: number, boop: BoopWithOptionalFields): Hash { return null as any},
+    execute(input: ExecuteClientInput): ExecuteOutput { return null as any },
 }
 // ---cut-end---
-const { address, description: error1 }
+
+const { address, error: error1 }
     = await boopClient.createAccount({ owner: owner.publicKey })
 if (address) {
     console.log("Your account address is: ", address)
@@ -82,27 +86,31 @@ if (address) {
     throw Error("Could not create account: " + error1)
 }
 
-// TODO make fields optional in SDK:
-//  gas fields, nonceTrack, value, extraData, validatorData
 const unsignedBoop = {
     // mock ERC20 contract deployed on HappyChain Sepolia
-    dest: 0x02206fac6469b2f59fc2bb9d3bc181fbe703f8b7,
+    dest: "0x02206fac6469b2f59fc2bb9d3bc181fbe703f8b7",
     account: address,
+    nonceTrack: 0n,
     nonceValue: 0n, // first one!
+    value: 0n,
     payer: zeroAddress, // the HappyChain submitter will pay for it
     callData: encodeFunctionData({
         abi: parseAbi(["function mint(address _account, uint256 _amount)"]),
         functionName: "mint",
         args: [address, 100n],
     }),
-} as Boop // TODO
+    validatorData: "0x",
+    extraData: "0x",
+} satisfies BoopWithOptionalFields
 
-// TODO needs hash
-const boop = await owner.sign({ hash: boopClient.encode(unsignedBoop) })
+const signature = await owner.sign({
+    hash: boopClient.computeBoopHash(happychainTestnet.id, unsignedBoop)
+})
+const boop = { ...unsignedBoop, validatorData: signature }
 
 // No need to estimate gas or simulate — the submitter takes care of it!
-const { receipt, description: error2 } = await boopClient.execute({ boop })
-if (receipt) {
+const { receipt, error: error2 } = await boopClient.execute({ boop })
+if (receipt?.status === Onchain.Success) {
     console.log(
         "You are now 100 MockTokenA richer! " +
         "Here's a receipt to prove it: ", receipt)
@@ -111,14 +119,42 @@ if (receipt) {
 }
 ```
 
-## Methods Overview
+## API Overview
 
-TODO
+See the [API reference](/boop/sdk/api) for a full reference.
 
-- `simulate`
-- `getNonce`
-- `execute`
-- `submit`
-- `waitForReceipt`
-- `getState`
-- `getPending`
+The most important part of the API is the [`BoopClient`]. You instantiate it with a submitter URL and a RPC URL (the RPC
+URL requirement will be removed soon), and then you can invoke its methods to make calls to the
+[submitter](/boop/submitter)'s [REST API](/boop/rest).
+
+[`BoopClient`]: /boop/sdk/api/classes/BoopClient
+
+The following methods are available, refer to the [submitter] and [REST API] documentation pages for more details:
+
+- [`simulate`](/boop/sdk/api/classes/BoopClient#simulate)
+- [`getNonce`](/boop/sdk/api/classes/BoopClient#getNonce)
+- [`execute`](/boop/sdk/api/classes/BoopClient#execute)
+- [`submit`](/boop/sdk/api/classes/BoopClient#submit)
+- [`waitForReceipt`](/boop/sdk/api/classes/BoopClient#waitForReceipt)
+- [`getState`](/boop/sdk/api/classes/BoopClient#getState)
+- [`getPending`](/boop/sdk/api/classes/BoopClient#getPending)
+
+The SDK also exports all the types and status codes necessary to interpret the return values of these methods.
+
+Additionally, the package exposes utility methods to manipulate boops, namely:
+
+- [`computeBoopHash`](/boop/sdk/api/functions/computeBoopHash)
+- [`decodeBoop`](/boop/sdk/api/functions/decodeBoop)
+- [`encodeBoop`](/boop/sdk/api/functions/encodeBoop)
+- [`encodeExtraData`](/boop/sdk/api/functions/encodeExtraData)
+- [`updateBoopFromSimulation`](/boop/sdk/api/functions/updateBoopFromSimulation)
+
+The purpose of these various methods can be understood from reading the rest of the docs
+(if in doubt, use the search box!).
+
+`updateBoopFromSimulation` deserves a special explanation: it is used for the flow where you simulate a transaction
+before submitting it (either via `execute` or `submit`). This flow is mandatory for self-payout boops, where you have to
+sign over the fees and gas limits — which you can retrieve via `simulate`.
+
+You can then pass in the (successful) simulation results and the simulated boop into the function to obtain an updated
+version of the boop suitable for signing and submitting.

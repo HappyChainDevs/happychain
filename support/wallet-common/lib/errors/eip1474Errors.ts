@@ -3,15 +3,15 @@
 import { HappyRpcError, type HappyRpcErrorArgs } from "./HappyRpcError"
 
 /**
- * Standard Ethereum RPC Error Codes {@link https://eips.ethereum.org/EIPS/eip-1474#error-codes}
+ * Standard [Ethereum RPC Error Codes](https://eips.ethereum.org/EIPS/eip-1474#error-codes)
  *
  * In EIP1474, "standard" means that the error is defined in the JSON-RPC 2.0 spec, "non-standard"
  * means it is defined by EIP1474.
  *
  * Additionally, JSON-RPC providers define their own error codes (and possibly node implementations too).
  * Examples:
- * - {@link Infura | https://docs.metamask.io/services/reference/unichain/json-rpc-methods/#json-rpc-errors}
- * - {@link QuickNode | https://www.quicknode.com/docs/base/error-references#evm-rpc-error-codes}
+ * - [Infura](https://docs.metamask.io/services/reference/unichain/json-rpc-methods/#json-rpc-errors)
+ * - [QuickNode](https://www.quicknode.com/docs/base/error-references#evm-rpc-error-codes)
  *
  * See also {@link EIP1193ErrorCodes}
  */

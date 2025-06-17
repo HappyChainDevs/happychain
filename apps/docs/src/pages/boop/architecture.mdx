@@ -3,17 +3,21 @@ layout: doc
 showOutline: true
 ---
 
+import { ModeImage } from "#src/components/ModeImage.js"
+
 # Boop Architecture
 
-Check [the overview](/index) for a quick intro to Boop. This documents details the architecture of the system.
+Check [the introduction](/boop) for a quick intro to Boop. This documents details the architecture of the system.
 
 ## Background
 
 The goal of an account abstraction system is very simple: a user wants to make transactions,
 but their account is a smart contract. In the Boop system, we call such transactions "boops".
 
-This immediately runs into a problem: a boop needs to be triggered by an EOA transaction, which has to pay fees.
-Ideally, we don't want the user to both maintain his smart account and an EOA to pay fees.
+This immediately runs into a problem: a boop needs to be triggered by an EOA\* transaction, which has to pay fees.
+Ideally, we don't want the user to maintain balances on both his smart account and an EOA to pay fees.
+
+\* An "externally owned account", i.e. an account controlled by private key.
 
 To avoid this you need a relayer: someone that will trigger the smart account transaction on behalf of the user, and
 will either front the fees, to be repaid by the smart account or a third-party (a "paymaster"), or will sponsor the fees
@@ -21,18 +25,23 @@ itself. In Boop, we call this relayer "the submitter".
 
 The Boop system involves the following "sites":
 
-- the user that wants to make transaction from their device
-- a submitter that fronts or sponsors the transaction costs
-- a blockchain where the operation happens (and more concretely, a blockhain node that the submitter talks to)
+- A device form which the user wants to make transactions.
+- A submitter that fronts or sponsors the transaction costs.
+- A blockchain where the operation happens (and more concretely, a blockhain node that the submitter talks to).
 
 On the blockchain itself, there are a few contracts involved:
 
-- The EntryPoint contract, that orchestrates boop execution
-- The user's account contract
-- (optionally) a paymaster contract that pays for the user's transaction fees (refunding the submitter)
+- The [`EntryPoint`] contract, that orchestrates boop execution.
+- The user's [account contract].
+- (optionally) A [paymaster contract] that pays for the user's transaction fees (refunding the submitter).
+
+[`EntryPoint`]: /boop/contracts#entrypoint-contract
+[account contract]: /boop/contracts#account-contract
+[paymaster contract]: /boop/contracts#paymaster-contract
 
 Finally, there are three options for who *actually* pays the fees (i.e. refunds the submitter):
-- The account pays its account itself, in which case the `payer` boop field will be set to the account's address.
+
+- The account pays its fees itself, in which case the `payer` boop field will be set to the account's address.
 - The submitter sponsors the boop, in which case the `payer` field is set to the zero address. No refund need to occur.
 - A paymaster contract sponsors the boop, in which case the `payer` field is set to its address.
 
@@ -41,7 +50,7 @@ Finally, there are three options for who *actually* pays the fees (i.e. refunds 
 Here's a diagram of how a Boop flows between the locations we mentioned in the previous section.
 In particular, this is an `execute` endpoint request to the submitter, for a submitter-sponsored boop.
 
-![](/boop-execute.png)
+<ModeImage lightSrc="/boop-execute.png" darkSrc="/boop-execute-dark.png" />
 
 - The user sends an `execute` request to the submitter, to which a boop (transaction) is attached.
 
@@ -50,7 +59,7 @@ In particular, this is an `execute` endpoint request to the submitter, for a sub
     - This step is not strictly necessary but it is usual: the submitter does not want to pay fees for a failing boop.
 
     - Simulation is also necessary if the transaction is sponsored, in which case the user is allowed to omit fee
-      information and gas limits — and this is the case here.
+      information and gas limits — as is the case here.
 
     - The simulation result from the contract will provide appropriate gas limit values.
 
@@ -81,8 +90,8 @@ In particular, this is an `execute` endpoint request to the submitter, for a sub
 Boop execution (besides any call that would be specified by the boop itself) involve two or three contracts:
 
 - The [`EntryPoint`] contract, that orchestrates the execution of the boop.
-- An account contract implementing [`IAccount`], which validates and excutes the boop.
-- An optional paymaster contract (specified in the `payer` field of the boop) implementing [`IPaymaster`], which pays
+- An [account contract] implementing [`IAccount`], which validates and excutes the boop.
+- An optional [paymaster contract] (specified in the `payer` field of the boop) implementing [`IPaymaster`], which pays
   the boop's fees (to the submitter, which fronts the blockchain fees and may charge his own fee).
 
 [`EntryPoint`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
@@ -91,7 +100,7 @@ Boop execution (besides any call that would be specified by the boop itself) inv
 
 Here's a diagram that shows the interaction between those:
 
-![](/contracts-overview.png)
+<ModeImage lightSrc="/contracts-overview.png" darkSrc="/contracts-overview-dark.png" />
 
 There are three possible flows:
 
@@ -101,6 +110,11 @@ There are three possible flows:
 
 For more details about how the Boop contract function and can be implemented, refer to the [Boop
 Contracts](/boop/contracts) section.
+
+## Account Extensions
+
+Accounts can be extends with validation and execution extensions, which can be modify how boops are validated and
+executed. Refer to the [Extensions page](/boop/extensions) for more information.
 
 ## Account Deployment
 
@@ -139,7 +153,7 @@ need a funded EOA to pay the blockchain fees.
 
 The Boop contracts don't need a standard submitter to be used, anybody can come up with their own implementation.
 
-Happy Devs however maintains an [open-source submitter implementation][submitter], which exposes a REST API to
+Happy Devs maintains an [open-source submitter implementation][submitter], which exposes a REST API to
 submit boops and query boop-related information. Below is an overview of the exposed endpoints, which a fully specified
 on the [REST API page](/boop/rest).
 
@@ -164,9 +178,14 @@ on the [REST API page](/boop/rest).
 - `/api/v1/boop/getPending` — returns all boops being processed for a given account, i.e. all the boops that are
   awaiting either being submitted to the chain, or for their receipt to be available.
 
-Our JavaScript/TypeScript [Boop Client SDK](/boop/sdk) provides typed functions to easily make calls to our submitter
-implementation (or to any other implementation that exposes the same REST API).
+The Boop [client SDK](/boop/sdk) provides typed functions to easily make calls to our submitter implementation (or to
+any other implementation that exposes the same REST API) from JavaScript or TypeScript.
 
 To learn more about the submitter implementation, refer to the [Boop Submitter](/boop/submitter) section.
 
 ## Boop Client SDK Overview
+
+The Boop client SDK allows to easily call the submitter via the REST API in JavaScript and TypeScript, with full type
+safety for the latter. It also supplies a few utilities functions to work with boops (encoding etc).
+
+See the [Boop Client SDK](/boop/sdk) page for more information.

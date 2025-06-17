@@ -8,6 +8,6 @@ export function keys<K extends PropertyKey, T>(object: Record<K, T>) {
 /**
  * Type-aware version of {@link Object.entries} that uses the correct type for keys.
  */
-export function entries<K extends PropertyKey, T>(object: Record<K, T>) {
-    return Object.entries(object) as [K, T][]
+export function entries<T, K extends keyof T>(object: T): [K, T[K]][] {
+    return Object.entries(object as object) as [K, T[K]][]
 }

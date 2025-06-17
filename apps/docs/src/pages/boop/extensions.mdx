@@ -1,0 +1,171 @@
+---
+layout: doc
+showOutline: true
+---
+
+# Boop Extensions
+
+Boop supports two kind of extensions: validation extensions and execution extensions.
+
+- Validation extension are triggered at the account's discretion in his [`validate(Boop)`][account-overview] function.
+  They enable permissioning certain operations differently. Validation extension implement their own version of
+  `validate(Boop)`, with the same signature and specification.
+
+[account-overview]: /boop/contracts#account-contract
+
+- Execution extensions are triggered at the account's discretion in his [`execute(Boop)`][account-overview] function.
+  They enable customizing how certain operations are run. Execution extension implement their own version of
+  `execution(Boop)`, with the same signature and specification.
+
+A typical account implementationg like the [`HappyAccount`] will have a standard validation and execution path,
+usually verifying some kind of signature for validation and carrying off the call specified in the boop's `dest`,
+`callData` and `value` fields for execution. Extensions allows it to do different things in certain cases.
+
+[`HappyAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/happychain/HappyAccount.sol
+
+We currently maintain two extensions:
+
+- The [`SessionKeyValidator`] enables account to authorize transactions to specific addresses to be signed by another EOA.
+  We use this to implement [session keys] in the [Happy Wallet], enable a user to authorize an app to make transactions on
+  his behalf, but the principle can be using for any kind of simple delegation with target address as the single criteria.
+
+- The [`BatchCallExecutor`] enables batching multiple contract calls or transfers into a single Boop. It's the equivalent
+  of a [multicall], but more powerful as the `msg.sender` on these calls will be account itself, just like for a normal
+  Boop.
+
+See the sections below on [using the `SessionKeyValidator`][using-session-key] and [using the
+`BatchCallExecutor`][using-batch-call].
+
+[`SessionKeyValidator`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/extensions/SessionKeyValidator.sol
+[`BatchCallExecutor`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/extensions/BatchCallExecutor.sol
+[session keys]: /sdk/js#session-keys
+[Happy Wallet]: /sdk
+[multicall]: https://github.com/mds1/multicall3
+[using-session-key]: #using-the-sessionkeyvalidator
+[using-batch-call]: #using-the-batchcallexecutor
+
+## Accepting Extensions
+
+To support extensions, an account must implement [`IExtensibleAccount`] instead of [`IAccount`] (which it extends).
+See the [`HappyAccount`] for an example of this.
+
+[`IExtensibleAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IExtensibleAccount.sol
+[`IAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
+
+The interface adds a few functions to implement:
+
+- `addExtension(address extension, ExtensionType type, bytes installData)`
+- `removeExtension(address extension, ExtensionType type, bytes uninstallData)`
+- `isExtensionRegistered(address extension, ExtensionType type)`
+- `executeCallFromExecutor(CallInfo)`
+
+The first three are pretty self-explanatory, this is how you add, remove and query extensions on the account. Each
+extension has its own deployed contract. The `type` here is an enum that indicates whether the extension is an execution
+or validation extension, and could be extended with other types in the future. If not empty, the data parameter is used
+to make a call to the extension contract, which can be used for some install/uninstall bookkeeping, or to bundle
+installation with initial usage. For instance, we use it to register an initial session key at the same time that we
+install the session key extension.
+
+Note that these first three functions can be called as boops themselves. Simply fire off a boop that makes
+a call to the account itself, and don't forget the lock down who can call the function. The `HappyAccount` enables
+them to be called as boops or from the owner EOA directly via the `onlySelfOrOwner` modifier.
+
+The `executeCallFromExecutor` function enables execution extensions to make calls on behalf of the account (i.e.
+`msg.sender` = account address). It must be locked down to only enable calls from an authorized executor, which we
+recommend implementing via a `transient` variable set during the `execute` call. The [`CallInfo`][Types.sol] struct is just the usual
+`dest`, `callData`, `value` triplet.
+
+[Types.sol]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/Types.sol
+
+## Dispatching Extensions
+
+How to know when to use an extension?
+
+The account's [`validate` and `execute`][account-overview] functions can use any criteria they wants, however that would
+have to be hardcoded in the logic.
+
+The standard & recommended way to dispatch an extension is to use a reserved key in the boop's [`extraData`] dictionary.
+The three-byte key `0x000001` ([`ICustomValidator.VALIDATOR_KEY`][`ICustomValidator`]) is reserved to specify the
+address of a custom validator, while the three-byte key `0x000002` ([`ICustomExecutor.EXECUTOR_KEY`][`ICustomExecutor`])
+is reserved to specify the address of a custom executor.
+
+[`extraData`]: /boop/contracts#encoding
+[`ICustomValidator`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/ICustomValidator.sol
+[`ICustomExecutor`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/ICustomExecutor.sol
+
+During `validate` and `execute` respectively, the account should look up if these keys exist, and use the address to
+make a call to the `validate` or `executed` function of the extension, respectively.
+
+Of note, it's possible to specify garbled values for the reserved keys (i.e. not exactly 20 bytes) or addresses that are
+not registered extensions. We provide the standard `InvalidExtensionValue` and `ExtensionNotRegistered` errors so that
+`validate` and `execute` can reject these cases and aid debugging.
+
+Again, see the [`HappyAccount`] for an example implementation.
+
+## Implementing Extensions
+
+Extension contracts themselves should implement the [`ICustomValidator`] or [`ICustomExecutor`] interfaces. These
+interfaces are straightforward: they must respectively implement a `validate(Boop)` or `execute(Boop)` function, whose
+signature and behaviour should be identical to the corresponding function in [the account itself][account-overview].
+
+An execution extension can make calls on behalf of the account by calling ` executeCallFromExecutor` on the account.
+
+See the [`SessionKeyValidator`] and [`BatchCallExecutor`] extensions source code for implementation examples.
+
+## Using the `SessionKeyValidator`
+
+([Source code][`SessionKeyValidator`])
+
+1. Install the session key validator on the account via `addExtension` on the account (can be sent as a boop).
+
+2. Add a session key by calling `addSessionKey` on the session key validator contract, and passing it the address of the
+   signing key and the authorized target address. This *must* be sent as a boop, as it registers the key for `msg.sender`.
+
+3. You can now send boops with `dest` as the authorized target address. Specify the session key validator address as the
+   value for `ICustomValidator.VALIDATOR_KEY` (`0x000001`). The account will use the session key contract to validator the
+   call.
+
+4. You can remove a session key by calling `removeSessionKey` on the validator, and you can uninstall the extension via
+   `removeExtension` on the account.
+
+You can use the Boop client SDK's [`encodeExtraData`] function to prepare the boop's [`extraData`] field.
+
+[`encodeExtraData`]: /boop/sdk/api/functions/encodeExtraData
+
+Note that if you use the [Happy Wallet] for [session keys], you don't need to worry about any of this: just use the
+[`requestSessionKey`] function in our SDK, then send transactions to the authorized target address as usual, and the
+Happy Wallet will automatically route them to use the registered session key.
+
+[`requestSessionKey`]: sdk/js/api/functions/requestSessionKey
+
+## Using the `BatchCallExecutor`
+
+([Source code][`BatchCallExecutor`])
+
+1. Install the session key validator on the account via `addExtension` on the account (can be sent as a boop).
+
+2. You can now use the batch call executor by specifying the batch call executor address as the value for
+   `ICustomExecutor.EXECUTOR_KEY` (`0x000001`) `extraData` key. The calls you want to make should be encoded as a tightly
+   packed array of [`CallInfo`][Types.sol] structure (`address dest`, `uint256 value`, `bytes callData`) \*, and provided
+   as the value for the ` BatchCallExecutor.BATCH_CALL_INFO_KEY` (`0x000100`) `extraData` key. The `dest`, `value` and
+   `callData` fields of the boopt itself are ignored and should be zeroed/empty.
+
+   \* The memory layout for batching calls is: 20 bytes for the first destination, 32 bytes for the first value, 32 bytes
+   for the calldata size of the first calldata, then the first calldata bytes, then repeat for the second batched call and
+   onwards. The total length is encoded in the `extraData` key length.
+
+   Note: in the future we may change the length of `CallInfo` size to be encoded on 3 bytes instead of 32, since the total
+   length of an `extraData` key's value is encoded on 3 bytes anyway (allowing for up to 16MB values, which is more than
+   node will accept today anyway).
+
+3. You can uninstall the extension via `removeExtension` on the account.
+
+You can use the Boop client SDK's [`encodeExtraData`] function to prepare the boop's [`extraData`] field.
+We will add a function to pack a `CallInfo` array shortly.
+
+## Security Considerations
+
+Extensions are extremely powerful. You should make sure you trust them before adding them to your account, as a
+validator extension can essentially approve any boop on your account, while an executor extension can make any call it
+wants on your behalf. Please make sure the extensions you use are trusted and review their code if you're able. If
+you're not sure about an extension and don't want to lose control over your account and assets, don't install it!

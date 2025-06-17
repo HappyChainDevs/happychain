@@ -2,7 +2,7 @@
 layout: doc
 ---
 
-# HappyChain Docs 🤠
+# HappyChain Documentation Hub
 
 [HappyChain] is a blockchain focused on onchain games and social apps.
 We help solve challenges in building and distributing these demanding applications.
@@ -42,12 +42,25 @@ on [our Mirror blog][mirror].
 These are open-source tools and utilities that we build for our internal needs
 but make available to everyone. App builders most likely won't need those.
 
+Our [Boop account abstraction stack](/boop) provides all the convenience of account abstraction (key rotation &
+recovery, gas sponsorship & gas abstraction, delegation & session keys, extensibility) in a software form-factor
+that enables low latency blockchain interactions, implementation simplicity, and superb reliability.
+
+We maintain all sides of the stack: [contracts](/boop/contracts), [submitter](/boop/submitter) (relaying transactions &
+more), and a [client-side SDK][/boop/sdk] for easy interactions with the stack from JavaScript and TypeScript.
+
 ## Incubating
 
-Stuff that's not quite ready yet, but you preview :)
+Stuff that's not quite ready yet, but for you to preview :)
 
-- [TXM (Transaction Manager)] — Our WIP transaction manager, which makes submitting transactions super reliable
-and takes care of everything that could go wrong. It also allows custom fine-grained policies for
-handling issues in the transaction lifecycle.
+- [TXM (Transaction Manager)](/txm) — Our WIP transaction manager, which makes submitting transactions super reliable
+and takes care of everything that could go wrong. It also allows custom fine-grained policies for handling issues in the
+transaction lifecycle. TXM is already running on HappyChain Sepolia, where it is the backbone of our randomness
+solution.
 
-[TXM (Transaction Manager)]: /txm
+- **Happy Randomness** — Our unique <abbr title="Verifiable Random Function">VRF</abbr> solution to provisioning provable
+  onchain randomness, built on top of [TXM](/txm) and the [Drand network][drand]. Besides the traditional request-response
+  model, Happy Randomness uniquely provides "synchronous randomness" — provable random numbers by making a contract call.
+  Documentation coming soon.
+
+[drand]: https://www.drand.love/

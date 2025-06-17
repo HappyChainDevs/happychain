@@ -33,7 +33,7 @@ import type {
 export interface HappyProvider extends EventEmitter {
     /**
      * Makes an EIP-1193 request and returns the response.
-     * @throws {@link GenericProviderRpcError}
+     * @throws {@link HappyRpcError}
      */
     // biome-ignore lint/suspicious/noExplicitAny: let's not export all of Viem's types
     request: (args: any) => Promise<any>

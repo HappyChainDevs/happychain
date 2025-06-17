@@ -2,3 +2,29 @@
     /* Don't emphasize code text. */
     --vocs-color_codeInlineText: var(--vocs-color_text) !important;
 }
+
+/** Custom elements for accenting. */
+
+acc {
+    color: light-dark(darkgreen, orange);
+}
+
+accu {
+    color: light-dark(darkgreen, orange);
+    text-decoration: underline;
+}
+
+/** See components/ModeImage.tsx */
+
+:root:not(.dark) .dark-image {
+    display: none;
+}
+
+:root.dark .light-image {
+    display: none;
+}
+
+/** Increase logo size. */
+.vocs_Sidebar_logo {
+    height: 128px;
+}
