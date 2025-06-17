@@ -160,6 +160,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
         if (result == Validity.VALIDATION_REJECTED) revert ValidationRejected(revertData);
         if (result == Validity.UNKNOWN_DURING_SIMULATION) {
+            if (!isSimulation) revert ValidationRejected(revertData);
             output.validityUnknownDuringSimulation = true;
         }
         output.validateGas = gasUsed;
@@ -175,6 +176,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
             if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
             if (result == Validity.VALIDATION_REJECTED) revert PaymentValidationRejected(revertData);
             if (result == Validity.UNKNOWN_DURING_SIMULATION) {
+                if (!isSimulation) revert PaymentValidationRejected(revertData);
                 output.paymentValidityUnknownDuringSimulation = true;
             }
             output.validatePaymentGas = gasUsed;
@@ -275,7 +277,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
     /**
      * This function abstracts common boilerplate for calling {IAccount.validate} and
-     * [IPaymaster.validatePayment](/src/boop/interfaces/IPaymaster.sol/interface.IPaymaster.html#validatepayment).
+     * {IPaymaster.validatePayment}.
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
@@ -311,7 +313,14 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         if (returnData.length < 96 || status.length < 4 || status.length > 256) {
             // only 256 bytes were copied, and there's 64 for tuple offset and inner bytes length
             return (Validity.INVALID_RETURN_DATA, gasUsed, returnData);
-        } else if (isSimulation && selector == UnknownDuringSimulation.selector) {
+        } else if (selector == UnknownDuringSimulation.selector) {
+            if (isSimulation) {
+                return (
+                    Validity.UNKNOWN_DURING_SIMULATION,
+                    gasUsed,
+                    abi.encodeWithSelector(UnknownDuringSimulation.selector)
+                );
+            }
             return (Validity.UNKNOWN_DURING_SIMULATION, gasUsed, "");
         } else if (selector != 0) {
             return (Validity.VALIDATION_REJECTED, gasUsed, status);
