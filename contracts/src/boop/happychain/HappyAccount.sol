@@ -147,13 +147,9 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable {
                 }
             }
         } else {
-            // Get the signature from the boop's validatorData
             bytes memory signature = boop.validatorData;
-
-            // Call boopHash with restore=false since we don't need to restore the values after
-            // since we're only using the hash for signature verification
-            address signer = Utils.boopHash(boop, false).tryRecover(signature);
-
+            // Call with restore=false since the boop isn't used here after computing the hash.
+            address signer = Utils.computeBoopHash(boop, false).tryRecover(signature);
             validationResult = signer == owner()
                 ? bytes4(0)
                 : tx.origin == address(0) ? UnknownDuringSimulation.selector : InvalidSignature.selector;
