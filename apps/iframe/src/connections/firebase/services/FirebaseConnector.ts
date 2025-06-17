@@ -32,15 +32,6 @@ export enum FirebaseAuthState {
     Connecting = "connecting",
 }
 
-// Store in local storage to share current auth state progress across tabs
-function getFirebaseAuthState() {
-    return localStorage.getItem("firebase-cache") as FirebaseAuthState | undefined
-}
-
-function setFirebaseAuthState(val: FirebaseAuthState) {
-    return localStorage.setItem("firebase-cache", val)
-}
-
 export class ConnectionProviderBusyError extends Error {
     constructor(message = "Connection Provider Is Busy") {
         super(message)
@@ -98,14 +89,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         signal: AbortSignal,
         { resolve, reject }: { resolve: ResolveType<MsgsFromWallet[Msgs.ConnectResponse]>; reject: RejectType },
     ) {
-        // If we are already connecting/connected, don't attempt to connect again
-        const authState = getFirebaseAuthState()
-        if (authState !== FirebaseAuthState.Disconnected) reject(new ConnectionProviderBusyError())
-
         this.#userInitiatedAction = true
-
-        // Set shared firebase auth state for other tabs to be aware
-        setFirebaseAuthState(FirebaseAuthState.Connecting)
 
         // need to handle here with listeners so we can abort mid-async call, such as with
         // signInWithPopup, when we have no access to cancel it due to it being managed by firebase sdk
@@ -113,7 +97,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         // in the case of signInWithPopup with a 2nd attempt while the popup is still open, the old popup
         // will be closed and the new one will open automatically
         const handleAbort = async () => {
-            setFirebaseAuthState(FirebaseAuthState.Disconnected)
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect()
             reject(new ConnectionAbortedError())
@@ -141,7 +124,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             // See explanation for signal.aborted check after signInWithPopup
             if (signal.aborted) throw new ConnectionAbortedError()
 
-            setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
 
             return resolve({
@@ -152,7 +134,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                         : getPermissions(getAppURL(), "eth_accounts"),
             })
         } catch (e) {
-            setFirebaseAuthState(FirebaseAuthState.Disconnected)
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect()
             return reject(e)
@@ -166,13 +147,10 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     public async disconnect(): Promise<undefined> {
         try {
             this.#userInitiatedAction = true
-            setFirebaseAuthState(FirebaseAuthState.Disconnecting)
             // just do our best to cancel all third parties, it may fail if they are already signed out for example
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect()
         } finally {
-            // Reset the user initiated action flag regardless of success or failure
-            setFirebaseAuthState(FirebaseAuthState.Disconnected)
             this.#userInitiatedAction = false
         }
     }
@@ -269,53 +247,25 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             // without interfering with the user initiated action.
             if (this.#userInitiatedAction) return
 
-            const authState = getFirebaseAuthState()
-
             if (_user) {
-                // new user logged in, or re-connected
-                switch (authState) {
-                    case FirebaseAuthState.Disconnecting:
-                    case FirebaseAuthState.Disconnected: {
-                        // ignore
-                        return
-                    }
-                    case FirebaseAuthState.Connecting:
-                    case FirebaseAuthState.Connected: {
-                        const firebaseCachedUser = await waitForValue(
-                            () => getUser() ?? storage.get(StorageKey.HappyUser),
-                            30_000, // runs in background, 30 seconds should be more than enough time to check login
-                            250,
-                        )
-                        if (!firebaseCachedUser) return
+                // firebase callback resolves before web3auth finishes connecting, and so user may not yet be available
+                const cachedUser = await waitForValue(
+                    () => getUser() ?? storage.get(StorageKey.HappyUser),
+                    30_000, // runs in background, 30 seconds should be more than enough time to check login
+                    250,
+                )
+                if (!cachedUser) return
 
-                        if (await isWeb3AuthConnected()) {
-                            await this.onReconnect(firebaseCachedUser, web3AuthEIP1193Provider)
-                            return
-                        } else {
-                            const happyUser = await this.#connectFirebaseUserToWeb3Auth(_user)
-                            await this.onReconnect(happyUser, web3AuthEIP1193Provider)
-                            return
-                        }
-                    }
+                if (await isWeb3AuthConnected()) {
+                    await this.onReconnect(cachedUser, web3AuthEIP1193Provider)
+                    return
+                } else {
+                    const happyUser = await this.#connectFirebaseUserToWeb3Auth(_user)
+                    await this.onReconnect(happyUser, web3AuthEIP1193Provider)
+                    return
                 }
             } else {
-                // user absent, disconnect, or not yet loaded. Sometimes on page load, during reconnect
-                // this will be falsely null
-                switch (authState) {
-                    case FirebaseAuthState.Connecting:
-                    case FirebaseAuthState.Connected: {
-                        // no user, but we are trying to connect. just ignore this event
-                        // later if the connection is successful and the full user is resolved,
-                        // we will handle that
-                        return
-                    }
-                    case FirebaseAuthState.Disconnecting:
-                    case FirebaseAuthState.Disconnected: {
-                        // already disconnected, or disconnecting
-                        await this.disconnect()
-                        return
-                    }
-                }
+                await this.disconnect()
             }
         })
     }
