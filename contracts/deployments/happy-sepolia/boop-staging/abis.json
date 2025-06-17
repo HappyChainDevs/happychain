@@ -389,7 +389,7 @@
     },
     {
       "type": "event",
-      "name": "BoopExecutionStarted",
+      "name": "BoopExecutionCompleted",
       "inputs": [],
       "anonymous": false
     },
@@ -624,7 +624,7 @@
     },
     {
       "type": "error",
-      "name": "GasPriceTooHigh",
+      "name": "GasPriceTooLow",
       "inputs": []
     },
     {
