@@ -7,7 +7,7 @@ ERC-4337, but we use the term "transaction" here.
 
 - Latency
     - Simulation
-        - bles really low latency by enabling the submitter to set the fees and gas limits for transactions it sponsors
+        - Boop enables really low latency by enabling the submitter to set the fees and gas limits for transactions it sponsors
           itself, and for transactions sponsored by paymasters (who need to validate that these values are set adequately). For
           instance, this means that for signature validation, account owner don't need to set the fee values and gas limits.
         - ERC-4337 requires additional network calls and at least one additional network roundtrip to fetch these values.
@@ -37,7 +37,7 @@ ERC-4337, but we use the term "transaction" here.
     - Boop has not been audited yet.
 - Wallet Support
     - Wallet for support ERC-4337 is relatively spotty — [Ambire] as seemingly the only "real" wallet (i.e. not
-      tied to single app) you can could use, but things to be changing starting with [MetaMask].
+      tied to single app) you can use, but things seem to be changing (starting with [MetaMask]).
     - The [Happy Wallet] is powered by Boop, but only runs on the HappyChain testnet today.
 - Gas Costs
     - Boop is marginally cheaper than most ERC-4337 contract implementations on a 1-1 basis. But see "Transaction Bundling"

@@ -229,14 +229,14 @@ export class SharedWorkerClient {
 
     /**
      * Listen for incoming messages sent from the {@link SharedWorkerServer} to all clients via
-     * his {@link SharedWorkerServer.broadcast} method.
+     * its {@link SharedWorkerServer.broadcast} method.
      */
     addMessageListener(fn: MessageCallback<unknown>) {
         this.messageCallbacks.push(fn)
     }
 
     /**
-     * Dispatch a message to the {@link SharedWorkerServer} who can listen to them via his
+     * Dispatch a message to the {@link SharedWorkerServer} who can listen to them via its
      * own {@link SharedWorkerServer.addMessageListener} method.
      */
     dispatch(data: unknown) {

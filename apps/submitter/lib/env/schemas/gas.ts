@@ -44,7 +44,7 @@ export const gasSchema = z.object({
     FEE_BUMP_PERCENT: z.coerce.bigint().min(10n).default(15n),
 
     /**
-     * The maximum base fee per gas (in wei) that the submitter is willing to pay for his EVM transactions.
+     * The maximum base fee per gas (in wei) that the submitter is willing to pay for its EVM transactions.
      * Defaults to 100 gwei.
      *
      * TODO: Make this conditional to whether the boop is self-paying, sponsored or submitter-sponsored.
@@ -52,12 +52,12 @@ export const gasSchema = z.object({
     MAX_BASEFEE: z.coerce.bigint().positive().default(100_000_000_000n),
 
     /**
-     * The initial priority fee per gas (in wei) for the submitter to pay on his EVM transactions. Defaults to 1.
+     * The initial priority fee per gas (in wei) for the submitter to pay on its EVM transactions. Defaults to 1.
      */
     INITIAL_PRIORITY_FEE: z.coerce.bigint().nonnegative().default(1n),
 
     /**
-     * The maximum priority fee per gas (in wei) that the submitter is willing to pay for his EVM transactions.
+     * The maximum priority fee per gas (in wei) that the submitter is willing to pay for its EVM transactions.
      * Defaults to 1000 wei.
      */
     MAX_PRIORITY_FEE: z.coerce.bigint().nonnegative().default(1000n),

@@ -91,7 +91,7 @@ struct Boop {
 
 We typically expect that the operation carried out by an account is a call or send to another address, and the fields in
 the `Boop` structure (`dest`, `value`, `callData`) reflect this — this is however not mandatory, it's up to the account
-implemenation how to interpret these values. We might refer to "the call carried (or made) by the boop" in the rest of
+implementation how to interpret these values. We might refer to "the call carried (or made) by the boop" in the rest of
 the documentation.
 
 To save on calldata costs, boops are packed tightly when submitted to the chain. The first thing the EntryPoint contract
@@ -176,14 +176,14 @@ in [`Staking.sol`].
 ## The `BoopSubmitted` Event
 
 If a boop is successfully included onchain (nonce incremented), a `BoopSubmitted` event is emitted from the EVM
-transaction that carries it. Its topics include all the field in the boop, and it can be used for indexing boops.
+transaction that carries it. Its topics include all the fields in the boop, and it can be used for indexing boops.
 
 It also conveniently shows up at the top of the logs list on block explorers, and is a great way to get some level of
 observability for boops without needing any custom block explorer support.
 
 ## Account Contract
 
-The user can use any account implementation of his choice that implement the [`IAccount`] or
+The user can use any account implementation of their choice that implement the [`IAccount`] or
 [`IExtensibleAccount`] interface. We provide our own [`HappyAccount`] compliant
 implementation — note that despite the name, the implementation is not HappyChain-specific.
 

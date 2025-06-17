@@ -46,7 +46,7 @@ event ExecutionReverted(bytes revertData);
 error GasPriceTooLow();
 
 /**
- * The entrypoint reverts with this error if the paymaster cannot cover the gas limit cost from his
+ * The entrypoint reverts with this error if the paymaster cannot cover the gas limit cost from its
  * stake.
  */
 error InsufficientStake();

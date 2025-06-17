@@ -15,7 +15,7 @@ The goal of an account abstraction system is very simple: a user wants to make t
 but their account is a smart contract. In the Boop system, we call such transactions "boops".
 
 This immediately runs into a problem: a boop needs to be triggered by an EOA\* transaction, which has to pay fees.
-Ideally, we don't want the user to maintain balances on both his smart account and an EOA to pay fees.
+Ideally, we don't want the user to maintain balances on both their smart account and EOA to pay fees.
 
 \* An "externally owned account", i.e. an account controlled by private key.
 
@@ -25,7 +25,7 @@ itself. In Boop, we call this relayer "the submitter".
 
 The Boop system involves the following "sites":
 
-- A device form which the user wants to make transactions.
+- A device from which the user wants to make transactions.
 - A submitter that fronts or sponsors the transaction costs.
 - A blockchain where the operation happens (and more concretely, a blockhain node that the submitter talks to).
 
@@ -92,7 +92,7 @@ Boop execution (besides any call that would be specified by the boop itself) inv
 - The [`EntryPoint`] contract, that orchestrates the execution of the boop.
 - An [account contract] implementing [`IAccount`], which validates and excutes the boop.
 - An optional [paymaster contract] (specified in the `payer` field of the boop) implementing [`IPaymaster`], which pays
-  the boop's fees (to the submitter, which fronts the blockchain fees and may charge his own fee).
+  the boop's fees (to the submitter, which fronts the blockchain fees and may charge their own fee).
 
 [`EntryPoint`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/core/EntryPoint.sol
 [`IAccount`]: https://github.com/HappyChainDevs/happychain/blob/master/contracts/src/boop/interfaces/IAccount.sol
