@@ -1,7 +1,8 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import {
-    EIP1193UnsupportedMethodError,
+    EIP1193SwitchChainError,
     EIP1193UserRejectedRequestError,
+    EIP1474InvalidInput,
     type Msgs,
     type ProviderMsgsFromApp,
 } from "@happy.tech/wallet-common"
@@ -92,16 +93,12 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             return []
 
         case "wallet_addEthereumChain":
-            if (import.meta.env.PROD) {
-                throw new EIP1193UnsupportedMethodError("feature not available in production")
-            }
+            if (import.meta.env.PROD) throw new EIP1474InvalidInput("Feature not available in production.")
             // If this is permissionless, the chain already exists, so we simply succeed.
             return null
 
         case "wallet_switchEthereumChain":
-            if (import.meta.env.PROD) {
-                throw new EIP1193UnsupportedMethodError("feature not available in production")
-            }
+            if (import.meta.env.PROD) throw new EIP1193SwitchChainError("Feature not available in production.")
             // If this is permissionless, we're already on the right chain so we simply succeed.
             return null
 
