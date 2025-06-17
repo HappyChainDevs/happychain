@@ -41,7 +41,7 @@ async function resyncAccount(account: Account, recheck?: "recheck") {
             if (included_ >= pending_) return
             break
         } catch (error) {
-            const delay = Math.max(maxDelay, initialDelay * 2 ** attempt++)
+            const delay = Math.min(maxDelay, initialDelay * 2 ** attempt++)
             resyncLogger.error(`Error during resync routine, waiting ${delay}ms and retrying`, error)
             await sleep(delay)
         }
