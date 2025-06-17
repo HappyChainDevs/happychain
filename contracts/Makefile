@@ -415,15 +415,13 @@ define set-chain-name
 	endif
 endef
 
-# If DEPLOYMENT_NAME is not set, sets CHAIN_ID and CHAIN_NAME and defines DEPLOYMENT_NAME = CHAIN_NAME/$(1)
+# Sets CHAIN_ID and CHAIN_NAME and defines DEPLOYMENT_NAME = CHAIN_NAME/$(1)
 # Call like this: $(eval $(call set-deployment-name,myDeployment))
 define set-deployment-name
-	ifeq ($(DEPLOYMENT_NAME),)
-		$(eval $(set-chain-id))
-        $(eval $(set-chain-name))
-        # Export for use in recursive make invocations.
-        export DEPLOYMENT_NAME := $(CHAIN_NAME)/$(1)
-	endif
+	$(eval $(set-chain-id))
+	$(eval $(set-chain-name))
+	# Export for use in recursive make invocations.
+	export DEPLOYMENT_NAME := $(CHAIN_NAME)/$(1)
 endef
 
 deploy-l1: ## Deploys the non-upgradeable L1 contracts
@@ -448,18 +446,6 @@ deploy-boop: ## Deploys the Boop contracts.
 	make deploy DEPLOY_SCRIPT=DeployBoop.s.sol
 .PHONY: deploy-boop
 
-deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/boop-staging CONFIG=TEST make deploy-boop
-.PHONY: deploy-boop-staging
-
-deploy-mocks-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/mock-staging CONFIG=TEST make deploy-mocks
-.PHONY: deploy-mock-staging
-
-deploy-random-staging: ## Deploys the randomness contracts to testnet as 'staging' (no metadata)
-	DEPLOYMENT_NAME=happy-sepolia/random-staging CONFIG=TEST make deploy-random
-.PHONY: deploy-random-staging
-
 deploy-mocks: ## Deploys the mock contracts.
 	$(eval $(call set-deployment-name,mocks))
 	make deploy DEPLOY_SCRIPT=DeployMocks.s.sol
@@ -469,5 +455,26 @@ deploy-random: ## Deploys the randomness contracts and saves the deployment.
 	$(eval $(call set-deployment-name,random))
 	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
 .PHONY: deploy-random
+
+deploy-all: deploy-boop deploy-mocks deploy-random ## Deploys random, mock and boop contracts
+.PHONY: deploy-all
+
+deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-deployment-name,boop-staging))
+	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployBoop.s.sol
+.PHONY: deploy-boop-staging
+
+deploy-mocks-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-deployment-name,mocks-staging))
+	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployMocks.s.sol
+.PHONY: deploy-mock-staging
+
+deploy-random-staging: ## Deploys the randomness contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-deployment-name,random-staging))
+	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployRandom.s.sol
+.PHONY: deploy-random-staging
+
+deploy-all-staging: deploy-boop-staging deploy-mocks-staging deploy-random-staging
+.PHONY: deploy-all-staging
 
 ####################################################################################################
