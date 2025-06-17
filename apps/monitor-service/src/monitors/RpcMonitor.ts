@@ -35,7 +35,10 @@ export type Alert = AlertNormal | AlertAlerting | AlertRecovering
 type RpcStatus = {
     isLive: Alert
     isSyncing: Alert
-    latestBlock: number
+    latestBlock: {
+        number: number
+        timestamp: number
+    }
 }
 
 export const NotSyncingSecondsThreshold = 8n
@@ -65,7 +68,10 @@ export class RpcMonitor {
                     unhealthyAt: undefined,
                     healthyAt: undefined,
                 },
-                latestBlock: 0,
+                latestBlock: {
+                    number: 0,
+                    timestamp: 0,
+                },
             }
 
             this.rpcClients[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
@@ -103,7 +109,10 @@ export class RpcMonitor {
                 isSyncing = false
             }
 
-            this.rpcStatus[rpcUrl].latestBlock = Number(block.number)
+            this.rpcStatus[rpcUrl].latestBlock = {
+                number: Number(block.number),
+                timestamp: Number(block.timestamp),
+            }
         } catch (_error) {
             isLive = false
         }
@@ -111,14 +120,18 @@ export class RpcMonitor {
         this.rpcStatus[rpcUrl].isLive = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isLive,
             isLive,
-            `❗️❗️ RPC ${rpcUrl} is not live. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
-            `✅✅ RPC ${rpcUrl} is now live again. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
+            `❗️ *RPC ${rpcUrl} not live*`,
+            `✅ *RPC ${rpcUrl} live again*`,
+            this.rpcStatus[rpcUrl].latestBlock.number,
+            this.rpcStatus[rpcUrl].latestBlock.timestamp,
         )
         this.rpcStatus[rpcUrl].isSyncing = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isSyncing,
             isSyncing,
-            `❗️❗️ RPC ${rpcUrl} is not syncing. Stuck at block ${this.rpcStatus[rpcUrl].latestBlock}`,
-            `✅✅ RPC ${rpcUrl} is now syncing again. Latest block: ${this.rpcStatus[rpcUrl].latestBlock}`,
+            `❗️ *RPC ${rpcUrl} not syncing*`,
+            `✅ *RPC ${rpcUrl} is now syncing again*`,
+            this.rpcStatus[rpcUrl].latestBlock.number,
+            this.rpcStatus[rpcUrl].latestBlock.timestamp,
         )
 
         this.rpcLocks[rpcUrl] = false
@@ -129,13 +142,17 @@ export class RpcMonitor {
         newCheck: boolean,
         alertingMessage: string,
         recoveredMessage: string,
+        latestBlockNumber: number,
+        latestBlockTimestamp: number,
     ): Promise<Alert> {
         if (
             (currentAlert.status === AlertStatus.NORMAL || currentAlert.status === AlertStatus.RECOVERING) &&
             newCheck === false
         ) {
             if (currentAlert.status === AlertStatus.NORMAL) {
-                await sendSlackMessageToAlertChannel(`[${new Date().toISOString()}] ${alertingMessage}`)
+                await sendSlackMessageToAlertChannel(
+                    `*[${new Date().toISOString()}]* ${alertingMessage} \n• *Latest Block Number:* ${latestBlockNumber}\n• *Latest Block Timestamp:* ${new Date(latestBlockTimestamp * 1000).toISOString()}`,
+                )
                 return {
                     status: AlertStatus.ALERTING,
                     changedAt: new Date(),
@@ -169,7 +186,7 @@ export class RpcMonitor {
             const alertingTimeSeconds = (currentAlert.healthyAt.getTime() - currentAlert.unhealthyAt.getTime()) / 1000
 
             await sendSlackMessageToAlertChannel(
-                `[${new Date().toISOString()}] ${recoveredMessage} - Alert duration: ${alertingTimeSeconds}s`,
+                `*[${new Date().toISOString()}]* ${recoveredMessage} \n• *Latest Block Number:* ${latestBlockNumber}\n• *Latest Block Timestamp:* ${new Date(latestBlockTimestamp * 1000).toISOString()} \n• *Alert duration:* ${alertingTimeSeconds}s`,
             )
 
             return {
