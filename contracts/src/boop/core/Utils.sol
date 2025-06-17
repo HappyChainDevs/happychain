@@ -90,17 +90,20 @@ library Utils {
     }
 
     /**
-     * @dev Computes the EIP-191 signed message hash for a boop
-     * @param boop The boop to compute the hash for (validatorData field will be ignored)
-     * @param restore Whether to restore the original values after computing the hash
-     * @return The EIP-191 signed message hash for the boop
+     * Computes the EIP-191 signed message hash for a boop.
+     *
+     * @dev This ignores the `validatorField` for the boop, as well as the gas limits and fee values if the boop
+     * is sponsored by a paymaster or by the submitter.
+     *
+     * @param boop The boop to compute the hash for.
+     * @param restore Whether to restore the original validatorData/gas limits/fee values after computing the hash.
+     * @return The EIP-191 signed message hash for the boop.
      */
-    function boopHash(Boop memory boop, bool restore) internal view returns (bytes32) {
+    function computeBoopHash(Boop memory boop, bool restore) internal view returns (bytes32) {
         // Set validatorData to empty for hashing
         bytes memory originalValidatorData = boop.validatorData;
         boop.validatorData = "";
 
-        // Store the original gas values
         uint32 originalGasLimit = 0;
         uint32 originalValidateGasLimit = 0;
         uint32 originalValidatePaymentGasLimit = 0;
@@ -108,7 +111,6 @@ library Utils {
         uint256 originalMaxFeePerGas = 0;
         int256 originalSubmitterFee = 0;
 
-        // If not self-paying, zero out the gas values
         bool isSelfPaying = boop.payer == boop.account;
         if (!isSelfPaying) {
             // Only store the original gas values if we're restoring
@@ -131,11 +133,9 @@ library Utils {
 
         bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
 
-        // Restore the original values if requested
         if (restore) {
             boop.validatorData = originalValidatorData;
 
-            // Only restore gas values if they were zeroed out (not self-paying)
             if (!isSelfPaying) {
                 boop.gasLimit = originalGasLimit;
                 boop.validateGasLimit = originalValidateGasLimit;
