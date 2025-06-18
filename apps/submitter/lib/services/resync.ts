@@ -8,6 +8,15 @@ import { getFees, getLatestBaseFee } from "#lib/utils/gas"
 import { resyncLogger } from "#lib/utils/logger"
 import { accountDeployer, executorAccounts } from "./evmAccounts"
 
+// TODO Most of this is based upon the incorrect assumption that `getBlock({ block: "pending" }) would return
+//      the nonce inclusive all transactions pending in the mempool. In reality, it only returns
+//      transactions considered by the node for inclusion in the next block.
+//      To achieve the effect we want, we need to leverage the `txpool_contentFrom` special RPC call.
+//
+//      If not available, things will still work given our replacement logic in `replaceTransaction.ts`.
+//      However, transactions with identical nonces will risk failing, either because they don't meet the
+//      fee bar for replacement, or because the old transactions did include instead of the new ones.
+
 /**
  * Resyncs all accounts so that their "included nonce" matches their "pending nonce".
  */
@@ -52,11 +61,11 @@ async function resyncAccount(account: Account, recheck?: "recheck") {
 
     // === Setup subscription to nonce, to be fetched every block ===
 
-    const nonceStream = new Stream<number>()
+    const nonceStream = new Stream<number | undefined>()
     const unsubscribe = blockService.onBlock(async () => {
         const { value, error } = await tryCatchAsync<number, Error>(publicClient.getTransactionCount({ address }))
         if (error) resyncLogger.error("Error fetching nonce", address, error)
-        else nonceStream.push(value)
+        nonceStream.push(value)
     })
 
     // === Helpers ====
@@ -69,10 +78,16 @@ async function resyncAccount(account: Account, recheck?: "recheck") {
         resyncLogger.trace(`Updated fees: maxFeePerGas=${maxFeePerGas}, maxPriorityFeePerGas=${maxPriorityFeePerGas}`)
     }
 
+    /**
+     * Wait for the account nonce, delivered every block.
+     * Returns true iff the nonce exceeds or equals the replaced tx nonce.
+     */
     async function waitForNonce(): Promise<boolean> {
         const nonce = await nonceStream.consume()
-        if (nonce >= included) included = nonce
-        else resyncLogger.warn(`Included nonce went down from ${included} to ${nonce}, possible re-org.`)
+        if (nonce) {
+            if (nonce >= included) included = nonce
+            else resyncLogger.warn(`Included nonce went down from ${included} to ${nonce}, possible re-org.`)
+        }
         if (included >= pending) {
             resyncLogger.info("Resync complete", account)
             unsubscribe()
@@ -119,8 +134,7 @@ async function resyncAccount(account: Account, recheck?: "recheck") {
                     account, to: account.address, value: 0n, gas: 21_000n, nonce, maxFeePerGas, maxPriorityFeePerGas,
                 }))
             await Promise.all(promises)
-            const timeout = sleep(env.RECEIPT_TIMEOUT)
-            while (true) if (await Promise.race([waitForNonce(), timeout])) return
+            while (true) if (await waitForNonce()) return
         } catch (error) {
             updateGasPrice()
             const msg = getProp(error, "message", "string")

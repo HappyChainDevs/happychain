@@ -19,11 +19,11 @@ import { logger } from "#lib/utils/logger"
  */
 async function replaceTransaction(account: Account, evmTxInfo: Omit<EvmTxInfo, "evmTxHash">): Promise<void> {
     const address = account.address
-    const nonceStream = new Stream<number>()
+    const nonceStream = new Stream<number | undefined>()
     const unsubscribe = blockService.onBlock(async () => {
         const { value, error } = await tryCatchAsync<number, Error>(publicClient.getTransactionCount({ address }))
         if (error) logger.warn("Error fetching nonce", address, error)
-        else nonceStream.push(value)
+        nonceStream.push(value)
     })
 
     try {
@@ -37,7 +37,7 @@ async function replaceTransaction(account: Account, evmTxInfo: Omit<EvmTxInfo, "
 async function replaceInternal(
     account: Account,
     evmTxInfo: Omit<EvmTxInfo, "evmTxHash">,
-    nonceStream: Stream<number>,
+    nonceStream: Stream<number | undefined>,
 ): Promise<void> {
     const address = account.address
     const nonce = evmTxInfo.nonce
@@ -51,12 +51,19 @@ async function replaceInternal(
     //      Possible mitigations:
     //      - bail if the nonce of the transaction to replace is no longer pending
     //      - global re-org detection and `resync`, cancelling any stale `replaceTransaction`
-    async function waitForNonce(): Promise<boolean> {
+
+    /**
+     * Wait for the account nonce, delivered every block.
+     * Returns true iff the nonce exceeds or equals the replaced tx nonce.
+     */
+    async function waitForNonce(): Promise<boolean | undefined> {
         const receivedNonce = await nonceStream.consume()
-        if (nonce >= included) included = nonce
-        else logger.error(`Included nonce went down from ${included} to ${nonce}, possible re-org.`)
-        if (receivedNonce > nonce) {
-            logger.info(`Transaction replacement successful for ${address} at nonce ${nonce}`)
+        if (receivedNonce) {
+            if (receivedNonce >= included) included = receivedNonce
+            else logger.error(`Included nonce went down from ${included} to ${receivedNonce}, possible re-org.`)
+        }
+        if (included > nonce) {
+            logger.info(`Transaction replacement successful for ${address} at nonce ${receivedNonce}`)
             return true
         }
         return false
@@ -89,8 +96,7 @@ async function replaceInternal(
             })
             evmTxInfo = { nonce, ...fees }
             logger.info(`Sent replacement tx ${hash} for ${account} at nonce ${nonce}`)
-            const timeout = sleep(env.RECEIPT_TIMEOUT)
-            while (true) if (await Promise.race([waitForNonce(), timeout])) return
+            while (true) if (await waitForNonce()) return
         } catch (error) {
             if (isNonceTooLowError(error)) {
                 const newNonce = await evmNonceManager.resyncIfTooLow(account.address)
