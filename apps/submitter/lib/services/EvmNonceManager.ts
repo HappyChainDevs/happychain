@@ -34,8 +34,12 @@ export class EvmNonceManager {
     /**
      * Resync the nonce for the given EVM EOA managed by the submitter, but only if it's lower than the local view of
      * the nonce. Call this when encoutering "nonce too low" errors.
+     *
+     * Return the nonce fetched onchain, or undefined if could not fetch.
+     *
+     * This never throws.
      */
-    async resyncIfTooLow(address: Address): Promise<void> {
+    async resyncIfTooLow(address: Address): Promise<number | undefined> {
         const { value: onchainNonce, error } = await tryCatchAsync(publicClient.getTransactionCount({ address }))
         if (error) {
             console.warn("Failed to fetch EOA nonce", address)
@@ -47,9 +51,11 @@ export class EvmNonceManager {
         if (!localNonce) {
             // This should never happen, but handle just in case.
             this.#nonces.set(address, onchainNonce)
+            return onchainNonce
         } else if (onchainNonce > localNonce) {
             logger.trace("Onchain EOA nonce is ahead of local nonce — skipping to it.", address, onchainNonce)
             this.#nonces.set(address, onchainNonce)
+            return onchainNonce
         }
     }
 }
