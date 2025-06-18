@@ -405,7 +405,8 @@ faucet.build: setup shared.build
 	cd apps/faucet && make build
 .PHONY: faucet.build
 
-monitor-service.build: setup shared.build
+monitor-service.build: setup shared.build submitter.build
+	cd packages/boop-sdk && make build
 	cd packages/txm && make build
 	cd apps/monitor-service && make build
 .PHONY: monitor-service.build

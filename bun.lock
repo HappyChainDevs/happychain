@@ -128,13 +128,14 @@
       "name": "@happy.tech/monitor-service",
       "version": "0.1.0",
       "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/boop-sdk": "workspace:*",
+        "@happy.tech/common": "workspace:*",
         "@happy.tech/txm": "workspace:0.1.0",
         "eventemitter3": "^5.0.1",
         "viem": "^2.21.53",
       },
       "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/happybuild": "workspace:*",
         "typescript": "^5.6.2",
       },
     },
@@ -200,9 +201,9 @@
         "zod-openapi": "^4.2.3",
       },
       "devDependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/bun": "^1.2.4",
         "kysely-codegen": "^0.17.0",
         "openapi-types": "^12.1.3",
@@ -302,11 +303,11 @@
       "name": "@happy.tech/boop-sdk",
       "version": "0.1.0",
       "devDependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/contracts": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "@happy.tech/submitter": "workspace:0.0.0",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/contracts": "workspace:0.2.0",
+        "@happy.tech/happybuild": "workspace:*",
+        "@happy.tech/submitter": "workspace:0.1.0",
         "@types/bun": "^1.2.4",
         "typescript": "^5.6.2",
       },
@@ -359,25 +360,24 @@
       "name": "@happy.tech/txm",
       "version": "0.1.0",
       "dependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/contracts": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/contracts": "workspace:0.2.0",
         "@hono/node-server": "^1.13.8",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/exporter-prometheus": "^0.57.2",
         "@opentelemetry/sdk-metrics": "^1.30.1",
         "@opentelemetry/sdk-node": "^0.57.2",
         "@opentelemetry/sdk-trace-node": "^1.30.1",
-        "better-sqlite3": "^11.5.0",
         "eventemitter3": "^5.0.1",
         "hono": "^4.7.2",
         "kysely": "^0.27.4",
+        "kysely-bun-sqlite": "^0.4.0",
         "neverthrow": "^8.0.0",
         "vitest": "^3.2.3",
       },
       "devDependencies": {
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "@types/better-sqlite3": "^7.6.11",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "ts-node": "11.0.0-beta.1",
         "typescript": "^5.6.2",
       },
@@ -408,8 +408,8 @@
         "@opentelemetry/api": "^1.9.0",
       },
       "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/react": "^19.1.4",
         "vite-plugin-node-polyfills": "^0.22.0",
       },
@@ -1754,8 +1754,6 @@
     "@types/babel__traverse": ["@types/babel__traverse@7.20.7", "", { "dependencies": { "@babel/types": "^7.20.7" } }, "sha512-dkO5fhS7+/oos4ciWxyEyjWe48zmG6wbCheo/G2ZnHx4fs3EU6YC6UM8rk56gAjNJ9P3MTH2jo5jb92/K6wbng=="],
 
     "@types/base16": ["@types/base16@1.0.5", "", {}, "sha512-OzOWrTluG9cwqidEzC/Q6FAmIPcnZfm8BFRlIx0+UIUqnuAmi5OS88O0RpT3Yz6qdmqObvUhasrbNsCofE4W9A=="],
-
-    "@types/better-sqlite3": ["@types/better-sqlite3@7.6.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA=="],
 
     "@types/bn.js": ["@types/bn.js@5.2.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q=="],
 
@@ -4652,6 +4650,8 @@
     "@firebase/util/tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
     "@firebase/vertexai-preview/tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "@happy.tech/txm/kysely-bun-sqlite": ["kysely-bun-sqlite@0.4.0", "", { "dependencies": { "bun-types": "^1.1.31" }, "peerDependencies": { "kysely": "^0.28.2" } }, "sha512-2EkQE5sT4ewiw7IWfJsAkpxJ/QPVKXKO5sRYI/xjjJIJlECuOdtG+ssYM0twZJySrdrmuildNPFYVreyu1EdZg=="],
 
     "@humanwhocodes/config-array/minimatch": ["minimatch@3.1.2", "", { "dependencies": { "brace-expansion": "^1.1.7" } }, "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw=="],
 

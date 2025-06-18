@@ -35,10 +35,11 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "apps/monitor-service/build/*,node_modules/better-sqlite3,node_modules/bindings,node_modules/file-uri-to-path"
+          source: "apps/monitor-service/build/*"
           target: /home/deployer/monitor-service
-          strip_components: 1   
+          strip_components: 2
           rm: true
+          debug: true
 
       - name: Deploy fund monitor to server
         uses: appleboy/ssh-action@v1.1.0
@@ -47,21 +48,14 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          # We copy better-sqlite3, bindings, and file-uri-to-path separately because the bundled file does not include
-          # better-sqlite3 and its dependencies
           script: |
             chmod -R o+rX /home/deployer/monitor-service
+            rm -rf /tmp/monitor-service
             mv /home/deployer/monitor-service /tmp
             sudo -u monitor_service bash -c '
               rm -rf /home/monitor_service/build
-              rm -rf /home/monitor_service/node_modules
-              cp -r /tmp/monitor-service/monitor-service/build /home/monitor_service/build
+              cp -r /tmp/monitor-service/* /home/monitor_service/build
 
-              mkdir -p /home/monitor_service/node_modules
-              cp -r /tmp/monitor-service/better-sqlite3 /home/monitor_service/node_modules/better-sqlite3
-              cp -r /tmp/monitor-service/bindings /home/monitor_service/node_modules/bindings
-              cp -r /tmp/monitor-service/file-uri-to-path /home/monitor_service/node_modules/file-uri-to-path
-          
               cd /home/monitor_service
     
               rm -f .env
@@ -85,14 +79,6 @@ jobs:
               # cf. https://github.com/appleboy/drone-ssh/issues/175
               sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' .env
 
-              npm rebuild
-
-              pm2 delete ${{ env.PM2_PROCESS_NAME }}
-
-              source .env && node ./build/migrate.es.js
-
-              source .env && pm2 start ./build/index.es.js \
-                    --name ${{ env.PM2_PROCESS_NAME }}
-              pm2 save
+              bun ./build/migrate.es.js
             '
-            rm -rf /tmp/monitor-service
+            sudo /bin/systemctl restart monitor_service.service
