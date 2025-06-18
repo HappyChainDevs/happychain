@@ -74,11 +74,13 @@ jobs:
             export LOG_COLORS=true
             export LOG_TIMESTAMPS=true
             EOF
+              # cf. https://github.com/appleboy/drone-ssh/issues/175
+              sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' /home/staging_submitter/build/.env
 
               npm rebuild
-            
+
               pm2 delete ${{ env.PM2_PROCESS_NAME }}
-        
+
               source .env && node ./build/migrate.es.js
 
               source .env && pm2 start ./build/index.es.js \

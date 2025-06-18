@@ -66,6 +66,8 @@ jobs:
             LOG_COLORS=false
             LOG_TIMESTAMPS=false
             EOF
+              # cf. https://github.com/appleboy/drone-ssh/issues/175
+              sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' /home/staging_submitter/build/.env
               cd /home/submitter/build
               bun migrate.es.js
             '
