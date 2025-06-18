@@ -13,7 +13,8 @@
         "viem": "^2.21.53",
         "eventemitter3": "^5.0.1",
         "@happy.tech/common": "workspace:*",
-        "@happy.tech/txm": "workspace:0.1.0"
+        "@happy.tech/txm": "workspace:0.1.0",
+        "@happy.tech/boop-sdk": "workspace:*"
     },
     "devDependencies": {
         "@happy.tech/happybuild": "workspace:*",

@@ -10,14 +10,14 @@ include ../../makefiles/help.mk
 -include .env
 
 start: ## Starts the monitor service
-	node --env-file=.env dist/index.es.js
+	bun run src/index.ts
 .PHONY: start
 
 migrate: ## Runs pending migrations
-	node --env-file=.env dist/migrate.es.js
+	bun run src/migrate.ts
 PHONY: migrate
 
 migrate-fresh: ## Deletes database and starts fresh
 	@if [ -f ${TXM_DB_PATH} ]; then rm ${TXM_DB_PATH}; fi;
-	node --env-file=.env dist/migrate.es.js
+	bun run src/migrate.ts
 .PHONY: migrate-fresh

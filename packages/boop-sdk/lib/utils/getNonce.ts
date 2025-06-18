@@ -8,6 +8,7 @@ export async function getNonce(rpcUrl: string, to: `0x${string}`, input: GetNonc
     try {
         const addressData = input.address.replace(/^0x/, "").toLowerCase().padStart(64, "0")
         const nonceTrackData = input.nonceTrack.toString(16).padStart(64, "0")
+
         const nonceValue = await fetch(rpcUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

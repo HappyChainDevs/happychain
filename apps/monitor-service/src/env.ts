@@ -54,7 +54,15 @@ const envSchema = z.object({
                 try { return Boolean(JSON.parse(str.toLowerCase())) } 
                 catch { return false }
             })(),
-        ),
+    ),
+    SUBMITTERS_TO_MONITOR: z
+        .string()
+        .trim()
+        .transform((value) => value.split(","))
+        .refine((submitters) => submitters.every((submitter) => z.string().url().safeParse(submitter).success), {
+            message: "All submitters must be valid URLs",
+        }),
+    SUBMITTER_MONITOR_INTERVAL_MS: z.coerce.number(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
