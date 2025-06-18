@@ -116,4 +116,9 @@ export const appSchema = z.object({
      * The port to run the Prometheus metrics server on.
      */
     PROMETHEUS_PORT: z.coerce.number().default(9090),
+
+    /**
+     * The Slack webhook URL to send notifications to.
+     */
+    SLACK_WEBHOOK_URL: z.string().optional(),
 })

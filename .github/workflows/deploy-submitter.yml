@@ -54,6 +54,7 @@ jobs:
               cat > /home/submitter/build/.env <<-EOF
             EXECUTOR_KEYS=${{ secrets.SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
+            SLACK_WEBHOOK_URL=${{ secrets.SUBMITTER_SLACK_WEBHOOK_URL }}
             APP_PORT=49534
             LOG_LEVEL=TRACE
             DATABASE_URL=/home/submitter/db.sqlite

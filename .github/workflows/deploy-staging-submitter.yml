@@ -54,6 +54,7 @@ jobs:
               cat > /home/staging_submitter/build/.env <<-EOF
             EXECUTOR_KEYS=${{ secrets.STAGING_SUBMITTER_EXECUTOR_KEYS }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.STAGING_SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
+            SLACK_WEBHOOK_URL=${{ secrets.STAGING_SUBMITTER_SLACK_WEBHOOK_URL }}
             APP_PORT=49535
             LOG_LEVEL=TRACE
             DATABASE_URL=/home/staging_submitter/db.sqlite
