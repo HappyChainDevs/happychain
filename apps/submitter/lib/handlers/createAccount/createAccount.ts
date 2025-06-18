@@ -65,8 +65,13 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         const event = foundLog && decodeEvent(foundLog)?.args
 
         if (!event) logger.warn("Couldn't find `Deployed` event in receipt")
-        if (event?.account !== predictedAddress)
-            logger.error("Predicted and deployed addresses don't match", predictedAddress, event?.account)
+        if (event?.account !== predictedAddress) {
+            // The most likely causes for this is that the account deployment key is used concurrently outside of the
+            // submitter or that we rebooted and that an old transaction we lost track of landed at this nonce.
+            if (event) logger.error("Predicted and deployed addresses don't match.", predictedAddress, event?.account)
+            const error = "Submitter transaction management issue, please try again."
+            return { status: CreateAccount.Failed, owner, salt, error }
+        }
 
         const address = (event?.account ?? predictedAddress) as Address
         logger.trace("Successfully created account", address, owner, salt)

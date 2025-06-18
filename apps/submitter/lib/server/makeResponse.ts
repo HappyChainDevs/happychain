@@ -61,7 +61,6 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
         case Onchain.EntryPointOutOfGas:
         case Onchain.GasPriceTooLow:
         case SubmitterError.GasPriceTooHigh:
-        case SubmitterError.RpcError:
         case SubmitterError.NonceTooFarAhead:
         case SubmitterError.BoopReplaced:
         case SubmitterError.ExternalSubmit:
@@ -70,7 +69,9 @@ export function makeResponse<T extends { status: Status }>(output: T): [BigIntSe
             return [response, 422] // Unprocessable Content
         case SubmitterError.BufferExceeded:
             return [response, 429] // Too Many Requests
+        case SubmitterError.RpcError:
         case SubmitterError.UnexpectedError:
+        case SubmitterError.TransactionManagementError:
             return [response, 500] // Internal Server Error
         case SubmitterError.OverCapacity:
             // TODO set Retry-After HTTP header

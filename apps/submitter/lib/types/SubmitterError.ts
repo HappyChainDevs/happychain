@@ -43,6 +43,12 @@ export const SubmitterError = {
     ExternalSubmit: "submitterExternalSubmit",
 
     /**
+     * The submitter had an issue with its transaction management. Typically this means that another transaction landed
+     * for the EVM nonce that we were using for the operation. This is usually solveable by retrying the operation.
+     */
+    TransactionManagementError: "submitterTransactionManagementError",
+
+    /**
      * The boop got rejected because the maxFeePerGas (either explicitly specified by the sender
      * or computed from the network) was higher than what the submitter was willing to accept.
      */
