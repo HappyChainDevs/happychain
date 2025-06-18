@@ -26,7 +26,7 @@ async function run() {
     const account = createAccountResult.address
 
     const nonceResult = await boopClient.getNonce({ address: createAccountResult.address, nonceTrack: 0n })
-    if (nonceResult.status !== GetNonce.Success) throw new Error(nonceResult.description)
+    if (nonceResult.status !== GetNonce.Success) throw new Error(nonceResult.error)
     const nonceValue = nonceResult.nonceValue
 
     const boop = await createAndSignMintBoop(eoa, { account, nonceValue })

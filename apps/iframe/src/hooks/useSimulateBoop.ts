@@ -1,5 +1,5 @@
 import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
-import { type Address, getProp, stringify } from "@happy.tech/common"
+import { type Address, stringify } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useRef } from "react"
 import type { RpcTransactionRequest } from "viem"
@@ -68,11 +68,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
 
     return {
         simulateOutput: data?.status === Simulate.Success ? data : undefined,
-        simulateError:
-            error ??
-            (data && data.status !== Simulate.Success //
-                ? new Error(getProp(data, "description", "string"))
-                : undefined),
+        simulateError: error ?? (data && data.status !== Simulate.Success ? new Error(data.error) : undefined),
         isSimulatePending,
     }
 }
