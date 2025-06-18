@@ -1,4 +1,5 @@
 /** @jsxImportSource preact */
+import { useRef } from "preact/hooks"
 import { WalletFrame } from "./WalletFrame"
 import { IsOpenContext, useSetupIsOpenContext } from "./context/IsOpenContext"
 import { useWalletDragger } from "./hooks/useWalletDragger"
@@ -18,7 +19,8 @@ export interface HappyWalletProps {
  */
 export const HappyWallet = ({ windowId, chainId }: HappyWalletProps) => {
     const { isOpen, setIsOpen } = useSetupIsOpenContext()
-    const { handleOffset, walletOffset, dragging, dragProps } = useWalletDragger()
+    const walletRef = useRef<HTMLDivElement>(null)
+    const { handleOffset, walletOffset, dragging, dragProps } = useWalletDragger({ containerRef: walletRef })
 
     if (!chainId || !windowId) {
         throw new Error("Misconfigured HappyWallet. ")
@@ -28,6 +30,7 @@ export const HappyWallet = ({ windowId, chainId }: HappyWalletProps) => {
         <>
             <style>{cssStyles}</style>
             <div
+                ref={walletRef}
                 data-open-state={isOpen}
                 data-drag-state={dragging}
                 style={{ "--happy-translate-y": `${handleOffset}px` }}

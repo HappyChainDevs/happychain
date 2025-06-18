@@ -25,9 +25,17 @@ export function makeBlankImage() {
 }
 
 /**
- * Feature Detection would be much better, however not possible in this case. The primary use here
+ * Determines if the browser supports native drag and drop functionality.
+ * Does not take into account browser quirks such as Firefox incorrectly reporting drop coordinates.
+ */
+export const browserFeatures = {
+    dragAndDrop: typeof document !== "undefined" && "draggable" in document.createElement("div"),
+}
+
+/**
+ * Feature Detection alone would be much better, however not possible in this case. The primary use here
  * is for the drag-and-drop API, which is baseline/'fully supported' on all modern browsers, however
  * the implementation for many (such as Firefox and Safari) is broken in reality.
  */
-export const isFirefox = navigator.userAgent.includes("Firefox")
-export const isChrome = navigator.userAgent.includes("Chrome")
+export const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox")
+export const isChrome = typeof navigator !== "undefined" && navigator.userAgent.includes("Chrome")
