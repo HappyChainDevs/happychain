@@ -510,12 +510,15 @@ export class BlockService {
 
             for (let blockNumber = from; blockNumber <= to; blockNumber++) {
                 try {
+                    // Filled in meanwhile, move forward.
+                    if (this.#current?.number ?? 0n > blockNumber) continue
                     const block = await promises[Number(blockNumber - from)]
                     if (!block) throw "Block was undefined" // this shouldn't happen
-                    // Disallow recursive backfills. This should never happen,
-                    // but might be theoretically possible with reorgs.
+                    // Disallow recursive backfills. Should never happen, but theoretically possible with reorgs.
                     if (!(await this.#handleNewBlock(block, false))) throw "Block was skipped."
                 } catch (e) {
+                    // If the block was filled meanwhile, we can move forward.
+                    if (this.#current?.number ?? 0n > blockNumber) continue
                     blockLogger.error(`Error fetching block ${blockNumber}. Stopping fill for this gap.`, e)
                     return false
                 }
