@@ -285,6 +285,10 @@ export class BlockService {
             let unsubscribe: (() => Promise<void>) | null = null
             let pollingTimer: Timer | undefined = undefined
 
+            // Protection against race conditions where `reject` would be called before it's awaited below.
+            // It will always eventually get awaited below, so this is safe.
+            promise.catch(() => {})
+
             this.#startBlockTimeout()
 
             if (this.#client.transport.type === "webSocket") {
@@ -308,11 +312,8 @@ export class BlockService {
                     // awaited, leading the exception to escape. We however do need the `onError`
                     // as it is also called if there is an error later with the subscription.
 
-                    // For the same reason, we need to queue a microtask, execution will run from here
-                    // to `await promise` and the promise wil be awaited when the microtask is executed.
-                    queueMicrotask(() => {
-                        reject(e)
-                    })
+                    // This is safe because of the `promise.catch` above.
+                    reject(e)
                 }
             } else {
                 pollingTimer = setInterval(async () => {
