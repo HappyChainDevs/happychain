@@ -24,7 +24,8 @@ import {
 export function ConnectModal() {
     return (
         <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col items-center justify-start">
-            <div className="max-w-xs grid grid-rows-[auto_1fr] gap-6 px-2 p-4 w-full">
+            {/* max-h-screen here refers to the embedded iframe screen, not the window screen */}
+            <div className="max-w-xs grid grid-rows-[auto_1fr] gap-6 px-2 p-4 w-full max-h-screen grow">
                 <div className="flex items-center justify-center mt-12">
                     <div className="flex flex-col items-center gap-2">
                         <img
@@ -35,7 +36,7 @@ export function ConnectModal() {
                         <p className="text-xl font-bold">HappyChain</p>
                     </div>
                 </div>
-                <div className="grid min-h-0 max-h-[335px] h-full gap-4">
+                <div className="grid min-h-0 h-full gap-4">
                     <ConnectContent />
                 </div>
             </div>
@@ -149,10 +150,12 @@ const ConnectContent = () => {
     }
     return (
         <>
-            <div className="overflow-y-auto scrollbar-thin">
+            <div className="overflow-y-auto scrollbar-thin grow">
                 <ProviderList onSelect={mutationLogin.mutate} />
             </div>
-            <CloseButton />
+            <div className="grid items-end justify-stretch">
+                <CloseButton />
+            </div>
         </>
     )
 }
