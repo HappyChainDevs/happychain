@@ -1,10 +1,10 @@
 import { Stream, getProp, sleep, tryCatchAsync } from "@happy.tech/common"
 import type { Account } from "viem/accounts"
 import { env } from "#lib/env"
-import { blockService } from "#lib/services"
+import { blockService, evmNonceManager } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
 import type { EvmTxInfo } from "#lib/types"
-import { publicClient, walletClient } from "#lib/utils/clients"
+import { isNonceTooLowError, publicClient, walletClient } from "#lib/utils/clients"
 import { getFees, getLatestBaseFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 
@@ -92,6 +92,10 @@ async function replaceInternal(
             const timeout = sleep(env.RECEIPT_TIMEOUT)
             while (true) if (await Promise.race([waitForNonce(), timeout])) return
         } catch (error) {
+            if (isNonceTooLowError(error)) {
+                const newNonce = await evmNonceManager.resyncIfTooLow(account.address)
+                if (newNonce && newNonce >= evmTxInfo.nonce) return
+            }
             const msg = getProp(error, "message", "string")
             const underpriced = msg?.includes("replacement") || msg?.includes("underpriced")
             if (underpriced) continue // don't wait

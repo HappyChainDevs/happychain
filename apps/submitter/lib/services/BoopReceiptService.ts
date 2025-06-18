@@ -15,7 +15,14 @@ import { GetState } from "#lib/handlers/getState"
 import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
-import { boopStore, computeHash, dbService, findExecutionAccount, simulationCache } from "#lib/services"
+import {
+    boopStore,
+    computeHash,
+    dbService,
+    evmNonceManager,
+    findExecutionAccount,
+    simulationCache,
+} from "#lib/services"
 import { TraceMethod } from "#lib/telemetry/traces"
 import {
     type Boop,
@@ -180,7 +187,7 @@ export class BoopReceiptService {
             if (isNonceTooLowError(error)) {
                 // A tx with the same nonce landed on chain earlier.
                 // This is probably the tx we were trying to replace or cancel.
-
+                evmNonceManager.resyncIfTooLow(account.address)
                 // Give the actual included tx some time to be processed.
                 await sleep(1000)
                 // Then resolve & clear interval. Those will do nothing if
