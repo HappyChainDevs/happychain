@@ -62,7 +62,7 @@ async function replaceInternal(
             if (receivedNonce >= included) included = receivedNonce
             else logger.error(`Included nonce went down from ${included} to ${receivedNonce}, possible re-org.`)
         }
-        if (included > nonce) {
+        if (included >= nonce) {
             logger.info(`Transaction replacement successful for ${address} at nonce ${receivedNonce}`)
             return true
         }
