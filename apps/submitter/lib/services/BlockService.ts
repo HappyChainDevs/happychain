@@ -52,6 +52,8 @@ const checkBlock = type({
  */
 export type Block = typeof checkBlock.infer
 
+const TIMEOUT_MSG = "Timed out while waiting for block"
+
 // Note there is an extra block type: `RpcBlock` from Viem representing an raw block from RPC, which we get on
 // our WebSocket subscription. We normalize those to `InputBlock`.
 
@@ -345,7 +347,10 @@ export class BlockService {
                 unsubscribe && tryCatchAsync(unsubscribe)
                 clearInterval(pollingTimer)
                 clearTimeout(this.blockTimeout)
-                blockLogger.error("Block watcher error", client, stringify(e))
+                // This happens more than the rest, and if the timeout persist, there will be plenty of other logs
+                // for us to notice as the RPC will rotate.
+                if (e === TIMEOUT_MSG) blockLogger.info(TIMEOUT_MSG, client)
+                else blockLogger.error("Block watcher error", client, stringify(e))
                 ++this.#attempt
             }
         }
@@ -354,7 +359,7 @@ export class BlockService {
     #startBlockTimeout() {
         clearTimeout(this.blockTimeout)
         this.blockTimeout = setTimeout(() => {
-            this.#skipToNextClient("Timed out while waiting for block")
+            this.#skipToNextClient(TIMEOUT_MSG)
         }, env.BLOCK_MONITORING_TIMEOUT)
     }
 
