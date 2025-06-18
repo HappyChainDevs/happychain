@@ -82,6 +82,8 @@ jobs:
             export TXM_DB_PATH=/home/faucet/txm.sqlite
             export FAUCET_DB_PATH=/home/faucet/faucet.sqlite
             EOF
+              # cf. https://github.com/appleboy/drone-ssh/issues/175
+              sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' /home/staging_submitter/build/.env
 
               dos2unix .env
 
