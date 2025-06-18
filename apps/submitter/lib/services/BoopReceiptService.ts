@@ -5,6 +5,7 @@ import {
     delayed,
     getOrSet,
     ifDef,
+    pick,
     promiseWithResolvers,
     sleep,
 } from "@happy.tech/common"
@@ -28,7 +29,6 @@ import {
     type Boop,
     type BoopGasInfo,
     type BoopLog,
-    type BoopReceipt,
     type EvmTxInfo,
     Onchain,
     type OnchainStatus,
@@ -245,11 +245,9 @@ export class BoopReceiptService {
 
     @TraceMethod("BoopReceiptService.getReceiptResult")
     private async getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
-        if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length)
-            return {
-                status: WaitForReceipt.Success,
-                receipt: this.buildReceipt(boop, evmTxReceipt),
-            }
+        if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length) {
+            return this.buildReceipt(boop, evmTxReceipt)
+        }
 
         // TODO? Get the revertData from a log and populate here (instead of "0x")
         //       This is quite difficult to do: it would require tracing the evm transaction in its intra-block
@@ -280,11 +278,16 @@ export class BoopReceiptService {
     }
 
     @TraceMethod("BoopReceiptService.buildReceipt")
-    private buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): BoopReceipt {
+    private buildReceipt(boop: Boop, evmTxReceipt: TransactionReceipt): WaitForReceiptOutput {
         if (evmTxReceipt.status !== "success") throw new Error("BUG: buildReceipt")
         const boopHash = computeHash(boop)
-        const logs = this.filterLogs(evmTxReceipt.logs, boopHash)
         const entryPoint = evmTxReceipt.to! // not a contract deploy, so will be set
+        const logs = this.filterLogs(evmTxReceipt.logs, boopHash)
+
+        if (logs === null) {
+            const error = "Submitter transaction management issue, please try again."
+            return { status: SubmitterError.TransactionManagementError, error }
+        }
 
         let status: OnchainStatus = Onchain.Success
         let description = "Boop executed successfully."
@@ -318,11 +321,12 @@ export class BoopReceiptService {
             boop,
         }
         void dbService.saveReceipt(receipt)
-        return receipt
+        return { status: WaitForReceipt.Success, receipt }
     }
 
+    /** Returns the logs pertaining to the boop, or null if the EVM receipt does not match the passed boop hash. */
     @TraceMethod("BoopReceiptService.filterLogs")
-    private filterLogs(logs: Log[], boopHash: Hash): BoopLog[] {
+    private filterLogs(logs: Log[], boopHash: Hash): BoopLog[] | null {
         let select = false
         const filteredLogs: BoopLog[] = []
 
@@ -332,24 +336,20 @@ export class BoopReceiptService {
                 return filteredLogs
             }
             if (select) {
-                const { address, topics, data } = log
-                filteredLogs.push({ address, topics, data })
+                filteredLogs.push(pick(log, "address", "topics", "data"))
             } else if (fromEntryPoint && log.topics[0] === BOOP_SUBMITTED_SELECTOR) {
                 const decodedLog = decodeEvent(log)
                 if (!decodedLog) throw new Error("Found BoopSubmitted event but could not decode")
 
                 const decodedHash = computeHash(decodedLog.args as Boop)
-                if (decodedHash === boopHash) {
-                    select = true
-                }
+                if (decodedHash === boopHash) select = true
             }
         }
-        if (select) {
-            receiptLogger.warn(
-                `Boop ${boopHash} has a 'BoopSubmitted' event but no matching 'BoopExecutionCompleted' event in the transaction receipt.`,
-            )
-        }
-        return filteredLogs
+        // biome-ignore format: terse
+        if (select) receiptLogger.error( // This should never happen.
+            `Boop ${boopHash} has a 'BoopSubmitted' event but no matching 'BoopExecutionCompleted' event in the transaction receipt.`,
+        )
+        return filteredLogs // will be `null` except in this "should never happen" case
     }
 }
 

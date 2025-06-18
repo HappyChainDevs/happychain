@@ -26,6 +26,8 @@ export const CreateAccount = {
     Timeout: SubmitterError.ReceiptTimeout,
     /** The account creation transaction made it onchain, but failed there. */
     Failed: "createAccountFailed",
+    /** @inheritDoc SubmitterError.TransactionManagementError */
+    TransactionManagementError: SubmitterError.TransactionManagementError,
 } as const
 
 /**
