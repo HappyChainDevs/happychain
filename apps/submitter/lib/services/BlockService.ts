@@ -14,12 +14,12 @@ import { ArkErrors, type } from "arktype"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
+import { notifySlack } from "#lib/policies/slackNotitification.ts"
 import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"
-import { notifySlack } from "#lib/policies/slackNotitification.ts"
 
 /**
  * Type of block we get from Viem's `getBlock` — made extra permissive for safety,
@@ -455,7 +455,9 @@ export class BlockService {
                     // malicious, but there are a lot of other problems with that). So we do nothing.
                 } else if (cachedHash !== block.hash) {
                     blockLogger.error("Detected re-org.", blockInfo, `Replacing: ${block.number} / ${cachedHash}`)
-                    notifySlack("Detected re-org." + "\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash)
+                    notifySlack(
+                        "Detected re-org." + "\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash,
+                    )
                     // Do nothing, subscribers should deal with this if they need to.
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
