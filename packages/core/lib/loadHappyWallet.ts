@@ -80,7 +80,7 @@ function registerWallet(opts: LoadHappyWalletOptions) {
 }
 
 function registerOverlay(_opts: LoadHappyWalletOptions) {
-    if (!customElements.get("happy-wallet")) {
+    if (!customElements.get("happy-overlay")) {
         define(HappyOverlay, "happy-overlay", [], { shadow: true })
     }
 
