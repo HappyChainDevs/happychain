@@ -18,6 +18,7 @@ import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { type BlockParam, parseBlockParam } from "#src/requests/utils/eip1474"
 import { getBoopClient } from "#src/state/boopClient"
 import { getPublicClient } from "#src/state/publicClient"
+import type { AppURL } from "#src/utils/appURL"
 import { reqLogger } from "#src/utils/logger"
 
 export const FORWARD = Symbol("FORWARD")
@@ -132,12 +133,13 @@ async function getNonceAtBlock(account: Address, nonceTrack: bigint, block: Bloc
 export async function eth_estimateGas(
     user: HappyUser | undefined,
     tx: ValidRpcTransactionRequest,
+    app: AppURL,
 ): Promise<Hex | Forward> {
     const account = user?.address ?? tx.from
     if (!account || account !== tx.from) return FORWARD
     const boopClient = getBoopClient()
     // This handles both legacy and EIP-1559 transactions.
-    const boop = await boopFromTransaction(account, tx)
+    const boop = await boopFromTransaction(account, tx, app)
     const output = await boopClient.simulate({ entryPoint, boop })
     if (output.status !== Onchain.Success) throw new EIP1474InternalError(`Gas estimation failed: ${output.error}`)
     return toHex(output.executeGas)

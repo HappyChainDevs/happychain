@@ -1,6 +1,6 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193SwitchChainError, EIP1474InvalidInput, type Msgs, type PopupMsgs } from "@happy.tech/wallet-common"
-import { sendBoop } from "#src/requests/utils/boop"
+import { type SendBoopArgs, sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
 import { installNewSessionKey } from "#src/requests/utils/sessionKeys"
@@ -27,12 +27,13 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
         case "wallet_sendTransaction":
         case "eth_sendTransaction": {
             const tx = checkedTx(request.payload.params[0])
-            return await sendBoop({
+            const args = {
                 account: user.address,
                 tx,
                 simulation: request.payload.extraData,
                 signer: eoaSigner,
-            })
+            } satisfies SendBoopArgs
+            return await sendBoop(args, app)
         }
 
         case "eth_requestAccounts": {

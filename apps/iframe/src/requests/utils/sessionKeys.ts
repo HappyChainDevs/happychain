@@ -9,23 +9,23 @@ import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { Permissions } from "#src/constants/permissions"
-import { sendBoop } from "#src/requests/utils/boop"
+import { type SendBoopArgs, sendBoop } from "#src/requests/utils/boop"
 import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
 import { revokedSessionKeys } from "#src/state/interfaceState"
-import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
+import { getPermissions, grantPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getCheckedUser } from "#src/state/user"
 import { checkWalletClient } from "#src/state/walletClient"
-import type { AppURL } from "#src/utils/appURL"
+import { type AppURL, getAppURL } from "#src/utils/appURL"
 import { sessionKeyLogger } from "#src/utils/logger"
 
 /**
  * Returns extraData for a boop, which will specify the session key validator
  * if a session key exists for the destination address, or be empty otherwise.
  */
-export function createValidatorExtraData(account: Address, target: Address): `0x${string}` {
-    const extraData = hasSessionKey(account, target) ? { [ExtraDataKey.Validator]: sessionKeyValidator } : {}
+export function createValidatorExtraData(account: Address, target: Address, app: AppURL): `0x${string}` {
+    const extraData = hasSessionKey(account, target, app) ? { [ExtraDataKey.Validator]: sessionKeyValidator } : {}
     return encodeExtraData(extraData)
 }
 
@@ -56,7 +56,7 @@ async function installSessionKeyExtension(account: Address, target?: Address, se
               })
             : "0x"
 
-    await sendBoop({
+    const args = {
         account,
         tx: {
             to: account,
@@ -68,12 +68,13 @@ async function installSessionKeyExtension(account: Address, target?: Address, se
             }),
         },
         signer: eoaSigner,
-    })
+    } satisfies SendBoopArgs
+    await sendBoop(args, getAppURL())
 }
 
 async function registerSessionKey(account: Address, target: Address, sessionKeyAddress: Address) {
     sessionKeyLogger.trace("registerSessionKey", { account, target, sessionKeyAddress })
-    return await sendBoop({
+    const args = {
         account,
         signer: eoaSigner,
         tx: {
@@ -85,13 +86,14 @@ async function registerSessionKey(account: Address, target: Address, sessionKeyA
                 args: [target, sessionKeyAddress],
             }),
         },
-    })
+    } satisfies SendBoopArgs
+    return await sendBoop(args, getAppURL())
 }
 
 export async function removeSessionKey(account: Address, target: Address) {
     sessionKeyLogger.trace("removeSessionKey", { account, target })
     checkWalletClient()
-    await sendBoop({
+    const args = {
         account,
         signer: eoaSigner,
         tx: {
@@ -103,13 +105,14 @@ export async function removeSessionKey(account: Address, target: Address) {
                 args: [target],
             }),
         },
-    })
+    } satisfies SendBoopArgs
+    await sendBoop(args, getAppURL())
 }
 
 export async function uninstallSessionKeyExtension(account: Address) {
     sessionKeyLogger.trace("uninstallSessionKeyExtension", { account })
     checkWalletClient()
-    await sendBoop({
+    const args = {
         account,
         signer: eoaSigner,
         tx: {
@@ -121,7 +124,8 @@ export async function uninstallSessionKeyExtension(account: Address) {
                 args: [sessionKeyValidator, ExtensionType.Validator, "0x"],
             }),
         },
-    })
+    } satisfies SendBoopArgs
+    await sendBoop(args, getAppURL())
 }
 
 /**
@@ -135,7 +139,9 @@ export function isSessionKeyAuthorized(app: AppURL, target: Address): boolean {
 /**
  * Returns true iff the user has a session key registered for the target address.
  */
-export function hasSessionKey(account: Address, target: Address): boolean {
+export function hasSessionKey(account: Address, target: Address, app: AppURL): boolean {
+    const hasPermission = hasPermissions(app, { [Permissions.SessionKey]: { target } })
+    if (!hasPermission) return false
     const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
     return Boolean(storedSessionKeys[account]?.[target])
 }
@@ -198,7 +204,7 @@ export function authorizeSessionKey(app: AppURL, account: Address, target: Addre
 export async function removeSessionKeys(account: Address, targets: Address[]) {
     sessionKeyLogger.trace("removeSessionKeys", { account, targets })
     checkWalletClient()
-    await sendBoop({
+    const args = {
         account,
         signer: eoaSigner,
         tx: {
@@ -210,7 +216,8 @@ export async function removeSessionKeys(account: Address, targets: Address[]) {
                 args: [targets],
             }),
         },
-    })
+    } satisfies SendBoopArgs
+    await sendBoop(args, getAppURL())
 }
 
 /**

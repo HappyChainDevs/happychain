@@ -40,7 +40,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             const tx = checkedTx(request.payload.params[0])
             const account = getCheckedUser().address
             checkSessionKeyAuthorized(app, tx.to)
-            return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) })
+            return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) }, app)
         }
 
         case "eth_accounts": {
@@ -73,7 +73,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
 
         case "eth_estimateGas": {
             const tx = checkedTx(request.payload.params[0])
-            const gasLimit = await eth_estimateGas(user, tx)
+            const gasLimit = await eth_estimateGas(user, tx, app)
             return gasLimit !== FORWARD ? gasLimit : await sendToPublicClient(app, request.payload)
         }
 
