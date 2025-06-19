@@ -36,7 +36,7 @@ export function ErrorDisplay({ error, onAccept }: { error?: ConnectErrors; onAcc
     return (
         <>
             <ErrorComponent error={error} />
-            <div className="flex items-center justify-center mt-4 ">
+            <div className="flex items-center justify-center mt-4">
                 <Button intent="secondary" type="button" className="w-full h-fit justify-center" onClick={onAccept}>
                     Okay
                 </Button>
