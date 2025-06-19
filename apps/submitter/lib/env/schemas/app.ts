@@ -118,7 +118,7 @@ export const appSchema = z.object({
     PROMETHEUS_PORT: z.coerce.number().default(9090),
 
     /**
-     * The Slack webhook URL to send notifications to.
+     * The Slack webhook URL to send alerts to. If omitted, no alerts are sent (they are all logged anyway).
      */
     SLACK_WEBHOOK_URL: z.string().optional(),
 })

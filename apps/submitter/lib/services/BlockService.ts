@@ -14,7 +14,7 @@ import { ArkErrors, type } from "arktype"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
-import { notifySlack } from "#lib/policies/slackNotitification.ts"
+import { alert } from "#lib/policies/alerting.ts"
 import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, rpcUrls, stringify } from "#lib/utils/clients"
@@ -171,7 +171,7 @@ export class BlockService {
             // Everything's dead. Halt and catch fire, maybe a service restart will help.
             const message = "All RPCs are down. Halting process."
             blockLogger.error(message)
-            notifySlack(message)
+            alert(message)
             exit(1)
         }
 
@@ -181,7 +181,7 @@ export class BlockService {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
             blockLogger.error(message)
-            notifySlack(message)
+            alert(message)
             const { promise, resolve } = promiseWithResolvers()
             let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
             const pollingTimer = setInterval(async () => {
@@ -447,17 +447,16 @@ export class BlockService {
                 const cachedHash = this.#blockHistory.get(block.number)
                 const blockInfo = `Last block: ${curNum} / ${curHash}, New block: ${block.number} / ${block.hash}`
                 if (!cachedHash) {
-                    const message = "Potential long-range re-org."
-                    blockLogger.error(message, blockInfo)
-                    notifySlack(message + "\n" + blockInfo)
+                    const msg = "Potential long-range re-org."
+                    blockLogger.error(msg, blockInfo)
+                    alert(msg + "\n" + blockInfo)
                     // Note: Something is very wrong if this happens. There are various things we could
                     // do, but the submitter won't really suffer from this (unless the RPC is downright
                     // malicious, but there are a lot of other problems with that). So we do nothing.
                 } else if (cachedHash !== block.hash) {
-                    blockLogger.error("Detected re-org.", blockInfo, `Replacing: ${block.number} / ${cachedHash}`)
-                    notifySlack(
-                        "Detected re-org." + "\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash,
-                    )
+                    const msg = "Detected re-org.\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash
+                    blockLogger.error(msg)
+                    alert(msg)
                     // Do nothing, subscribers should deal with this if they need to.
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
