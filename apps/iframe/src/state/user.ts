@@ -4,7 +4,14 @@ import { atom } from "jotai"
 import { getAddress as checksumAddress } from "viem"
 import { StorageKey, storage } from "../services/storage"
 
-const userCompare = (a: HappyUser | undefined, b: HappyUser | undefined) => a?.uid === b?.uid
+const userCompare = (a: HappyUser | undefined, b: HappyUser | undefined) =>
+    a?.uid === b?.uid &&
+    a?.address === b?.address &&
+    a?.ens === b?.ens &&
+    a?.controllingAddress === b?.controllingAddress &&
+    a?.provider === b?.provider &&
+    a?.avatar === b?.avatar
+
 const initialUserValue = storage.get(StorageKey.HappyUser)
 
 // Base atom for the user, wrapped by `userAtom` to provide a custom setter.
@@ -13,9 +20,14 @@ const baseUserAtom = atomWithCompare<HappyUser | undefined>(initialUserValue, us
 export const userAtom = atom(
     (get) => get(baseUserAtom),
     (_get, set, newUser: HappyUser | undefined) => {
+        const currentUser = _get(baseUserAtom)
         if (newUser?.address) {
             const formattedUser = {
                 ...newUser,
+                // if its an update to the current user, we must maintain the existing ENS
+                // since most places where the user is set, the ENS is not available
+                // and so would otherwise be cleared out
+                ens: newUser.ens || currentUser?.uid === newUser.uid ? currentUser?.ens || "" : "",
                 controllingAddress: checksumAddress(newUser.controllingAddress),
                 address: checksumAddress(newUser.address),
             }
