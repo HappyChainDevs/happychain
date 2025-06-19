@@ -12,6 +12,7 @@ export default defineConfig({
         envPrefix: "HAPPY_",
         envDir: __dirname,
         server: { port: 4000, strictPort: true },
+        // Vocs currently ignores this, always serves preview on port 4173 (or higher if busy)
         preview: { port: 4000, strictPort: true },
         resolve: {
             alias: {
