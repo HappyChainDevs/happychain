@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import type { ResponseHeader } from "hono/utils/headers"
 import { executeBodyValidation, executeDescription } from "#lib/handlers/execute"
 import { execute } from "#lib/handlers/execute/execute"
 import { executeOutputValidation } from "#lib/handlers/execute/validation"
@@ -47,11 +48,7 @@ export default new Hono()
             const input = c.req.valid("json")
             const output = await submit(input)
             const [body, code, headers] = makeResponse(output)
-            if (headers) {
-                Object.entries(headers).forEach(([key, value]) => {
-                    c.header(key, value)
-                })
-            }
+            for (const k in headers) c.header(k, headers[k as ResponseHeader])
             validateOutput(body, submitOutputValidation, "submit response")
             return c.json(body, code)
         },
@@ -64,11 +61,7 @@ export default new Hono()
             const input = c.req.valid("json")
             const output = await execute(input)
             const [body, code, headers] = makeResponse(output)
-            if (headers) {
-                Object.entries(headers).forEach(([key, value]) => {
-                    c.header(key, value)
-                })
-            }
+            for (const k in headers) c.header(k, headers[k as ResponseHeader])
             validateOutput(body, executeOutputValidation, "execute response")
             return c.json(body, code)
         },
