@@ -19,7 +19,7 @@ import App from "./App.tsx"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <HappyWalletProvider init={{ chainId: import.meta.env.VITE_CHAIN_ID, disableStyles: true }}>
+        <HappyWalletProvider init={{ chainId: import.meta.env.VITE_CHAIN_ID }}>
             <Toaster theme="system" richColors={true} closeButton={true} />
             <App />
         </HappyWalletProvider>
