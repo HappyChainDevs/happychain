@@ -31,7 +31,6 @@ export type Forward = typeof FORWARD
 export async function getTransactionByHash(hash: Hash): Promise<Transaction | Forward | null> {
     const cached = boopCache.get(hash)
 
-    // TODO we must NOT store receipts where the nonce was not incremented
     // If the receipt is present, the entry is final. If not, try to fetch a more up-to-date state.
     if (cached?.receipt) return formatTransaction(hash, cached)
 
@@ -71,7 +70,6 @@ export async function getTransactionByHash(hash: Hash): Promise<Transaction | Fo
  * be passed to the public client to find an actual Ethereum transaction receipt.
  */
 export async function getTransactionReceipt(hash: Hash): Promise<TransactionReceipt | Forward | null> {
-    // TODO fill cache from sending side
     const cached = boopCache.get(hash)
     if (cached?.receipt) return formatTransactionReceipt(hash, cached.receipt)
 

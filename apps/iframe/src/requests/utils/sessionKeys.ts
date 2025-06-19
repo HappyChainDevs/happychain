@@ -165,8 +165,6 @@ export function getSessionKey(account: Address, target: Address): Address {
 
 /**
  * Installs and authorizes a new session key for the target address.
- *
- * @throws TODO: generic onchain interaction error
  */
 export async function installNewSessionKey(app: AppURL, account: Address, target: Address): Promise<void> {
     const sessionKey = generatePrivateKey()

@@ -129,6 +129,7 @@ export async function sendBoop(
 
         if (output.status !== Onchain.Success) throw translateBoopError(output)
         markBoopAsSuccess(boopHash, output.receipt)
+        boopCache.putReceipt(boopHash, output.receipt)
         return output.receipt.boopHash
     } catch (err) {
         reqLogger.trace(`boop submission failed — ${retry} attempts left`, err)
@@ -216,7 +217,7 @@ export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): Tran
         gasUsed: BigInt(receipt.boop.gasLimit), // TODO incorrect, but ok enough approximation for now
         logs: receipt.logs as Log<bigint, number, false>[],
         status: receipt.status === Onchain.Success ? "success" : "reverted",
-        to: "0x0", // TODO include Boop inside receipt and read from there
+        to: receipt.boop.dest,
         transactionHash: hash,
         type: "eip1559",
 
@@ -231,33 +232,31 @@ export function formatTransactionReceipt(hash: Hash, receipt: BoopReceipt): Tran
 
 /**
  * Given a boop and an optional receipt, returns an EIP1559-style transaction object, which is what is returned
- * for RPC calls to `eth_getTransactionByHash` when it is passed a boop receipt.
+ * for RPC calls to `eth_getTransactionByHash` when it is passed a boop hash.
+ *
+ * An optional simulation can also be passed, which can provide an estimation of `maxFeePerGas`.
  */
 export function formatTransaction(
     hash: Hash,
     { boop: cachedBoop, receipt }: BoopCacheEntry,
     simulation?: SimulateSuccess,
-): TransactionEIP1559 & { boop?: BoopReceipt } {
+): (TransactionEIP1559 & { boop?: BoopReceipt }) | null {
     const currentChain = getCurrentChain()
-    const boop = {
-        ...(cachedBoop ? cachedBoop : {}),
-        ...(receipt ? receipt.boop : {}),
-    }
-    // NOTES(norswap)
-    // - maxPriorityFeePerGas: The submitter might have put some. We can compute this by subtracting the tx receipt's
-    //    effectiveGasPrive minus the basefee. But getting the basefee requires an onchain call. Probably not worth it.
-    // - maxFeePerGas: incorrect approximation by the effectiveGasPrice if we don't have the tx.
-    // - nonce, input, value: incorrect if receipt is missing
-    // - null = missing
+    const boop = receipt ? receipt.boop : cachedBoop
+
+    // This is what eth_getTransactionByHash returns when a transaction is not found.
+    if (!boop) return null
+
     return {
         hash,
         blockHash: receipt?.blockHash || null,
         blockNumber: receipt?.blockNumber || null,
-        from: boop.account!, // TODO need to guarantee one boop is defined at least
+        from: boop.account,
         to: boop.dest ?? null,
         gas: BigInt(boop.gasLimit ?? 0n),
+        // The submitter might have specified one on the EVM tx, but that is not the user's concern.
         maxPriorityFeePerGas: 0n,
-        maxFeePerGas: boop.maxFeePerGas ?? simulation?.maxFeePerGas ?? 0n,
+        maxFeePerGas: (boop.maxFeePerGas || simulation?.maxFeePerGas) ?? 0n,
         nonce: Number(boop.nonceValue ?? 0),
         input: boop.callData || "0x",
         value: boop.value ?? 0n,

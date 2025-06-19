@@ -24,8 +24,8 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 }
 
 /**
- * Handles requests using the connected injected wallet (e.g. Metamask), both requiring and not requiring approval.
- * TODO precision on where and when approval happens (popup vs injected wallet window)
+ * Handles requests using the connected injected wallet (e.g. Metamask), both requiring and not requiring approval
+ * (approval is given in the injected wallet itself).
  */
 export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     reqLogger.trace("injected request:", request.payload.method, request)

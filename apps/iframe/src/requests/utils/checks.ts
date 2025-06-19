@@ -66,8 +66,6 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
 
     if (tx.data && !isHex(tx.data)) return tx as ValidRpcTransactionRequest
 
-    // TODO more
-
     return tx as ValidRpcTransactionRequest
 }
 
