@@ -86,7 +86,6 @@ store.sub(userAtom, async () => {
     try {
         const ensName = await mainnetClient.getEnsName({ address: user.address })
         if (!ensName) return
-
         user.ens = ensName
         store.set(userAtom, user)
     } catch {
