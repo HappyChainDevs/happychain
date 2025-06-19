@@ -186,7 +186,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
     return {
         account: tx.from ?? account,
         dest: tx.to,
-        payer: zeroAddress, // happyPaymaster, // TODO need to fund paymaster
+        payer: zeroAddress, // happyPaymaster, // TODO switch to paymaster
         value: parseBigInt(tx.value) ?? 0n,
         nonceTrack: 0n,
         nonceValue: parseBigInt(tx.nonce) ?? (await getNextNonce(account)),

@@ -65,3 +65,7 @@ export function getPaymasterName(address: Address): string {
     if (isAddressEqual(address, happyPaymaster)) return "HappyChain"
     return shortenAddress(address)
 }
+
+export function getSubmitterName(): string {
+    return "HappyChain"
+}
