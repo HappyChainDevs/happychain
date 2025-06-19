@@ -75,6 +75,8 @@ jobs:
             export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/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
             export LOG_COLORS=true
             export LOG_TIMESTAMPS=true
+            export SUBMITTERS_TO_MONITOR=https://submitter-staging.happy.tech,https://submitter.happy.tech
+            export SUBMITTER_MONITOR_INTERVAL_MS=60000
             EOF
               # cf. https://github.com/appleboy/drone-ssh/issues/175
               sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' .env

@@ -1,12 +1,26 @@
-import { Database as BunDatabase } from "bun:sqlite"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
-import type { Database } from "./types.js"
+import { Kysely, type Dialect } from "kysely";
+import type { Database } from "./types.js";
 
-const dialect = new BunSqliteDialect({
-    database: new BunDatabase(process.env.TXM_DB_PATH ?? ":memory:"),
-})
+async function createDb(): Promise<Kysely<Database>> {
+  const dbPath = process.env.TXM_DB_PATH ?? ":memory:";
+  const isBun = typeof Bun !== "undefined" || Boolean(process.versions?.bun);
+  let dialect: Dialect;
 
-export const db = new Kysely<Database>({
-    dialect,
-})
+  if (isBun) {
+    const { Database: BunDatabase } = await import("bun:sqlite");
+    const { BunSqliteDialect } = await import("kysely-bun-sqlite");
+    dialect = new BunSqliteDialect({
+      database: new BunDatabase(dbPath),
+    });
+  } else {
+    const BetterSqlite3 = (await import("better-sqlite3")).default;
+    const { SqliteDialect } = await import("kysely");
+    dialect = new SqliteDialect({
+      database: new BetterSqlite3(dbPath),
+    });
+  }
+
+  return new Kysely<Database>({ dialect });
+}
+
+export const db = await createDb();
