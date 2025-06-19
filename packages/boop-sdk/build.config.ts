@@ -1,3 +1,5 @@
 import { defineConfig } from "@happy.tech/happybuild"
 
-export default defineConfig({})
+export default defineConfig({
+    bundle: true,
+})
