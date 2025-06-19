@@ -27,6 +27,7 @@ import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { getBoopClient } from "#src/state/boopClient"
 import { addPendingBoop, markBoopAsFailed, markBoopAsSuccess } from "#src/state/boopHistory"
 import { getCurrentChain } from "#src/state/chains"
+import type { AppURL } from "#src/utils/appURL"
 import { reqLogger } from "#src/utils/logger"
 import { createValidatorExtraData } from "./sessionKeys"
 
@@ -90,13 +91,14 @@ export type SendBoopArgs = {
 
 export async function sendBoop(
     { account, tx, simulation: sim, signer, isSponsored = true, nonceTrack = 0n }: SendBoopArgs,
+    app: AppURL,
     retry = 0, // TODO: set to 1?
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
 
     try {
         const boopClient = getBoopClient()
-        let boop = await boopFromTransaction(account, tx)
+        let boop = await boopFromTransaction(account, tx, app)
 
         let simulation = sim
         if (!isSponsored) {
@@ -134,7 +136,7 @@ export async function sendBoop(
     } catch (err) {
         reqLogger.trace(`boop submission failed — ${retry} attempts left`, err)
         deleteNonce(account, nonceTrack)
-        if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, retry - 1)
+        if (retry > 0) return sendBoop({ account, tx, signer, isSponsored }, app, retry - 1)
         if (boopHash) {
             // If the error is a translated boop error, extract its status & description.
             const isHappyRpcError = err instanceof HappyRpcError
@@ -183,7 +185,11 @@ function safeParseSignature(validatorData?: Hex) {
  * Translates an Ethereum transaction that has been checked with {@link
  * checkedTx} into a boop. Supports both EIP1559 and legacy transactions.
  */
-export async function boopFromTransaction(account: Address, tx: ValidRpcTransactionRequest): Promise<Boop> {
+export async function boopFromTransaction(
+    account: Address,
+    tx: ValidRpcTransactionRequest,
+    app: AppURL,
+): Promise<Boop> {
     return {
         account: tx.from ?? account,
         dest: tx.to,
@@ -193,7 +199,7 @@ export async function boopFromTransaction(account: Address, tx: ValidRpcTransact
         nonceValue: parseBigInt(tx.nonce) ?? (await getNextNonce(account)),
         callData: tx.data ?? "0x",
         validatorData: "0x", // we will fill after signing
-        extraData: createValidatorExtraData(account, tx.to),
+        extraData: createValidatorExtraData(account, tx.to, app),
         // Use gas values from the transaction if they exist, for legacy txs, use gasPrice as maxFeePerGas
         maxFeePerGas: parseBigInt(tx.maxFeePerGas) ?? parseBigInt(tx.gasPrice) ?? 0n,
         submitterFee: 0n,

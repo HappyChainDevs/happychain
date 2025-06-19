@@ -76,7 +76,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
                 ? sessionKeySigner(getSessionKey(user.address, tx.to))
                 : eoaSigner
 
-            return await sendBoop({ account, tx, signer })
+            return await sendBoop({ account, tx, signer }, app)
         }
 
         case "eth_getTransactionByHash": {
@@ -96,7 +96,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
 
         case "eth_estimateGas": {
             const tx = checkedTx(request.payload.params[0])
-            const gasLimit = await eth_estimateGas(user, tx)
+            const gasLimit = await eth_estimateGas(user, tx, app)
             return gasLimit !== FORWARD ? gasLimit : await sendToPublicClient(app, request.payload)
         }
 

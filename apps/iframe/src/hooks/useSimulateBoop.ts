@@ -7,6 +7,7 @@ import { entryPoint } from "#src/constants/contracts"
 import { boopFromTransaction } from "#src/requests/utils/boop"
 import type { ValidRpcTransactionRequest } from "#src/requests/utils/checks"
 import { getBoopClient } from "#src/state/boopClient"
+import { getAppURL } from "#src/utils/appURL"
 
 export type UseSimulateBoopArgs = {
     userAddress: Address | undefined
@@ -55,7 +56,7 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
         queryKey: jsonTxQueryKey,
         enabled: !!userAddress && enabled && !lastError.current,
         queryFn: async () => {
-            const boop = await boopFromTransaction(userAddress!, filledTx!)
+            const boop = await boopFromTransaction(userAddress!, filledTx!, getAppURL())
             return await boopClient.simulate({ entryPoint, boop })
         },
         // the refetches are only performed if the window is in focus,
