@@ -45,6 +45,9 @@ TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_ONLY_PKGS}
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs,support/happybuild
 
+# Packages that get published to npm
+PUBLISHED_PKGS := $(SDK_ONLY_PKGS),packages/boop-sdk
+
 # ==================================================================================================
 # CMDS
 
@@ -529,13 +532,16 @@ version: ## Bump all package dependencies according to staged changesets & gener
 .PHONY: version
 
 publish: build test  ## Build, test, then publish current packages
-	$(call forall_make , $(SDK_ONLY_PKGS) , publish)
+	$(call forall_make , $(PUBLISHED_PKGS) , publish)
 	changeset tag # push with `git push --follow-tags`
 .PHONY: publish
 
+publish.dry-run: build  ## Dry-run package publishing
+	$(call forall_make , $(PUBLISHED_PKGS) , publish.dry-run)
+.PHONY: publish
 
 pack: build ## Packs the tarball, ready to publish manually
-	$(call forall_make , $(SDK_ONLY_PKGS) , pack)
+	$(call forall_make , $(PUBLISHED_PKGS) , pack)
 .PHONY: pack
 
 # ==================================================================================================
