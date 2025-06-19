@@ -12,7 +12,7 @@ env:
     DATABASE_URL: "dummy.sqlite"
     SUBMITTER_URL: "https://submitter.happy.tech"
     LOG_COLORS: false
-    LOG_TIMESTAMPS: false
+    LOG_TIMESTAMPS: true
 jobs:
   test:
     runs-on: ubuntu-latest

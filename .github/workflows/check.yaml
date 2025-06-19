@@ -22,7 +22,7 @@ env:
   VITE_TURNSTILE_SITEKEY: "-"
   VITE_FAUCET_ENDPOINT: "-"
   LOG_COLORS: false
-  LOG_TIMESTAMPS: false
+  LOG_TIMESTAMPS: true
 
 jobs:
   check:
