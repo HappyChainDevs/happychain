@@ -12,7 +12,7 @@ on:
 
 env:
   FOUNDRY_PROFILE: default
-  LOG_COLORS: false
+  LOG_COLORS: true
   LOG_TIMESTAMPS: true
 
 jobs:
