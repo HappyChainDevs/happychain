@@ -368,6 +368,7 @@
         "@opentelemetry/sdk-metrics": "^1.30.1",
         "@opentelemetry/sdk-node": "^0.57.2",
         "@opentelemetry/sdk-trace-node": "^1.30.1",
+        "better-sqlite3": "^11.10.0",
         "eventemitter3": "^5.0.1",
         "hono": "^4.7.2",
         "kysely": "^0.27.4",
@@ -378,6 +379,7 @@
       "devDependencies": {
         "@happy.tech/configs": "workspace:*",
         "@happy.tech/happybuild": "workspace:*",
+        "@types/better-sqlite3": "^7.6.13",
         "ts-node": "11.0.0-beta.1",
         "typescript": "^5.6.2",
       },
@@ -1754,6 +1756,8 @@
     "@types/babel__traverse": ["@types/babel__traverse@7.20.7", "", { "dependencies": { "@babel/types": "^7.20.7" } }, "sha512-dkO5fhS7+/oos4ciWxyEyjWe48zmG6wbCheo/G2ZnHx4fs3EU6YC6UM8rk56gAjNJ9P3MTH2jo5jb92/K6wbng=="],
 
     "@types/base16": ["@types/base16@1.0.5", "", {}, "sha512-OzOWrTluG9cwqidEzC/Q6FAmIPcnZfm8BFRlIx0+UIUqnuAmi5OS88O0RpT3Yz6qdmqObvUhasrbNsCofE4W9A=="],
+
+    "@types/better-sqlite3": ["@types/better-sqlite3@7.6.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA=="],
 
     "@types/bn.js": ["@types/bn.js@5.2.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q=="],
 
