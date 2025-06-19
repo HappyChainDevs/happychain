@@ -54,7 +54,7 @@ const envSchema = z.object({
                 try { return Boolean(JSON.parse(str.toLowerCase())) } 
                 catch { return false }
             })(),
-    ),
+        ),
     SUBMITTERS_TO_MONITOR: z
         .string()
         .trim()
