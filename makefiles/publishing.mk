@@ -9,7 +9,8 @@ publish.dry-run: ## Dry Run publish to npm
 .PHONY: publish.dry-run
 
 publish: prepare-dist ## Publish the package to npm
-	bun publish --access public
+	# Keep going even if it fails, typically because one of our package does not need an update.
+	bun publish --access public  || true
 .PHONY: publish
 
 prepare-dist:
