@@ -5,7 +5,7 @@ import { formatEther, isAddress } from "viem"
 import { useBalance } from "wagmi"
 import { classifyTxType, isSupported } from "#src/components/requests/utils/transactionTypes"
 import { useTxDecodedData } from "#src/components/requests/utils/useTxDecodedData"
-import { getPaymaster, getPaymasterName } from "#src/constants/contracts"
+import { getPaymaster, getPaymasterName, getSubmitterName } from "#src/constants/contracts"
 import { useSimulateBoop } from "#src/hooks/useSimulateBoop"
 import { userAtom } from "#src/state/user"
 
@@ -42,6 +42,7 @@ export const EthSendTransaction = ({
     const isSupportedTxType = isSupported(txType)
     const isValidTransaction = !!user?.address && isSupportedTxType && !!txTo
     const isSelfPaying = false // currently we always sponsor
+    const isPaymasterSponsored = false // currently it's submitter-sponsored
     const shouldQueryBalance = (!!txValue || isSelfPaying) && isValidTransaction
     const decodedData = useTxDecodedData({ tx, txTo, account: user?.address })
 
@@ -154,13 +155,16 @@ export const EthSendTransaction = ({
                                     `${values?.f.cost} $HAPPY ${(values?.submitterFee ?? 0n) > 0n ? `(Submitter Fee: ${values?.f.submitterFee})` : ""}`
                                 )}{" "}
                             </FormattedDetailsLine>
-                            {!isSelfPaying && (
+                            {!isSelfPaying && isPaymasterSponsored && (
                                 <span className="text-accent text-xs">
                                     Sponsored by{" "}
                                     <LinkToAddress address={paymasterInUse}>
                                         {getPaymasterName(paymasterInUse)}
                                     </LinkToAddress>
                                 </span>
+                            )}
+                            {!isSelfPaying && !isPaymasterSponsored && (
+                                <span className="text-accent text-xs">Sponsored by {getSubmitterName()}</span>
                             )}
                         </SubsectionContent>
                     </SubsectionBlock>
