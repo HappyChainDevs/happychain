@@ -4,6 +4,7 @@
 
 ### Minor Changes
 
+- 4cd8da2: update how to disable styles on connect button
 - 80b5e99: Rename useHappyChain hook to useHappyWallet.
 - 0da44ab: Rename BadgeProps to ConnectButtonProps.
 

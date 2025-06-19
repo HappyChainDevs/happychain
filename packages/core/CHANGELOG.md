@@ -9,6 +9,8 @@
 
 ### Patch Changes
 
+- 08dcf66: Fix drag handler getting stuck dragging on non-chrome browsers
+- 4cd8da2: update how to disable styles on connect button
 - 0da44ab: Rename BadgeProps to ConnectButtonProps.
 - 3f5d45f: Add new happychain icon
 - 1b07b8a: Allow rpc requests as soon as iframe/wallet is ready to accept them
