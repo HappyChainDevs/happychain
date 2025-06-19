@@ -5,6 +5,7 @@ import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/con
 import { encodeFunctionData, zeroAddress, type Address, type PrivateKeyAccount } from "viem"
 import { env } from "../env"
 import { sendSlackMessageToAlertChannel } from "../slack"
+import { logger } from "../logger"
 
 
 export const zeroGasLimits = {
@@ -62,7 +63,7 @@ export class SubmitterMonitor {
             sendSlackMessageToAlertChannel(`Boop execution failed for submitter ${submitterUrl}: ${stringify(result)}`)
             return
         }
-        console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(result as ExecuteSuccess).receipt.evmTxHash}`)
+        logger.info(`Boop: https://explorer.testnet.happy.tech/tx/${(result as ExecuteSuccess).receipt.evmTxHash}`)
     
         const receiptResult = await boopClient.waitForReceipt({ boopHash: result.receipt.boopHash })
         if (receiptResult.status !== Onchain.Success) {
