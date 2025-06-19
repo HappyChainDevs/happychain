@@ -4,6 +4,8 @@ import { stringify } from "@happy.tech/common"
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
 import { encodeFunctionData, zeroAddress, type Address, type PrivateKeyAccount } from "viem"
 import { env } from "../env"
+import { sendSlackMessageToAlertChannel } from "../slack"
+
 
 export const zeroGasLimits = {
     gasLimit: 0,
@@ -39,22 +41,34 @@ export class SubmitterMonitor {
             owner: eoa.address,
             salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
         })
-        if (createAccountResult.status !== CreateAccount.Success)
-            throw new Error("Account creation failed: " + stringify(createAccountResult))
+        if (createAccountResult.status !== CreateAccount.Success) {
+            sendSlackMessageToAlertChannel(`Account creation failed for submitter ${submitterUrl}: ${stringify(createAccountResult)}`)
+            return
+        }
+            
         const account = createAccountResult.address as Address
     
         const nonceResult = await boopClient.getNonce({ address: account, nonceTrack: 0n })
-        if (nonceResult.status !== GetNonce.Success) throw new Error(nonceResult.error)
+        if (nonceResult.status !== GetNonce.Success) {
+            sendSlackMessageToAlertChannel(`Nonce retrieval failed for submitter ${submitterUrl}: ${stringify(nonceResult)}`)
+            return
+        }
         const nonceValue = nonceResult.nonceValue
     
         const boop = await this.createAndSignMintBoop(eoa, { account, nonceValue })
     
         const result = await boopClient.execute({ boop })
-        if (result.status !== Onchain.Success) throw new Error(`execute failed: ${stringify(result)}`)
+        if (result.status !== Onchain.Success) {
+            sendSlackMessageToAlertChannel(`Boop execution failed for submitter ${submitterUrl}: ${stringify(result)}`)
+            return
+        }
         console.log(`Boop: https://explorer.testnet.happy.tech/tx/${(result as ExecuteSuccess).receipt.evmTxHash}`)
     
         const receiptResult = await boopClient.waitForReceipt({ boopHash: result.receipt.boopHash })
-        if (receiptResult.status !== Onchain.Success) throw new Error(`Receipt not found: ${stringify(receiptResult)}`)
+        if (receiptResult.status !== Onchain.Success) {
+            sendSlackMessageToAlertChannel(`Receipt not found for submitter ${submitterUrl}: ${stringify(receiptResult)}`)
+            return
+        }
     }
 
     

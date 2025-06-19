@@ -76,7 +76,7 @@ jobs:
             export LOG_COLORS=true
             export LOG_TIMESTAMPS=true
             export SUBMITTERS_TO_MONITOR=https://submitter-staging.happy.tech,https://submitter.happy.tech
-            export SUBMITTER_MONITOR_INTERVAL_MS=60000
+            export SUBMITTER_MONITOR_INTERVAL_MS=600000
             EOF
               # cf. https://github.com/appleboy/drone-ssh/issues/175
               sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' .env
