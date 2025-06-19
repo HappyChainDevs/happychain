@@ -544,6 +544,13 @@ pack: build ## Packs the tarball, ready to publish manually
 	$(call forall_make , $(PUBLISHED_PKGS) , pack)
 .PHONY: pack
 
+use-published-packages:
+	echo "Installing published packages... Don't commit these changes!"
+	cd demos/react && bun install @happy.tech/core@latest @happy.tech/react@latest
+	cd apps/iframe && bun install @happy.tech/boop-sdk@latest
+	bun install
+.PHONY: use-published-packages
+
 # ==================================================================================================
 # ENV CONFIG
 
