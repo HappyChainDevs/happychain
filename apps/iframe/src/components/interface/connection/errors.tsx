@@ -110,7 +110,6 @@ export function PendingProvider({ provider, onCancel }: { provider: ConnectionPr
             <div className="overflow-y-auto scrollbar-thin">
                 <LoginPending provider={provider} />
             </div>
-            <CloseButton />
             <CancelButton cancel={() => onCancel()} />
         </>
     )
