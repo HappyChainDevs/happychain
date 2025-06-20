@@ -27,8 +27,8 @@ import { resyncAccount } from "#lib/services/resync"
 
 const BLOCK_GAS_LIMIT = 30_000_000
 const NUM_STUCK_TXS = 10
-const TX_GAS_AMOUNT = 3_000_000n
-const NUM_BLOCKS_TO_FILL = 20
+const TX_GAS_AMOUNT = 1_500_000n
+const NUM_BLOCKS_TO_FILL = 10
 const MONITOR_TIMEOUT = 60_000
 const NUM_FILLER_ACCOUNTS = 10
 // const MIN_ACCOUNT_BALANCE = parseGwei("10000")
@@ -246,7 +246,7 @@ async function run(): Promise<void> {
         orderedTxs.forEach((tx, index) => {
             // Use setTimeout to ensure minimal delay between sends and avoid overwhelming the RPC
             // setTimeout(() => {
-            publicClient.sendRawTransaction({ serializedTransaction: tx.txHash }).catch((error) => {
+            const _hash = publicClient.sendRawTransaction({ serializedTransaction: tx.txHash }).catch((error) => {
                 console.error(
                     `Failed to send tx ${index} (address: ${tx.address}, nonce: ${tx.nonce}): ${error.message}`,
                 )
