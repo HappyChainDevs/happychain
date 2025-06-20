@@ -37,7 +37,14 @@ const RECOVERING_PERIOD_MS = 1000 * 60 // 1 minute
 /**
  * Customize this to send alerts for particularly import errors that jeopardize the ability of the submitter to carry on
  * its task. The default behaviour is to send an alert to a slack channel if in production and `env.SLACK_WEBHOOK_URL`
- * is set.
+ * is set. 
+ * 
+ * If an {@link AlertType} is provided, the alert will be tracked with a recovery mechanism.
+ * When providing a type, you must call {@link notifyAlertIsHealthy} once the issue is resolved. 
+ * After the alert has been healthy for longer than {@link RECOVERING_PERIOD_MS}, a recovery message will be sent.
+ * 
+ * @param message - The message to send to Slack.
+ * @param type - The type of alert to notify about.
  */
 export async function alert( message: string, type?: AlertType) {
     if (!isProduction || !env.SLACK_WEBHOOK_URL) return
@@ -66,6 +73,14 @@ export async function alert( message: string, type?: AlertType) {
     }
 }
 
+
+/**
+ * Notify that an alert type is now healthy. If the alert stays healthy for longer than {@link RECOVERING_PERIOD_MS},
+ * a recovery message will be sent to Slack in production if {@link env.SLACK_WEBHOOK_URL} is set.
+ * 
+ * @param type - The type of alert to notify about.
+ * @param message - The message to send to Slack.
+ */
 export async function notifyAlertIsHealthy(type: AlertType, message: string) {
     if (alertsInformation[type].status === AlertStatus.ALERTING) {
         alertsInformation[type].status = AlertStatus.RECOVERING
