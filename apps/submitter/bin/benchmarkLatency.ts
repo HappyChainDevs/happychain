@@ -17,7 +17,7 @@ async function run({
 
     // Step 1: Create account (this remains serial)
     console.log("Creating test account...")
-    const start = performance.now()
+    let start = performance.now()
     const createAccountResult = await boopClient.createAccount({
         owner: eoa.address,
         salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -35,9 +35,10 @@ async function run({
 
     // Step 2: Initiate transactions with a controlled delay
     console.log(`Initiating ${numBoops} transactions with a ${delayBetweenTransactions}ms delay between each...`)
+    start = performance.now() - start
     for (let i = 0; i < numBoops; i++) {
+        const nonceTrack = BigInt(i) / 50n
         const nonceValue = BigInt(i) % 50n
-        const nonceTrack = i < 50 ? 0n : 1n
         const tx = await createAndSignMintBoop(eoa, { account, nonceTrack, nonceValue })
         boopPromises[i] = delayed(i * delayBetweenTransactions, async (): Promise<void> => {
             const start = performance.now()
@@ -72,7 +73,7 @@ async function run({
     // Step 3: Wait for all initiated transactions to complete
     console.log("All transactions initiated. Waiting for all to complete...")
     await Promise.all(boopPromises)
-    console.log("All transactions completed.")
+    console.log("All transactions completed — total time: " + (performance.now() - start))
 
     // Display results in a console table
     console.log("\n--- Transaction Latency Results ---")
