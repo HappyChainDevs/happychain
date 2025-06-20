@@ -1,5 +1,6 @@
 import { env, isProduction } from "#lib/env"
 import { logger } from "#lib/utils/logger.ts"
+import type { UnionFill } from "@happy.tech/common"
 
 export enum AlertType {
     BLOCK_PRODUCTION_HALTED = "BLOCK_PRODUCTION_HALTED",
@@ -12,11 +13,18 @@ export enum AlertStatus {
     NORMAL = "NORMAL",
 }
 
-type AlertInformation = {
-    status: AlertStatus
-    healthyAt: Date | undefined
-    unhealthyAt: Date | undefined
-}
+type AlertInformation = UnionFill<{
+    status: AlertStatus.ALERTING
+    unhealthyAt: Date
+} | {
+    status: AlertStatus.RECOVERING
+    healthyAt: Date
+    unhealthyAt: Date
+} | {
+    status: AlertStatus.NORMAL
+}>
+
+
 
 export const alertsInformation: Record<AlertType, AlertInformation> = {
     [AlertType.BLOCK_PRODUCTION_HALTED]: {
@@ -53,11 +61,19 @@ export async function alert( message: string, type?: AlertType) {
         if (type) {    
             const info = alertsInformation[type]
             if (info.status === AlertStatus.RECOVERING) {
-                info.healthyAt = undefined
+                alertsInformation[type] = {
+                    status: AlertStatus.ALERTING,
+                    unhealthyAt: info.unhealthyAt,
+                    healthyAt: undefined
+                }
             }
     
             if (info.status === AlertStatus.NORMAL) {
-                info.unhealthyAt = new Date()
+                alertsInformation[type] = {
+                    status: AlertStatus.ALERTING,
+                    unhealthyAt: new Date(),
+                    healthyAt: undefined
+                }
             }
         }
 
@@ -83,16 +99,21 @@ export async function alert( message: string, type?: AlertType) {
  */
 export async function notifyAlertIsHealthy(type: AlertType, message: string) {
     if (alertsInformation[type].status === AlertStatus.ALERTING) {
-        alertsInformation[type].status = AlertStatus.RECOVERING
-        alertsInformation[type].healthyAt = new Date()
+        alertsInformation[type] = {
+            status: AlertStatus.RECOVERING,
+            healthyAt: new Date(),
+            unhealthyAt: alertsInformation[type].unhealthyAt
+        }
     }
 
     if (alertsInformation[type].status === AlertStatus.RECOVERING) {
-        const healthyElapsedTime = Date.now() - alertsInformation[type].healthyAt!.getTime()
+        const healthyElapsedTime = Date.now() - alertsInformation[type].healthyAt.getTime()
         if (healthyElapsedTime > RECOVERING_PERIOD_MS) {
-            alertsInformation[type].status = AlertStatus.NORMAL
-            alertsInformation[type].healthyAt = undefined
-            alertsInformation[type].unhealthyAt = undefined
+            alertsInformation[type] = {
+                status: AlertStatus.NORMAL,
+                healthyAt: undefined,
+                unhealthyAt: undefined
+            }
 
             if (!env.SLACK_WEBHOOK_URL) return
 
