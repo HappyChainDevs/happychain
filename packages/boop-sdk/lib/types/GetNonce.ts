@@ -1,3 +1,5 @@
+import type { UnionFill } from "@happy.tech/common"
+
 export type GetNonceInput = {
     /** Happy Account Address */
     address: `0x${string}`
@@ -12,7 +14,7 @@ export const GetNonce = {
 
 export type GetNonceStatus = (typeof GetNonce)[keyof typeof GetNonce]
 
-export type GetNonceOutput = GetNonceSuccess | GetNonceError
+export type GetNonceOutput = UnionFill<GetNonceSuccess | GetNonceError>
 
 export type GetNonceSuccess = GetNonceInput & {
     status: typeof GetNonce.Success
