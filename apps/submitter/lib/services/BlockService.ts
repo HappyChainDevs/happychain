@@ -17,7 +17,7 @@ import { env } from "#lib/env"
 import { alert } from "#lib/policies/alerting.ts"
 import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
-import { chain, rpcUrls, stringify } from "#lib/utils/clients"
+import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"
 
@@ -93,6 +93,13 @@ export class BlockService {
 
         // In automined tests, no new block will come in, but RPC selection will give us a block via `getBlock`.
         blockLogger.trace("Waiting for initialization...")
+
+        // Get initial block from publicClient, useful for chains with long block times.
+        void publicClient
+            .getBlock()
+            .then((block) => this.#handleNewBlock(block))
+            .catch((e) => blockLogger.warn("Failure of initial block fetch", e))
+
         // Not configurable, this is only on boot, and if your RPCs cannot get you this under 5s, you're toast anyway.
         await waitForCondition(() => this.#current !== undefined, 5000)
         if (!this.#current) {
@@ -359,7 +366,7 @@ export class BlockService {
     #startBlockTimeout() {
         clearTimeout(this.blockTimeout)
         this.blockTimeout = setTimeout(() => {
-            this.#skipToNextClient(TIMEOUT_MSG)
+            this.#skipToNextClient?.(TIMEOUT_MSG)
         }, env.BLOCK_MONITORING_TIMEOUT)
     }
 
