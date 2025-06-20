@@ -44,7 +44,7 @@ async function replaceInternal(
     const initialDelay = 500
     const maxDelay = 8000
     let attempt = 0
-    let included = 0 // current included nonce — okay to start at 0
+    let included = 0 // current included onchain transaction count — okay to start at 0
 
     // TODO We don't really handle re-orgs here and might end up spinning forever.
     //      Not an urgent problem: OP stacks don't re-org unless there is a catastrophe.
@@ -62,7 +62,7 @@ async function replaceInternal(
             if (receivedNonce >= included) included = receivedNonce
             else logger.error(`Included nonce went down from ${included} to ${receivedNonce}, possible re-org.`)
         }
-        if (included >= nonce) {
+        if (included > nonce) {
             logger.info(`Transaction replacement successful for ${address} at nonce ${receivedNonce}`)
             return true
         }
@@ -100,7 +100,7 @@ async function replaceInternal(
         } catch (error) {
             if (isNonceTooLowError(error)) {
                 const newNonce = await evmNonceManager.resyncIfTooLow(account.address)
-                if (newNonce && newNonce >= evmTxInfo.nonce) return
+                if (newNonce && newNonce > evmTxInfo.nonce) return
             }
             const msg = getProp(error, "message", "string")
             const underpriced = msg?.includes("replacement") || msg?.includes("underpriced")
