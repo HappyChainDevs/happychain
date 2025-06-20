@@ -122,23 +122,14 @@ The button turns into a badge displaying the username and avatar after connectin
 The `ConnectButton` component wraps the `happychain-connect-button` [Web Component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), allowing it to be
 used from JSX.
 
-You can disable the default styles by passing the `disableStyles` property. In this case, you
-probably want to specify your own style, for which you need to pass the `disableStyles` option
-to the [`HappyWalletProvider`].
+If you would like to customize the look, the default styles can be completely disabled by specifying `disableStyles:
+true` inside the `init` prop of the the [`HappyWalletProvider`].
 
 [`HappyWalletProvider`]: /sdk/react/api/functions/HappyWalletProvider
 
-:::code-group
-
-```jsx [Default Style] twoslash
+```jsx twoslash
 <ConnectButton />
 ```
-
-```jsx [Custom Style] twolash
-<ConnectButton disableStyles />
-```
-
-:::
 
 ### More
 
