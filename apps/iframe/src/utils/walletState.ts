@@ -1,4 +1,4 @@
-import { AuthState, Msgs } from "@happy.tech/wallet-common"
+import { AuthState, Msgs, type MsgsFromApp } from "@happy.tech/wallet-common"
 import { appMessageBus } from "#src/services/eventBus"
 import { getAuthState } from "#src/state/authState"
 import { setWalletOpenSignal } from "#src/state/interfaceState"
@@ -14,9 +14,19 @@ export function signalOpen() {
     patchTimeoutOn()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true })
 }
-export function signalClosed() {
+
+export function signalClosed(request?: MsgsFromApp[Msgs.ConnectRequest]) {
     patchTimeoutOff()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
+
+    // if a connection request is provided, also emits a ConnectResponse event with a null response,
+    // indicating that the connection attempt was cancelled or not completed.
+    if (request) {
+        void appMessageBus.emit(Msgs.ConnectResponse, {
+            request: request,
+            response: null,
+        })
+    }
 }
 
 /**

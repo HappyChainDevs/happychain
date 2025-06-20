@@ -1,5 +1,5 @@
 import { CreateAccount } from "@happy.tech/boop-sdk"
-import type { ConnectionProvider } from "@happy.tech/wallet-common"
+import type { ConnectionProvider, Msgs, MsgsFromApp } from "@happy.tech/wallet-common"
 import { EIP1193UserRejectedRequestError } from "@happy.tech/wallet-common"
 import { cx } from "class-variance-authority"
 import type { PropsWithChildren } from "react"
@@ -115,9 +115,14 @@ export function PendingProvider({ provider, onCancel }: { provider: ConnectionPr
     )
 }
 
-export function CloseButton() {
+export function CloseButton({ req }: { req?: MsgsFromApp[Msgs.ConnectRequest] | null }) {
     return (
-        <Button intent="ghost" type="button" className="h-fit justify-center" onClick={signalClosed}>
+        <Button
+            intent="ghost"
+            type="button"
+            className="h-fit justify-center"
+            onClick={() => signalClosed(req ?? undefined)}
+        >
             Close
         </Button>
     )

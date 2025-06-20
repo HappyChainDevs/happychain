@@ -154,7 +154,7 @@ const ConnectContent = () => {
                 <ProviderList onSelect={mutationLogin.mutate} />
             </div>
             <div className="grid items-end justify-stretch">
-                <CloseButton />
+                <CloseButton req={clientConnectionRequest ?? undefined} />
             </div>
         </>
     )

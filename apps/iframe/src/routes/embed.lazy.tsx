@@ -49,7 +49,7 @@ function Embed() {
                     signalOpen()
                     break
                 case WalletDisplayAction.Closed:
-                    signalClosed()
+                    signalClosed(undefined)
                     setSecondaryMenuVisibility(false)
                     setDialogLogoutVisibility(false)
                     break
