@@ -95,7 +95,7 @@ async function replaceInternal(
                 ...fees,
             })
             evmTxInfo = { nonce, ...fees }
-            logger.info(`Sent replacement tx ${hash} for ${account} at nonce ${nonce}`)
+            logger.info(`Sent replacement tx ${hash} for ${account.address} at nonce ${nonce}`)
             while (true) if (await waitForNonce()) return
         } catch (error) {
             if (isNonceTooLowError(error)) {
