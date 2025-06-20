@@ -14,7 +14,7 @@ import { ArkErrors, type } from "arktype"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
-import { alert } from "#lib/policies/alerting.ts"
+import { alert, AlertType, notifyAlertIsHealthy } from "#lib/policies/alerting.ts"
 import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
 import { LruCache } from "#lib/utils/LruCache"
 import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
@@ -180,8 +180,10 @@ export class BlockService {
             // Everything's dead. Halt and catch fire, maybe a service restart will help.
             const message = "All RPCs are down. Halting process."
             blockLogger.error(message)
-            alert(message)
+            alert(message, AlertType.ALL_RPC_DOWN)
             exit(1)
+        } else {
+            notifyAlertIsHealthy(AlertType.ALL_RPC_DOWN, "At least one RPC is back online.")
         }
 
         // === Check to see if block production has halted ===
@@ -190,7 +192,7 @@ export class BlockService {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
             blockLogger.error(message)
-            alert(message)
+            alert(message, AlertType.BLOCK_PRODUCTION_HALTED)
             const { promise, resolve } = promiseWithResolvers()
             let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
             const pollingTimer = setInterval(async () => {
@@ -214,6 +216,8 @@ export class BlockService {
             await promise
             // The issue was a block production stall — it should be safe to retry the previous RPCs.
             this.#recentlyFailedRpcs.clear()
+        } else {
+            notifyAlertIsHealthy(AlertType.BLOCK_PRODUCTION_HALTED, "Block production has resumed.")
         }
 
         // === Select RPC ===
@@ -468,7 +472,7 @@ export class BlockService {
                 } else if (cachedHash !== block.hash) {
                     const msg = "Detected re-org.\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash
                     blockLogger.error(msg)
-                    alert(msg)
+                    alert(msg + "\n" + blockInfo)
                     // Do nothing, subscribers should deal with this if they need to.
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
