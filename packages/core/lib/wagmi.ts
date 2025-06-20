@@ -30,7 +30,7 @@ export function happyWagmiConnector(): CreateConnectorFn {
         target() {
             return {
                 id: "happyProvider",
-                name: "HappyChain Wagmi Provider",
+                name: "Happy Wallet",
                 provider: happyProvider,
             }
         },
