@@ -30,16 +30,18 @@ export type AlertRecovering = {
 
 export type Alert = UnionFill<AlertNormal | AlertAlerting | AlertRecovering>
 
+type BlockInfo = {
+    number: number
+    timestamp: number
+}
+
 type RpcStatus = {
     isLive: Alert
     isSyncing: Alert
-    latestBlock: {
-        number: number
-        timestamp: number
-    }
+    latestBlock: BlockInfo
 }
 
-export const NotSyncingSecondsThreshold = 8n
+export const NotSyncingThresholdMilliseconds = 8000
 export const TimeToConsiderAlertRecoveredMilliseconds = 1000 * 60
 
 export class RpcMonitor {
@@ -54,26 +56,10 @@ export class RpcMonitor {
 
         for (const rpcUrl of env.RPCS_TO_MONITOR) {
             this.rpcStatus[rpcUrl] = {
-                isLive: {
-                    status: AlertStatus.NORMAL,
-                    changedAt: new Date(),
-                    unhealthyAt: undefined,
-                    healthyAt: undefined,
-                    recoveredAtBlockNumber: undefined,
-                },
-                isSyncing: {
-                    status: AlertStatus.NORMAL,
-                    changedAt: new Date(),
-                    unhealthyAt: undefined,
-                    healthyAt: undefined,
-                    recoveredAtBlockNumber: undefined,
-                },
-                latestBlock: {
-                    number: 0,
-                    timestamp: 0,
-                },
+                isLive: { status: AlertStatus.NORMAL, changedAt: new Date() },
+                isSyncing: { status: AlertStatus.NORMAL, changedAt: new Date() },
+                latestBlock: { number: 0, timestamp: 0 },
             }
-
             this.rpcClients[rpcUrl] = createViemPublicClient(env.CHAIN_ID, rpcUrl)
             this.rpcLocks[rpcUrl] = false
         }
@@ -91,24 +77,20 @@ export class RpcMonitor {
         if (this.rpcLocks[rpcUrl]) {
             return
         }
-
         this.rpcLocks[rpcUrl] = true
 
+        const viemClient = this.rpcClients[rpcUrl]
         let isLive = true
         let isSyncing = true
-
-        const viemClient = this.rpcClients[rpcUrl]
+        let gap = 0
 
         try {
             const block = await viemClient.getBlock({ blockTag: "latest" })
-            const blockTimestampSeconds = block.timestamp
-
-            // If the difference between the current time and the block timestamp is greater than the threshold, we consider the RPC is not syncing
-            const gap = BigInt(Math.floor(Date.now() / 1000)) - blockTimestampSeconds
-            if (gap > NotSyncingSecondsThreshold) {
+            const blockTimestampSeconds = Number(block.timestamp)
+            gap = Date.now() - blockTimestampSeconds * 1000
+            if (gap > NotSyncingThresholdMilliseconds) {
                 isSyncing = false
             }
-
             this.rpcStatus[rpcUrl].latestBlock = {
                 number: Number(block.number),
                 timestamp: Number(block.timestamp),
@@ -117,21 +99,23 @@ export class RpcMonitor {
             isLive = false
         }
 
+        const latestBlock = { ...this.rpcStatus[rpcUrl].latestBlock }
+
         this.rpcStatus[rpcUrl].isLive = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isLive,
             isLive,
+            new Date(),
             `❗️ *RPC ${rpcUrl} not live*`,
             `✅ *RPC ${rpcUrl} live again*`,
-            this.rpcStatus[rpcUrl].latestBlock.number,
-            this.rpcStatus[rpcUrl].latestBlock.timestamp,
+            latestBlock,
         )
         this.rpcStatus[rpcUrl].isSyncing = await this.handleNewCheckForAnAlert(
             this.rpcStatus[rpcUrl].isSyncing,
             isSyncing,
+            new Date(Date.now() - gap),
             `❗️ *RPC ${rpcUrl} not syncing*`,
             `✅ *RPC ${rpcUrl} is now syncing again*`,
-            this.rpcStatus[rpcUrl].latestBlock.number,
-            this.rpcStatus[rpcUrl].latestBlock.timestamp,
+            latestBlock,
         )
 
         this.rpcLocks[rpcUrl] = false
@@ -139,68 +123,64 @@ export class RpcMonitor {
 
     private async handleNewCheckForAnAlert(
         currentAlert: Alert,
-        newCheck: boolean,
+        isOkay: boolean,
+        alertStartTime: Date,
         alertingMessage: string,
         recoveredMessage: string,
-        latestBlockNumber: number,
-        latestBlockTimestamp: number,
+        latestBlock: BlockInfo,
     ): Promise<Alert> {
-        if (
-            (currentAlert.status === AlertStatus.NORMAL || currentAlert.status === AlertStatus.RECOVERING) &&
-            newCheck === false
-        ) {
-            if (currentAlert.status === AlertStatus.NORMAL) {
-                await sendSlackMessageToAlertChannel(
-                    `*[${new Date().toISOString()}]* ${alertingMessage} \n• *Latest Block Number:* ${latestBlockNumber}\n• *Latest Block Timestamp:* ${new Date(latestBlockTimestamp * 1000).toISOString()}`,
-                )
-                return {
-                    status: AlertStatus.ALERTING,
-                    changedAt: new Date(),
-                    unhealthyAt: new Date(),
-                    healthyAt: undefined,
-                    recoveredAtBlockNumber: undefined,
-                }
-            }
+        const isAlerting = currentAlert.status === AlertStatus.ALERTING
+        const isNormal = currentAlert.status === AlertStatus.NORMAL
+        const isRecovering = currentAlert.status === AlertStatus.RECOVERING
 
+        if (isNormal && !isOkay) {
+            const msg =
+                `${alertingMessage}\n` +
+                `• *Latest Block Number:* ${latestBlock.number}\n` +
+                `• *Latest Block Timestamp:* ${new Date(latestBlock.timestamp * 1000).toISOString()}`
+            await this.#sendAlert(msg)
+            return {
+                status: AlertStatus.ALERTING,
+                changedAt: new Date(),
+                unhealthyAt: alertStartTime,
+            }
+        }
+
+        if (isRecovering && !isOkay)
             return {
                 status: AlertStatus.ALERTING,
                 changedAt: new Date(),
                 unhealthyAt: currentAlert.unhealthyAt,
-                healthyAt: undefined,
-                recoveredAtBlockNumber: undefined,
             }
-        }
 
-        if (currentAlert.status === AlertStatus.ALERTING && newCheck === true) {
+        if (isAlerting && isOkay) {
             return {
                 status: AlertStatus.RECOVERING,
                 changedAt: new Date(),
                 unhealthyAt: currentAlert.unhealthyAt,
                 healthyAt: new Date(),
-                recoveredAtBlockNumber: latestBlockNumber,
+                recoveredAtBlockNumber: latestBlock.number,
             }
         }
 
         const timeSinceLastStatusChange = new Date().getTime() - currentAlert.changedAt.getTime()
-        if (
-            currentAlert.status === AlertStatus.RECOVERING &&
-            timeSinceLastStatusChange > TimeToConsiderAlertRecoveredMilliseconds
-        ) {
+        if (isRecovering && timeSinceLastStatusChange > TimeToConsiderAlertRecoveredMilliseconds) {
             const alertingTimeSeconds = (currentAlert.healthyAt.getTime() - currentAlert.unhealthyAt.getTime()) / 1000
-
-            await sendSlackMessageToAlertChannel(
-                `*[${new Date().toISOString()}]* ${recoveredMessage} \n• *Recovered at block number:* ${currentAlert.recoveredAtBlockNumber}\n• *Alert duration:* ${alertingTimeSeconds}s`,
-            )
-
+            const msg =
+                `${recoveredMessage}\n` +
+                `• *Recovered at block number:* ${currentAlert.recoveredAtBlockNumber}\n` +
+                `• *Alert duration:* ${alertingTimeSeconds}s`
+            await this.#sendAlert(msg)
             return {
                 status: AlertStatus.NORMAL,
                 changedAt: new Date(),
-                unhealthyAt: undefined,
-                healthyAt: undefined,
-                recoveredAtBlockNumber: undefined,
             }
         }
 
         return currentAlert
+    }
+
+    async #sendAlert(msg: string) {
+        return await sendSlackMessageToAlertChannel(`*[${new Date().toISOString()}]* ${msg}`)
     }
 }
