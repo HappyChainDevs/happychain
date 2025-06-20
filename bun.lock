@@ -128,7 +128,7 @@
       "name": "@happy.tech/monitor-service",
       "version": "0.1.0",
       "dependencies": {
-        "@happy.tech/boop-sdk": "workspace:*",
+        "@happy.tech/boop-sdk": "workspace:0.2.0",
         "@happy.tech/common": "workspace:*",
         "@happy.tech/txm": "workspace:0.1.0",
         "eventemitter3": "^5.0.1",
