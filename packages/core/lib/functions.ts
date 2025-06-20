@@ -85,13 +85,6 @@ export function openWallet() {
 }
 
 /**
- * Makes the wallet close.
- */
-export function closeWallet() {
-    internalProvider.displayWallet(false)
-}
-
-/**
  * Register a callback that gets called whenever the user changes.
  */
 export function onUserUpdate(callback: UserUpdateCallback): ListenerUnsubscribeFn {

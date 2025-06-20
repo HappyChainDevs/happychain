@@ -1,6 +1,6 @@
 import { EIP1193ErrorCodes } from "@happy.tech/wallet-common"
 import { useCallback, useEffect, useState } from "preact/hooks"
-import { closeWallet, connect as hcConnect, disconnect as hcDisconnect, openWallet } from "../functions"
+import { connect as hcConnect, disconnect as hcDisconnect, openWallet } from "../functions"
 import { internalProvider } from "../happyProvider"
 
 export function useConnection() {
@@ -52,10 +52,5 @@ export function useConnection() {
         openWallet()
     }, [])
 
-    const close = useCallback(() => {
-        if (connecting) setConnecting(false)
-        closeWallet()
-    }, [connecting])
-
-    return { connect, disconnect, connecting, open, close }
+    return { connect, disconnect, connecting, open }
 }
