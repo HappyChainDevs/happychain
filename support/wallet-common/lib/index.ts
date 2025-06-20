@@ -12,6 +12,7 @@ export { AuthState, WalletType } from "./interfaces/happyUser"
 
 export * from "./errors"
 
+export { HappyMethodNames } from "./interfaces/eip1193"
 export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 
 // services
@@ -33,7 +34,6 @@ export type {
     RPCMethods,
     HappyMethods,
 } from "./interfaces/eip1193"
-export { HappyMethodNames } from "./interfaces/eip1193"
 export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
 
 export type {
