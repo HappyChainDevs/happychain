@@ -17,6 +17,7 @@ import {
 } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { getBoopAccountAddress } from "#src/connections/boopAccount"
+import { deploymentVar } from "#src/env"
 import { StorageKey, storage } from "#src/services/storage"
 import { getPermissions } from "#src/state/permissions"
 import { getUser } from "#src/state/user"
@@ -163,7 +164,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         if (signal?.aborted) throw new ConnectionAbortedError()
         // Connect to web3Auth using the JWT token
         const addresses = await this.#web3ConnectWithRetry({
-            verifier: import.meta.env.VITE_WEB3AUTH_VERIFIER,
+            verifier: deploymentVar("VITE_WEB3AUTH_VERIFIER"),
             verifierId: idToken.claims.sub,
             idToken: idToken.token,
         } satisfies JWTLoginParams)
