@@ -8,19 +8,22 @@ import { defineConfig, loadEnv, mergeConfig } from "vite"
 import type { ViteUserConfig } from "vitest/config"
 import z from "zod"
 
+const DEPL = process.env.VITE_DEPLOYMENT || "PROD"
+
 const envConfigSchema = z.object({
+    VITE_DEPLOYMENT: z.enum(["LOCAL", "STAGING", "PROD"]),
     VITE_SUBMITTER_URL: z.string(),
-    VITE_FIREBASE_API_KEY: z.string(),
-    VITE_FIREBASE_AUTH_DOMAIN: z.string(),
-    VITE_FIREBASE_PROJECT_ID: z.string(),
-    VITE_FIREBASE_STORAGE_BUCKET: z.string(),
-    VITE_FIREBASE_MESSAGE_SENDER_ID: z.string(),
-    VITE_FIREBASE_APP_ID: z.string(),
-    VITE_WEB3AUTH_CLIENT_ID: z.string(),
-    VITE_WEB3AUTH_NETWORK: z.string(),
-    VITE_WEB3AUTH_VERIFIER: z.string(),
     VITE_TURNSTILE_SITEKEY: z.string(),
     VITE_FAUCET_ENDPOINT: z.string(),
+    [`VITE_FIREBASE_API_KEY_${DEPL}`]: z.string(),
+    [`VITE_FIREBASE_AUTH_DOMAIN_${DEPL}`]: z.string(),
+    [`VITE_FIREBASE_PROJECT_ID_${DEPL}`]: z.string(),
+    [`VITE_FIREBASE_STORAGE_BUCKET_${DEPL}`]: z.string(),
+    [`VITE_FIREBASE_MESSAGE_SENDER_ID_${DEPL}`]: z.string(),
+    [`VITE_FIREBASE_APP_ID_${DEPL}`]: z.string(),
+    [`VITE_WEB3AUTH_CLIENT_ID_${DEPL}`]: z.string(),
+    [`VITE_WEB3AUTH_NETWORK_${DEPL}`]: z.enum(["sapphire_devnet", "sapphire_mainnet"]),
+    [`VITE_WEB3AUTH_VERIFIER_${DEPL}`]: z.string(),
 })
 
 // https://vitejs.dev/config/

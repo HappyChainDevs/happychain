@@ -599,6 +599,10 @@ select-allowed-hosts:
 	$(call update_env,demos/vue/.env,ALLOWED_HOSTS,$(urls))
 .PHONY: select-allowed-hosts
 
+select-auth:
+	$(call update_env,apps/iframe/.env,VITE_DEPLOYMENT,$(deployment))
+.PHONY: select-auth
+
 select-docs:
 	$(call update_env,apps/docs/.env,HAPPY_DOCS_URL,$(url))
 .PHONY: select-docs
@@ -653,6 +657,18 @@ select-chain-prod:
 	make select-staging-contracts use=false
 .PHONY: select-chain-prod
 
+select-auth-local:
+	make select-auth deployment=LOCAL
+.PHONY: select-auth-local
+
+select-auth-staging:
+	make select-auth deployment=STAGING
+.PHONY: select-auth-local
+
+select-auth-prod:
+	make select-auth deployment=PROD
+.PHONY: select-auth-local
+
 select-docs-local:
 	make select-docs url=http://localhost:4000
 .PHONY: select-docs-local
@@ -665,13 +681,13 @@ select-docs-prod:
 	make select-docs url=https://docs.happy.tech
 .PHONY: select-docs-prod
 
-select-all-local: select-chain-local select-submitter-local select-iframe-local select-docs-local
+select-all-local: select-chain-local select-submitter-local select-iframe-local select-auth-local select-docs-local
 .PHONY: select-all-local
 
-select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging select-docs-staging
+select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging select-auth-staging select-docs-staging
 .PHONY: select-all-staging
 
-select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod select-docs-prod
+select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod select-auth-prod select-docs-prod
 .PHONY: select-all-prod
 
 select-iframe-dev-staging: select-all-staging select-iframe-local
