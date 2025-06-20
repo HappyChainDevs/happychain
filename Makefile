@@ -559,7 +559,6 @@ use-published-packages:
 select-submitter:
 	$(call update_env,apps/iframe/.env,VITE_SUBMITTER_URL,$(url))
 	$(call update_env,apps/submitter/.env,SUBMITTER_URL,$(url))
-	$(call update_env,packages/boop-sdk/.env,SUBMITTER_URL,$(url))
 	$(call update_env,apps/docs/.env,HAPPY_SUBMITTER_URL,$(url))
 .PHONY: select-submitter
 
@@ -574,13 +573,11 @@ select-chain:
 	$(call update_env,demos/js/.env,VITE_CHAIN_ID,$(chain))
 	$(call update_env,demos/react/.env,VITE_CHAIN_ID,$(chain))
 	$(call update_env,demos/vue/.env,VITE_CHAIN_ID,$(chain))
-	$(call update_env,packages/boop-sdk/.env,CHAIN_ID,$(chain))
 .PHONY: select-chain
 
 select-rpc-url:
 	$(call update_env,apps/submitter/.env,RPC_URLS,$(url))
 	$(call update_env,apps/randomness/.env,RPC_URL,$(url))
-	$(call update_env,packages/boop-sdk/.env,RPC_URL,$(url))
 	$(call update_env,apps/iframe/.env,HAPPY_RPC_OVERRIDE,$(url))
 	$(call update_env,packages/core/.env,HAPPY_RPC_OVERRIDE,$(url))
 .PHONY: select-rpc-url
@@ -592,7 +589,6 @@ select-rpc-urls:
 select-staging-contracts:
 	$(call update_env,apps/iframe/.env,VITE_USE_STAGING_CONTRACTS,$(use))
 	$(call update_env,apps/submitter/.env,USE_STAGING_CONTRACTS,$(use))
-	$(call update_env,packages/boop-sdk/.env,USE_STAGING_CONTRACTS,$(use))
 .PHONY: select-staging-contracts
 
 # Sets the allowed hosts for Vite.
