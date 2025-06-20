@@ -6,7 +6,7 @@ import { createAndSignMintBoop } from "#lib/utils/test/helpers" // no barrel imp
 /**
  * Runs the main test sequence, creating an account and sending multiple boop transactions concurrently.
  */
-async function run({
+export async function run({
     eoa = privateKeyToAccount(generatePrivateKey()),
     numBoops = 80,
 }: { eoa?: PrivateKeyAccount; numBoops?: number } = {}) {
@@ -27,6 +27,7 @@ async function run({
     const account = createAccountResult.address
     console.log(`Account created: ${account} in ${performance.now() - start}`)
     if (numBoops === 0) return
+
     // 80 boops spaced 50ms = consistently spaced sending for 4 seconds
     const delayBetweenTransactions = 50
     // Array to store results for console.table
@@ -87,8 +88,33 @@ async function run({
     console.log(`Standard Deviation: ${stdDeviation}`)
 }
 
-// // Uncomment to benchmark account creation latency.
-// for (let i = 0; i < 10; i++) {
+// No benchmark, but can be used to spam `createAccount` on the submitter.
+export async function runAccounts(numAccounts: number) {
+    const boopClient = new BoopClient({
+        rpcUrl: process.env.RPC_HTTP_URLS?.split(",").map((a) => a.trim())[0],
+        submitterUrl: process.env.SUBMITTER_URL,
+    })
+    const promises = []
+    for (let i = 0; i < numAccounts; i++) {
+        const account = privateKeyToAccount(generatePrivateKey())
+        promises.push(
+            boopClient.createAccount({
+                owner: account.address,
+                salt: "0x0000000000000000000000000000000000000000000000000000000000000001",
+            }),
+        )
+    }
+    const result = await Promise.allSettled(promises)
+    console.log(result)
+}
+
+// Uncomment to spam submitter with createAccount.
+// const start = performance.now()
+// await runAccounts(500)
+// console.log("finished in " + (performance.now() - start))
+
+// Uncomment to benchmark account creation latency.
+// for (let i = 0; i < 100; i++) {
 //     await run({ numBoops: 0 })
 // }
 
