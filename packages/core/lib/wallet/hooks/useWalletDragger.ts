@@ -138,7 +138,7 @@ function useNativeDrag(shared: ReturnType<typeof useWalletDragSharedState>) {
 
         // Disables ghosting. cf. makeBlankImage docstring
         // note: works on chrome, broken on safari in some cases (safari will use useCustomDrag)
-        e.dataTransfer.setDragImage(blank, 0, 0)
+        if (blank) e.dataTransfer.setDragImage(blank, 0, 0)
     }
 
     function onDragEnd(e: DragEvent) {
