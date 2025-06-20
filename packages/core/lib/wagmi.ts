@@ -38,7 +38,7 @@ export function happyWagmiConnector(): CreateConnectorFn {
 
     return (...args) => {
         const connector = connectorFn(...args)
-        const onConnect = connector.onConnect
+        const onConnect = connector.onConnect.bind(connector)
         connector.onConnect = (connectInfo) => {
             onConnect(connectInfo)
             loadHappyWallet({ chainId: connectInfo.chainId })

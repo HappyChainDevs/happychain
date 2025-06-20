@@ -19,6 +19,7 @@ export function makeIframeUrl({ windowId, chainId }: IframeSrcOptions) {
  * e.dataTransfer.setDragImage(img, 0, 0)
  */
 export function makeBlankImage() {
+    if (typeof window === "undefined") return null
     const img = new Image()
     img.src = blankIcon
     return img

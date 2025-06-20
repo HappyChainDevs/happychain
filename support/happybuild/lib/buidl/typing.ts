@@ -3,7 +3,6 @@ import { $ } from "bun"
 import type { Context } from "../build"
 import type { Config } from "../config/types"
 import { colors } from "../utils/colors"
-import { base } from "../utils/globals"
 import { spinner } from "../utils/spinner"
 import { rollupTypes } from "./rollupTypes"
 import { tscBuild } from "./typescript"
@@ -58,7 +57,7 @@ async function writeTypesStubs(config: Config) {
         spinner.setText(`${config.fullName} — Generating index type stub...`)
         // We need the absolute type here, or api-extractor won't be able to read the through the
         // symlink.
-        const importPath = join(base, config.outDir, "types", ex.entrypoint).replace(".ts", "")
-        await Bun.write(ex.typesOutputFile, `export * from '${importPath}'\n` + "export {}")
+        const importPath = join("types", ex.entrypoint).replace(".ts", "")
+        await Bun.write(ex.typesOutputFile, `export * from './${importPath}'\n` + "export {}")
     }
 }
