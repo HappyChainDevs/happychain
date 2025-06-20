@@ -4,7 +4,7 @@ import { createBigIntStorage } from "@happy.tech/common"
 import { atom, getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { StorageKey } from "#src/services/storage"
-import { logger } from "#src/utils/logger"
+import { reqLogger } from "#src/utils/logger"
 import { userAtom } from "./user"
 
 // === Atom ============================================================================================================
@@ -89,7 +89,7 @@ export function markBoopAsSuccess(boopHash: Hash, receipt: BoopReceipt): void {
     const history = store.get(historyAtom)
     const index = history.findIndex((entry) => entry.boopHash === boopHash)
     if (index < 0) {
-        logger.error("Updating non-existing entry", receipt)
+        reqLogger.error("Updating non-existing entry", receipt)
         return
     }
     history.splice(index, 1, { ...history[index], status: Onchain.Success, receipt })
@@ -100,7 +100,7 @@ export function markBoopAsFailed(boopHash: Hash, status: string, error: string):
     const history = store.get(historyAtom)
     const index = history.findIndex((entry) => entry.boopHash === boopHash)
     if (index < 0) {
-        logger.error("Updating non-existing entry", boopHash)
+        reqLogger.error("Updating non-existing entry", boopHash)
         return
     }
     history.splice(index, 1, { ...history[index], status, error })

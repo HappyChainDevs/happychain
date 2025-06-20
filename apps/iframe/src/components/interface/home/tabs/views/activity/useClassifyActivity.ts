@@ -3,7 +3,7 @@ import { parseBigInt } from "@happy.tech/common"
 import { type Address, erc20Abi, keccak256, stringToHex } from "viem"
 import { useReadContracts } from "wagmi"
 import type { HistoryEntry } from "#src/state/boopHistory"
-import { logger } from "#src/utils/logger"
+import { miscLogger } from "#src/utils/logger"
 
 export enum OperationType {
     NativeTransfer = "native-transfer",
@@ -101,6 +101,6 @@ function decodeERC20TransferLog(log: BoopLog) {
         if (!from || !to || !amount) return
         return { address: log.address, from, to, amount }
     } catch {
-        logger.info("Failed to decode ERC20 transfer log", log)
+        miscLogger.info("Failed to decode ERC20 transfer log", log)
     }
 }

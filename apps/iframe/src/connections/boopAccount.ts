@@ -1,7 +1,7 @@
 import { CreateAccount } from "@happy.tech/boop-sdk"
 import type { Address } from "@happy.tech/common"
 import { getBoopClient } from "#src/state/boopClient"
-import { logger, reqLogger } from "#src/utils/logger"
+import { reqLogger } from "#src/utils/logger"
 
 export async function getBoopAccountAddress(owner: Address): Promise<Address> {
     const salt = "0x1"
@@ -21,7 +21,7 @@ export async function getBoopAccountAddress(owner: Address): Promise<Address> {
 
         throw result
     } catch (error) {
-        logger.error("Failed to create Boop account:", error)
+        reqLogger.error("Failed to create Boop account:", error)
         throw error
     }
 }
