@@ -1,4 +1,5 @@
 import { type Address, type Hash, type Hex, type Override, serializeBigInt } from "@happy.tech/common"
+import { deployment as happyChainSepoliaDeployment } from "@happy.tech/contracts/boop/sepolia"
 import {
     type Boop,
     type BoopReceipt,
@@ -25,7 +26,6 @@ import {
     decodeBoop,
     encodeBoop,
 } from "@happy.tech/submitter/client"
-import { env } from "./env"
 import type { GetNonceInput, GetNonceOutput } from "./types/GetNonce"
 import { ApiClient } from "./utils/apiClient"
 import { getNonce } from "./utils/getNonce"
@@ -51,9 +51,9 @@ export class BoopClient {
 
     #applyDefaults(config?: Partial<BoopClientConfig>): BoopClientConfig {
         return {
-            submitterUrl: config?.submitterUrl ?? env.SUBMITTER_URL,
-            rpcUrl: config?.rpcUrl ?? env.RPC_URL,
-            entryPoint: config?.entryPoint ?? env.ENTRYPOINT,
+            submitterUrl: config?.submitterUrl ?? "https://submitter.happy.tech",
+            rpcUrl: config?.rpcUrl ?? "https://rpc.testnet.happy.tech/http",
+            entryPoint: config?.entryPoint ?? happyChainSepoliaDeployment.EntryPoint,
         }
     }
 
