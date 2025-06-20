@@ -1,13 +1,8 @@
-import { Msgs } from "@happy.tech/wallet-common"
 import { ArrowLeftIcon, ArrowsInSimpleIcon } from "@phosphor-icons/react"
 import { useRouter } from "@tanstack/react-router"
-import { appMessageBus } from "#src/services/eventBus"
 import { navigationStateManager } from "#src/utils/NavStateManager"
+import { signalClosed } from "#src/utils/walletState.ts"
 import { TriggerSecondaryActionsMenu } from "./menu-secondary-actions/SecondaryActionsMenu"
-
-function signalClosed() {
-    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
-}
 
 export const GlobalHeader = () => {
     const router = useRouter()
@@ -41,7 +36,7 @@ export const GlobalHeader = () => {
                     type="button"
                     aria-label="Click to hide wallet"
                     className="dark:opacity-60"
-                    onClick={signalClosed}
+                    onClick={() => signalClosed(undefined)}
                 >
                     <ArrowsInSimpleIcon weight="bold" />
                 </button>
