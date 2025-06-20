@@ -1,4 +1,4 @@
-import { createViemPublicClient } from "@happy.tech/common"
+import { type UnionFill, createViemPublicClient } from "@happy.tech/common"
 import type { PublicClient } from "viem"
 import { env } from "../env"
 import { sendSlackMessageToAlertChannel } from "../slack"
@@ -12,15 +12,12 @@ enum AlertStatus {
 export type AlertNormal = {
     status: AlertStatus.NORMAL
     changedAt: Date
-    unhealthyAt: undefined
-    healthyAt: undefined
 }
 
 export type AlertAlerting = {
     status: AlertStatus.ALERTING
     changedAt: Date
     unhealthyAt: Date
-    healthyAt: undefined
 }
 
 export type AlertRecovering = {
@@ -28,9 +25,10 @@ export type AlertRecovering = {
     changedAt: Date
     unhealthyAt: Date
     healthyAt: Date
+    recoveredAtBlockNumber: number
 }
 
-export type Alert = AlertNormal | AlertAlerting | AlertRecovering
+export type Alert = UnionFill<AlertNormal | AlertAlerting | AlertRecovering>
 
 type RpcStatus = {
     isLive: Alert
@@ -61,12 +59,14 @@ export class RpcMonitor {
                     changedAt: new Date(),
                     unhealthyAt: undefined,
                     healthyAt: undefined,
+                    recoveredAtBlockNumber: undefined,
                 },
                 isSyncing: {
                     status: AlertStatus.NORMAL,
                     changedAt: new Date(),
                     unhealthyAt: undefined,
                     healthyAt: undefined,
+                    recoveredAtBlockNumber: undefined,
                 },
                 latestBlock: {
                     number: 0,
@@ -158,6 +158,7 @@ export class RpcMonitor {
                     changedAt: new Date(),
                     unhealthyAt: new Date(),
                     healthyAt: undefined,
+                    recoveredAtBlockNumber: undefined,
                 }
             }
 
@@ -166,6 +167,7 @@ export class RpcMonitor {
                 changedAt: new Date(),
                 unhealthyAt: currentAlert.unhealthyAt,
                 healthyAt: undefined,
+                recoveredAtBlockNumber: undefined,
             }
         }
 
@@ -175,6 +177,7 @@ export class RpcMonitor {
                 changedAt: new Date(),
                 unhealthyAt: currentAlert.unhealthyAt,
                 healthyAt: new Date(),
+                recoveredAtBlockNumber: latestBlockNumber,
             }
         }
 
@@ -186,7 +189,7 @@ export class RpcMonitor {
             const alertingTimeSeconds = (currentAlert.healthyAt.getTime() - currentAlert.unhealthyAt.getTime()) / 1000
 
             await sendSlackMessageToAlertChannel(
-                `*[${new Date().toISOString()}]* ${recoveredMessage} \n• *Latest Block Number:* ${latestBlockNumber}\n• *Latest Block Timestamp:* ${new Date(latestBlockTimestamp * 1000).toISOString()} \n• *Alert duration:* ${alertingTimeSeconds}s`,
+                `*[${new Date().toISOString()}]* ${recoveredMessage} \n• *Recovered at block number:* ${currentAlert.recoveredAtBlockNumber}\n• *Alert duration:* ${alertingTimeSeconds}s`,
             )
 
             return {
@@ -194,6 +197,7 @@ export class RpcMonitor {
                 changedAt: new Date(),
                 unhealthyAt: undefined,
                 healthyAt: undefined,
+                recoveredAtBlockNumber: undefined,
             }
         }
 
