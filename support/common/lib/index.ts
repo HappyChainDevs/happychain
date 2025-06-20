@@ -98,7 +98,8 @@ export { fetchWithRetry } from "./utils/fetch"
 export { type Fn, type Lazy, force } from "./utils/functions"
 export { binaryPartition, partition, filterMap } from "./utils/iterables"
 export { accessorsFromAtom, atomWithCompare, atomWithCompareAndStorage, createBigIntStorage } from "./utils/jotai"
-export { LogLevel, type LogTag, Logger, type TaggedLogger, logLevel } from "./utils/logger"
+export type { LogTag, TaggedLogger, LoggerOptions } from "./utils/logger"
+export { LogLevel, Logger, logLevel, logTag } from "./utils/logger"
 export { Mutex } from "./utils/mutex"
 export {
     type UndefinedAsOptional,

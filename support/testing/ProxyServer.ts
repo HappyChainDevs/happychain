@@ -38,7 +38,7 @@ export class ProxyServer {
     constructor(
         ANVIL_PORT: number,
         PROXY_PORT: number,
-        private logger?: Logger | TaggedLogger,
+        private logger?: TaggedLogger,
     ) {
         this.#PROXY_PORT = PROXY_PORT
         this.#ANVIL_PORT = ANVIL_PORT

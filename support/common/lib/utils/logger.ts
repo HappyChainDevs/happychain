@@ -29,7 +29,14 @@ export function logLevel(logLevelName: string | undefined): LogLevel {
 /**
  * Tags that categorize log messages by subsystem or feature area.
  */
-export type LogTag = string
+export type LogTag = string & { brand: "tag" }
+
+/**
+ * Creates a {@link LogTag} with the given name.
+ */
+export function logTag(name: string): LogTag {
+    return name as LogTag
+}
 
 /**
  * Logger interface that injects the log tag into the logging methods automatically.
@@ -119,10 +126,11 @@ export class Logger {
     }
 
     public static create(
-        tag: LogTag,
+        tagName: string,
         { level = Logger.instance.minLevel, colors = true, timestamp = true }: LoggerOptions = {},
     ): TaggedLogger {
         const logger = new Logger()
+        const tag = logTag(tagName)
         logger.useColors = colors
         logger.showTimestamp = timestamp
         logger.enableTags(tag)
