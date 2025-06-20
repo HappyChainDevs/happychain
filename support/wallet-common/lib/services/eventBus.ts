@@ -1,5 +1,4 @@
-import { LogLevel, Logger, type TaggedLogger } from "@happy.tech/common"
-import { waitForCondition } from "../utils/waitForCondition"
+import { LogLevel, Logger, type TaggedLogger, waitForCondition } from "@happy.tech/common"
 
 const silentLogger = Logger.create("silent", { level: LogLevel.OFF })
 

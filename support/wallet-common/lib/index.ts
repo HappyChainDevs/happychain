@@ -12,14 +12,11 @@ export { AuthState, WalletType } from "./interfaces/happyUser"
 
 export * from "./errors"
 
+export { HappyMethodNames } from "./interfaces/eip1193"
 export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 
 // services
 export { EventBus, EventBusMode } from "./services/eventBus"
-
-// utils
-export { waitForCondition } from "./utils/waitForCondition"
-export { shortenAddress } from "./utils/shortenAddress"
 
 // === TYPES =======================================================================================
 

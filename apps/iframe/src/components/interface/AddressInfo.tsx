@@ -1,5 +1,5 @@
 import { Clipboard as ArkClipboard, useClipboard } from "@ark-ui/react/clipboard"
-import { shortenAddress } from "@happy.tech/wallet-common"
+import { shortenAddress } from "@happy.tech/common"
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 import type { Address } from "viem"
 

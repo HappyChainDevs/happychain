@@ -1,6 +1,6 @@
-import type { Address } from "@happy.tech/common"
+import { type Address, waitForCondition } from "@happy.tech/common"
 import type { Chain, HappyUser } from "@happy.tech/wallet-common"
-import { defaultChain, waitForCondition } from "@happy.tech/wallet-common"
+import { defaultChain } from "@happy.tech/wallet-common"
 import {
     type CustomTransport,
     type ParseAccount,

@@ -1,6 +1,7 @@
 import { exit } from "node:process"
 import {
     type Hash,
+    LruCache,
     Mutex,
     type RejectType,
     filterMap,
@@ -16,7 +17,6 @@ import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
 import { alert } from "#lib/policies/alerting.ts"
 import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
-import { LruCache } from "#lib/utils/LruCache"
 import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"

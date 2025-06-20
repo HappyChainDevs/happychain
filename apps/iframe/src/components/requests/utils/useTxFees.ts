@@ -1,6 +1,7 @@
-import { TransactionType, parseBigInt } from "@happy.tech/common"
+import { parseBigInt } from "@happy.tech/common"
 import type { RpcTransactionRequest } from "viem"
 import { type UseEstimateFeesPerGasReturnType, useEstimateFeesPerGas } from "wagmi"
+import { TransactionType } from "./transactionTypes"
 
 export type UseTxFeesArgs = {
     tx: RpcTransactionRequest

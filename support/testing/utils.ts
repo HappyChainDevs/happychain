@@ -1,11 +1,10 @@
 import { randomBytes } from "node:crypto"
-import { type UUID, createUUID } from "@happy.tech/common"
+import { type UUID, createUUID, shortenAddress } from "@happy.tech/common"
 import {
     type EIP1193RequestParameters,
     type HappyUser,
     type ProviderEventPayload,
     WalletType,
-    shortenAddress,
 } from "@happy.tech/wallet-common"
 import { getAddress } from "viem"
 

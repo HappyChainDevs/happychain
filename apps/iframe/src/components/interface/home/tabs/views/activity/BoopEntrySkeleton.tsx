@@ -1,4 +1,4 @@
-import { shortenAddress } from "@happy.tech/wallet-common"
+import { shortenAddress } from "@happy.tech/common"
 import { CircleNotchIcon } from "@phosphor-icons/react"
 import type { Hash } from "viem"
 

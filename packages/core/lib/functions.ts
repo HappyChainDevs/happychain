@@ -1,5 +1,5 @@
-import { HappyMethodNames } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/wallet-common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Abi } from "viem"
 import { internalProvider } from "./happyProvider"

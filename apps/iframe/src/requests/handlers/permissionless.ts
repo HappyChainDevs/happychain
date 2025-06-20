@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/wallet-common"
 import {
     EIP1193SwitchChainError,
     EIP1193UserRejectedRequestError,

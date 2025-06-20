@@ -9,6 +9,7 @@ export { Map2 } from "./collections/map2"
 export { FIFOCache } from "./collections/fifoCache"
 export { Stream } from "./collections/stream"
 export { Heap, IndexedHeap } from "./collections/heap"
+export { LruCache } from "./collections/LruCache"
 
 // === UTILS =======================================================================================
 
@@ -86,11 +87,10 @@ export type {
 
 export { isHttpString, isDef, isNullish } from "./utils/types"
 
-export { isAddress } from "./utils/address"
+export { isAddress, shortenAddress } from "./utils/address"
 export { array, uniques, last } from "./utils/arrays"
 export { type AssertionError, assertDef, assertType } from "./utils/assertions"
 export { With } from "./utils/classes"
-export { HappyMethodNames, TransactionType } from "./utils/constants"
 export { nowInSeconds } from "./utils/date"
 export { debounce } from "./utils/debounce"
 export { unknownToError, tryCatch, tryCatchAsync, tryCatchU, tryCatchAsyncU, type Result } from "./utils/error"

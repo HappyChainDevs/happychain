@@ -1,4 +1,4 @@
-import type { HappyMethodNames } from "@happy.tech/common"
+import type { HappyMethodNames } from "@happy.tech/wallet-common"
 import type { Address } from "viem"
 import { getAppURL } from "#src/utils/appURL"
 import {

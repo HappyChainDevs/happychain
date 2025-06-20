@@ -1,4 +1,4 @@
-import type { HappyMethodNames } from "@happy.tech/common"
+import type { HappyMethodNames } from "@happy.tech/wallet-common"
 import { formatAbiItem } from "abitype"
 import { useSmartContract } from "#src/hooks/useBlockExplorer"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
