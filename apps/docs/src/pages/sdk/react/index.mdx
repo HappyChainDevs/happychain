@@ -3,6 +3,8 @@
 The `@happy.tech/react` package provides React-specific functionality, to be used instead or in
 addition to those provided in [`@happy.tech/core`][js-getting-started].
 
+You should read the [`@happy.tech/core` docs][js-getting-started] for important context!
+
 [js-getting-started]: /sdk/js
 
 ## Install 
@@ -99,6 +101,13 @@ To get the active user outside of React components, see [the corresponding secti
 in the "Getting started with JavaScript/TypeScript" page.
 
 [js-active-user]: /sdk/js#getting-the-active-user
+
+The method presented there — [`getCurrentUser`], can also be useful in your callbacks. In particular, the Happy Wallet
+enables "lazy connection" where making requests that require permissions (like sending a transaction) will prompt to
+user to login to the wallet and connect to the app. So if you make a request without a user being connected, you can use
+`getCurrentUser` to get the user from your callbacks.
+
+[`getCurrentUser`]: /sdk/js/api/functions/getCurrentUser
 
 ### UI component
 
