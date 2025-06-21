@@ -103,6 +103,7 @@ function useCounterActions() {
 
     async function increment() {
         try {
+            txsSent.current++
             updateInFlightSpinner()
             const hash = await walletClient.writeContract({
                 address: deployment.HappyCounter,
@@ -177,7 +178,6 @@ function useCounterActions() {
             showSpinner()
             timeout.current = setTimeout(() => hideSpinner, 15_000)
         } else {
-            console.log("hiding")
             hideSpinner()
         }
     }
