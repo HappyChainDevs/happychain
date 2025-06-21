@@ -11,6 +11,7 @@ export {
     loadAbi,
     openWallet,
     requestSessionKey,
+    revokeSessionKey,
     showSendScreen,
     onUserUpdate,
 } from "./functions"

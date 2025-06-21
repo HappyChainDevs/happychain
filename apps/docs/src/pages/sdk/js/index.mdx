@@ -222,11 +222,14 @@ async function noApproveTx(): Promise<Hash> {
 }
 ```
 
-What happens under the hood? When a session key is approved, the wallet creates a key and saves it in the wallet's
-local storage. The session key's address is registered with the user's wallet onchain. The key itself never leaves
-the wallet, so it cannot leak.
+What happens under the hood? When a session key is approved, the wallet creates a key and saves it in the wallet's local
+storage. The session key's address is registered with the user's wallet onchain. The key itself never leaves the wallet,
+so apps cannot access it. However, browser extensions could access them by injecting content scripts into the page.
 
-Session keys can be revoked in the wallet settings, under "Permissions".
+The user can revoke session keys in the wallet settings, under "Permissions", while the app can revoke them using the
+[`revokeSessionKey`] function.
+
+[`revokeSessionKey`]: /sdk/js/api/functions/revokeSessionKey
 
 ### UI component
 

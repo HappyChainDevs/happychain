@@ -4,6 +4,7 @@
 
 - ea14fb5: Fix ConnectButton element name
 - 4cd8da2: Simplify custom styling for the ConnectButton
+- add `revokeSessionKey`
 
 ## 0.3.0
 
