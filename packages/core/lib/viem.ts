@@ -16,6 +16,7 @@ import {
 import { onUserUpdate } from "./functions"
 import { happyProvider } from "./happyProvider"
 import { getChain } from "./utils/getChain"
+
 /**
  * Return type for {@link createHappyPublicClient}.
  */
