@@ -21,14 +21,12 @@ for (const alertType of Object.values(AlertType)) {
 }
 
 /**
- * Customize this to send alerts for particularly import errors that jeopardize the ability of the submitter to carry on
- * its task. The default behaviour is to send an alert to a slack channel if in production and `env.SLACK_WEBHOOK_URL`
- * is set.
+ * Sends alerts for particularly import errors that jeopardize the ability of the submitter to carry on its task.
+ * This calls the policy function {@link sendAlertPolicy} to actually carry out the alert reporting.
  *
- * If an {@link AlertType} is provided, the alert will be tracked with a recovery mechanism.
- *
- * When providing a type, you must call {@link recoverAlert} once the issue is resolved.
- * After the alert has been healthy for longer than {@link env.ALERT_RECOVERY_PERIOD}, a recovery message will be sent.
+ * If an {@link AlertType} is provided, the alert will be tracked with a recovery mechanism. You must call {@link
+ * recoverAlert} once the issue is resolved. If {@link sendAlert} is called again with the same alert type while it is
+ * still unhealthy, {@link sendAlertPolicy} will not be called again.
  */
 export async function sendAlert(message: string, type?: AlertType) {
     if (!isProduction || !env.SLACK_WEBHOOK_URL) return
@@ -46,6 +44,7 @@ export async function sendAlert(message: string, type?: AlertType) {
                 unhealthyAt: new Date(),
                 healthyAt: undefined,
             }
+        if (info.status !== AlertStatus.NORMAL) return // don't re-alert
     }
     try {
         await sendAlertPolicy(message, type)
