@@ -14,9 +14,10 @@ import { ArkErrors, type } from "arktype"
 import { type PublicClient, type RpcBlock, type RpcTransaction, formatBlock } from "viem"
 import { http, createPublicClient, webSocket } from "viem"
 import { env } from "#lib/env"
-import { AlertType, alert, notifyAlertIsHealthy } from "#lib/policies/alerting.ts"
-import { currentBlockGauge } from "#lib/telemetry/metrics.ts"
+import { AlertType } from "#lib/policies/alerting"
+import { currentBlockGauge } from "#lib/telemetry/metrics"
 import { LruCache } from "#lib/utils/LruCache"
+import { alert, recoverAlert } from "#lib/utils/alert"
 import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"
@@ -180,10 +181,8 @@ export class BlockService {
             // Everything's dead. Halt and catch fire, maybe a service restart will help.
             const message = "All RPCs are down. Halting process."
             blockLogger.error(message)
-            alert(message, AlertType.ALL_RPC_DOWN)
+            alert(message)
             exit(1)
-        } else {
-            notifyAlertIsHealthy(AlertType.ALL_RPC_DOWN, "At least one RPC is back online.")
         }
 
         // === Check to see if block production has halted ===
@@ -214,10 +213,9 @@ export class BlockService {
                 }
             }, env.BLOCK_MONITORING_HALTED_POLL_TIMEOUT)
             await promise
+            recoverAlert("Block production has resumed.", AlertType.BLOCK_PRODUCTION_HALTED)
             // The issue was a block production stall — it should be safe to retry the previous RPCs.
             this.#recentlyFailedRpcs.clear()
-        } else {
-            notifyAlertIsHealthy(AlertType.BLOCK_PRODUCTION_HALTED, "Block production has resumed.")
         }
 
         // === Select RPC ===
