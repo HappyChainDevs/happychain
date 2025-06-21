@@ -1,5 +1,6 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
+import { Permissions } from "@happy.tech/iframe/src/constants/permissions"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Abi } from "viem"
 import { internalProvider } from "./happyProvider"
@@ -53,10 +54,20 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
  * user approval (i.e. popups). Nothing is returned: instead transaction requests for the given
  * contracts are automatically approved.
  */
-export const requestSessionKey = async (contractAddress: Address): Promise<void> => {
+export const requestSessionKey = async (target: Address): Promise<void> => {
     await internalProvider.request({
         method: HappyMethodNames.REQUEST_SESSION_KEY,
-        params: [contractAddress],
+        params: [target],
+    })
+}
+
+/**
+ * Revokes a session key for the given contract, if one exists.
+ */
+export const revokeSessionKey = async (target: Address): Promise<void> => {
+    await internalProvider.request({
+        method: "wallet_revokePermissions",
+        params: [{ [Permissions.SessionKey]: { target } }],
     })
 }
 
