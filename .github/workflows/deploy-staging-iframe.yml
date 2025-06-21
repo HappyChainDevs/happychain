@@ -21,20 +21,21 @@ jobs:
       - name: Build code
         run: |
           cat > apps/iframe/.env <<-EOF
-          VITE_FIREBASE_API_KEY="AIzaSyAx6idMmETQKhyPJeCQ3l62fMLEn3ZLwRw"
-          VITE_FIREBASE_AUTH_DOMAIN="happytech-staging.firebaseapp.com"
-          VITE_FIREBASE_PROJECT_ID="happytech-staging"
-          VITE_FIREBASE_STORAGE_BUCKET="happytech-staging.firebasestorage.app"
-          VITE_FIREBASE_MESSAGE_SENDER_ID="658209801994"
-          VITE_FIREBASE_APP_ID="1:658209801994:web:5308b68401ae9b03151cf3"
-          VITE_WEB3AUTH_CLIENT_ID="BEicEwse7BdJ1UU5pYG4EpRvm-64fE8_Qd8BgvoRNNzTaojockVhkjDNE3KJXrBSfThJJr0w_U8Kn76PO4hrwOE"
-          VITE_WEB3AUTH_NETWORK="sapphire_devnet"
-          VITE_WEB3AUTH_VERIFIER="firebase-2"
           VITE_TURNSTILE_SITEKEY=0x4AAAAAABRnNdBbR6oFMviC
           VITE_FAUCET_ENDPOINT=https://faucet.testnet.happy.tech/faucet
           VITE_SUBMITTER_URL=https://submitter-staging.happy.tech
           VITE_CHAIN_ID=216
           VITE_USE_STAGING_CONTRACTS=true
+          VITE_DEPLOYMENT=STAGING
+          VITE_FIREBASE_API_KEY_STAGING="AIzaSyAx6idMmETQKhyPJeCQ3l62fMLEn3ZLwRw"
+          VITE_FIREBASE_AUTH_DOMAIN_STAGING="happytech-staging.firebaseapp.com"
+          VITE_FIREBASE_PROJECT_ID_STAGING="happytech-staging"
+          VITE_FIREBASE_STORAGE_BUCKET_STAGING="happytech-staging.firebasestorage.app"
+          VITE_FIREBASE_MESSAGE_SENDER_ID_STAGING="658209801994"
+          VITE_FIREBASE_APP_ID_STAGING="1:658209801994:web:5308b68401ae9b03151cf3"
+          VITE_WEB3AUTH_CLIENT_ID_STAGING="BEicEwse7BdJ1UU5pYG4EpRvm-64fE8_Qd8BgvoRNNzTaojockVhkjDNE3KJXrBSfThJJr0w_U8Kn76PO4hrwOE"
+          VITE_WEB3AUTH_NETWORK_STAGING="sapphire_devnet"
+          VITE_WEB3AUTH_VERIFIER_STAGING="firebase-2"
           EOF
           make setup
           make iframe.build
