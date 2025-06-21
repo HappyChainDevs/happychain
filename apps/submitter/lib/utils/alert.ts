@@ -1,5 +1,5 @@
 import type { UnionFill } from "@happy.tech/common"
-import { env, isProduction } from "#lib/env"
+import { env } from "#lib/env"
 import { AlertType, sendAlertPolicy } from "#lib/policies/alerting"
 import { logger } from "#lib/utils/logger.ts"
 
@@ -29,7 +29,6 @@ for (const alertType of Object.values(AlertType)) {
  * still unhealthy, {@link sendAlertPolicy} will not be called again.
  */
 export async function sendAlert(message: string, type?: AlertType) {
-    if (!isProduction || !env.SLACK_WEBHOOK_URL) return
     if (type) {
         const info = alertInformation[type]
         if (info.status === AlertStatus.RECOVERING)
