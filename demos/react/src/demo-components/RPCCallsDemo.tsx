@@ -67,65 +67,64 @@ export const RPCCallsDemo = () => {
     }, [user])
 
     return (
-        <div className=" rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
-            <div className="text-lg font-bold">RPC Calls</div>
-            <div className="grid flex-wrap sm:flex-nowrap gap-4">
-                <div className="h-full grid sm:flex gap-4 w-full">
-                    <button
-                        type="button"
-                        disabled={isSigning}
-                        onClick={() => signMessage("Hello, World!")}
-                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
-                    >
-                        Sign Message
-                    </button>
-                    <button
-                        type="button"
-                        disabled={isSigning}
-                        onClick={() => signMessageWithDelay("Hello, World!")}
-                        className="flex  items-center gap-2 rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
-                    >
-                        {signDelayCountdown || "Sign with Delay"}
-                        <small className="text-sm text-gray-700">(for popup blocking)</small>
-                    </button>
-                </div>
-                <div className="w-full overflow-auto grid gap-2">
-                    <div className="text-lg grid gap-2 whitespace-nowrap">
-                        <p className="font-bold">Raw Message: </p>
-                        <div className="flex">
-                            <pre className="break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg">
+        <details className=" rounded-lg p-4 backdrop-blur-sm bg-gray-200/35 col-span-2 [&[open]>summary]:mb-4">
+            <summary className="text-lg font-bold">RPC Calls</summary>
+            <div className="flex flex-col gap-4">
+                <div className="grid flex-wrap sm:flex-nowrap gap-4">
+                    <div className="h-full w-full grid sm:flex gap-4">
+                        <button
+                            type="button"
+                            disabled={isSigning}
+                            onClick={() => signMessage("Hello, World!")}
+                            className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
+                        >
+                            Sign Message
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isSigning}
+                            onClick={() => signMessageWithDelay("Hello, World!")}
+                            className="flex  items-center gap-2 rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-gray-300"
+                        >
+                            {signDelayCountdown || "Sign with Delay"}
+                            <small className="text-sm text-gray-700">(for popup blocking)</small>
+                        </button>
+                    </div>
+                    <div className="h-full w-full grid grid-cols-[auto_1fr] gap-2">
+                        <div className="text-lg grid grid-rows-[auto_1fr] gap-2 whitespace-nowrap">
+                            <p className="font-bold">Raw Message </p>
+                            <pre className="flex-1 break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg h-full">
                                 Hello, World!
                             </pre>
                         </div>
-                    </div>
 
-                    <div className="text-lg grid gap-2">
-                        <p className="font-bold whitespace-nowrap">Signed Message:</p>
-                        <pre className="break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg">
-                            {signatureResult || "------"}
-                        </pre>
+                        <div className="text-lg grid grid-rows-[auto_1fr] gap-2">
+                            <p className="font-bold whitespace-nowrap">Signed Message</p>
+                            <pre className="flex-1 break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg h-full">
+                                {signatureResult || ""}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-4 mt-4">
+                    <button
+                        type="button"
+                        onClick={getBlock}
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
+                    >
+                        Load Block Info
+                    </button>
+
+                    <div className="w-full overflow-auto max-h-56 ">
+                        {blockResult && (
+                            <pre className="break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg">
+                                {JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}
+                            </pre>
+                        )}
                     </div>
                 </div>
             </div>
-            <hr className="border-sky-300" />
-
-            <div className="flex flex-col gap-4 ">
-                <button
-                    type="button"
-                    onClick={getBlock}
-                    className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
-                >
-                    Load Block Info
-                </button>
-
-                <div className="w-full overflow-auto max-h-56 ">
-                    {blockResult && (
-                        <pre className="break-all whitespace-pre-wrap bg-gray-200/25 p-2 rounded-lg">
-                            {JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}
-                        </pre>
-                    )}
-                </div>
-            </div>
-        </div>
+        </details>
     )
 }
