@@ -121,4 +121,10 @@ export const appSchema = z.object({
      * The Slack webhook URL to send alerts to. If omitted, no alerts are sent (they are all logged anyway).
      */
     SLACK_WEBHOOK_URL: z.string().optional(),
+
+    /**
+     * The time in millisecond to make a recoverable alert (cf. `lib/policies/alerting.ts`) as recovered after it
+     * effectively recovered and didn't fail again. Defaults to 60s.
+     */
+    ALERT_RECOVERY_PERIOD: z.coerce.number().default(60_000),
 })

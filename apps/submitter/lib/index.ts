@@ -9,6 +9,7 @@ await blockService.waitForInitialization()
 void evmReceiptService.start()
 await resyncAllAccounts()
 await fetchProxyCreationCode()
+alert(`*Submitter has started* (Environment: ${env.NODE_ENV})`)
 
 export { app }
 

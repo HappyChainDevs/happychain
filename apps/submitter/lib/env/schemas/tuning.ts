@@ -52,9 +52,9 @@ export const tuningSchema = z.object({
 
     /**
      * The time in milliseconds after which to consider a block timed out for the purpose of block monitoring, and
-     * re-attempting to setup the block subscription or switching to another RPC. Defaults to 3s.
+     * re-attempting to setup the block subscription or switching to another RPC. Defaults to 5s.
      */
-    BLOCK_MONITORING_TIMEOUT: z.coerce.number().positive().default(3000),
+    BLOCK_MONITORING_TIMEOUT: z.coerce.number().positive().default(5000),
 
     /**
      * The time in milliseconds to wait before successive attempts to fetch a block
