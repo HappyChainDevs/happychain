@@ -1,6 +1,6 @@
 import type { UnionFill } from "@happy.tech/common"
 import { env, isProduction } from "#lib/env"
-import { AlertType, sendAlert } from "#lib/policies/alerting"
+import { AlertType, sendAlertPolicy } from "#lib/policies/alerting"
 import { logger } from "#lib/utils/logger.ts"
 
 enum AlertStatus {
@@ -30,7 +30,7 @@ for (const alertType of Object.values(AlertType)) {
  * When providing a type, you must call {@link recoverAlert} once the issue is resolved.
  * After the alert has been healthy for longer than {@link env.ALERT_RECOVERY_PERIOD}, a recovery message will be sent.
  */
-export async function alert(message: string, type?: AlertType) {
+export async function sendAlert(message: string, type?: AlertType) {
     if (!isProduction || !env.SLACK_WEBHOOK_URL) return
     if (type) {
         const info = alertInformation[type]
@@ -48,7 +48,7 @@ export async function alert(message: string, type?: AlertType) {
             }
     }
     try {
-        await sendAlert(message, type)
+        await sendAlertPolicy(message, type)
     } catch (error) {
         logger.error("Error sending alert:", error)
     }
@@ -56,7 +56,7 @@ export async function alert(message: string, type?: AlertType) {
 
 /**
  * Notify that an alert type is now healthy. If the alert stays healthy for longer than {@link
- * env.ALERT_RECOVERY_PERIOD}, {@link sendAlert} will be called to send the recovery alert.
+ * env.ALERT_RECOVERY_PERIOD}, {@link sendAlertPolicy} will be called to send the recovery alert.
  */
 export async function recoverAlert(message: string, type: AlertType) {
     if (alertInformation[type].status !== AlertStatus.ALERTING) return
@@ -75,6 +75,6 @@ export async function recoverAlert(message: string, type: AlertType) {
             return
         }
         alertInformation[type] = { status: AlertStatus.NORMAL }
-        sendAlert(message, type)
+        sendAlertPolicy(message, type)
     }, env.ALERT_RECOVERY_PERIOD)
 }
