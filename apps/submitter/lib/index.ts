@@ -1,5 +1,6 @@
 import "./telemetry/instrumentation"
 import { fetchProxyCreationCode } from "#lib/handlers/createAccount/computeHappyAccountAddress"
+import { sendAlert } from "#lib/utils/alert"
 import { env } from "./env"
 import { app } from "./server"
 import { blockService, evmReceiptService, resyncAllAccounts } from "./services"
@@ -9,7 +10,7 @@ await blockService.waitForInitialization()
 void evmReceiptService.start()
 await resyncAllAccounts()
 await fetchProxyCreationCode()
-alert(`*Submitter has started* (Environment: ${env.NODE_ENV})`)
+void sendAlert(`*Submitter has started* (Environment: ${env.NODE_ENV})`)
 
 export { app }
 
