@@ -1,4 +1,4 @@
-import { requestSessionKey } from "@happy.tech/core"
+import { requestSessionKey, revokeSessionKey } from "@happy.tech/core"
 import { KeyIcon, TrashIcon } from "@phosphor-icons/react"
 import { toast } from "sonner"
 import { deployment } from "../deployments"
@@ -36,6 +36,26 @@ export const SessionKeyDemo = () => {
         }
     }
 
+    async function revokeCounterSessionKey() {
+        try {
+            await revokeSessionKey(deployment.HappyCounter)
+            toast.success("Counter session key revoked")
+        } catch (error) {
+            toast.error("Error revoking session key")
+            console.error(error)
+        }
+    }
+
+    async function revokeTokenSessionKey() {
+        try {
+            await revokeSessionKey(deployment.MockTokenA)
+            toast.success("Token session key revoked")
+        } catch (error) {
+            toast.error("Error revoking session key")
+            console.error(error)
+        }
+    }
+
     return (
         <div className="flex flex-col gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Session Key Management</div>
@@ -47,7 +67,7 @@ export const SessionKeyDemo = () => {
                     className="rounded-lg bg-sky-300 p-2 shadow-xl flex gap-2 items-center"
                 >
                     <KeyIcon />
-                    Counter Key
+                    Add Counter Key
                 </button>
 
                 <button
@@ -56,25 +76,25 @@ export const SessionKeyDemo = () => {
                     className="rounded-lg bg-sky-300 p-2 shadow-xl flex gap-2 items-center"
                 >
                     <KeyIcon />
-                    Token Key
+                    Add Token Key
                 </button>
 
                 <button
                     type="button"
-                    disabled
                     className="rounded-lg bg-orange-300 p-2 shadow-xl flex gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={revokeCounterSessionKey}
                 >
                     <TrashIcon />
-                    Counter Key
+                    Remove Counter Key
                 </button>
 
                 <button
                     type="button"
-                    disabled
                     className="rounded-lg bg-orange-300 p-2 shadow-xl flex gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={revokeTokenSessionKey}
                 >
                     <TrashIcon />
-                    Remove Key
+                    Remove Token Key
                 </button>
             </div>
         </div>

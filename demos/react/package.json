@@ -9,7 +9,7 @@
         "@phosphor-icons/react": "^2.1.10",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
-        "sonner": "^1.7.2",
+        "sonner": "^2.0.5",
         "viem": "^2.30.1"
     },
     "devDependencies": {
