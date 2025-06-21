@@ -123,7 +123,7 @@ export const appSchema = z.object({
     SLACK_WEBHOOK_URL: z.string().optional(),
 
     /**
-     * The time in millisecond to make a recoverable alert (cf. `lib/policies/alerting.ts`) as recovered after it
+     * The time in millisecond to make a recoverable alert (cf. `lib/utils/alert.ts`) as recovered after it
      * effectively recovered and didn't fail again. Defaults to 60s.
      */
     ALERT_RECOVERY_PERIOD: z.coerce.number().default(60_000),
