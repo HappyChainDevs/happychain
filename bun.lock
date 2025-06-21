@@ -256,16 +256,16 @@
       "name": "demo-react",
       "version": "0.3.0",
       "dependencies": {
-        "@happy.tech/core": "workspace:0.2.1",
-        "@happy.tech/react": "workspace:0.2.1",
+        "@happy.tech/core": "workspace:0.3.0",
+        "@happy.tech/react": "workspace:0.3.0",
         "@phosphor-icons/react": "^2.1.10",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
-        "sonner": "^1.7.2",
+        "sonner": "^2.0.5",
         "viem": "^2.30.1",
       },
       "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:*",
         "@types/react": "^19.1.4",
         "@types/react-dom": "^19.1.5",
         "@vitejs/plugin-react-swc": "^3.7.0",
@@ -301,7 +301,7 @@
     },
     "packages/boop-sdk": {
       "name": "@happy.tech/boop-sdk",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "devDependencies": {
         "@happy.tech/common": "workspace:*",
         "@happy.tech/configs": "workspace:*",
@@ -321,10 +321,10 @@
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "@happy.tech/wallet-common": "workspace:0.2.0",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
+        "@happy.tech/wallet-common": "workspace:*",
         "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.2.4",
         "@types/preact-custom-element": "^4.0.4",
@@ -341,8 +341,8 @@
       "name": "@happy.tech/react",
       "version": "0.3.0",
       "devDependencies": {
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.2.4",
         "@types/node": "^22.5.0",
@@ -351,7 +351,7 @@
         "typescript": "^5.6.2",
       },
       "peerDependencies": {
-        "@happy.tech/core": "workspace:^0.2.1",
+        "@happy.tech/core": "workspace:0.3.0",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
       },
@@ -461,9 +461,9 @@
       "version": "1.0.0",
       "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/common": "workspace:*",
+        "@happy.tech/configs": "workspace:*",
+        "@happy.tech/happybuild": "workspace:*",
         "@types/bun": "^1.2.4",
         "happy-dom": "^15.0.0",
         "typescript": "^5.6.2",
@@ -4089,7 +4089,7 @@
 
     "sonic-boom": ["sonic-boom@2.8.0", "", { "dependencies": { "atomic-sleep": "^1.0.0" } }, "sha512-kuonw1YOYYNOve5iHdSahXPOK49GqwA+LZhI6Wz/l0rP57iKyXXIHaRagOBHAPmGwJC6od2Z9zgvZ5loSgMlVg=="],
 
-    "sonner": ["sonner@1.7.4", "", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0 || ^19.0.0-rc", "react-dom": "^18.0.0 || ^19.0.0 || ^19.0.0-rc" } }, "sha512-DIS8z4PfJRbIyfVFDVnK9rO3eYDtse4Omcm6bt0oEr5/jtLgysmjuBl1frJ9E/EQZrFmKx2A8m/s5s9CRXIzhw=="],
+    "sonner": ["sonner@2.0.5", "", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0 || ^19.0.0-rc", "react-dom": "^18.0.0 || ^19.0.0 || ^19.0.0-rc" } }, "sha512-YwbHQO6cSso3HBXlbCkgrgzDNIhws14r4MO87Ofy+cV2X7ES4pOoAK3+veSmVTvqNx1BWUxlhPmZzP00Crk2aQ=="],
 
     "source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
 
