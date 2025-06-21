@@ -429,7 +429,7 @@ export class BlockService {
 
         const block = checkBlock(inputBlock)
         if (block instanceof ArkErrors) {
-            blockLogger.error("Received an invalid block from the watcher, skipping.", inputBlock, block)
+            blockLogger.error("Received an invalid block from the watcher, skipping.", inputBlock, block.summary)
             return false
         }
 
