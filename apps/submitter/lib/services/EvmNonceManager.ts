@@ -51,11 +51,10 @@ export class EvmNonceManager {
         if (!localNonce) {
             // This should never happen, but handle just in case.
             this.#nonces.set(address, onchainNonce)
-            return onchainNonce
         } else if (onchainNonce > localNonce) {
             logger.trace("Onchain EOA nonce is ahead of local nonce — skipping to it.", address, onchainNonce)
             this.#nonces.set(address, onchainNonce)
-            return onchainNonce
         }
+        return onchainNonce
     }
 }
