@@ -9,7 +9,7 @@ import { logger } from "#lib/utils/logger.ts"
  * This is called from the `alert` function in `lib/utils/alerts.ts`, which also enables "recoverable alerts". See the
  * details over there. This function is called both for the initial alert and the recovery alert.
  */
-export async function sendAlert(message: string, _type?: AlertType): Promise<void> {
+export async function sendAlertPolicy(message: string, _type?: AlertType): Promise<void> {
     if (!isProduction || !env.SLACK_WEBHOOK_URL) return
     try {
         await fetch(env.SLACK_WEBHOOK_URL, {

@@ -17,7 +17,7 @@ import { env } from "#lib/env"
 import { AlertType } from "#lib/policies/alerting"
 import { currentBlockGauge } from "#lib/telemetry/metrics"
 import { LruCache } from "#lib/utils/LruCache"
-import { alert, recoverAlert } from "#lib/utils/alert"
+import { recoverAlert, sendAlert } from "#lib/utils/alert"
 import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"
@@ -181,7 +181,7 @@ export class BlockService {
             // Everything's dead. Halt and catch fire, maybe a service restart will help.
             const message = "All RPCs are down. Halting process."
             blockLogger.error(message)
-            alert(message)
+            sendAlert(message)
             exit(1)
         }
 
@@ -191,7 +191,7 @@ export class BlockService {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
             blockLogger.error(message)
-            alert(message, AlertType.BLOCK_PRODUCTION_HALTED)
+            sendAlert(message, AlertType.BLOCK_PRODUCTION_HALTED)
             const { promise, resolve } = promiseWithResolvers()
             let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
             const pollingTimer = setInterval(async () => {
@@ -463,14 +463,14 @@ export class BlockService {
                 if (!cachedHash) {
                     const msg = "Potential long-range re-org."
                     blockLogger.error(msg, blockInfo)
-                    alert(msg + "\n" + blockInfo)
+                    sendAlert(msg + "\n" + blockInfo)
                     // Note: Something is very wrong if this happens. There are various things we could
                     // do, but the submitter won't really suffer from this (unless the RPC is downright
                     // malicious, but there are a lot of other problems with that). So we do nothing.
                 } else if (cachedHash !== block.hash) {
                     const msg = "Detected re-org.\n" + blockInfo + "\nReplacing: " + block.number + " / " + cachedHash
                     blockLogger.error(msg)
-                    alert(msg + "\n" + blockInfo)
+                    sendAlert(msg + "\n" + blockInfo)
                     // Do nothing, subscribers should deal with this if they need to.
                 } else {
                     blockLogger.warn("Out of order block delivery, skipping.", blockInfo)
