@@ -1,4 +1,4 @@
-import type { Address, Hash } from "@happy.tech/common"
+import type { Hash } from "@happy.tech/common"
 import { trace } from "@opentelemetry/api"
 import { type BaseError, InsufficientFundsError } from "viem"
 import { abis, deployment } from "#lib/env"
@@ -143,12 +143,14 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 // TODO: implement own nonce manager, Viem's one sucks and always incurs a eth_getTransactionCount
                 logger.trace("Submitting to the chain using execution account", account.address, boopHash)
 
-                const evmTxHash = await submitWithRetryOnNonceTooLow({
-                    boop,
-                    simulationGas: BigInt(simulation.gas),
-                    evmTxInfo: partialEvmTxInfo,
-                    entryPoint,
+                const evmTxHash = await walletClient.writeContract({
                     account,
+                    address: entryPoint,
+                    args: [encodeBoop(boop)],
+                    abi: abis.EntryPoint,
+                    functionName: "submit",
+                    gas: BigInt(simulation.gas),
+                    ...partialEvmTxInfo,
                 })
 
                 logger.trace("Successfully submitted", boopHash, evmTxHash)
@@ -178,44 +180,6 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
         else return await afterSimulationPromise
     } catch (error) {
         return { ...outputForGenericError(error), stage: "submit" }
-    }
-}
-
-async function submitWithRetryOnNonceTooLow({
-    boop,
-    simulationGas,
-    evmTxInfo,
-    entryPoint,
-    account,
-}: {
-    boop: Boop
-    simulationGas: bigint
-    evmTxInfo: Omit<EvmTxInfo, "evmTxHash">
-    entryPoint: Address
-    account: typeof accountDeployer
-}): Promise<Hash> {
-    const encodedBoop = encodeBoop(boop)
-
-    const send = () =>
-        walletClient.writeContract({
-            account,
-            address: entryPoint,
-            args: [encodedBoop],
-            abi: abis.EntryPoint,
-            functionName: "submit",
-            gas: simulationGas,
-            ...evmTxInfo,
-        })
-
-    try {
-        return await send()
-    } catch (error) {
-        if (isNonceTooLowError(error)) {
-            logger.warn("Nonce too low, resyncing and retrying once", computeHash(boop))
-            await evmNonceManager.resyncIfTooLow(accountDeployer.address)
-            return await send()
-        }
-        throw error
     }
 }
 
