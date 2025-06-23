@@ -4,8 +4,10 @@ import { defineConfig } from "vocs"
 export default defineConfig({
     rootDir: "src",
     title: "HappyChain Docs 🤠",
-    logoUrl: "/happychain-logotype.png",
-    ogImageUrl: "https://vocs.dev/api/og?logo=%logo&title=%title&description=%description",
+    // Absolute URL for ogImageUrl below to render correctly
+    logoUrl: `${process.env.HAPPY_DOCS_URL ?? "https://docs.happy.tech"}/happychain-logotype.png`,
+    // docs: https://vocs.dev/docs/guides/og-images#path-based-og-images
+    ogImageUrl: "https://vocs.dev/api/og?logo=%logo&title=%title",
     iconUrl: "/happyicon.png",
     aiCta: true,
     vite: {
@@ -14,14 +16,6 @@ export default defineConfig({
         server: { port: 4000, strictPort: true },
         // Vocs currently ignores this, always serves preview on port 4173 (or higher if busy)
         preview: { port: 4000, strictPort: true },
-        resolve: {
-            alias: {
-                "@happy.tech/submitter/client": "../submitter/lib/client",
-                "@happy.tech/submitter": "../submitter/lib",
-                "@happy.tech/boop-sdk": "../../packages/boop-sdk/lib",
-                "@happy.tech/common": "../../support/common/lib",
-            },
-        },
     },
     socials: [
         {

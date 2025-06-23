@@ -11,8 +11,6 @@
         "@happy.tech/configs": "workspace:*",
         "@happy.tech/common": "workspace:*",
         "@happy.tech/wallet-common": "workspace:*",
-        "@happy.tech/core": "workspace:*",
-        "@happy.tech/react": "workspace:*",
         "@happy.tech/submitter": "workspace:*",
         "@happy.tech/txm": "workspace:*",
         "@happy.tech/vue": "workspace:*",
@@ -34,6 +32,8 @@
         "web3": "^4.16.0"
     },
     "dependencies": {
+        "@happy.tech/core": "workspace:*",
+        "@happy.tech/react": "workspace:*",
         "@scalar/api-reference-react": "^0.6.30"
     }
 }

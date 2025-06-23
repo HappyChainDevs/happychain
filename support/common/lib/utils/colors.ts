@@ -1,8 +1,27 @@
-const isCI =
-    globalThis.process?.env?.CI === "true" ||
-    globalThis.process?.env?.CI === "1" ||
-    import.meta?.env?.CI === "true" ||
-    import.meta?.env?.CI === "1"
+const isCITruthy = (ci: string | undefined): boolean => ci === "1" || ci?.toUpperCase() === "TRUE"
+
+const isCI = (() => {
+    if (typeof process !== "undefined" && typeof process.env === "object" && process.env.CI != null) {
+        return isCITruthy(process.env.CI)
+    }
+
+    // Try to access import.meta.env safely in ESM + browser contexts
+    try {
+        // Note: some SSR tools throw just for *referencing* import.meta
+        // So we wrap even that in a try block
+        // This only works in environments that actually support import.meta
+        // and won't throw just for reading it
+        // @ts-ignore
+        if (typeof import.meta !== "undefined" && typeof import.meta.env === "object") {
+            // @ts-ignore
+            return isCITruthy(import.meta.env.CI)
+        }
+    } catch {
+        // Do nothing — likely running in CJS, SSR, or a CSP-restricted browser
+    }
+
+    return false
+})()
 
 const passthrough = (s: unknown): string => `${s}`
 
