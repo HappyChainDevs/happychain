@@ -80,14 +80,6 @@ export async function getCurrentNonce(account: Address, nonceTrack = 0n): Promis
     return onchainNonce
 }
 
-async function resyncBoopNonce(account: Address, nonceTrack = 0n): Promise<void> {
-    reqLogger.trace("boop nonce resync needed, deleting cached nonce")
-    // This function primarily delegates to deleteNonce to clear the local cache.
-    // In a more complex scenario, it might directly call an on-chain nonce fetch
-    // or perform other synchronization steps, hence it's marked as async.
-    deleteNonce(account, nonceTrack)
-}
-
 export type SendBoopArgs = {
     account: Address
     tx: ValidRpcTransactionRequest
@@ -138,11 +130,8 @@ export async function sendBoop(
         const output = await boopClient.execute({ entryPoint, boop: signedBoop })
         reqLogger.trace("boop/execute output", output)
 
-        // detect nonce too low
+        // If the nonce is too low and the wallet is assigning it, we'll need a resync.
         needsNonceResync = !tx.nonce && output.status === Onchain.InvalidNonce
-        if (needsNonceResync) {
-            await resyncBoopNonce(account, nonceTrack)
-        }
 
         if (output.status !== Onchain.Success) throw translateBoopError(output)
         markBoopAsSuccess(boopHash, output.receipt)
@@ -150,19 +139,14 @@ export async function sendBoop(
         return output.receipt.boopHash
     } catch (err) {
         reqLogger.trace(`boop submission failed — ${retry} attempts left`, err)
-        if (!needsNonceResync || (retry === 0 && needsNonceResync)) {
+        if (needsNonceResync) {
+            reqLogger.trace("boop nonce resync needed, deleting cached nonce")
             deleteNonce(account, nonceTrack)
         }
 
-        // We let the retry count go to -1 if the error is a boop nonce too low and the wallet is assigning the nonce.
-        // This means if `needsNonceResync` is true (and the wallet is assigning the nonce),
-        // we essentially give it one "extra" retry attempt before truly failing.
-        if (retry > 0 || (retry === 0 && needsNonceResync)) {
-            // Decrement retry normally, but if needsNonceResync is true, it effectively
-            // allows one retry from `retry = 0` (making `retry` -1 for the next call, which is then caught by `retry > -1`).
-            const nextRetry = needsNonceResync && retry === 0 ? -1 : retry - 1
-            return sendBoop({ account, tx, signer, isSponsored, nonceTrack }, app, nextRetry)
-        }
+        // Try one more time if the last attempt failed due to a boop set by the wallet being too low.
+        if (retry > 0 || (retry === 0 && needsNonceResync))
+            return sendBoop({ account, tx, signer, isSponsored, nonceTrack }, app, retry - 1)
 
         if (boopHash) {
             // If the error is a translated boop error, extract its status & description.
