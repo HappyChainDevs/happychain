@@ -1,5 +1,6 @@
+import type { DeepOverride } from "../types/override"
 import { entries } from "./records"
-import type { Override } from "./types"
+import { type Obj, isObj } from "./types"
 
 type TypeMap = {
     boolean: boolean
@@ -117,6 +118,7 @@ export function isEmpty(obj: object, strict?: "strict"): boolean {
     if (strict) {
         return Object.getOwnPropertyNames(obj).length === 0
     } else {
+        // noinspection LoopStatementThatDoesntLoopJS
         for (const _ in obj) return false
         return true
     }
@@ -153,18 +155,32 @@ export function makeUndefinedOptional<T extends object>(value: T): UndefinedAsOp
 }
 
 /**
- * Return a new object that merges the properties from {@link a} and {@link b}, with the properties of {@link b}
- * overriding those of {@link a} whenever there is a conflict.
- */
-export function merge<A extends object, B extends object>(a: A, b: B): Override<A, B> {
-    return { ...a, ...b }
-}
-
-/**
- * A version of {@link Object.assign} that asserts the new type of {@link target} after assigning the properties
+ * A version of {@link Object.assign} that asserts the new type of {@link target} after *shallowly* assigning the properties
  * of {@link source} to it.
+ *
+ * See {@link merge} with the `inPlace` option if you need deep assignment.
  */
 // @ts-ignore We have to bring the big hammer for this one.
 export function assign<T extends object, S extends object>(target: T, source: S): asserts target is Override<T, S> {
     Object.assign(target, source)
+}
+
+/**
+ * Returns a deep-merge of the two object parameters. See the doc of {@link DeepOverride} and {@link Override} for
+ * a more precise explanation of what this means.
+ *
+ * Of note, this only operates only at the level of objects and their properties: it does not merge arrays (it picks the
+ * array in the second parameter if present in both).
+ *
+ * If {@link inPlace} is false, then {@link a} must support {@link structuredClone}.
+ *
+ * If you only need a shallow merge, you can use `{ ...a, ...b }` (or {@link assign} for in place shallow-merging).
+ */
+export function merge<A extends Obj, B extends Obj>(a: A, b: B, inPlace = false): DeepOverride<A, B> {
+    const result = (inPlace ? a : structuredClone(a)) as Obj
+    for (const key in b) {
+        if (isObj(result[key]) && isObj(b[key])) result[key] = merge(result[key], b[key], inPlace)
+        else if (b[key]) result[key] = b[key]
+    }
+    return result as DeepOverride<A, B>
 }
