@@ -7,8 +7,8 @@ import { checkAndChecksumAddress } from "#src/requests/utils/checks"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
 import { getChains, getCurrentChain } from "../state/chains"
-import { getUser } from "../state/user"
-import type { AppURL } from "./appURL"
+import { getUser } from "#src/state/user"
+import type { AppURL } from "#src/utils/appURL"
 
 export function checkIfRequestRequiresConfirmation(
     app: AppURL,
