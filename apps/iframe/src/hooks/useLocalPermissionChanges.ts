@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { createContext, use, useState } from "react"
 import type { WalletPermissionCaveat } from "viem"
+import { PermissionName } from "#src/constants/permissions"
 import { revokeSessionKeys } from "#src/requests/utils/sessionKeys"
 import { revokedSessionKeys } from "#src/state/interfaceState"
 import { grantPermissions, hasPermissions, permissionRequestEntries, revokePermissions } from "#src/state/permissions"
@@ -13,9 +14,11 @@ import { checkIfCaveatsMatch } from "#src/utils/checkIfCaveatsMatch"
 export const PermissionsContext = createContext<null | ReturnType<typeof createLocalPermissionsValue>>(null)
 
 export function createLocalPermissionsValue(appURL: AppURL) {
+    // Keep a set of permissions to be revoked on save.
     const [revoked, setRevoked] = useState<{ [name: string]: WalletPermissionCaveat[] }>({})
     const router = useRouter()
 
+    // Granting a permission in this context is undoing a revocation.
     const grant = (permissionRequest: PermissionsRequest) => {
         const entries = permissionRequestEntries(permissionRequest)
         setRevoked((prevRevoked) => {
@@ -27,6 +30,7 @@ export function createLocalPermissionsValue(appURL: AppURL) {
             return { ...prevRevoked }
         })
     }
+
     const revoke = (permissionRequest: PermissionsRequest) => {
         const entries = permissionRequestEntries(permissionRequest)
         setRevoked((prevRevoked) => {
@@ -47,11 +51,9 @@ export function createLocalPermissionsValue(appURL: AppURL) {
         mutationFn: async () => {
             const entries = Object.entries(revoked)
             for (const [name, caveats] of entries) {
-                if (name === "happy_sessionKey") {
+                if (name === PermissionName.SessionKey) {
                     for (const caveat of caveats) {
-                        const perm: PermissionsRequest = {
-                            [name]: { target: caveat.value },
-                        }
+                        const perm: PermissionsRequest = { [name]: { target: caveat.value } }
                         revokePermissions(appURL, perm)
                     }
                 } else {
@@ -69,11 +71,9 @@ export function createLocalPermissionsValue(appURL: AppURL) {
             // on error, we will re-grant the permissions (no change)
             const entries = Object.entries(revoked)
             for (const [name, caveats] of entries) {
-                if (name === "happy_sessionKey") {
+                if (name === PermissionName.SessionKey) {
                     for (const caveat of caveats) {
-                        const perm: PermissionsRequest = {
-                            [name]: { target: caveat.value },
-                        }
+                        const perm: PermissionsRequest = { [name]: { target: caveat.value } }
                         grantPermissions(appURL, perm)
                     }
                 } else {
@@ -87,14 +87,11 @@ export function createLocalPermissionsValue(appURL: AppURL) {
         if (!hasPermissions(appURL, permissionRequest)) return false
 
         return permissionRequestEntries(permissionRequest).every(({ name, caveats }) => {
-            const permission = revoked[name]
-            // this is opposite of hasPermissions logic since its operating on a block list
-            // instead of an allow list
-            if (!permission) return true
-
-            // Verify each requested caveat has not been 'revoked'
+            const isInRevoked = revoked[name]
+            if (!isInRevoked) return true
+            // Check to see if at least one caveat of the request has been revoked.
             return caveats.every(
-                (caveat) => !permission.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
+                (caveat) => !isInRevoked.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
             )
         })
     }
