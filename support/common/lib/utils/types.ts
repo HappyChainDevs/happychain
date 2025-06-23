@@ -1,3 +1,5 @@
+import type { Keys } from "../types/keys"
+
 // === COMMON TYPES ================================================================================
 
 /** Type of http or https strings, starting with the proper protocol. */
@@ -41,6 +43,12 @@ export type NotNull = {} | undefined
 export type Defined = {}
 
 /**
+ * Type of object with values of type `T` (`unknown` by default). This is a better object type than `object` that
+ * excludes `null`, `undefined` and primitive types (numbers, booleans, strings).
+ */
+export type Obj<T = unknown> = Record<string, T>
+
+/**
  * Type guard shorthand for `value !== null && value !== undefined`
  */
 export function isDef(value: unknown): value is Defined {
@@ -52,6 +60,13 @@ export function isDef(value: unknown): value is Defined {
  */
 export function isNullish(value: unknown): value is null | undefined {
     return value === null || value === undefined
+}
+
+/**
+ * Type guard to check if a value is an object in the sense of {@link Obj} (a non-null non-undefined record).
+ */
+export function isObj(value: unknown): value is Obj {
+    return typeof value === "object" && isDef(value) && !Array.isArray(value)
 }
 
 // === Solidity Type Mappings ================================================================================
@@ -220,44 +235,13 @@ export type RecursiveReplace<T, Src, Dst> = Prettify<{
     [K in keyof T]: T[K] extends Src ? Dst : T[K] extends object ? RecursiveReplace<T[K], Src, Dst> : T[K]
 }>
 
-type OptionalKeys<T extends object> = {
-    // biome-ignore lint/complexity/noBannedTypes: we need it
-    [K in keyof T]-?: {} extends Pick<T, K> ? K : never
-}[keyof T]
-
-type RequiredKeys<T extends object> = Exclude<keyof T, OptionalKeys<T>>
-
-/**
- * Returns a type that has all properties in both `T` and `O`, with the value type from `O` for the common properties
- * that are not optional in `O`, and the union of the value types from `O` and `T` for common properties that are
- * optional in `O`. Without entering into the details, optionality on the resulting keys is correct.
- *
- * Another way to think about this is that this correctly types `a` in `Object.assign(a, b)` after the assignment is
- * done.
- *
- * e.g. `Override<{ a: number, b: number, c: number }, { b: string, c?: string }>`
- * evaluates to `{ a: number, b: string, c?: number | string | undefined  }`
- */
-// biome-ignore format: pretty
-export type Override<T extends object, O extends object> = Prettify<
-    & { [K in Exclude<RequiredKeys<T>, keyof O>]: T[K] }
-    & { [K in Exclude<OptionalKeys<T>, keyof O>]?: T[K] }
-    & { [K in OptionalKeys<O> & RequiredKeys<T>]: T[K] | O[K] }
-    // We'd rather have written `K in OptionalKey<T> & OptionalKeys<O>` but it somehow doesn't work.
-    & { [K in OptionalKeys<O> & Exclude<keyof T, RequiredKeys<T>>]?: T[K] | O[K] }
-    & { [K in Exclude<keyof O, keyof T & OptionalKeys<O>>]: O[K] }
->
-
-/** Extract all keys from a union of objects. */
-export type AllKeys<Union> = Union extends unknown ? keyof Union : never
-
 /**
  * Distributes the types in an union.
  *
  * e.g. `Distribute<{ a: 1, b: 2 } | { a: 3, b: 4 }>` evaluates to `{ a: 1 | 3, b: 2 | 4 }`
  */
 export type Distribute<T> = {
-    [K in AllKeys<T>]: T extends Record<K, infer U> ? U : never
+    [K in Keys<T>]: T extends Record<K, infer U> ? U : never
 }
 
 /**
@@ -272,7 +256,7 @@ export type UnionFill<Union, Original = Union> = Prettify<
     [Union] extends [never]
         ? never
         : Select<Union> extends infer Member
-            ? | ( & { [K in Exclude<AllKeys<Original>, keyof Member>]?: undefined }
+            ? | ( & { [K in Exclude<Keys<Original>, keyof Member>]?: undefined }
                   & { [K in keyof Member]: Member[K] } )
               | UnionFill<Exclude<Union, Member>, Original>
             : never

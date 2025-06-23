@@ -48,6 +48,7 @@ export type {
     NotNull,
     NotUndefined,
     Defined,
+    Obj,
     UInt256,
     UInt192,
     UInt160,
@@ -77,14 +78,15 @@ export type {
     MapTuple,
     ObjectFromTuples,
     RecursiveReplace,
-    Override,
     Select,
-    AllKeys,
     Distribute,
     UnionFill,
 } from "./utils/types"
 
-export { isHttpString, isDef, isNullish } from "./utils/types"
+export type { Keys, OptionalKeys, RequiredKeys, NonOptionalKeys, NonRequiredKeys } from "./types/keys"
+export type { Override, DeepOverride } from "./types/override"
+
+export { isHttpString, isDef, isNullish, isObj } from "./utils/types"
 
 export { isAddress } from "./utils/address"
 export { array, uniques, last } from "./utils/arrays"
@@ -111,8 +113,8 @@ export {
     isEmpty,
     pick,
     makeUndefinedOptional,
-    merge,
     assign,
+    merge,
 } from "./utils/objects"
 export {
     promiseWithResolvers,
