@@ -12,14 +12,11 @@ import {
 } from "#src/state/permissions"
 import { userAtom } from "#src/state/user.ts"
 import type { AppURL } from "#src/utils/appURL"
+
 export const Route = createLazyFileRoute("/embed/permissions/$appURL")({
     component: DappPermissions,
 })
-function useGetAppPermissions(appURL: AppURL) {
-    const user = useAtomValue(userAtom)
-    const permissionsMap = useAtomValue(permissionsMapAtom)
-    return getAppPermissionsPure(user, appURL, permissionsMap)
-}
+
 function DappPermissions() {
     const appURL = useParams({
         from: "/embed/permissions/$appURL",
@@ -47,62 +44,54 @@ function useCachedPermissions(appURL: AppURL): { permissions: AppPermissions } {
     // and can be toggle back on while we don't navigate away.
     const [cachedPermissions, setCachedPermissions] = useState(structuredClone(getAppPermissions(appURL)))
 
-    const reactivePermissions = useGetAppPermissions(appURL)
+    const user = useAtomValue(userAtom)
+    const permissionsMap = useAtomValue(permissionsMapAtom)
+    const reactivePermissions = getAppPermissionsPure(user, appURL, permissionsMap)
 
     let updated = false
 
-    // de-duplicate and loop through the keys. the keys here are the capabilities, eth_accounts, happy_sessionKey, etc
+    // Loop through the keys, checking for new keys and updates to existing keys.
+    // The keys here are permission names, as listed in `src/constants/permissions.ts`.
     for (const key of Object.keys({ ...cachedPermissions, ...reactivePermissions })) {
-        // If this is a new key, we were not previously await of. update the local view
-        // and mark it as updated.
-
-        // precompute the caveat 'keys' to avoid updates when nothing has changed.
-
+        // Fingerprint the caveats to check for changes.
+        const cacheKey = canonicalCaveatKey(cachedPermissions[key]?.caveats)
         const reactiveKey = canonicalCaveatKey(reactivePermissions[key]?.caveats)
-        const staleKey = canonicalCaveatKey(cachedPermissions[key]?.caveats)
 
-        // there where no changes to this key, skip it.
-        if (reactiveKey === staleKey) continue
+        if (reactiveKey === cacheKey) continue
 
-        // if the key is not in the stale permissions, we will add it.
-        // if it is, we will update the caveats.
-        // we use `??=` to only set it if it is undefined, otherwise we will overwrite the existing value.
-        const alreadyKnown = cachedPermissions[key] !== undefined
-
-        // add if its a new key
-        cachedPermissions[key] ??= structuredClone(reactivePermissions[key])
-
-        // update if it was known previously
-        if (alreadyKnown) {
+        const isNewPermissionName = cachedPermissions[key] === undefined
+        if (isNewPermissionName) {
+            cachedPermissions[key] = structuredClone(reactivePermissions[key])
+            updated = true
+        } else {
             cachedPermissions[key].caveats = mergeCaveats(
                 cachedPermissions[key]?.caveats,
                 reactivePermissions[key]?.caveats,
             )
+            // Check if merging actually changed the permissions.
+            const updatedCacheKey = canonicalCaveatKey(cachedPermissions[key].caveats)
+            if (updatedCacheKey !== cacheKey) updated = true
         }
-
-        // we will re-compute the 'stale' key to see if it has actually changed.
-        const updatedStaleKey = canonicalCaveatKey(cachedPermissions[key].caveats)
-        if (updatedStaleKey !== staleKey) updated = true
     }
 
-    // if changes where detected, we will update the state.
     if (updated) setCachedPermissions(() => cachedPermissions)
-
     return { permissions: cachedPermissions }
 }
 
-function filterUnique(a: WalletPermissionCaveat, index: number, array: WalletPermissionCaveat[]) {
-    return array.findIndex((b) => b.type === a.type && b.value === a.value) === index
-}
-function mergeCaveats(caveatsA: WalletPermissionCaveat[] | undefined, caveatsB: WalletPermissionCaveat[] | undefined) {
-    if (!caveatsA) return caveatsB ?? []
-    if (!caveatsB) return caveatsA
-    return caveatsA.concat(caveatsB).filter(filterUnique)
-}
 function canonicalCaveatKey(caveats?: WalletPermissionCaveat[]) {
     if (!caveats?.length) return ""
     return caveats
         .map((c) => `${c.type}::${c.value}`)
         .toSorted()
         .join(",")
+}
+
+function mergeCaveats(caveatsA: WalletPermissionCaveat[] | undefined, caveatsB: WalletPermissionCaveat[] | undefined) {
+    if (!caveatsA) return caveatsB ?? []
+    if (!caveatsB) return caveatsA
+    return caveatsA.concat(caveatsB).filter(filterUnique)
+}
+
+function filterUnique(a: WalletPermissionCaveat, index: number, array: WalletPermissionCaveat[]) {
+    return array.findIndex((b) => b.type === a.type && b.value === a.value) === index
 }
