@@ -1,7 +1,9 @@
 import { Checkbox } from "@ark-ui/react"
 import { CheckIcon } from "@phosphor-icons/react"
+import { useMemo } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
+import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { grantPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
@@ -12,11 +14,12 @@ interface SessionKeyContractProps {
 
 export const SessionKeyCheckbox = ({ appURL, contract }: SessionKeyContractProps) => {
     // Initial state is whether the permission is granted or not.
-    const permissionRequest = { [Permissions.SessionKey]: { target: contract } }
+    const permissionRequest = useMemo(() => ({ [Permissions.SessionKey]: { target: contract } }), [contract])
+    const checked = useHasPermissions(permissionRequest, appURL)
 
     return (
         <Checkbox.Root
-            checked={hasPermissions(appURL, permissionRequest)}
+            checked={checked}
             className="w-full flex justify-between items-center focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
