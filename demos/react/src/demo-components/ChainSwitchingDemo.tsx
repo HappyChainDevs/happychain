@@ -2,6 +2,7 @@ import { happyChainSepolia } from "@happy.tech/core"
 import { toast } from "sonner"
 import { gnosis } from "viem/chains"
 import GnosisLogo from "../assets/gnosis-logo.svg"
+import UnknownLogo from "../assets/unknown-logo.png"
 import { walletClient } from "../clients"
 
 export const ChainSwitchingDemo = () => {
@@ -34,7 +35,25 @@ export const ChainSwitchingDemo = () => {
         <div className="flex flex-col gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Chain Switching</div>
 
-            <div className="grid grid-rows-2 grid-flow-col gap-4">
+            <div className="grid grid-cols-2 grid-flow-row gap-4">
+                <button
+                    type="button"
+                    onClick={addChain}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={UnknownLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    Add Anvil
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => switchChain(gnosis.id)}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={UnknownLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    Switch to Anvil
+                </button>
+
                 <button
                     type="button"
                     onClick={addChain}
@@ -46,20 +65,23 @@ export const ChainSwitchingDemo = () => {
 
                 <button
                     type="button"
-                    onClick={addConflictedChain}
-                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
-                >
-                    <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
-                    <p title="This will create a conflict for the chain ID">Add Gnosis 2</p>
-                </button>
-
-                <button
-                    type="button"
                     onClick={() => switchChain(gnosis.id)}
                     className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
                 >
                     <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
                     Switch to Gnosis
+                </button>
+
+                <button
+                    type="button"
+                    onClick={addConflictedChain}
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                >
+                    <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    <p title="This will create a conflict for the chain ID">
+                        <div>Add 'Gnosis 2'</div>
+                        <small className="opacity-50">(Should Detect Changes)</small>
+                    </p>
                 </button>
 
                 <button

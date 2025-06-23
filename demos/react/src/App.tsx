@@ -1,5 +1,4 @@
 import { useHappyWallet } from "@happy.tech/react"
-import { WalletType } from "@happy.tech/wallet-common"
 import { ChainSwitchingDemo } from "./demo-components/ChainSwitchingDemo"
 import { ConnectionDemo } from "./demo-components/ConnectionDemo"
 import { ContractInteractionDemo } from "./demo-components/ContractInteractionDemo"
@@ -24,7 +23,7 @@ function App() {
                 </details>
 
                 <RPCCallsDemo />
-                {!(user?.type === WalletType.Injected && import.meta.env.PROD) && <ChainSwitchingDemo />}
+                {!import.meta.env.PROD && <ChainSwitchingDemo />}
                 <WalletActionsDemo />
                 <SessionKeyDemo />
                 <ContractInteractionDemo />
