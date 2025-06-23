@@ -16,7 +16,7 @@ import { type RpcTransactionRequest, type WatchAssetParameters, isAddress, isHex
 import { getAuthState } from "#src/state/authState"
 import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
+import { checkIfRequestRequiresConfirmation } from "#src/requests/checkIfRequestRequiresConfirmation"
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.

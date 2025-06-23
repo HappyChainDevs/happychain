@@ -33,7 +33,7 @@ import { checkUser, getUser } from "#src/state/user"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import { sendBoop } from "../utils/boop"
+import { sendBoop } from "#src/requests/utils/boop"
 
 export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
