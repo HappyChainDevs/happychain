@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames, parseBigInt } from "@happy.tech/common"
 import {
     EIP1193SwitchChainError,
     EIP1193UserRejectedRequestError,
@@ -42,11 +42,9 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             checkSessionKeyAuthorized(app, tx.to)
 
             // Session key transactions are not allowed to send value - security measure
-            if (tx.value && isHex(tx.value)) {
-                if (BigInt(tx.value) > 0n) {
-                    throw new EIP1474InvalidInput("Session key transactions cannot send ETH value")
-                }
-            }
+            const value = parseBigInt(tx.value)
+            if (tx.value && (value === undefined || value > 0n))
+                    throw new EIP1474InvalidInput("Session key transactions cannot send gas tokens")
 
             return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) }, app)
         }
