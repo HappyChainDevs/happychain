@@ -86,6 +86,7 @@ const errorSignatures = [
     "AccountPaidSessionKeyBoop()",
     "CannotRegisterSessionKeyForValidator()",
     "CannotRegisterSessionKeyForAccount()",
+    "SessionKeyValueTransferNotAllowed()",
 
     // =================================================================================================================
     // Staking — not handled in the submiter
