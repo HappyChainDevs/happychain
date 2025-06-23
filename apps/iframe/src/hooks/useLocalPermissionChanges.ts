@@ -87,11 +87,12 @@ export function createLocalPermissionsValue(appURL: AppURL) {
         if (!hasPermissions(appURL, permissionRequest)) return false
 
         return permissionRequestEntries(permissionRequest).every(({ name, caveats }) => {
-            const isInRevoked = revoked[name]
-            if (!isInRevoked) return true
+            const revokedCaveats = revoked[name]
+            if (!revokedCaveats) return true
+            if (caveats.length === 0) return false
             // Check to see if at least one caveat of the request has been revoked.
             return caveats.every(
-                (caveat) => !isInRevoked.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
+                (caveat) => !revokedCaveats.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
             )
         })
     }
