@@ -10,6 +10,7 @@ import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { revokedSessionKeys } from "./interfaceState"
 import { getUser } from "./user"
 import type { HappyUser } from "@happy.tech/wallet-common"
+import { deploymentVar } from "#src/env.ts"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.
@@ -89,6 +90,9 @@ export type SessionKeyRequest = {
  */
 export type PermissionsRequest = string | PermissionRequestObject
 
+
+const SYNC_SERVICE_URL = deploymentVar("VITE_SYNC_SERVICE_URL")
+ 
 export const permissionsMapLegend = observable(
     syncedCrud({
         list: async ({ lastSync }) => {
@@ -96,14 +100,14 @@ export const permissionsMapLegend = observable(
             if (!user) return []
 
             const response = await fetch(
-                `http://localhost:3000/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`,
+                `${SYNC_SERVICE_URL}/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`,
             )
             const data = await response.json()
 
             return data.data as WalletPermission[]
         },
         create: async (data: WalletPermission) => {
-            const response = await fetch("http://localhost:3000/api/v1/settings/create", {
+            const response = await fetch(`${SYNC_SERVICE_URL}/api/v1/settings/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -116,7 +120,7 @@ export const permissionsMapLegend = observable(
             const user = getUser()
             if (!user) return
 
-            const response = await fetch("http://localhost:3000/api/v1/settings/update", {
+            const response = await fetch(`${SYNC_SERVICE_URL}/api/v1/settings/update`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -135,16 +139,27 @@ export const permissionsMapLegend = observable(
 
             console.log("Subscribing to updates for user", user.address)
 
-            const eventSource = new EventSource(`http://localhost:3000/api/v1/settings/subscribe?user=${user.address}`)
-            eventSource.addEventListener("update", (event) => {
+            const eventSource = new EventSource(`${SYNC_SERVICE_URL}/api/v1/settings/subscribe?user=${user.address}`)
+            eventSource.addEventListener("WalletPermissions.updated", (event) => {
                 const data = JSON.parse(event.data)
                 console.log("Received update", data)
                 refresh()
             })
+            eventSource.addEventListener("WalletPermissions.deleted", (event) => {
+                const data = JSON.parse(event.data)
+                console.log("Received update", data)
+                refresh()
+            })
+            eventSource.addEventListener("WalletPermissions.created", (event) => {
+                const data = JSON.parse(event.data)
+                console.log("Received update", data)
+                refresh()
+            })
+
             return () => eventSource.close()
         },
         delete: async ({ id }) => {
-            const response = await fetch("http://localhost:3000/api/v1/settings/delete", {
+            const response = await fetch(`${SYNC_SERVICE_URL}/api/v1/settings/delete`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -166,33 +181,6 @@ export const permissionsMapLegend = observable(
         updatePartial: true,
     }),
 )
-
-// // === RANDOM PERMISSION UPDATE SIMULATION ========================================================================
-
-const mockPermissionUpdates = () => {
-    const permissions = permissionsMapLegend.get()
-    const permissionArray = Object.values(permissions)
-    
-    if (permissionArray.length === 0) return
-    
-    // Randomly select a permission to update
-    const randomIndex = Math.floor(Math.random() * permissionArray.length)
-    const permissionToUpdate = permissionArray[randomIndex]
-    
-    // Update the timestamp
-    const updatedPermission = {
-        ...permissionToUpdate,
-        caveats: [...permissionToUpdate.caveats, { type: "random", value: String(Math.random()) }],
-        updatedAt: Date.now()
-    }
-
-    
-    // Update in the legend
-    permissionsMapLegend[permissionToUpdate.id].set(updatedPermission)
-}
-
-// Set up interval for random updates every 5 seconds
-setInterval(mockPermissionUpdates, 5000)
 
 
 // === GET ALL PERMISSIONS =======================================================================================

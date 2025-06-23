@@ -6,7 +6,9 @@ const defaultLogLevel = logLevel(env.LOG_LEVEL)
 Logger.instance.setLogLevel(defaultLogLevel)
 
 export const logger = Logger.create("SettingsService")
-const responseLogger = Logger.create("Response", LogLevel.TRACE)
+const responseLogger = Logger.create("Response", {
+    level: LogLevel.TRACE,
+})
 
 export const logJSONResponseMiddleware = createMiddleware(async (c, next) => {
     await next()

@@ -6,6 +6,8 @@ import type { SubscribeInput } from "./types"
 export async function subscribe(input: SubscribeInput, stream: SSEStreamingApi) {
     const {promise, reject } = promiseWithResolvers<void>()
 
+    console.log("Subscribing to updates for user", input.user)
+
     stream.onAbort(() => {
         reject(undefined)
     })
