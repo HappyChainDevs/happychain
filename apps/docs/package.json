@@ -34,6 +34,8 @@
     "dependencies": {
         "@happy.tech/core": "workspace:*",
         "@happy.tech/react": "workspace:*",
-        "@scalar/api-reference-react": "^0.6.30"
+        "@scalar/api-reference-react": "^0.6.30",
+        "posthog-js": "^1.255.1"
+
     }
 }
