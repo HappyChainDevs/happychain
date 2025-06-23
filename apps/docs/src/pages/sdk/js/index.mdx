@@ -2,6 +2,10 @@
 layout: doc
 showOutline: true
 ---
+import { connect, disconnect, loadAbi, openWallet, requestSessionKey, createHappyWalletClient, getCurrentUser } from '@happy.tech/core'
+import { useHappyWallet, ConnectButton } from '@happy.tech/react'
+import { Button } from "#src/components/Button"
+import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 
 # Getting started with JavaScript/TypeScript
 
@@ -183,11 +187,30 @@ The SDK makes the following functions available for wallet interaction:
 
 - [`connect()`] — Prompts the user to connect the wallet to the app.
     - This will also prompt the user to log in to the wallet if he hasn't already.
+
+<Button onClick={connect}>{(() => { 
+    const {user} = useHappyWallet()
+    return user?.address ? `Already Connected!` : "Connect Wallet"
+})()}</Button>
+
 - [`disconnect()`] — Disconnects the wallet from the app.
     - The user will stay logged in.
+
+<Button onClick={disconnect}>{(() => { 
+    const {user} = useHappyWallet()
+    return user?.address ? `Disconnect` : "Must Connect First!"
+})()}</Button>
+
 - [`openWallet()`] — Pops the wallet open.
+
+<Button onClick={openWallet}>Open Wallet</Button>
+
 - [`loadAbi(abi: Abi)`] — Prompts the user to approve the ABI, which is then used to decode
   transactions in approval popups.
+
+<Button onClick={() => loadAbi(deployment.MockTokenA, abis.MockTokenA)}>
+    Load ABI
+</Button>
 
 [`disconnect()`]: /sdk/js/api/functions/disconnect
 [`openWallet()`]: /sdk/js/api/functions/openWallet
@@ -201,6 +224,10 @@ You can call [`requestSessionKey(contract: Address)`] to prompt the user to appr
 authorizing the app to transact with the selected contract on the user's behalf.
 
 [`requestSessionKey(contract: Address)`]: /sdk/js/api/functions/requestSessionKey
+
+<Button onClick={() => requestSessionKey(deployment.MockTokenA).then(() => alert('Session Key Added!'))}>
+    Request Session Key
+</Button>
 
 The session key is persisted between session, and further calls to the function simply return without
 prompting the user, so it is safe to always call this function before other actions.
@@ -232,6 +259,9 @@ The user can revoke session keys in the wallet settings, under "Permissions", wh
 [`revokeSessionKey`]: /sdk/js/api/functions/revokeSessionKey
 
 ### UI component
+
+<ConnectButton />
+<br />
 
 The Happy Wallet component (the orb on the right side of the screen that opens up the wallet)
 is automatically added to the page when you call [`loadHappyWallet`].

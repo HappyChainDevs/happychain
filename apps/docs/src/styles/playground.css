@@ -1,3 +1,5 @@
+/* Scalar/Vocs related overrides */
+
 body {
     --scalar-background-1: var(--vocs-color_background);
 }

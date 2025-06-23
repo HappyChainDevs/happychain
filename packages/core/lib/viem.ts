@@ -70,7 +70,7 @@ export function createHappyWalletClient(): HappyWalletClient {
 
     return new Proxy<HappyWalletClient>({} as HappyWalletClient, {
         get(_target, prop, _receiver) {
-            if (walletClient) return walletClient[prop as keyof HappyWalletClient]
+            if (walletClient) return Reflect.get(walletClient, prop)
 
             // This template is used so we can feature detect the methods available on the wallet client
             // without having to wait for the user to connect. don't actually try to execute any methods
@@ -84,7 +84,7 @@ export function createHappyWalletClient(): HappyWalletClient {
             // we can only properly intercept methods (such as `sendTransaction`) and prompt the
             // user to connect/log in first. if properties such as `.chain` or `.account` are accessed
             // we will throw an error, as we simply don't have the available user data yet.
-            if (typeof template[prop as keyof HappyWalletClient] !== "function") {
+            if (typeof Reflect.get(template, prop) !== "function") {
                 throw new Error(`Cannot call wallet.${String(prop)}: Wallet is currently unavailable.`)
             }
 
@@ -95,16 +95,20 @@ export function createHappyWalletClient(): HappyWalletClient {
             return (...args: unknown[]) =>
                 happyProvider.request({ method: "eth_requestAccounts" }).then(async () => {
                     // wait for wallet client to load
-                    await waitForCondition(() => !!walletClient, 5000)
 
-                    const maybeFunc = (walletClient as HappyWalletClient)?.[prop as keyof HappyWalletClient]
+                    try {
+                        await waitForCondition(() => !!walletClient, 5000)
+                    } catch {}
+
+                    if (!walletClient) throw new Error("Failed to initialize wallet client. Please try again.")
+
+                    const maybeFunc = Reflect.get(walletClient, prop)
 
                     // Shouldn't happen as 'template' should have the same shape as walletClient
                     if (!maybeFunc || typeof maybeFunc !== "function") {
                         throw new Error(`Cannot call wallet.${String(prop)}: Not a function`)
                     }
 
-                    // @ts-expect-error
                     return maybeFunc(...args)
                 })
         },

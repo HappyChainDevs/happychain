@@ -1,9 +1,9 @@
+import "./ModeImage.css"
+
 export type ModeImage = {
     lightSrc: string
     darkSrc: string
-    alt?: string
-    className?: string
-} & { [key: string]: string }
+} & Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src">
 
 export const ModeImage = ({ lightSrc, darkSrc, className = "", alt = "", ...props }: ModeImage) => {
     // NOTE: I tried using a use-effect to pick the right picture, but the latency is horrendous,
@@ -11,9 +11,7 @@ export const ModeImage = ({ lightSrc, darkSrc, className = "", alt = "", ...prop
 
     // biome-ignore format: stupid parens
     return <>
-        {/*biome-ignore lint/a11y/useAltText: ...props fucks up the detection*/}
-        <img src={lightSrc} alt={alt} className="light-image" {...props} />
-        {/*biome-ignore lint/a11y/useAltText: ...props fucks up the detection*/}
-        <img src={darkSrc} alt={alt} className="dark-image" {...props} />
+        <img {...props} src={lightSrc} alt={alt} className="light-image" />
+        <img {...props} src={darkSrc} alt={alt} className="dark-image"/>
     </>
 }
