@@ -3,7 +3,6 @@ import { CheckIcon } from "@phosphor-icons/react"
 import { useMemo } from "react"
 import type { Address } from "viem"
 import { PermissionName } from "#src/constants/permissions"
-import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
 
 interface SessionKeyContractProps {
@@ -13,12 +12,11 @@ interface SessionKeyContractProps {
 export const SessionKeyCheckbox = ({ contract }: SessionKeyContractProps) => {
     // Initial state is whether the permission is granted or not.
     const permissionRequest = useMemo(() => ({ [PermissionName.SessionKey]: { target: contract } }), [contract])
-    const checked = useHasPermissions(permissionRequest)
     const { grant, revoke, has } = useLocalPermissionChanges()
 
     return (
         <Checkbox.Root
-            checked={checked}
+            checked={has(permissionRequest)}
             className="w-full flex justify-between items-center focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
                 // if user deselects it to un-grant the permission, we store it
