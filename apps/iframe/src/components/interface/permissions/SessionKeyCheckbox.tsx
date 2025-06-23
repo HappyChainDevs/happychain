@@ -2,7 +2,7 @@ import { Checkbox } from "@ark-ui/react"
 import { CheckIcon } from "@phosphor-icons/react"
 import { useMemo } from "react"
 import type { Address } from "viem"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
 
@@ -12,7 +12,7 @@ interface SessionKeyContractProps {
 
 export const SessionKeyCheckbox = ({ contract }: SessionKeyContractProps) => {
     // Initial state is whether the permission is granted or not.
-    const permissionRequest = useMemo(() => ({ [Permissions.SessionKey]: { target: contract } }), [contract])
+    const permissionRequest = useMemo(() => ({ [PermissionName.SessionKey]: { target: contract } }), [contract])
     const checked = useHasPermissions(permissionRequest)
     const { grant, revoke, has } = useLocalPermissionChanges()
 

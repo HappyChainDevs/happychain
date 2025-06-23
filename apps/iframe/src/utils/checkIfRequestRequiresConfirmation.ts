@@ -1,7 +1,7 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { requiresApproval } from "@happy.tech/wallet-common"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import { checkAndChecksumAddress } from "#src/requests/utils/checks"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
@@ -30,7 +30,7 @@ export function checkIfRequestRequiresConfirmation(
         case "wallet_sendTransaction":
         case "eth_sendTransaction":
             return !hasPermissions(app, {
-                [Permissions.SessionKey]: { target: payload.params[0].to },
+                [PermissionName.SessionKey]: { target: payload.params[0].to },
             })
 
         case "wallet_requestPermissions":
@@ -61,7 +61,7 @@ export function checkIfRequestRequiresConfirmation(
             // 2. No session key exists for this contract
             return (
                 !hasPermissions(app, {
-                    [Permissions.SessionKey]: {
+                    [PermissionName.SessionKey]: {
                         target: targetAddress,
                     },
                 }) || !storedSessionKeys?.[user!.address]?.[targetAddress]

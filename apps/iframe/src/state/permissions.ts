@@ -3,7 +3,7 @@ import type { Address, UUID } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import { permissionsLogger } from "#src/utils/logger"
 import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
@@ -52,7 +52,7 @@ export type WalletPermission = {
     // The app to which the permission is granted.
     invoker: AppURL
     // This is the EIP-1193 request that this permission is mapped to.
-    parentCapability: Permissions | (string & {})
+    parentCapability: PermissionName | (string & {})
     caveats: WalletPermissionCaveat[]
     date: number
     // Not in the EIP, but Viem wants this.
@@ -78,7 +78,7 @@ export type PermissionRequestObject = {
  * A refinement of {@link PermissionRequestObject} for requesting session keys.
  */
 export type SessionKeyRequest = {
-    [Permissions.SessionKey]: { target: Address }
+    [PermissionName.SessionKey]: { target: Address }
 }
 
 /**
@@ -233,7 +233,7 @@ export function clearAppPermissions(app: AppURL): void {
 
     // Register session keys for onchain deregistrations.
     Object.values(getAppPermissions(app))
-        .filter((p: WalletPermission) => p.parentCapability === Permissions.SessionKey)
+        .filter((p: WalletPermission) => p.parentCapability === PermissionName.SessionKey)
         .flatMap((p) => p.caveats)
         .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
@@ -337,7 +337,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
         // Note there is a possible rare race condition here, where a user toggles a session key off, then registers
         // a new session key for the same target from the app, then toggles the old key back on in the UI. This should
         // mostly not happen, but it will lead to two session keys for the same target to be displayed in the UI.
-        if (name === Permissions.SessionKey) {
+        if (name === PermissionName.SessionKey) {
             newCaveats.forEach((c) => revokedSessionKeys.delete(c.value as Address))
         }
     }
@@ -386,7 +386,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
         // Otherwise, remove specific caveats.
 
         // For session key permission, register the targets for onchain deregistration.
-        if (name === Permissions.SessionKey) {
+        if (name === PermissionName.SessionKey) {
             caveats.forEach((caveat) => revokedSessionKeys.add(caveat.value as Address))
         }
 

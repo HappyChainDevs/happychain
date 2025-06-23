@@ -1,6 +1,6 @@
 import { generateTestUser } from "@happy.tech/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import {
     clearPermissions,
     getAllPermissions,
@@ -101,20 +101,20 @@ describe("PermissionsService", () => {
 
                 it("should not change state if same sessionKey target is granted multiple times", () => {
                     // Start Empty
-                    const zeroState = getPermissions(appURL, Permissions.SessionKey)
+                    const zeroState = getPermissions(appURL, PermissionName.SessionKey)
                     expect(zeroState.length).toBe(0)
 
                     // Add the same target multiple times
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    const firstState = getPermissions(appURL, Permissions.SessionKey)
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    const firstState = getPermissions(appURL, PermissionName.SessionKey)
                     expect(firstState.length).toBe(1)
                     expect(firstState[0].caveats.length).toBe(1)
 
                     // Add a new target
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0xbcd" } })
-                    const secondState = getPermissions(appURL, Permissions.SessionKey)
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0xbcd" } })
+                    const secondState = getPermissions(appURL, PermissionName.SessionKey)
                     expect(secondState.length).toBe(1)
                     expect(secondState[0].caveats.length).toBe(2)
                 })
@@ -282,10 +282,10 @@ describe("PermissionsService", () => {
                 it("returns all permissions granted to app (all caveats)", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
 
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x4567" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x4567" } })
 
-                    const granted = getPermissions(appURL, Permissions.SessionKey)
+                    const granted = getPermissions(appURL, PermissionName.SessionKey)
                     expect(granted.length).toBe(1)
                     expect(granted[0].caveats.length).toBe(2)
                 })
@@ -293,15 +293,15 @@ describe("PermissionsService", () => {
                 it("returns all permissions granted to app (filtering caveats)", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
 
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x4567" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x4567" } })
 
-                    expect(getPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } }).length).toBe(1)
-                    expect(getPermissions(appURL, { [Permissions.SessionKey]: { target: "0x4567" } }).length).toBe(1)
+                    expect(getPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } }).length).toBe(1)
+                    expect(getPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x4567" } }).length).toBe(1)
 
-                    expect(getPermissions(appURL, { [Permissions.SessionKey]: { target: "0xdeadbeef" } }).length).toBe(
-                        0,
-                    )
+                    expect(
+                        getPermissions(appURL, { [PermissionName.SessionKey]: { target: "0xdeadbeef" } }).length,
+                    ).toBe(0)
                 })
             })
             describe("without user", () => {
@@ -340,12 +340,12 @@ describe("PermissionsService", () => {
                 it("returns all permissions granted to app (all caveats)", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
 
-                    grantPermissions(appURL, { [Permissions.SessionKey]: { target: "0x1234" } })
-                    grantPermissions(walletURL, { [Permissions.SessionKey]: { target: "0x4567" } })
+                    grantPermissions(appURL, { [PermissionName.SessionKey]: { target: "0x1234" } })
+                    grantPermissions(walletURL, { [PermissionName.SessionKey]: { target: "0x4567" } })
 
-                    expect(getPermissions(appURL, Permissions.SessionKey).length).toBe(1)
-                    expect(getPermissions(appURL, Permissions.SessionKey)[0].caveats.length).toBe(1)
-                    expect(getPermissions(walletURL, Permissions.SessionKey)[0].caveats.length).toBe(1)
+                    expect(getPermissions(appURL, PermissionName.SessionKey).length).toBe(1)
+                    expect(getPermissions(appURL, PermissionName.SessionKey)[0].caveats.length).toBe(1)
+                    expect(getPermissions(walletURL, PermissionName.SessionKey)[0].caveats.length).toBe(1)
                 })
             })
 
