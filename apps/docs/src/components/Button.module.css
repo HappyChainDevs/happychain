@@ -1,0 +1,10 @@
+.root {
+    padding: 0.5rem 1rem;
+    background: var(--vocs-color_background3);
+    color: var(--vocs-color_text);
+    border: 1px solid var(--vocs-color_border);
+    transition: 0.15s;
+    &:hover {
+        background: var(--vocs-color_background5);
+    }
+}

@@ -1,0 +1,7 @@
+:root:not(.dark) .dark-image {
+    display: none;
+}
+
+:root.dark .light-image {
+    display: none;
+}
