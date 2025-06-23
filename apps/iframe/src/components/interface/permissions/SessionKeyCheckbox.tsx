@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import type { Address } from "viem"
 import { Permissions } from "#src/constants/permissions"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import { grantPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
+import { grantPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
