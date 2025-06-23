@@ -46,7 +46,7 @@ export const ContractInteractionDemo = () => {
             </div>
 
             {/* Counter Display */}
-            <div className="col-span-2 text-center mt-2">
+            <div className="col-span-2 text-center mt-2 min-h-16">
                 <pre className="text-sm font-semibold">Current counter value</pre>
                 {count !== undefined ? (
                     <div className="text-4xl font-bold">{count.toString()}</div>
