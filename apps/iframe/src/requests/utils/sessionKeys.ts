@@ -8,7 +8,7 @@ import { EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import { type SendBoopArgs, sendBoop } from "#src/requests/utils/boop"
 import { eoaSigner } from "#src/requests/utils/signers"
 import { StorageKey, storage } from "#src/services/storage"
@@ -132,7 +132,7 @@ export async function uninstallSessionKeyExtension(account: Address) {
  * Returns true iff the user has session key authorization for the target address.
  */
 export function isSessionKeyAuthorized(app: AppURL, target: Address): boolean {
-    const permissionRequest = { [Permissions.SessionKey]: { target } }
+    const permissionRequest = { [PermissionName.SessionKey]: { target } }
     return getPermissions(app, permissionRequest).length > 0
 }
 
@@ -140,7 +140,7 @@ export function isSessionKeyAuthorized(app: AppURL, target: Address): boolean {
  * Returns true iff the user has a session key registered for the target address.
  */
 export function hasSessionKey(account: Address, target: Address, app: AppURL): boolean {
-    const hasPermission = hasPermissions(app, { [Permissions.SessionKey]: { target } })
+    const hasPermission = hasPermissions(app, { [PermissionName.SessionKey]: { target } })
     if (!hasPermission) return false
     const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
     return Boolean(storedSessionKeys[account]?.[target])
@@ -190,7 +190,7 @@ export async function installNewSessionKey(app: AppURL, account: Address, target
  * Authorizes & stores the session for the target address.
  */
 export function authorizeSessionKey(app: AppURL, account: Address, target: Address, sessionKey: Hex) {
-    grantPermissions(app, { [Permissions.SessionKey]: { target } })
+    grantPermissions(app, { [PermissionName.SessionKey]: { target } })
     const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
     storage.set(StorageKey.SessionKeys, {
         ...storedSessionKeys,
@@ -243,7 +243,7 @@ export async function revokeSessionKeys(app: AppURL, targets: Address[]): Promis
 
         for (const target of targets) {
             // remove permissions + session key entries from local storage
-            const permissionRequest = { [Permissions.SessionKey]: { target } }
+            const permissionRequest = { [PermissionName.SessionKey]: { target } }
             revokePermissions(app, permissionRequest)
             revokedSessionKeys.clear()
             const { [target]: _, ...rest } = userSessionKeys

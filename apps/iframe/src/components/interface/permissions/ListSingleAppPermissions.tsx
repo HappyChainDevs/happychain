@@ -1,7 +1,7 @@
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react"
 import type { Address } from "viem"
 import { Switch } from "#src/components/primitives/toggle-switch/Switch"
-import { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
 import type { AppPermissions, PermissionsRequest, WalletPermission } from "#src/state/permissions"
@@ -19,7 +19,7 @@ const onSwitchToggle = (
     grant: (permissionRequest: PermissionsRequest) => void,
     revoke: (permissionRequest: PermissionsRequest) => void,
 ) => {
-    const isSessionKey = permission.parentCapability === Permissions.SessionKey
+    const isSessionKey = permission.parentCapability === PermissionName.SessionKey
 
     if (!isSessionKey) {
         // No caveat to worry about for now.
@@ -31,7 +31,7 @@ const onSwitchToggle = (
     // re-enable all, after disabling all.
     for (const target of allSessionKeys) {
         if (e.checked) {
-            grant({ [Permissions.SessionKey]: { target } })
+            grant({ [PermissionName.SessionKey]: { target } })
         } else {
             // The sessions keys will be unregistered onchain when transitioning away from
             // the page (cf. transition handler in `__root.tsx`). This avoids sending
@@ -43,7 +43,7 @@ const onSwitchToggle = (
             // despite being allowed onchain. This can only be a safety issues if the session keys
             // are stolen, but if that is possible, then we have much bigger problems to worry about.
 
-            revoke({ [Permissions.SessionKey]: { target } })
+            revoke({ [PermissionName.SessionKey]: { target } })
         }
     }
 }
@@ -52,13 +52,15 @@ const ListItem = ({ permission }: ListItemProps) => {
     const { grant, revoke, has } = useLocalPermissionChanges()
 
     const allSessionKeys =
-        permission?.parentCapability === Permissions.SessionKey ? permission.caveats.map((c) => c.value as Address) : []
+        permission?.parentCapability === PermissionName.SessionKey
+            ? permission.caveats.map((c) => c.value as Address)
+            : []
 
     // These are the active contract target that have active session keys.
-    const activeSessionKeys = allSessionKeys.filter((target) => has({ [Permissions.SessionKey]: { target } }))
+    const activeSessionKeys = allSessionKeys.filter((target) => has({ [PermissionName.SessionKey]: { target } }))
 
     const checked =
-        permission.parentCapability === "happy_sessionKey"
+        permission.parentCapability === PermissionName.SessionKey
             ? has(permission.parentCapability) && activeSessionKeys.length > 0
             : has(permission.parentCapability)
 
