@@ -46,7 +46,7 @@ export class IframeProvider extends BasePopupProvider {
         // injected wallets don't need permissions here (handled by the wallet)
         if (this.isInjectedUser) return false
 
-        return await checkIfRequestRequiresConfirmation(getWalletURL(), args)
+        return checkIfRequestRequiresConfirmation(getWalletURL(), args)
     }
 
     private get isInjectedUser() {

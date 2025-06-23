@@ -6,7 +6,7 @@ import {
     type Msgs,
     type ProviderMsgsFromApp,
 } from "@happy.tech/wallet-common"
-import { isAddress } from "viem"
+import { isAddress, isHex } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
@@ -40,6 +40,14 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             const tx = checkedTx(request.payload.params[0])
             const account = getCheckedUser().address
             checkSessionKeyAuthorized(app, tx.to)
+
+            // Session key transactions are not allowed to send value - security measure
+            if (tx.value && isHex(tx.value)) {
+                if (BigInt(tx.value) > 0n) {
+                    throw new EIP1474InvalidInput("Session key transactions cannot send ETH value")
+                }
+            }
+
             return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) }, app)
         }
 

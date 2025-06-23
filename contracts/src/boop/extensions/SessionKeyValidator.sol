@@ -33,6 +33,9 @@ contract SessionKeyValidator is ICustomValidator {
     // ====================================================================================================
     // ERRORS
 
+    /// Selector returned if the transaction is trying to send non-zero value transaction
+    error SessionKeyValueTransferNotAllowed();
+
     /// Selector returned if trying to validate an account-paid boop with a session key.
     error AccountPaidSessionKeyBoop();
 
@@ -76,6 +79,10 @@ contract SessionKeyValidator is ICustomValidator {
     }
 
     function validate(Boop memory boop) external view returns (bytes memory) {
+        if (boop.value > 0) {
+            return abi.encodeWithSelector(SessionKeyValueTransferNotAllowed.selector);
+        }
+
         if (boop.payer == boop.account) {
             return abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector);
         }
