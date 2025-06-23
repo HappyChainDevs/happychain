@@ -31,10 +31,16 @@ import type { AppURL } from "#src/utils/appURL"
 import { reqLogger } from "#src/utils/logger"
 import { createValidatorExtraData } from "./sessionKeys"
 
+interface NonceCacheEntry {
+    nonce: bigint
+    timestamp: number
+}
+const CACHE_TTL_MS = 15_000 // 15 seconds
+
 /**
  * Local cache of nonces to avoid repeated
  */
-const nonces = new Map2<Address, bigint, bigint>()
+const nonces = new Map2<Address, bigint, NonceCacheEntry>()
 const nonceMutexes = new Map2<Address, bigint, Mutex>()
 
 /**
@@ -51,9 +57,25 @@ export function deleteNonce(account: Address, nonceTrack = 0n): void {
 export async function getNextNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
     return mutex.locked(async () => {
-        const nonce = await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
-        nonces.set(account, nonceTrack, nonce + 1n)
-        return nonce
+        let currentNonce: bigint
+        const cachedEntry = nonces.get(account, nonceTrack)
+
+        // check for existence and freshness
+        if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+            // If cache hit and is fresh, use the cached nonce
+            currentNonce = cachedEntry.nonce
+        } else {
+            // if cache miss or entry is stale, fetch a fresh nonce
+            currentNonce = await getOnchainNonce(account, nonceTrack)
+        }
+
+        // update the cache with the new nonce and a fresh timestamp
+        nonces.set(account, nonceTrack, {
+            nonce: currentNonce + 1n,
+            timestamp: Date.now(),
+        })
+
+        return currentNonce
     })
 }
 
@@ -73,10 +95,20 @@ async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigin
  * Fallback to fetching nonce from the EntryPoint contract.
  */
 export async function getCurrentNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
-    const cachedNonce = nonces.get(account, nonceTrack)
-    if (cachedNonce !== undefined) return cachedNonce
+    const cachedEntry = nonces.get(account, nonceTrack)
+
+    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+        // If cache hit and is fresh, return the cached nonce
+        return cachedEntry.nonce
+    }
     const onchainNonce = await getOnchainNonce(account, nonceTrack)
-    nonces.set(account, nonceTrack, onchainNonce)
+
+    // Update the cache with the newly fetched nonce and a fresh timestamp.
+    nonces.set(account, nonceTrack, {
+        nonce: onchainNonce,
+        timestamp: Date.now(),
+    })
+
     return onchainNonce
 }
 
