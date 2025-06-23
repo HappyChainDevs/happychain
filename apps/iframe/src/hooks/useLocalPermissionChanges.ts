@@ -26,6 +26,7 @@ export function createLocalPermissionsValue(appURL: AppURL) {
                 // its not revoked, we just skip it now
                 if (!prevRevoked[name]) continue
                 prevRevoked[name] = prevRevoked[name].filter((a) => !caveats.some((c) => checkIfCaveatsMatch(a, c)))
+                if (!prevRevoked[name].length) delete prevRevoked[name]
             }
             return { ...prevRevoked }
         })
@@ -44,6 +45,28 @@ export function createLocalPermissionsValue(appURL: AppURL) {
             }
 
             return { ...prevRevoked }
+        })
+    }
+
+    const has = (permissionRequest: PermissionsRequest) => {
+        // we can not add new permissions from this page,
+        // so if the permission is not granted, we return false
+        if (!hasPermissions(appURL, permissionRequest)) return false
+
+        return permissionRequestEntries(permissionRequest).every(({ name, caveats }) => {
+            const revokedCaveats = revoked[name]
+            // if there is no revoked caveats entry, then we know the user has the permission
+            // (see hasPermissions call above) and it is not revoked.
+            if (!revokedCaveats) return true
+
+            // if there is an entry, but it is empty, such as with eth_accounts, then we can assume
+            // the entire category is revoked, so we return false.
+            if (!revokedCaveats.length) return false
+
+            // Check to see if at least one caveat of the request has been revoked.
+            return caveats.every(
+                (caveat) => !revokedCaveats.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
+            )
         })
     }
 
@@ -82,20 +105,6 @@ export function createLocalPermissionsValue(appURL: AppURL) {
             }
         },
     })
-
-    const has = (permissionRequest: PermissionsRequest) => {
-        if (!hasPermissions(appURL, permissionRequest)) return false
-
-        return permissionRequestEntries(permissionRequest).every(({ name, caveats }) => {
-            const revokedCaveats = revoked[name]
-            if (!revokedCaveats) return true
-            if (caveats.length === 0) return false
-            // Check to see if at least one caveat of the request has been revoked.
-            return caveats.every(
-                (caveat) => !revokedCaveats.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
-            )
-        })
-    }
 
     return { appURL, grant, revoke, save, has }
 }
