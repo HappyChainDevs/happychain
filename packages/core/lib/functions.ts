@@ -1,6 +1,5 @@
 import { HappyMethodNames } from "@happy.tech/common"
 import type { Address } from "@happy.tech/common"
-import { Permissions } from "@happy.tech/iframe/src/constants/permissions"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Abi } from "viem"
 import { internalProvider } from "./happyProvider"
@@ -67,7 +66,7 @@ export const requestSessionKey = async (target: Address): Promise<void> => {
 export const revokeSessionKey = async (target: Address): Promise<void> => {
     await internalProvider.request({
         method: "wallet_revokePermissions",
-        params: [{ [Permissions.SessionKey]: { target } }],
+        params: [{ happy_sessionKey: { target } }],
     })
 }
 
