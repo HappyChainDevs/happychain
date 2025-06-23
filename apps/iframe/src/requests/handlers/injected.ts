@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames, parseBigInt } from "@happy.tech/common"
 import {
     EIP1193SwitchChainError,
     EIP1193UnauthorizedError,
@@ -72,7 +72,11 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const tx = checkedTx(request.payload.params[0])
             const account = user.address
-            const signer = isSessionKeyAuthorized(app, tx.to)
+
+            // Session key transactions are not allowed to send value - security measure
+            const value = parseBigInt(tx.value)
+            const txHasValue = tx.value && (value === undefined || value > 0n)
+            const signer = !txHasValue && isSessionKeyAuthorized(app, tx.to)
                 ? sessionKeySigner(getSessionKey(user.address, tx.to))
                 : eoaSigner
 
