@@ -68,15 +68,24 @@ export function outputForRevertError(
         }
         case "ValidationReverted": {
             const decodedReason = decodeRawError(decoded.args[0] as Hex)
-            if (decodedReason?.errorName === "AccountPaidSessionKeyBoop")
-                return {
-                    status: Onchain.ValidationReverted,
-                    revertData: decoded.args[0] as Hex,
-                    error: "Trying to validate a self-paying boop with a session key.",
-                }
+            let explanation: string | null = null
+            switch (decodedReason?.errorName) {
+                case "AccountPaidSessionKeyBoop":
+                    explanation = "Trying to validate a self-paying boop with a session key."
+                    break
+                case "CannotRegisterSessionKeyForValidator":
+                    explanation = "Trying to register a session key for the session key validator itself."
+                    break
+                case "CannotRegisterSessionKeyForAccount":
+                    explanation = "Trying to register a session key for the Boop account itself."
+                    break
+                case "SessionKeyValueTransferNotAllowed":
+                    explanation = "Trying to send gas tokens via a session key."
+                    break
+            }
             return {
                 status: Onchain.ValidationReverted,
-                error: "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
+                error: explanation ?? "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
             }
         }
