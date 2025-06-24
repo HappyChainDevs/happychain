@@ -50,10 +50,10 @@ type PendingBoopInfo = {
     boop: Boop
     boopHash: Hash
     entryPoint: Address | undefined
-    interval: NodeJS.Timeout | undefined
     latestEvmTx?: EvmTxInfo
     boopGasForEvmTxHash: Map<Hash, BoopGasInfo | undefined>
     pwr: PromiseWithResolvers<WaitForReceiptOutput>
+    attempt: number
 }
 
 export type WaitForInclusionArgs =
@@ -112,15 +112,15 @@ export class BoopReceiptService {
             boop,
             boopHash,
             entryPoint,
-            interval: undefined,
             boopGasForEvmTxHash: new Map(),
+            attempt: 0
         }) satisfies PendingBoopInfo)
 
         // This gets recursively incremented in case of retries, which is perfectly safe.
         sub.count += 1
         sub.entryPoint ??= entryPoint
 
-        // 3. if evmTxInfo supplied and no interval exists, start monitoring for replacement or cancellation
+        // 3. if evmTxInfo supplied, start monitoring for replacement or cancellation
         if (evmTxInfo) this.setActiveEvmTx(sub, evmTxInfo, boop)
 
         // 4. race the receipt against a timeout
@@ -164,16 +164,19 @@ export class BoopReceiptService {
     private async replaceOrCancel(sub: PendingBoopInfo): Promise<void> {
         const tx = sub.latestEvmTx!
 
-        // 1. Retry the transaction once. This won't recursively retry because the interval is unique for the boopHash.
-        receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
-        const output = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
-        if (output.status === Onchain.Success) return
+        if (sub.attempt++ === 0) {
+            // 1. Retry the transaction once.
+            receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
+            const output = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
+            if (output.status === Onchain.Success) return
+            const msg = `Retry failed, cancelling: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`
+            receiptLogger.warn(msg, output)
+        }
 
         // 2. Retry failed, switch to cancellation.
-        receiptLogger.warn(`Retry failed, cancelling: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`, output)
         const account = findExecutionAccount(sub.boop)
         const { fees } = getFees(sub.boopHash, tx)
-        // TODO error in getFees in unhandled
+        // TODO errors in getFees are unhandled
         const partialEvmTxInfo = { nonce: tx.nonce, ...fees! } satisfies Omit<EvmTxInfo, "evmTxHash">
         try {
             // We identify cancel transaction by making them self-sends.
@@ -191,13 +194,11 @@ export class BoopReceiptService {
                 evmNonceManager.resyncIfTooLow(account.address)
                 // Give the actual included tx some time to be processed.
                 await sleep(1000)
-                // Then resolve & clear interval. Those will do nothing if
-                // we picked up the included tx and processed it already.
+                // Then resolve — this will do nothing if we picked up the included tx and processed it already.
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
                     error: "Timed out while waiting for the receipt (nonce too low).",
                 })
-                clearInterval(sub.interval)
             } else {
                 logger.error("Error sending cancel tx", sub.boopHash, error)
             }
@@ -208,7 +209,7 @@ export class BoopReceiptService {
         try {
             if (receipt.to === receipt.from) {
                 // We identify cancel transactions by making them self-sends.
-                // No need to check if the tx was successful (it's 0 self-send, it can't really fail),
+                // No need to check if the tx was successful (it's 0 self-send, it can't fail),
                 // we only care about the executor address nonce bump.
                 boopNonceManager.handleCancelledNonce(sub.boop)
                 sub.pwr.resolve({
@@ -232,7 +233,6 @@ export class BoopReceiptService {
             // without causing issues (i.e. the PendingBoopInfo will be cleared from the internal
             // maps if it hasn't been already), so we can safely delete the boop from the store.
             boopStore.delete(sub.boop)
-            clearInterval(sub.interval)
         }
 
         // NOTE: In theory, we could resolve the subscription earlier in case of cancellation,
