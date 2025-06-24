@@ -2250,6 +2250,11 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -2260,7 +2265,12 @@ const contractToAbi = ({
       "name": "removeSessionKeys",
       "inputs": [
         {
-          "name": "target",
+          "name": "targets",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "keys",
           "type": "address[]",
           "internalType": "address[]"
         }
@@ -2281,13 +2291,18 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ],
-      "outputs": [
+        },
         {
           "name": "sessionKey",
           "type": "address",
           "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
       "stateMutability": "view"
@@ -2428,6 +2443,12 @@ const contractToAbi = ({
           "type": "address",
           "indexed": true,
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
         }
       ],
       "anonymous": false
@@ -2445,6 +2466,11 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "CannotRegisterSessionKeyForValidator",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SessionKeyValueTransferNotAllowed",
       "inputs": []
     }
   ]
@@ -2470,7 +2496,7 @@ export const deployment = ({
   "HappyAccountImpl": "0x5E7FC9dbE87a06364a275325e0d55a99bb834d68",
   "HappyAccountRegistry": "0xc4d696851e6dE7e6309F04b10D07704470e171A4",
   "HappyPaymaster": "0x8441F958a3996CAE898BCa4CEDb460C53D050c6d",
-  "SessionKeyValidator": "0x9b14b539CECee62F36aa80DF1791a049511D5249"
+  "SessionKeyValidator": "0x6f0db0E52c25993e9a639208000D1bE3B8242F94"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
