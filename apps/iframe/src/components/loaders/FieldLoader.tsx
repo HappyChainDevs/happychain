@@ -8,6 +8,7 @@ const fieldLoaderVariants = cva("bg-primary-content rounded animate-pulse dark:b
             md: "w-32 h-4", // 128px width, 16px height (original size)
             lg: "w-40 h-5", // 160px width, 20px height
             xl: "w-48 h-6", // 192px width, 24px height
+            snickers: "w-24 h-7", // short thick bar (for balance)
         },
     },
     defaultVariants: {

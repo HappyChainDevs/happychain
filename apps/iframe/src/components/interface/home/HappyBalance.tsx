@@ -27,7 +27,7 @@ export const HappyBalance = () => {
     return (
         <div className="mx-auto">
             <span className="gap-2 text-3xl items-center leading-none flex tabular-nums">
-                {isLoading ? <FieldLoader size="md" /> : <span className="font-bold">{formattedBalance}</span>}
+                {isLoading ? <FieldLoader size="snickers" /> : <span className="font-bold">{formattedBalance}</span>}
                 <span className="text-[0.675em] font-medium">$HAPPY</span>
             </span>
         </div>
