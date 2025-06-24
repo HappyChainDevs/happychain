@@ -129,3 +129,13 @@ export function ensureIsNotHappyMethod(
             `happy method unsupported by this handle: ${requestParams.method} — IMPLEMENTATION BUG`,
         )
 }
+
+/**
+ * Returns true if the transaction has non-zero value.
+ * This is currently only used to prevent session keys transactions that send values as a security measure.
+ * This is also enforced on the contract side, so the checks are mostly for UX.
+ */
+export function hasNonZeroValue(tx: RpcTransactionRequest): boolean {
+    const value = parseBigInt(tx.value)
+    return !!value && value > 0n
+}

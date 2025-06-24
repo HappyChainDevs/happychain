@@ -1,4 +1,4 @@
-import { HappyMethodNames, parseBigInt } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/common"
 import {
     EIP1193SwitchChainError,
     EIP1193UserRejectedRequestError,
@@ -8,7 +8,7 @@ import {
 } from "@happy.tech/wallet-common"
 import { isAddress, isHex } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
-import { checkAndChecksumAddress, checkAuthenticated, checkedTx } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkAuthenticated, checkedTx, hasNonZeroValue } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"
 import { checkSessionKeyAuthorized, getSessionKey, revokeSessionKeys } from "#src/requests/utils/sessionKeys"
 import {
@@ -40,12 +40,7 @@ export async function dispatchedPermissionlessRequest(request: ProviderMsgsFromA
             const tx = checkedTx(request.payload.params[0])
             const account = getCheckedUser().address
             checkSessionKeyAuthorized(app, tx.to)
-
-            // Session key transactions are not allowed to send value - security measure
-            const value = parseBigInt(tx.value)
-            if (tx.value && (value === undefined || value > 0n))
-                    throw new EIP1474InvalidInput("Session key transactions cannot send gas tokens")
-
+            if (hasNonZeroValue(tx)) throw new EIP1474InvalidInput("Session key transactions cannot send gas tokens")
             return await sendBoop({ account, tx, signer: sessionKeySigner(getSessionKey(account, tx.to)) }, app)
         }
 
