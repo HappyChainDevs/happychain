@@ -610,6 +610,11 @@ select-auth:
 
 select-docs:
 	$(call update_env,apps/docs/.env,HAPPY_DOCS_URL,$(url))
+	if [ "$(posthog)" = "true" ]; then \
+  		$(call update_env,apps/docs/.env,HAPPY_POSTHOG_HOST,https://us.i.posthog.com); \
+	else \
+		$(call update_env,apps/docs/.env,HAPPY_POSTHOG_HOST,); \
+	fi
 .PHONY: select-docs
 
 select-submitter-local:
@@ -675,15 +680,15 @@ select-auth-prod:
 .PHONY: select-auth-local
 
 select-docs-local:
-	make select-docs url=http://localhost:4000
+	make select-docs url=http://localhost:4000 posthog=false
 .PHONY: select-docs-local
 
 select-docs-staging:
-	make select-docs url=https://docs-staging.happy.tech
+	make select-docs url=https://docs-staging.happy.tech posthog=false
 .PHONY: select-docs-staging
 
 select-docs-prod:
-	make select-docs url=https://docs.happy.tech
+	make select-docs url=https://docs.happy.tech posthog=true
 .PHONY: select-docs-prod
 
 select-all-local: select-chain-local select-submitter-local select-iframe-local select-auth-local select-docs-local
