@@ -1,4 +1,4 @@
-import { HappyMethodNames, parseBigInt } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/common"
 import {
     EIP1193SwitchChainError,
     EIP1193UnauthorizedError,
@@ -8,7 +8,7 @@ import {
     WalletType,
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
-import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset, hasNonZeroValue } from "#src/requests/utils/checks"
 import { sendToPublicClient, sendToWalletClient } from "#src/requests/utils/sendToClient"
 import {
     getSessionKey,
@@ -72,14 +72,9 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const tx = checkedTx(request.payload.params[0])
             const account = user.address
-
-            // Session key transactions are not allowed to send value - security measure
-            const value = parseBigInt(tx.value)
-            const txHasValue = tx.value && (value === undefined || value > 0n)
-            const signer = !txHasValue && isSessionKeyAuthorized(app, tx.to)
+            const signer = !hasNonZeroValue(tx) && isSessionKeyAuthorized(app, tx.to)
                 ? sessionKeySigner(getSessionKey(user.address, tx.to))
                 : eoaSigner
-
             return await sendBoop({ account, tx, signer }, app)
         }
 

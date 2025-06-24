@@ -1,9 +1,8 @@
-import { HappyMethodNames, parseBigInt } from "@happy.tech/common"
+import { HappyMethodNames } from "@happy.tech/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { requiresApproval } from "@happy.tech/wallet-common"
-import { isHex } from "viem"
 import { PermissionName } from "#src/constants/permissions"
-import { checkAndChecksumAddress } from "#src/requests/utils/checks"
+import { checkAndChecksumAddress, hasNonZeroValue } from "#src/requests/utils/checks"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
 import { getChains, getCurrentChain } from "../state/chains"
@@ -30,12 +29,8 @@ export function checkIfRequestRequiresConfirmation(
         // Users don't need to approve permissions that have already been granted.
         case "wallet_sendTransaction":
         case "eth_sendTransaction": {
-            // Check if the transaction contains value - if so, always require confirmation.
-            // This is a security measure to prevent session keys from sending gas tokens.
             const tx = payload.params[0]
-            const value = parseBigInt(tx.value)
-            if (tx.value && (value === undefined || value > 0n)) return true
-
+            if (hasNonZeroValue(tx)) return true
             return !hasPermissions(app, { [PermissionName.SessionKey]: { target: tx.to } })
         }
 
