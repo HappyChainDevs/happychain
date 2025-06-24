@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Encoding} from "boop/core/Encoding.sol";
+import {Utils} from "boop/core/Utils.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 import {ICustomValidator} from "boop/interfaces/ICustomValidator.sol";
 import {Boop} from "boop/interfaces/Types.sol";
@@ -28,7 +29,7 @@ contract SessionKeyValidator is ICustomValidator {
     // EVENTS
 
     event SessionKeyAdded(address indexed account, address indexed target, address sessionKey);
-    event SessionKeyRemoved(address indexed account, address indexed target);
+    event SessionKeyRemoved(address indexed account, address indexed target, address sessionKey);
 
     // ====================================================================================================
     // ERRORS
@@ -48,7 +49,7 @@ contract SessionKeyValidator is ICustomValidator {
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
-    mapping(address account => mapping(address target => address sessionKey)) public sessionKeys;
+    mapping(address account => mapping(address target => mapping(address sessionKey => bool))) public sessionKeys;
 
     // ====================================================================================================
     // FUNCTIONS
@@ -57,7 +58,7 @@ contract SessionKeyValidator is ICustomValidator {
         if (target == address(this)) revert CannotRegisterSessionKeyForValidator();
         if (target == msg.sender) revert CannotRegisterSessionKeyForAccount();
 
-        sessionKeys[msg.sender][target] = sessionKey;
+        sessionKeys[msg.sender][target][sessionKey] = true;
         emit SessionKeyAdded(msg.sender, target, sessionKey);
     }
 
@@ -67,14 +68,15 @@ contract SessionKeyValidator is ICustomValidator {
         }
     }
 
-    function removeSessionKey(address target) public {
-        delete sessionKeys[msg.sender][target];
-        emit SessionKeyRemoved(msg.sender, target);
+    function removeSessionKey(address target, address sessionKey) public {
+        delete sessionKeys[msg.sender][target][sessionKey];
+        emit SessionKeyRemoved(msg.sender, target, sessionKey);
     }
 
-    function removeSessionKeys(address[] calldata target) external {
-        for (uint256 i = 0; i < target.length; i++) {
-            removeSessionKey(target[i]);
+    function removeSessionKeys(address[] calldata targets, address[] calldata keys) external {
+        require(targets.length == keys.length, "Array lengths must match");
+        for (uint256 i = 0; i < targets.length; i++) {
+            removeSessionKey(targets[i], keys[i]);
         }
     }
 
@@ -87,24 +89,11 @@ contract SessionKeyValidator is ICustomValidator {
             return abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector);
         }
 
-        // The boop is not self-paying.
-        // The signer does not sign over these fields to avoid extra network roundtrips
-        // validation policy falls to the paymaster or the sponsoring submitter.
-        boop.gasLimit = 0;
-        boop.validateGasLimit = 0;
-        boop.validatePaymentGasLimit = 0;
-        boop.executeGasLimit = 0;
-        boop.maxFeePerGas = 0;
-        boop.submitterFee = 0;
-
         bytes memory signature = boop.validatorData;
-        boop.validatorData = ""; // set to "" to get the hash
-        address signer =
-            keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash().tryRecover(signature);
-        boop.validatorData = signature; // revert back to original value
+        address signer = Utils.computeBoopHash(boop, false).tryRecover(signature);
 
-        address sessionKey = sessionKeys[msg.sender][boop.dest];
-        bytes4 selector = signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
+        bool isValidSessionKey = sessionKeys[msg.sender][boop.dest][signer];
+        bytes4 selector = isValidSessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
         return abi.encodeWithSelector(selector);
     }
 }
