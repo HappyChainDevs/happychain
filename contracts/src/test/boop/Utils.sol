@@ -69,18 +69,12 @@ contract BoopTestUtils is Test {
     }
 
     function signBoop(Boop memory boop, uint256 privKey) public view returns (bytes memory signature) {
-        // Store original validator data
-        bytes memory origValidatorData = boop.validatorData;
-
         // Compute hash with restore=true to restore all fields after hash computation
         bytes32 hash = Utils.computeBoopHash(boop, true);
 
         // Sign the hash
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
-
-        // Return the boop's validator data to its original state
-        boop.validatorData = origValidatorData;
     }
 
     // ====================================================================================================
