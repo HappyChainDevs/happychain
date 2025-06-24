@@ -41,7 +41,7 @@ export const ChainSwitchingDemo = () => {
                     onClick={addChain}
                     className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
                 >
-                    <img src={UnknownLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    <img src={UnknownLogo} alt="Unknown Chain Logo" className="inline-block ml-2 h-6 w-6" />
                     Add Anvil
                 </button>
 
@@ -50,7 +50,7 @@ export const ChainSwitchingDemo = () => {
                     onClick={() => switchChain(gnosis.id)}
                     className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
                 >
-                    <img src={UnknownLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
+                    <img src={UnknownLogo} alt="Unknown Chain Logo" className="inline-block ml-2 h-6 w-6" />
                     Switch to Anvil
                 </button>
 
@@ -75,26 +75,29 @@ export const ChainSwitchingDemo = () => {
                 <button
                     type="button"
                     onClick={addConflictedChain}
-                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2 text-left"
                 >
                     <img src={GnosisLogo} alt="Gnosis Logo" className="inline-block ml-2 h-6 w-6" />
-                    <p title="This will create a conflict for the chain ID">
-                        <div>Add 'Gnosis 2'</div>
+                    <div title="This will create a conflict for the chain ID">
+                        <div>Add Gnosis Alt</div>
                         <small className="opacity-50">(Should Detect Changes)</small>
-                    </p>
+                    </div>
                 </button>
 
                 <button
                     type="button"
                     onClick={() => switchChain(happyChainSepolia.id)}
-                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2"
+                    className="rounded-lg bg-sky-300 p-2 shadow-xl flex items-center gap-2 text-left"
                 >
                     <img
                         src={"https://iframe.happy.tech/images/happychainLogoSimple.png"}
                         alt="HappyChain Logo"
                         className="inline-block ml-2 h-6 w-6"
                     />
-                    Switch to HappyChain Sepolia
+                    <div>
+                        <p>Switch to HappyChain</p>
+                        <small className="opacity-50">(HappyChain Sepolia)</small>
+                    </div>
                 </button>
             </div>
         </div>
