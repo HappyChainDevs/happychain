@@ -31,7 +31,13 @@ export function checkIfRequestRequiresConfirmation(
         case "eth_sendTransaction": {
             const tx = payload.params[0]
             if (hasNonZeroValue(tx)) return true
-            return !hasPermissions(app, { [PermissionName.SessionKey]: { target: tx.to } })
+            try {
+                return !hasPermissions(app, {
+                    [PermissionName.SessionKey]: { target: checkAndChecksumAddress(tx.to!) },
+                })
+            } catch {
+                return true
+            }
         }
 
         case "wallet_requestPermissions":
