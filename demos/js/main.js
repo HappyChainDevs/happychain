@@ -1,4 +1,4 @@
-// register web-component & import useful functions
+// register web component & import useful functions
 import { connect, disconnect, getCurrentUser, happyProvider, loadHappyWallet, onUserUpdate } from "@happy.tech/core"
 import { BrowserProvider } from "ethers"
 

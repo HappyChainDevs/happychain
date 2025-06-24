@@ -40,7 +40,7 @@ When accessing from an app (via the Happy Orb), the orb will indicate that it is
 only public actions such as `eth_getBlock` will be processed immediately. If a wallet action such as
 `personal_sign`, `eth_requestAccounts`, or `eth_sendTransaction` is requested from the app, a
 `WalletVisibility` message is sent via the event bus to signal to the wallet that it should 'open'.
-This message forwards to the wallet web-component which expands to display the authentication methods 
+This message forwards to the wallet web component which expands to display the authentication methods 
 described above when viewing the wallet directly as a standalone.
 
 ## Connection Methods
