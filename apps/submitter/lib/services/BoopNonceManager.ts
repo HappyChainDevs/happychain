@@ -50,6 +50,14 @@ export class BoopNonceManager {
         }
     }
 
+    @TraceMethod("BoopNonceManager.handleCancelledNonce")
+    handleCancelledNonce(boop: Boop): void {
+        const { account, nonceTrack, nonceValue } = boop;
+        this.#usedCapacity--;
+        const nextNonce = nonceValue + 1n;
+        this.setLocalNonce(account, nonceTrack, nextNonce);
+    }
+
     /**
      * Indicates whether the boop is blocked, i.e. unable to be submitted until we've submitted boops for all nonces
      * below it. This also returns true if the nonce is currently unknown.
@@ -106,10 +114,19 @@ export class BoopNonceManager {
 
         const boopHash = computeHash(boop)
         const { promise, resolve } = promiseWithResolvers<undefined | SubmitError>()
-        const timeout = setTimeout(() => {
-            logger.trace("Timed out while waiting to process blocked boop", boopHash)
-            this.pruneNonce(account, nonceTrack, nonceValue)
-            resolve(this.makeSubmitError(SubmitterError.SubmitTimeout))
+        const timeout = setTimeout(async () => {
+            logger.trace("Timed out while waiting to process blocked boop, attempting recovery", boopHash)
+
+            // Proactively try to fix an inconsistent state by fetching the true on-chain nonce.
+            await this.resyncNonce(entryPoint, account, nonceTrack)
+
+            // After attempting recovery, check if the boop is still blocked.
+            // It might have been unblocked and had its promise resolved by `resyncNonce`.
+            if (this.#blockedBoopsMap.get(account, nonceTrack)?.has(nonceValue)) {
+                // If it's still here, the resync didn't help, so now we officially time it out.
+                this.pruneNonce(account, nonceTrack, nonceValue)
+                resolve(this.makeSubmitError(SubmitterError.SubmitTimeout))
+            }
         }, env.MAX_BLOCKED_TIME)
 
         this.#blockedBoopsMap

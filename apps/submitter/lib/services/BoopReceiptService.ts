@@ -17,6 +17,7 @@ import { submitInternal } from "#lib/handlers/submit/submit"
 import { WaitForReceipt, type WaitForReceiptOutput } from "#lib/handlers/waitForReceipt"
 import { notePossibleMisbehaviour } from "#lib/policies/misbehaviour"
 import {
+    boopNonceManager,
     boopStore,
     computeHash,
     dbService,
@@ -209,6 +210,7 @@ export class BoopReceiptService {
                 // We identify cancel transactions by making them self-sends.
                 // No need to check if the tx was successful (it's 0 self-send, it can't really fail),
                 // we only care about the executor address nonce bump.
+                boopNonceManager.handleCancelledNonce(sub.boop)
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
                     error: "The boop was submitted to the mempool but got stuck and was cancelled.",
