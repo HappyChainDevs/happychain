@@ -85,7 +85,9 @@ export function outputForRevertError(
             }
             return {
                 status: Onchain.ValidationReverted,
-                error: explanation ?? "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
+                error:
+                    explanation ??
+                    "Account reverted in `validate`. " + faultyAccount + (simulation ? correctAddress : ""),
                 revertData: decoded.args[0] as Hex,
             }
         }

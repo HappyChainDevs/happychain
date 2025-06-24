@@ -8,13 +8,13 @@ import {
     waitForCondition,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
+import { handleInjectedRequest, handlePermissionlessRequest } from "#src/requests"
+import { checkIfRequestRequiresConfirmation } from "#src/requests/checkIfRequestRequiresConfirmation"
+import { getAuthState } from "#src/state/authState"
 import { addBanner } from "#src/state/banner"
 import { getCurrentChain } from "#src/state/chains"
 import { getUser } from "#src/state/user"
-import { handleInjectedRequest, handlePermissionlessRequest } from "../requests"
-import { getAuthState } from "#src/state/authState"
 import { getWalletURL, walletID } from "#src/utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "#src/requests/checkIfRequestRequiresConfirmation"
 
 /**
  * EIP-1193 provider for transactions initiated from the wallet.
