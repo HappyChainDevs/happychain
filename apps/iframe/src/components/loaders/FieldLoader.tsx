@@ -1,6 +1,6 @@
 import { type VariantProps, cva } from "class-variance-authority"
 
-const fieldLoaderVariants = cva("bg-primary-content rounded animate-pulse", {
+const fieldLoaderVariants = cva("bg-primary-content rounded animate-pulse dark:bg-neutral", {
     variants: {
         size: {
             xs: "w-16 h-3", // 64px width, 12px height
