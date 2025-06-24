@@ -389,7 +389,7 @@
     },
     {
       "type": "event",
-      "name": "BoopExecutionStarted",
+      "name": "BoopExecutionCompleted",
       "inputs": [],
       "anonymous": false
     },
@@ -624,7 +624,7 @@
     },
     {
       "type": "error",
-      "name": "GasPriceTooHigh",
+      "name": "GasPriceTooLow",
       "inputs": []
     },
     {
@@ -1657,13 +1657,7 @@
   "HappyAccountRegistry": [
     {
       "type": "constructor",
-      "inputs": [
-        {
-          "name": "owner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
+      "inputs": [],
       "stateMutability": "nonpayable"
     },
     {
@@ -2252,6 +2246,11 @@
           "name": "target",
           "type": "address",
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -2262,7 +2261,12 @@
       "name": "removeSessionKeys",
       "inputs": [
         {
-          "name": "target",
+          "name": "targets",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "keys",
           "type": "address[]",
           "internalType": "address[]"
         }
@@ -2283,13 +2287,18 @@
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ],
-      "outputs": [
+        },
         {
           "name": "sessionKey",
           "type": "address",
           "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
       "stateMutability": "view"
@@ -2430,6 +2439,12 @@
           "type": "address",
           "indexed": true,
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
         }
       ],
       "anonymous": false
@@ -2447,6 +2462,11 @@
     {
       "type": "error",
       "name": "CannotRegisterSessionKeyForValidator",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SessionKeyValueTransferNotAllowed",
       "inputs": []
     }
   ]

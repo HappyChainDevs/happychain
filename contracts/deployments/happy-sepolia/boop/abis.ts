@@ -393,7 +393,7 @@ const contractToAbi = ({
     },
     {
       "type": "event",
-      "name": "BoopExecutionStarted",
+      "name": "BoopExecutionCompleted",
       "inputs": [],
       "anonymous": false
     },
@@ -628,7 +628,7 @@ const contractToAbi = ({
     },
     {
       "type": "error",
-      "name": "GasPriceTooHigh",
+      "name": "GasPriceTooLow",
       "inputs": []
     },
     {
@@ -1661,13 +1661,7 @@ const contractToAbi = ({
   "HappyAccountRegistry": [
     {
       "type": "constructor",
-      "inputs": [
-        {
-          "name": "owner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
+      "inputs": [],
       "stateMutability": "nonpayable"
     },
     {
@@ -2256,6 +2250,11 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -2266,7 +2265,12 @@ const contractToAbi = ({
       "name": "removeSessionKeys",
       "inputs": [
         {
-          "name": "target",
+          "name": "targets",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "keys",
           "type": "address[]",
           "internalType": "address[]"
         }
@@ -2287,13 +2291,18 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ],
-      "outputs": [
+        },
         {
           "name": "sessionKey",
           "type": "address",
           "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
       "stateMutability": "view"
@@ -2434,6 +2443,12 @@ const contractToAbi = ({
           "type": "address",
           "indexed": true,
           "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
         }
       ],
       "anonymous": false
@@ -2452,6 +2467,11 @@ const contractToAbi = ({
       "type": "error",
       "name": "CannotRegisterSessionKeyForValidator",
       "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SessionKeyValueTransferNotAllowed",
+      "inputs": []
     }
   ]
 }
@@ -2469,14 +2489,14 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "BatchCallExecutor": "0xC639b1D65a935d35033Edff88D3587F8420bfc55",
-  "EntryPoint": "0x37CBcde602F8deAb58B8737fa485805525451c25",
-  "HappyAccountBeacon": "0x0dF4bb1513cECC75181e4bc2CC37263F36CEfC18",
-  "HappyAccountBeaconProxyFactory": "0xcC834E63f688Deb9835400Fd4Add5d578800d117",
-  "HappyAccountImpl": "0x8FdC0A69A4a330a4e8fe0990dE227F5691aefB7E",
-  "HappyAccountRegistry": "0xc654Ee95e472F1c54a53F06ce9bF83CFFF34e8ec",
-  "HappyPaymaster": "0x6D6c45984072E5d7476De71fBE570E52086dc02b",
-  "SessionKeyValidator": "0x232A78aD1B4926E8740340f3a9aaA4754caA1827"
+  "BatchCallExecutor": "0x8Ec12F85687c5AFD5eA9302549007AB64a04aEDF",
+  "EntryPoint": "0xD57BFE32c4ABE7B747f1C5215D919cfA5d7B5C77",
+  "HappyAccountBeacon": "0x0248Ce3ca36c9d33F4ad7d119Fd5498a7a162928",
+  "HappyAccountBeaconProxyFactory": "0x6ebb175eB125b3994AD76d24bFeF921B3526F2A5",
+  "HappyAccountImpl": "0xe03240C960901619d248688d41D2601880Cc9653",
+  "HappyAccountRegistry": "0xBe40F4eEA6e4f9971e31D3CA7FA8DA6445C549e8",
+  "HappyPaymaster": "0x3213eA9690a280e5509469f3F5d7224892B494Ee",
+  "SessionKeyValidator": "0x991E5558801b6831aa000B31dDa3FC4aBcb26D98"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
