@@ -37,9 +37,9 @@ export const limitsSchema = z.object({
 
     /**
      * The maximum amount of time in milliseconds a transaction can remain blocked before being submitted (i.e.
-     * waiting for previous transactions to be submitted or a nonce gap to close). Defaults to 30 seconds.
+     * waiting for previous transactions to be submitted or a nonce gap to close). Defaults to 5 seconds.
      */
-    MAX_BLOCKED_TIME: z.coerce.number().positive().default(30_000),
+    MAX_BLOCKED_TIME: z.coerce.number().positive().default(5_000),
 
     /**
      * The amount of simulation results cached in memory. This is used to supply a useful
