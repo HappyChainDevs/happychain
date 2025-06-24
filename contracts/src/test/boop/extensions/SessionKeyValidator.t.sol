@@ -83,8 +83,8 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
         // Verify the session key was added correctly
-        address storedSessionKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest);
-        assertEq(storedSessionKey, publicKey, "Session key not stored correctly");
+        bool isValidKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey);
+        assertTrue(isValidKey, "Session key not stored correctly");
 
         // Test Case 4: Add multiple session keys at once
         address[] memory targets = new address[](2);
@@ -99,32 +99,32 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         SessionKeyValidator(sessionKeyValidator).addSessionKeys(targets, keys);
 
         // Verify multiple session keys were added correctly
-        address storedSessionKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[0]);
-        address storedSessionKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[1]);
-        assertEq(storedSessionKey1, keys[0], "First session key not stored correctly");
-        assertEq(storedSessionKey2, keys[1], "Second session key not stored correctly");
+        bool isValidKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[0], keys[0]);
+        bool isValidKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[1], keys[1]);
+        assertTrue(isValidKey1, "First session key not stored correctly");
+        assertTrue(isValidKey2, "Second session key not stored correctly");
 
         // Test Case 5: Remove multiple session keys at once
         vm.prank(smartAccount);
-        SessionKeyValidator(sessionKeyValidator).removeSessionKeys(targets);
+        SessionKeyValidator(sessionKeyValidator).removeSessionKeys(targets, keys);
 
         // Verify multiple session keys were removed correctly
-        storedSessionKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[0]);
-        storedSessionKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[1]);
-        assertEq(storedSessionKey1, address(0), "First session key not removed correctly");
-        assertEq(storedSessionKey2, address(0), "Second session key not removed correctly");
+        isValidKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[0], keys[0]);
+        isValidKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, targets[1], keys[1]);
+        assertFalse(isValidKey1, "First session key not removed correctly");
+        assertFalse(isValidKey2, "Second session key not removed correctly");
 
         // Verify the first session key (dest) is still there (not removed)
-        storedSessionKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest);
-        assertEq(storedSessionKey, publicKey, "Original session key should not be removed");
+        isValidKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey);
+        assertTrue(isValidKey, "Original session key should not be removed");
 
         // Test Case 6: Remove a single session key
         vm.prank(smartAccount);
-        SessionKeyValidator(sessionKeyValidator).removeSessionKey(dest);
+        SessionKeyValidator(sessionKeyValidator).removeSessionKey(dest, publicKey);
 
         // Verify the session key was removed
-        storedSessionKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest);
-        assertEq(storedSessionKey, address(0), "Session key not removed correctly");
+        isValidKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey);
+        assertFalse(isValidKey, "Session key not removed correctly");
     }
 
     function testValidateWithValidSignature() public {
@@ -173,6 +173,64 @@ contract SessionKeyValidatorTest is BoopTestUtils {
 
         // Should return AccountPaidSessionKeyBoop selector
         assertEq(result, abi.encodeWithSelector(SessionKeyValidator.AccountPaidSessionKeyBoop.selector));
+    }
+
+    function testMultipleSessionKeysForSameTarget() public {
+        // Create multiple session keys
+        uint256 sessionKey1 = 0xdeadbeef11111111;
+        uint256 sessionKey2 = 0xdeadbeef22222222;
+        address publicKey1 = vm.addr(sessionKey1);
+        address publicKey2 = vm.addr(sessionKey2);
+
+        // Add multiple session keys for the same target
+        vm.startPrank(smartAccount);
+        SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey1);
+        SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey2);
+        vm.stopPrank();
+
+        // Verify both session keys are valid
+        bool isValidKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey1);
+        bool isValidKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey2);
+        assertTrue(isValidKey1, "First session key not stored correctly");
+        assertTrue(isValidKey2, "Second session key not stored correctly");
+
+        // Create a valid Boop signed with the first key
+        Boop memory boop1 = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, sessionKey1, new bytes(0));
+
+        // Create a valid Boop signed with the second key
+        Boop memory boop2 = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, sessionKey2, new bytes(0));
+
+        // Call validate with both Boops
+        vm.startPrank(smartAccount);
+        bytes memory result1 = SessionKeyValidator(sessionKeyValidator).validate(boop1);
+        bytes memory result2 = SessionKeyValidator(sessionKeyValidator).validate(boop2);
+        vm.stopPrank();
+
+        // Both should return empty bytes4(0) for success
+        assertEq(result1, abi.encodeWithSelector(bytes4(0)), "First session key validation failed");
+        assertEq(result2, abi.encodeWithSelector(bytes4(0)), "Second session key validation failed");
+
+        // Remove only the first session key
+        vm.prank(smartAccount);
+        SessionKeyValidator(sessionKeyValidator).removeSessionKey(dest, publicKey1);
+
+        // Verify first key was removed but second still works
+        isValidKey1 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey1);
+        isValidKey2 = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, dest, publicKey2);
+        assertFalse(isValidKey1, "First session key should be removed");
+        assertTrue(isValidKey2, "Second session key should still be active");
+
+        // Validation should now fail with first key but succeed with second
+        vm.startPrank(smartAccount);
+        result1 = SessionKeyValidator(sessionKeyValidator).validate(boop1);
+        result2 = SessionKeyValidator(sessionKeyValidator).validate(boop2);
+        vm.stopPrank();
+
+        // First should fail, second should succeed
+        assertEq(
+            result1, abi.encodeWithSelector(InvalidSignature.selector), "First key should fail validation after removal"
+        );
+        assertEq(result2, abi.encodeWithSelector(bytes4(0)), "Second key should still pass validation");
     }
 
     // ====================================================================================================
