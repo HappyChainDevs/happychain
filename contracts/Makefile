@@ -392,6 +392,11 @@ endef
 ####################################################################################################
 # Deploy Scripts
 
+# Defines and exports CONFIG
+define set-config
+	export CONFIG=$(1)
+endef
+
 # Sets CHAIN_ID based on RPC.
 define set-chain-id
 	CHAIN_ID = $(shell cast chain-id --rpc-url $(RPC_$(CONFIG)))
@@ -412,7 +417,7 @@ define set-chain-name
 	endif
 endef
 
-# Sets CHAIN_ID and CHAIN_NAME and defines DEPLOYMENT_NAME = CHAIN_NAME/$(1)
+# Sets CHAIN_ID and CHAIN_NAME, defines and *exports* DEPLOYMENT_NAME = CHAIN_NAME/$(1)
 # Call like this: $(eval $(call set-deployment-name,myDeployment))
 define set-deployment-name
 	$(eval $(set-chain-id))
@@ -457,16 +462,19 @@ deploy-all: deploy-boop deploy-mocks deploy-random ## Deploys random, mock and b
 .PHONY: deploy-all
 
 deploy-boop-staging: ## Deploys the Boop contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-config,TEST))
 	$(eval $(call set-deployment-name,boop-staging))
 	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployBoop.s.sol
 .PHONY: deploy-boop-staging
 
 deploy-mocks-staging: ## Deploys the mock contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-config,TEST))
 	$(eval $(call set-deployment-name,mocks-staging))
 	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployMocks.s.sol
 .PHONY: deploy-mock-staging
 
 deploy-random-staging: ## Deploys the randomness contracts to testnet as 'staging' (no metadata)
+	$(eval $(call set-config,TEST))
 	$(eval $(call set-deployment-name,random-staging))
 	make deploy CONFIG=TEST DEPLOY_SCRIPT=DeployRandom.s.sol
 .PHONY: deploy-random-staging
