@@ -386,9 +386,6 @@ define save-deployment
 	@cp -f out/{deployment.json,abiMap.json,abis.json,abis.ts} deployments/$(DEPLOYMENT_NAME)
 	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
 	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
-	@if [ "$(CONFIG)" != "LOCAL" ] && [ -f "$(__RUN_FILE)" ]; then \
-		cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json; \
-	fi
 	@echo "Saved deployment to deployments/$(DEPLOYMENT_NAME)"
 endef
 
