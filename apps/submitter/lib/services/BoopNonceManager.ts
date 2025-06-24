@@ -50,12 +50,17 @@ export class BoopNonceManager {
         }
     }
 
+    /**
+     * Advances the local nonce after a boop's cancellation is confirmed on-chain.
+     * This reflects the consumed nonce, allowing submissions for subsequent nonces to proceed.
+     * Additionally guards against race conditions from late-arriving receipts.
+     */
     @TraceMethod("BoopNonceManager.handleCancelledNonce")
     handleCancelledNonce(boop: Boop): void {
         const { account, nonceTrack, nonceValue } = boop
-        this.#usedCapacity--
         const nextNonce = nonceValue + 1n
-        this.setLocalNonce(account, nonceTrack, nextNonce)
+        if (nextNonce > (this.#nonces.get(account, nonceTrack) ?? 0n))
+            this.setLocalNonce(account, nonceTrack, nextNonce)
     }
 
     /**
