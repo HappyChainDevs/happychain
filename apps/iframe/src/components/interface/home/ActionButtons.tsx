@@ -56,7 +56,7 @@ interface ActionButtonContentProps extends PropsWithChildren {
 
 const ActionButtonContent = ({ icon: Icon, children }: ActionButtonContentProps) => (
     <>
-        <span className="text-[1.3em] min-w-10 aspect-square flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/15 dark:bg-primary/5 dark:hover:bg-primary/10 text-primary">
+        <span className="text-[1.3em] min-w-10 aspect-square flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/15 dark:bg-primary/10 dark:hover:bg-primary/20 text-primary">
             <Icon weight="fill" />
         </span>
         <span className="font-bold">{children}</span>

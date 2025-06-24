@@ -20,7 +20,7 @@ export const AddressInfo = ({ address }: AddressInfoProps) => {
                 <span className="sr-only">Copy address</span>
             </button>
             <ArkClipboard.RootProvider
-                className="w-max flex bg-neutral/5 focus-within:bg-neutral/10 dark:bg-neutral/50 dark:focus-within:bg-neutral/60 rounded-full text-[0.825rem] font-medium py-[0.05em] ps-[1ex] pe-[0.5ex] items-center gap-[1ex]"
+                className="w-max flex bg-neutral/5 focus-within:bg-neutral/10 dark:bg-neutral dark:focus-within:bg-neutral/60 rounded-full text-[0.825rem] font-medium py-[0.05em] ps-[1ex] pe-[0.5ex] items-center gap-[1ex]"
                 value={clipboard}
             >
                 <ArkClipboard.Label>
