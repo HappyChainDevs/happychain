@@ -248,6 +248,7 @@ export class BoopReceiptService {
     @TraceMethod("BoopReceiptService.getReceiptResult")
     private async getReceiptResult(boop: Boop, evmTxReceipt: TransactionReceipt): Promise<WaitForReceiptOutput> {
         if (evmTxReceipt.status === "success" && evmTxReceipt.logs?.length) {
+            boopNonceManager.hintNonce(boop.account, boop.nonceTrack, boop.nonceValue + 1n)
             return this.buildReceipt(boop, evmTxReceipt)
         }
 
