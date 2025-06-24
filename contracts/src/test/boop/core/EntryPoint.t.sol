@@ -425,9 +425,8 @@ contract EntryPointTest is BoopTestUtils {
         entryPoint.submit(initBoop.encode());
 
         // Check session key is set
-        assertEq(
-            SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target), publicKey, "Session key not set"
-        );
+        bool isValidKey = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target, publicKey);
+        assertTrue(isValidKey, "Session key not set");
 
         // Prepare a Boop signed by the session key, using SessionKeyValidator as external validator
         Boop memory boop =
@@ -444,7 +443,7 @@ contract EntryPointTest is BoopTestUtils {
         _assertExpectedEntryPointOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // Now remove the validator extension and remove the session key
-        bytes memory uninstallData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target));
+        bytes memory uninstallData = abi.encodeCall(SessionKeyValidator.removeSessionKey, (target, publicKey));
         bytes memory deCallData = abi.encodeCall(
             IExtensibleAccount.removeExtension, (sessionKeyValidator, ExtensionType.Validator, uninstallData)
         );
@@ -454,11 +453,8 @@ contract EntryPointTest is BoopTestUtils {
         entryPoint.submit(deBoop.encode());
 
         // Check session key is removed
-        assertEq(
-            SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target),
-            address(0),
-            "Session key not removed"
-        );
+        bool isKeyValid = SessionKeyValidator(sessionKeyValidator).sessionKeys(smartAccount, target, publicKey);
+        assertFalse(isKeyValid, "Session key not removed");
     }
 
     // ====================================================================================================
