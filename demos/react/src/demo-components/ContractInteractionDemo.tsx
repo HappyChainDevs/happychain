@@ -118,8 +118,11 @@ function useCounterActions() {
                 return
             }
 
-            if (countRef.current) setCount(countRef.current + 1n)
-            toast.success(`Counter incremented to ${countRef.current}`)
+            if (countRef.current !== undefined) {
+                setCount(countRef.current + 1n)
+                toast.success(`Counter incremented to ${countRef.current}`)
+            }
+
             void refetch(getCurrentUser()!.address)
         } catch {
             toast.error("Failed to increment counter")
