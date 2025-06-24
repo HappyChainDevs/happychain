@@ -157,7 +157,7 @@ test-happyAccount-upgradeability:
 .PHONY: test-happyAccount-upgradeability
 
 test-predictDeploymentAddress:
-	@bun run getAddressERC1967Tests
+	@bun test scripts/utils/__tests__/getAddressERC1967.test.ts
 .PHONY: test-predictDeploymentAddress
 
 ####################################################################################################
