@@ -52,10 +52,10 @@ export class BoopNonceManager {
 
     @TraceMethod("BoopNonceManager.handleCancelledNonce")
     handleCancelledNonce(boop: Boop): void {
-        const { account, nonceTrack, nonceValue } = boop;
-        this.#usedCapacity--;
-        const nextNonce = nonceValue + 1n;
-        this.setLocalNonce(account, nonceTrack, nextNonce);
+        const { account, nonceTrack, nonceValue } = boop
+        this.#usedCapacity--
+        const nextNonce = nonceValue + 1n
+        this.setLocalNonce(account, nonceTrack, nextNonce)
     }
 
     /**
