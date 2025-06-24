@@ -1,8 +1,8 @@
 import { Msgs } from "@happy.tech/wallet-common"
 import { handleInjectedRequest, handlePermissionlessRequest } from "#src/requests"
+import { checkIfRequestRequiresConfirmation } from "#src/requests/checkIfRequestRequiresConfirmation"
 import { happyProviderBus } from "#src/services/eventBus"
 import { getAppURL } from "#src/utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "#src/requests/checkIfRequestRequiresConfirmation"
 
 /**
  * Process direct-from-app RPC requests using the public client and publicClient middleware stack

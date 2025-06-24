@@ -6,7 +6,7 @@ import {
     type Msgs,
     type ProviderMsgsFromApp,
 } from "@happy.tech/wallet-common"
-import { isAddress, isHex } from "viem"
+import { isAddress } from "viem"
 import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkAuthenticated, checkedTx, hasNonZeroValue } from "#src/requests/utils/checks"
 import { sendToPublicClient } from "#src/requests/utils/sendToClient"

@@ -8,6 +8,7 @@ import {
     WalletType,
 } from "@happy.tech/wallet-common"
 import { privateKeyToAccount } from "viem/accounts"
+import { sendBoop } from "#src/requests/utils/boop"
 import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset, hasNonZeroValue } from "#src/requests/utils/checks"
 import { sendToPublicClient, sendToWalletClient } from "#src/requests/utils/sendToClient"
 import {
@@ -33,7 +34,6 @@ import { checkUser, getUser } from "#src/state/user"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { appForSourceID, isWallet } from "#src/utils/appURL"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import { sendBoop } from "#src/requests/utils/boop"
 
 export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
@@ -72,9 +72,10 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
             checkUser(user)
             const tx = checkedTx(request.payload.params[0])
             const account = user.address
-            const signer = !hasNonZeroValue(tx) && isSessionKeyAuthorized(app, tx.to)
-                ? sessionKeySigner(getSessionKey(user.address, tx.to))
-                : eoaSigner
+            const signer =
+                !hasNonZeroValue(tx) && isSessionKeyAuthorized(app, tx.to)
+                    ? sessionKeySigner(getSessionKey(user.address, tx.to))
+                    : eoaSigner
             return await sendBoop({ account, tx, signer }, app)
         }
 
