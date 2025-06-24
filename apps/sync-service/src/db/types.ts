@@ -33,6 +33,21 @@ export type WalletPermisisonRow = {
     deleted: ColumnType<number, boolean, boolean>
 }
 
+export type WatchAssetRow = {
+    user: Hex
+    type: string
+    address: Hex
+    symbol: string
+    decimals: number
+    image: string
+    id: string
+    updatedAt: number
+    createdAt: number
+    deleted: ColumnType<number, boolean, boolean>
+}
+
+
 export interface Database {
     walletPermissions: WalletPermisisonRow
+    watchedAssets: WatchAssetRow
 }

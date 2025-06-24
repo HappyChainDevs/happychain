@@ -1,20 +1,20 @@
 import { CoinsIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
-import { watchedAssetsAtom } from "#src/state/watchedAssets"
+import { getWatchedAssets } from "#src/state/watchedAssets"
 import { UserNotFoundWarning } from "../UserNotFoundWarning"
 import { TriggerImportTokensDialog } from "./ImportTokensDialog"
 import { WatchedAsset } from "./WatchedAsset"
+import { observer } from "@legendapp/state/react"
 
 /**
  * Displays all watched assets registered by the connected user.
  */
-export const TokenView = () => {
+export const TokenView = observer(() => {
     const user = useAtomValue(userAtom)
-    const watchedAssets = useAtomValue(watchedAssetsAtom)
+    const userAssets = getWatchedAssets()
 
     if (!user) return <UserNotFoundWarning />
-    const userAssets = watchedAssets[user.address]
 
     return (
         <ul className="flex flex-col w-full bg-content min-h-full gap-y-2">
@@ -35,4 +35,4 @@ export const TokenView = () => {
             <TriggerImportTokensDialog />
         </ul>
     )
-}
+})

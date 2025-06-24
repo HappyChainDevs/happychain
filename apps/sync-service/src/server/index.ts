@@ -4,16 +4,13 @@ import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
-import { logger as loggerMiddleware } from "hono/logger"
-import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
 import { requestId as requestIdMiddleware } from "hono/request-id"
-import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import pkg from "../../package.json" assert { type: "json" }
 import { env } from "../env"
 import { isProduction } from "../utils/isProduction"
-import { logJSONResponseMiddleware, logger } from "../utils/logger"
+import { logger } from "../utils/logger"
 import configRoute from "./configRoute"
 
 const app = new Hono()

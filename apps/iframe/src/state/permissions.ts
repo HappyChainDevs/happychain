@@ -100,7 +100,7 @@ export const permissionsMapLegend = observable(
             if (!user) return []
 
             const response = await fetch(
-                `${SYNC_SERVICE_URL}/api/v1/settings/list?user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`,
+                `${SYNC_SERVICE_URL}/api/v1/settings/list?type=WalletPermissions&user=${user.address}${lastSync ? `&lastUpdated=${lastSync}` : ""}`,
             )
             const data = await response.json()
 
@@ -140,17 +140,7 @@ export const permissionsMapLegend = observable(
             console.log("Subscribing to updates for user", user.address)
 
             const eventSource = new EventSource(`${SYNC_SERVICE_URL}/api/v1/settings/subscribe?user=${user.address}`)
-            eventSource.addEventListener("WalletPermissions.updated", (event) => {
-                const data = JSON.parse(event.data)
-                console.log("Received update", data)
-                refresh()
-            })
-            eventSource.addEventListener("WalletPermissions.deleted", (event) => {
-                const data = JSON.parse(event.data)
-                console.log("Received update", data)
-                refresh()
-            })
-            eventSource.addEventListener("WalletPermissions.created", (event) => {
+            eventSource.addEventListener("config.changed", (event) => {
                 const data = JSON.parse(event.data)
                 console.log("Received update", data)
                 refresh()

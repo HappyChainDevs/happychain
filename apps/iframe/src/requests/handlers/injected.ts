@@ -224,7 +224,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
         case "wallet_watchAsset": {
             checkUser(user)
             const params = checkedWatchedAsset(request.payload.params)
-            return addWatchedAsset(user.address, params)
+            return addWatchedAsset(params)
         }
 
         case HappyMethodNames.LOAD_ABI: {

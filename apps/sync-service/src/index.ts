@@ -7,5 +7,5 @@ export type { AppType }
 export default {
     port: env.APP_PORT,
     fetch: app.fetch,
-    idleTimeout: 0
+    idleTimeout: 0,
 }

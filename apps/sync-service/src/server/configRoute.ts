@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { stream, streamSSE } from "hono/streaming"
+import { streamSSE } from "hono/streaming"
 import { createConfig } from "../handlers/createConfig/createConfig"
 import { createConfigDescription, createConfigValidation } from "../handlers/createConfig/validation"
 import { deleteConfig } from "../handlers/deleteConfig/deleteConfig"

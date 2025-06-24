@@ -2,11 +2,12 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { walletPermission } from "../../dtos"
+import { walletPermission, watchAsset } from "../../dtos"
 import { isProduction } from "../../utils/isProduction"
 
-export const inputSchema: z.ZodDiscriminatedUnion<"type", [typeof walletPermission]> = z.discriminatedUnion("type", [
+export const inputSchema: z.ZodDiscriminatedUnion<"type", [typeof walletPermission, typeof watchAsset]> = z.discriminatedUnion("type", [
     walletPermission,
+    watchAsset,
 ])
 
 export const outputSchema = z.object({
