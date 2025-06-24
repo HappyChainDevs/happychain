@@ -37,9 +37,12 @@ export class BoopNonceManager {
     }
 
     /**
-     * Used to set the nonce after a simulation succeds without indicating a future nonce.
-     * This will only increase the nonce, never decrease it as we might already have submitted
-     * (in case of a replacement boop).
+     * Used to ensure that a nonce is at least as high as the provided value. This will never decrease the local nonce,
+     * as we might already have submitted boops with nonces within `]nonceValue, localNonce[`.
+     *
+     * This is called:
+     * - After a simulation succeds without indicating a future nonce.
+     * - Whenever we get a receipt for a boop.
      */
     @TraceMethod("BoopNonceManager.hintNonce")
     hintNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
