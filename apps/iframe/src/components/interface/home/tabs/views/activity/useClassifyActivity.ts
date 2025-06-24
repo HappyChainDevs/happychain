@@ -34,7 +34,7 @@ type ActivityDetails =
 const EVENT_SIGNATURES = {
     ERC20_TRANSFER: keccak256(stringToHex("Transfer(address,address,uint256)")),
     SESSION_KEY_ADDED: keccak256(stringToHex("SessionKeyAdded(address,address,address)")),
-    SESSION_KEY_REMOVED: keccak256(stringToHex("SessionKeyRemoved(address,address)")),
+    SESSION_KEY_REMOVED: keccak256(stringToHex("SessionKeyRemoved(address,address,address)")),
 } as const
 
 function getOperationType(entry: HistoryEntry): OperationType {
