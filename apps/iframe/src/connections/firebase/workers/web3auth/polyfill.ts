@@ -27,5 +27,10 @@ if (typeof window === "undefined") {
 // them from the vite build step.
 if (typeof process === "undefined") {
     // @ts-expect-error
-    globalThis.process = { env: import.meta.env }
+    globalThis.process = {
+        env: import.meta.env,
+        // Polyfill for process.nextTick. Fixes the following line in web3auth:
+        // var qnt = global.Bare ? queueMicrotask : process.nextTick.bind(process);
+        nextTick: queueMicrotask,
+    }
 }
