@@ -6,7 +6,7 @@ import { ExtensionType, ExtraDataKey, encodeExtraData } from "@happy.tech/boop-s
 import type { Address } from "@happy.tech/common"
 import { EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
 import { encodeFunctionData } from "viem"
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { extensibleAccountAbi, sessionKeyValidator, sessionKeyValidatorAbi } from "#src/constants/contracts"
 import { PermissionName } from "#src/constants/permissions"
 import { type SendBoopArgs, sendBoop } from "#src/requests/utils/boop"
@@ -97,10 +97,10 @@ async function installSessionKeyExtension(account: Address, target?: Address, se
     const installData =
         target && sessionKeyAddress
             ? encodeFunctionData({
-                abi: sessionKeyValidatorAbi,
-                functionName: "addSessionKey",
-                args: [target, sessionKeyAddress],
-            })
+                  abi: sessionKeyValidatorAbi,
+                  functionName: "addSessionKey",
+                  args: [target, sessionKeyAddress],
+              })
             : "0x"
 
     const args = {
@@ -205,28 +205,36 @@ export async function revokeSessionKeys(app: AppURL, targets: Address[]): Promis
 
     try {
         const user = getCheckedUser()
-        removeSessionKeys(user.address, targets)
         const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
         const userSessionKeys = { ...storedSessionKeys[user.address] }
+        const keyAddresses = targets //
+            .map((t) => userSessionKeys[t])
+            .map((key) => (key ? privateKeyToAddress(key) : key))
+        const onchainRemoveTargets = targets.filter((_, i) => !!keyAddresses[i])
+        const onchainRemoveKeyAddresses = keyAddresses.filter(Boolean) as Address[]
+
+        removeSessionKeys(user.address, onchainRemoveTargets, onchainRemoveKeyAddresses)
 
         for (const target of targets) {
-            // remove permissions + session key entries from local storage
+            // revoke permission + accumulate session key deletions
             const permissionRequest = { [PermissionName.SessionKey]: { target } }
             revokePermissions(app, permissionRequest)
             revokedSessionKeys.clear()
-            const { [target]: _, ...rest } = userSessionKeys
-            storage.set(StorageKey.SessionKeys, {
-                ...storedSessionKeys,
-                [user!.address]: rest,
-            })
+            delete userSessionKeys[target]
         }
+
+        // remove all keys keys from local storage
+        storage.set(StorageKey.SessionKeys, {
+            ...storedSessionKeys,
+            [user.address]: userSessionKeys,
+        })
     } catch (error) {
         sessionKeyLogger.error("failed to revoke session key", error)
         throw error
     }
 }
 
-async function removeSessionKey(account: Address, target: Address) {
+async function removeSessionKey(account: Address, target: Address, keyAddress: Address): Promise<void> {
     sessionKeyLogger.trace("removeSessionKey", { account, target })
     checkWalletClient()
     const args = {
@@ -238,15 +246,15 @@ async function removeSessionKey(account: Address, target: Address) {
             data: encodeFunctionData({
                 abi: sessionKeyValidatorAbi,
                 functionName: "removeSessionKey",
-                args: [target],
+                args: [target, keyAddress],
             }),
         },
     } satisfies SendBoopArgs
     await sendBoop(args, getAppURL())
 }
 
-async function removeSessionKeys(account: Address, targets: Address[]) {
-    if (targets.length === 1) removeSessionKey(account, targets[0])
+async function removeSessionKeys(account: Address, targets: Address[], keyAddresses: Address[]): Promise<void> {
+    if (targets.length === 1) removeSessionKey(account, targets[0], keyAddresses[0])
     sessionKeyLogger.trace("removeSessionKeys", { account, targets })
     checkWalletClient()
     const args = {
@@ -258,7 +266,7 @@ async function removeSessionKeys(account: Address, targets: Address[]) {
             data: encodeFunctionData({
                 abi: sessionKeyValidatorAbi,
                 functionName: "removeSessionKeys",
-                args: [targets],
+                args: [targets, keyAddresses],
             }),
         },
     } satisfies SendBoopArgs
