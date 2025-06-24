@@ -19,7 +19,7 @@ export default defineConfig({
     preview: { strictPort: true },
     define: (() => {
         if (process.cwd().includes("iframe")) return {}
-        // For demos: load the @happy.tech/core .env file.
+        // For demos & docs: load the @happy.tech/core .env file.
         // This is needed during dev as core won't be built and won't read its .env file.
         const env = loadEnv("" /* no mode */, resolve("../../packages/core"), "HAPPY_")
         return Object.fromEntries(Object.entries(env).map(([k, v]) => [`import.meta.env.${k}`, JSON.stringify(v)]))

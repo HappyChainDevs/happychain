@@ -1,4 +1,6 @@
 import "dotenv/config"
+import sharedConfig from "@happy.tech/configs/vite.config"
+import { defineConfig as defineViteConfig, mergeConfig as mergeViteConfig } from "vite"
 import { defineConfig } from "vocs"
 
 export default defineConfig({
@@ -10,13 +12,20 @@ export default defineConfig({
     ogImageUrl: "https://vocs.dev/api/og?logo=%logo&title=%title",
     iconUrl: "/happyicon.png",
     aiCta: true,
-    vite: {
-        envPrefix: "HAPPY_",
-        envDir: __dirname,
-        server: { port: 4000, strictPort: true },
-        // Vocs currently ignores this, always serves preview on port 4173 (or higher if busy)
-        preview: { port: 4000, strictPort: true },
-    },
+    vite: mergeViteConfig(
+        sharedConfig,
+        defineViteConfig({
+            envPrefix: "HAPPY_",
+            envDir: __dirname,
+            server: {
+                port: 4000,
+                strictPort: true,
+                fs: { allow: ["../.."] },
+            },
+            // Vocs currently ignores this, always serves preview on port 4173 (or higher if busy)
+            preview: { port: 4000, strictPort: true },
+        }),
+    ),
     socials: [
         {
             link: "https://x.com/HappyChainDevs",
