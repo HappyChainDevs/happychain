@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Encoding} from "boop/core/Encoding.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {Utils} from "boop/core/Utils.sol";
 import {Boop} from "boop/interfaces/Types.sol";
 import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "openzeppelin/utils/cryptography/MessageHashUtils.sol";
@@ -68,47 +69,17 @@ contract BoopTestUtils is Test {
     }
 
     function signBoop(Boop memory boop, uint256 privKey) public view returns (bytes memory signature) {
-        // Store the original gas values
-        uint32 origGasLimit;
-        uint32 origValidateGasLimit;
-        uint32 origValidatePaymentGasLimit;
-        uint32 origExecuteGasLimit;
-        uint256 origMaxFeePerGas;
-        int256 origSubmitterFee;
-        // Store original validator data (normally we'll use the signature to erase this)
-        bytes memory origValidatorData;
+        // Store original validator data
+        bytes memory origValidatorData = boop.validatorData;
 
-        if (boop.payer != boop.account) {
-            // If the boop is not self-paying, we don't sign over the gas values
-            origGasLimit = boop.gasLimit;
-            origValidateGasLimit = boop.validateGasLimit;
-            origValidatePaymentGasLimit = boop.validatePaymentGasLimit;
-            origExecuteGasLimit = boop.executeGasLimit;
-            origMaxFeePerGas = boop.maxFeePerGas;
-            origSubmitterFee = boop.submitterFee;
+        // Compute hash with restore=true to restore all fields after hash computation
+        bytes32 hash = Utils.computeBoopHash(boop, true);
 
-            // Temporarily make them zero to not sign over them
-            boop.gasLimit = 0;
-            boop.validateGasLimit = 0;
-            boop.validatePaymentGasLimit = 0;
-            boop.executeGasLimit = 0;
-            boop.maxFeePerGas = 0;
-            boop.submitterFee = 0;
-        }
-        boop.validatorData = ""; // erase existing signature if any
-        bytes32 hash = keccak256(abi.encodePacked(boop.encode(), block.chainid)).toEthSignedMessageHash();
+        // Sign the hash
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
 
-        if (boop.payer != boop.account) {
-            // Restore the original gas values after signing
-            boop.gasLimit = origGasLimit;
-            boop.validateGasLimit = origValidateGasLimit;
-            boop.validatePaymentGasLimit = origValidatePaymentGasLimit;
-            boop.executeGasLimit = origExecuteGasLimit;
-            boop.maxFeePerGas = origMaxFeePerGas;
-            boop.submitterFee = origSubmitterFee;
-        }
+        // Return the boop's validator data to its original state
         boop.validatorData = origValidatorData;
     }
 
