@@ -32,10 +32,9 @@
         "web3": "^4.16.0"
     },
     "dependencies": {
-        "@happy.tech/core": "workspace:*",
-        "@happy.tech/react": "workspace:*",
+        "@happy.tech/core": "workspace:0.3.0",
+        "@happy.tech/react": "workspace:0.3.0",
         "@scalar/api-reference-react": "^0.6.30",
         "posthog-js": "^1.255.1"
-
     }
 }
