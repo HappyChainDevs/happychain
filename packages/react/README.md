@@ -1,5 +1,11 @@
 # React SDK
 
+React utilities for interacting with the Happy Wallet. 
+
+For full documentation visit: https://docs.happy.tech/sdk/react
+
+For an example of the @happy.tech/react library in action visit the demo: https://github.com/HappyChainDevs/happychain/tree/master/demos/react
+
 ## Install
 
 ```sh
@@ -20,6 +26,23 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </HappyWalletProvider>
     </React.StrictMode>,
 )
+```
+
+
+## Connect Button
+
+Let Users connect easily using the built in ConnectButton component.
+
+```tsx
+import { ConnectButton } from '@happy.tech/react'
+
+function App() {
+    return (
+        <main>
+            <ConnectButton />
+        </main>
+    )
+}
 ```
 
 ## useHappyWallet hook
@@ -44,67 +67,5 @@ function App() {
     const ethersV6Provider = useMemo(() => new BrowserProvider(provider), [provider])
 
     return <main>{/* ... */}</main>
-}
-```
-
-## EIP1193Provider
-
-The raw eip1193provider is exposed directly, so you can initialize any compatible web3 library of your choosing. Viem, ethers, wagmi, web3 are all supported.
-
-```tsx
-import { happyProvider } from '@happy.tech/core'
-```
-
-## User Updates
-
-User changes (logging in, logging out) can be subscribed to using the `onUserUpdate` function. Pass it the callback you wish to execute when user details are updated
-
-```ts
-import { onUserUpdate } from '@happy.tech/core'
-
-onUserUpdate((user) => {
-    if (!user) {
-        // user is logged out
-        return
-    }
-
-    // user is logged in, see HappyUser interface below
-})
-```
-
-```ts
-type HappyUser = {
-    // CONNECTION
-
-    /** Connection provider ("rabby", "metamask", "google", ...) */
-    provider: string
-
-    /** Type of the controlling EOA (Social, Injected) */
-    type: WalletType
-
-    // USER DETAILS
-
-    /** Unique identifier (Firebase user ID) */
-    uid: string
-
-    /** Email (if available, or empty) */
-    email: string
-
-    /** Display name (abbreviated address for Injected) */
-    name: string
-
-    /** Avatar URL (if available, or placeholder avatar) */
-    avatar: string
-
-    // ONCHAIN
-
-    /** Happy account address */
-    address: `0x${string}`
-
-    /** EOA controlling the account */
-    controllingAddress: `0x${string}`
-
-    /** Active Address's ENS (if available, or empty) */
-    ens: string
 }
 ```

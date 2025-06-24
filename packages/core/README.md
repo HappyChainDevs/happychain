@@ -1,32 +1,36 @@
 # VanillaJS SDK
 
-Framework-agnostic Vanilla JS / Typescript SDK.
+Framework-agnostic Vanilla JS / Typescript SDK. 
+
+For full documentation visit: https://docs.happy.tech/sdk/js
+
+For an example of the @happy.tech/core library in action visit the demo: https://github.com/HappyChainDevs/happychain/tree/master/demos/js
 
 ## Quick Start
 
-Register the webcomponent in your app
-
-```js
-import '@happy.tech/core'
-```
-
-then include somewhere in your html
-
-```html
-<!doctype html>
-<html lang="en">
-    <body>
-        <happy-wallet></happy-wallet>
-    </body>
-</html>
-```
-
-Alternatively, you can call `register` to auto-register the component on the page
+Load the Happy Wallet to auto-register the wallet component on the page. 
 
 ```js
 import { loadHappyWallet } from '@happy.tech/core'
 
 loadHappyWallet()
+```
+
+## Connect Button
+
+Let Users connect easily using the built in Connect Button web component.
+
+```html
+// index.html
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Your bundle which calls loadHappyWallet() as described above -->
+     <script src="./main.js"></script>
+</head>
+<body>
+    <happychain-connect-button></happychain-connect-button>
+</body>
 ```
 
 ## EIP1193Provider
