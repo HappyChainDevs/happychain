@@ -38,6 +38,7 @@ export type ValidRpcTransactionRequest = RpcTransactionRequest & { to: Address }
 export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest {
     // Check required fields
     if (!tx.to) /****/ throw new EIP1474InvalidInput("missing 'to' field in transaction parameters")
+    tx.to = checksum(tx.to) // mutate here to checksum at ingress
 
     // Validate addresses
     if (!isAddress(tx.to)) /****/ throw new EIP1474InvalidInput(`not an address: ${tx.to}`)
@@ -88,7 +89,7 @@ export function checkedWatchedAsset(params: WatchAssetParameters) {
  * @throws EIP1474InvalidInput if the address is invalid
  */
 export function checkAddress(address: string): asserts address is Address {
-    if (!isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
+    if (!address || !isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
 }
 
 /**
