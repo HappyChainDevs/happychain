@@ -69,9 +69,30 @@ The `HappyWalletProvider` takes care of calling the [`loadHappyWallet()`] functi
 To set up your web3 integration (via Viem, Wagmi, Ethers), see the [corresponding
 section][js-web3-integration] in the "Getting started with JavaScript/TypeScript" page.
 
+To configure Wagmi with react specifically, include the WagmiProvider as you normally would,
+and simply use the `createHappyChainWagmiConfig` function to create the Wagmi config. After this
+you may use the `ConnectButton` as described below, or build your own, calling `connect` as described
+in the [Wagmi docs][https://wagmi.sh/react/guides/connect-wallet#_3-display-wallet-options].
+
+```tsx twoslash
+import React from "react"
+import { createHappyChainWagmiConfig } from "@happy.tech/core"
+import { WagmiProvider } from 'wagmi'
+
+const config = createHappyChainWagmiConfig() // [!code focus]
+
+function App() {
+  return (
+    <WagmiProvider config={config}>
+      {/* ... */}
+    </WagmiProvider>
+  )
+}
+```
+
 Of particular relevance to React users, we provide an easy way to create a Wagmi config
 ([`createHappyChainWagmiConfig`]), and a Wagmi connector if you need to customize the config
-([`happyWagmiConnector`]). Don't forget to call the Wagmi [`connect`] function!
+([`happyWagmiConnector`]).
 
 [js-web3-integration]: /sdk/js#web3-integration
 [`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig

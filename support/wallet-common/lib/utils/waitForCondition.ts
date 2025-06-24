@@ -10,12 +10,10 @@ export async function waitForCondition(
     const start = Date.now()
     return new Promise((resolve, reject) => {
         const pollForCondition = async () => {
-            if (await callback()) {
-                return resolve(true)
-            }
+            if (await callback()) return resolve(true)
 
             if (Date.now() - start > maxPollTimeMs) {
-                return reject()
+                return reject(new Error("Condition not met within the maximum poll time"))
             }
             setTimeout(pollForCondition, pollIntervalMs)
         }
