@@ -13,6 +13,7 @@
         "viem": "^2.30.1"
     },
     "devDependencies": {
+        "@happy.tech/common": "workspace:*",
         "@happy.tech/configs": "workspace:*",
         "@types/react": "^19.1.4",
         "@types/react-dom": "^19.1.5",

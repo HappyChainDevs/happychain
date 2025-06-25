@@ -1,3 +1,4 @@
+import { sleep } from "@happy.tech/common"
 import { connect, getCurrentUser } from "@happy.tech/core"
 import { useHappyWallet } from "@happy.tech/react"
 import { ArrowCounterClockwiseIcon, CalculatorIcon, CoinsIcon, SpinnerIcon } from "@phosphor-icons/react"
@@ -207,6 +208,7 @@ function useTestTokenActions() {
             // to ensure there is a user connected to the wallet, and in args, we may call
             // `getCurrentUser()` to get the address without waiting for react to re-render.
             if (!user?.address) await connect()
+            await sleep(500)
             const writeCallResult = await walletClient.writeContract({
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
