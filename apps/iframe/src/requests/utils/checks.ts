@@ -48,11 +48,12 @@ export function checkedTx(tx: RpcTransactionRequest): ValidRpcTransactionRequest
     if (tx.from && checksum(tx.from) !== getUser()?.address)
         /**/ throw new EIP1474InvalidInput(`invalid 'from' address: ${tx.from}`)
 
-    // Check if the value and nonce exist, and can be parsed as BigInt (allows zero values)
+    // Check that if the value exists, it can be parsed as BigInt.
     if (tx.value !== undefined && parseBigInt(tx.value) === undefined)
         throw new EIP1474InvalidInput(`value is not a number: ${tx.value}`)
-    if (tx.nonce !== undefined && parseBigInt(tx.nonce) === undefined)
-        throw new EIP1474InvalidInput(`nonce is not a number: ${tx.nonce}`)
+
+    if (tx.nonce !== undefined)
+        throw new EIP1474InvalidInput(`Nonces may not be specified, the wallet manages them, but got: \`${tx.nonce}\``)
 
     // Validate gas price parameters based on transaction type
     // Legacy transactions use gasPrice
