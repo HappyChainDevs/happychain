@@ -69,6 +69,19 @@ async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigin
 }
 
 /**
+ * Resets the nonce to the given value, unless the current local nonce is already lower.
+ * We call this whenever a boop fails to be included onchain.
+ */
+async function resetNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): Promise<void> {
+    const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
+    void mutex.locked(() => {
+        const nonce = nonces.get(account, nonceTrack)
+        if (!nonce || nonce <= nonceValue) return
+        nonces.set(account, nonceTrack, nonceValue)
+    })
+}
+
+/**
  * Returns cached nonce.
  * Fallback to fetching nonce from the EntryPoint contract.
  */
@@ -95,11 +108,14 @@ export async function sendBoop(
     retry = 0,
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
-    let needsNonceResync = false
+    let needsNonceResync = false // resync = delete nonce, next attempt will fetch onchain
+    let needsNonceReset = false // reset = reset to this boop's nonce (because it failed)
+    let nonceValue = 0n
 
     try {
         const boopClient = getBoopClient()
         let boop = await boopFromTransaction(account, tx, app)
+        nonceValue = boop.nonceValue
 
         let simulation = sim
         if (!isSponsored) {
@@ -133,7 +149,10 @@ export async function sendBoop(
         // If the nonce is too low and the wallet is assigning it, we'll need a resync.
         needsNonceResync = !tx.nonce && output.status === Onchain.InvalidNonce
 
-        if (output.status !== Onchain.Success) throw translateBoopError(output)
+        if (output.status !== Onchain.Success) {
+            needsNonceReset = true
+            throw translateBoopError(output)
+        }
         markBoopAsSuccess(boopHash, output.receipt)
         boopCache.putReceipt(boopHash, output.receipt)
         return output.receipt.boopHash
@@ -142,6 +161,8 @@ export async function sendBoop(
         if (needsNonceResync) {
             reqLogger.trace("boop nonce resync needed, deleting cached nonce")
             deleteNonce(account, nonceTrack)
+        } else if (needsNonceReset) {
+            resetNonce(account, nonceTrack, nonceValue)
         }
 
         // Try one more time if the last attempt failed due to a boop set by the wallet being too low.
