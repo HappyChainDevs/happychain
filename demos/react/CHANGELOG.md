@@ -1,9 +1,10 @@
 # demo-react
 
-## 0.3.0
+## 0.4.0
 
 ### Minor Changes
 
+- Align with @happy.tech/core versioning
 - 80b5e99: Rename useHappyChain hook to useHappyWallet.
 
 ### Patch Changes

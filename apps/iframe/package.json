@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "@ark-ui/react": "^4.1.1",
-        "@happy.tech/boop-sdk": "workspace:0.2.0",
+        "@happy.tech/boop-sdk": "workspace:0.3.0",
         "@happy.tech/common": "workspace:*",
         "@happy.tech/contracts": "workspace:0.2.0",
         "@happy.tech/wallet-common": "workspace:*",

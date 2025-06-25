@@ -17,8 +17,8 @@
       "name": "@happy.tech/docs",
       "version": "0.3.0",
       "dependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
-        "@happy.tech/react": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
+        "@happy.tech/react": "workspace:0.4.0",
         "@scalar/api-reference-react": "^0.6.30",
         "posthog-js": "^1.255.1",
       },
@@ -75,7 +75,7 @@
       "version": "0.3.0",
       "dependencies": {
         "@ark-ui/react": "^4.1.1",
-        "@happy.tech/boop-sdk": "workspace:0.2.0",
+        "@happy.tech/boop-sdk": "workspace:0.3.0",
         "@happy.tech/common": "workspace:*",
         "@happy.tech/contracts": "workspace:0.2.0",
         "@happy.tech/wallet-common": "workspace:*",
@@ -129,7 +129,7 @@
       "name": "@happy.tech/monitor-service",
       "version": "0.1.0",
       "dependencies": {
-        "@happy.tech/boop-sdk": "workspace:0.2.0",
+        "@happy.tech/boop-sdk": "workspace:0.3.0",
         "@happy.tech/common": "workspace:*",
         "@happy.tech/txm": "workspace:0.1.0",
         "eventemitter3": "^5.0.1",
@@ -238,9 +238,9 @@
     },
     "demos/js": {
       "name": "demo-js",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "dependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
         "ethers": "^6.13.7",
       },
       "devDependencies": {
@@ -255,10 +255,10 @@
     },
     "demos/react": {
       "name": "demo-react",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "dependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
-        "@happy.tech/react": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
+        "@happy.tech/react": "workspace:0.4.0",
         "@phosphor-icons/react": "^2.1.10",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
@@ -280,10 +280,10 @@
     },
     "demos/vue": {
       "name": "demo-vue",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "dependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
-        "@happy.tech/vue": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
+        "@happy.tech/vue": "workspace:0.4.0",
         "@tanstack/vue-query": "^5.62.0",
         "@wagmi/vue": "^0.1.20",
         "viem": "^2.30.1",
@@ -303,7 +303,7 @@
     },
     "packages/boop-sdk": {
       "name": "@happy.tech/boop-sdk",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "devDependencies": {
         "@happy.tech/common": "workspace:*",
         "@happy.tech/configs": "workspace:*",
@@ -316,7 +316,7 @@
     },
     "packages/core": {
       "name": "@happy.tech/core",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "dependencies": {
         "@wagmi/core": "^2.17.2",
         "viem": "^2.30.1",
@@ -341,7 +341,7 @@
     },
     "packages/react": {
       "name": "@happy.tech/react",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "devDependencies": {
         "@happy.tech/configs": "workspace:*",
         "@happy.tech/happybuild": "workspace:*",
@@ -353,7 +353,7 @@
         "typescript": "^5.6.2",
       },
       "peerDependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
       },
@@ -391,7 +391,7 @@
     },
     "packages/vue": {
       "name": "@happy.tech/vue",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "devDependencies": {
         "@happy.tech/configs": "workspace:*",
         "@happy.tech/happybuild": "workspace:*",
@@ -401,7 +401,7 @@
         "vue": "^3.5.13",
       },
       "peerDependencies": {
-        "@happy.tech/core": "workspace:0.3.0",
+        "@happy.tech/core": "workspace:0.4.0",
         "vue": "^3.5.13",
       },
     },

@@ -1,17 +1,14 @@
 # @happy.tech/core
 
-## Next
-
-- ea14fb5: Fix ConnectButton element name
-- 4cd8da2: Simplify custom styling for the ConnectButton
-- add `revokeSessionKey`
-
-## 0.3.0
+## 0.4.0
 
 ### Minor Changes
 
 - a9130df: Add utilities to create Viem clients.
 - 9f1bcd5: Rename provider interface / implementation to HappyProvider / HappyProviderImplem.
+- ea14fb5: Fix ConnectButton element name
+- 4cd8da2: Simplify custom styling for the ConnectButton
+- add `revokeSessionKey`
 
 ### Patch Changes
 

@@ -1,8 +1,8 @@
 # demo-js
 
-## 0.3.0
+## 0.4.0
 
-- Skip 0.2.0 to align with @happy.tech/core versioning
+- Align with @happy.tech/core versioning
 - Updated dependencies
 
 ## 0.1.3

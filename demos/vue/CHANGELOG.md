@@ -1,10 +1,10 @@
 # demo-vue
 
-## 0.3.0
+## 0.4.0
 
 ### Minor Changes
 
-- Skip 0.2.0 to align with @happy.tech/core versioning
+- Align with @happy.tech/core versioning
 - 80b5e99: Rename useHappyChain hook to useHappyWallet.
 
 ### Patch Changes
