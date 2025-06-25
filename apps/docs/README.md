@@ -1,1 +1,3 @@
-This is a [Vocs](https://vocs.dev) project bootstrapped with the Vocs CLI.
+# HappyChain Docs Source
+
+Read the docs online at https://docs.happy.tech

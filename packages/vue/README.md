@@ -2,7 +2,7 @@
 
 Vue utilities for interacting with the Happy Wallet. 
 
-For full documentation visit: https://docs.happy.tech/sdk/vue
+For full documentation, visit https://docs.happy.tech/sdk/vue
 
 For an example of the @happy.tech/vue library in action visit the demo: https://github.com/HappyChainDevs/happychain/tree/master/demos/vue
 

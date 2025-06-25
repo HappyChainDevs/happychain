@@ -2,7 +2,7 @@
 
 Framework-agnostic Vanilla JS / Typescript SDK. 
 
-For full documentation visit: https://docs.happy.tech/sdk/js
+For full documentation, visit https://docs.happy.tech/sdk/js
 
 For an example of the @happy.tech/core library in action visit the demo: https://github.com/HappyChainDevs/happychain/tree/master/demos/js
 

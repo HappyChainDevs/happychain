@@ -10,7 +10,7 @@ Add to your packages `package.json`
 {
      // ... other properties
     "devDependencies": {
-        "@happy.tech/configs": "workspace:",
+        "@happy.tech/configs": "workspace:*",
     }
 }
 ```

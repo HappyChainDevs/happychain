@@ -2,7 +2,7 @@
 
 React utilities for interacting with the Happy Wallet. 
 
-For full documentation visit: https://docs.happy.tech/sdk/react
+For full documentation, visit https://docs.happy.tech/sdk/react
 
 For an example of the @happy.tech/react library in action visit the demo: https://github.com/HappyChainDevs/happychain/tree/master/demos/react
 

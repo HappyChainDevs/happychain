@@ -1,4 +1,20 @@
-# Contracts
+# HappyChain Contracts
+
+## Directory Structure
+
+```txt
+contracts/
+├── src/
+│   ├── boop/         The Boop account abstraction system
+│   ├── randomness/   HappyChain's synchronous randomness contracts
+│   ├── mocks/        Mock contracts used in testing
+│   ├── deploy/       Deploy scripts
+│   ├── test/         Self-explanatory :)
+│
+├── scripts/          Scripts used in testing and Makefile operations
+│
+├── deployments/      Deployed contract addresses & ABIs
+```
 
 ## Installation
 
