@@ -130,8 +130,8 @@ export async function sendBoop(
     retry = 0,
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
-    let needsNonceReset = false // resync = delete nonce, next attempt will fetch onchain
-    let nonceNotConsumed = false // reset = reset to this boop's nonce (because it failed)
+    let nonceNeedsReset = false
+    let nonceNotConsumed = false
     let nonceValue = -1n
 
     try {
@@ -169,7 +169,7 @@ export async function sendBoop(
         reqLogger.trace("boop/execute output", output)
 
         // If the nonce is too low and the wallet is assigning it, we'll need a resync.
-        needsNonceReset = !tx.nonce && output.status === Onchain.InvalidNonce
+        nonceNeedsReset = !tx.nonce && output.status === Onchain.InvalidNonce
 
         if (output.status !== Onchain.Success) {
             nonceNotConsumed = true
@@ -188,12 +188,12 @@ export async function sendBoop(
 
         // Reset nonce to an appropriate state.
         if (nonceValue === -1n) {
-            // No nonce was consumed. Most likely, the nonce fetch itself failed, no need to do anything.
+            // No nonce was consumed. Most likely `getOnchainNonce` failed. No need to do anything.
         } else if (!(err instanceof HappyRpcError)) {
             // This is not one of our errors. We don't know whether the boop is making it onchain or not, so we use
             // downgrade+resync (see comment string over there).
             void downgradeNonce(account, nonceTrack, nonceValue, "resync")
-        } else if (needsNonceReset) {
+        } else if (nonceNeedsReset) {
             reqLogger.trace("boop nonce reset needed, deleting cached nonce")
             deleteNonce(account, nonceTrack)
         } else if (nonceNotConsumed) {
@@ -201,7 +201,7 @@ export async function sendBoop(
         }
 
         // Try one more time if the last attempt failed due to a boop set by the wallet being too low.
-        if (retry > 0 || (retry === 0 && needsNonceReset))
+        if (retry > 0 || (retry === 0 && nonceNeedsReset))
             return sendBoop({ account, tx, signer, isSponsored, nonceTrack }, app, retry - 1)
 
         if (boopHash) {
