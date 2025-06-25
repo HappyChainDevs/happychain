@@ -1,13 +1,11 @@
+import { createUUID } from "@happy.tech/common"
 import { type Result, ok } from "neverthrow"
-import { createUUID } from "../../../../../support/common/dist/index.es"
 import { savePermission } from "../../repositories/permissionsRepository"
+import { saveWatchedAsset } from "../../repositories/watchAssetsRepository"
 import { notifyUpdates } from "../../services/notifyUpdates"
 import type { CreateConfigInput } from "./types"
-import { saveWatchedAsset } from "../../repositories/watchAssetsRepository"
 
 export async function createConfig(input: CreateConfigInput): Promise<Result<undefined, Error>> {
-    console.log(input)
-
     if (input.type === "WalletPermissions") {
         await savePermission(input)
     } else if (input.type === "ERC20") {

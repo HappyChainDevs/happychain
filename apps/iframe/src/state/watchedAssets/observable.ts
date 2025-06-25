@@ -1,26 +1,13 @@
-import type { Address } from "@happy.tech/common"
-import { getDefaultStore } from "jotai"
-import { atomWithStorage } from "jotai/utils"
-import type { WalletPermission, WatchAssetParameters } from "viem"
-import { StorageKey } from "#src/services/storage"
+import { observable } from "@legendapp/state"
+import { getUser } from "../user"
 import { deploymentVar } from "#src/env.ts"
 import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
-import { observable } from "@legendapp/state"
-import { getUser } from "./user"
+import type { WatchedAsset } from "./types"
 import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage"
-
-export type WatchedAsset = WatchAssetParameters & {
-    user: Address
-    id: string
-    createdAt: number
-    updatedAt: number
-    deleted: boolean
-}
-
 
 const SYNC_SERVICE_URL = deploymentVar("VITE_SYNC_SERVICE_URL")
  
-export const permissionsMapLegend = observable(
+export const watchedAssetsMapLegend = observable(
     syncedCrud({
         list: async ({ lastSync }) => {
             const user = getUser()
@@ -67,9 +54,7 @@ export const permissionsMapLegend = observable(
             console.log("Subscribing to updates for user", user.address)
 
             const eventSource = new EventSource(`${SYNC_SERVICE_URL}/api/v1/settings/subscribe?user=${user.address}`)
-            eventSource.addEventListener("config.changed", (event) => {
-                const data = JSON.parse(event.data)
-                console.log("Received update", data)
+            eventSource.addEventListener("config.changed", () => {
                 refresh()
             })
 
@@ -98,46 +83,3 @@ export const permissionsMapLegend = observable(
         updatePartial: true,
     }),
 )
-
-// === State Accessors ==================================================================================
-
-/**
- * Retrieves the current list of watched assets from the Jotai store.
- */
-export function getWatchedAssets(): WatchedAsset[] {
-    return Object.values(permissionsMapLegend.get())
-}
-
-// === State Mutators ===================================================================================
-
-/**
- * Adds a new asset to the store under the provided address.
- * If the asset does not already exist for the address, it is added.
- * Does nothing if the asset is already in the list.
- */
-export function addWatchedAsset(newAsset: WatchAssetParameters): boolean {
-    const user = getUser()
-    if (!user) return false
-
-    const asset: WatchedAsset = {
-        ...newAsset,
-        user: user.address,
-        id: `${user.address}-${newAsset.options.address}`,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        deleted: false,
-    }
-    permissionsMapLegend[asset.id].set(asset)
-    return true
-}
-
-/**
- * Removes a specific asset from the watched assets list by its contract address for a specific user.
- * Returns `true` if the asset was found and removed, or `false` if it was not in the list.
- */
-export function removeWatchedAsset(assetAddress: Address): boolean {
-    const asset = Object.values(permissionsMapLegend.get()).find((asset) => asset.options.address === assetAddress)
-    if (!asset) return false
-    permissionsMapLegend[asset.id].delete()
-    return true
-}

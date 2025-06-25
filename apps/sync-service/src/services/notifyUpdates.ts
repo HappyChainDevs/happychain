@@ -1,10 +1,10 @@
 import type { Address } from "@happy.tech/common"
 import type { SSEStreamingApi } from "hono/streaming"
-import type { UpdateEvent } from "../dtos"
+import type { ConfigChangedEvent } from "../dtos"
 
 const streams = new Map<Address, SSEStreamingApi[]>()
 
-export function notifyUpdates(event: UpdateEvent) {
+export function notifyUpdates(event: ConfigChangedEvent) {
     const userStreams = streams.get(event.data.destination)
     if (!userStreams) {
         return

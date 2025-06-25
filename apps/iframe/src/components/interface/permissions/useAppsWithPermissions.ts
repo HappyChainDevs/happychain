@@ -1,5 +1,6 @@
 import { use$ } from "@legendapp/state/react"
-import { type AppPermissions, permissionsMapLegend } from "#src/state/permissions"
+import type { AppPermissions } from "#src/state/permissions/types"
+import { permissionsMapLegend } from "#src/state/permissions/observable"
 import { type AppURL, isWallet } from "#src/utils/appURL"
 
 export function useAppsWithPermissions(): [AppURL, AppPermissions][] {

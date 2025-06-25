@@ -5,10 +5,8 @@ import { z } from "zod"
 import { walletPermissionUpdate, watchAssetUpdate } from "../../dtos"
 import { isProduction } from "../../utils/isProduction"
 
-export const inputSchema: z.ZodDiscriminatedUnion<"type", [typeof walletPermissionUpdate, typeof watchAssetUpdate]> = z.discriminatedUnion(
-    "type",
-    [walletPermissionUpdate, watchAssetUpdate],
-)
+export const inputSchema: z.ZodDiscriminatedUnion<"type", [typeof walletPermissionUpdate, typeof watchAssetUpdate]> =
+    z.discriminatedUnion("type", [walletPermissionUpdate, watchAssetUpdate])
 
 export const outputSchema = z.object({
     success: z.boolean(),

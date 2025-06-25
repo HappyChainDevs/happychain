@@ -1,7 +1,8 @@
 import { useCollapsible } from "@ark-ui/react"
 import { Button } from "#src/components/primitives/button/Button"
 import { InlineDrawer } from "#src/components/primitives/collapsible/InlineDrawer"
-import { type AppPermissions, clearAppPermissions } from "#src/state/permissions"
+import { clearAppPermissions } from "#src/state/permissions"
+import type { AppPermissions } from "#src/state/permissions/types"
 import type { AppURL } from "#src/utils/appURL"
 
 interface ClearAllDappsPermissionsProps {

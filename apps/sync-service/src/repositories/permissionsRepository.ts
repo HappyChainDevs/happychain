@@ -1,10 +1,10 @@
 import type { Hex } from "@happy.tech/common"
 import type { Insertable, Selectable } from "kysely"
 import { db } from "../db/driver"
-import type { WalletPermisisonRow } from "../db/types"
+import type { WalletPermissionRow } from "../db/types"
 import type { WalletPermission, WalletPermissionUpdate } from "../dtos"
 
-function fromDtoToDbUpdate(permission: WalletPermissionUpdate): Partial<Insertable<WalletPermisisonRow>> {
+function fromDtoToDbUpdate(permission: WalletPermissionUpdate): Partial<Insertable<WalletPermissionRow>> {
     const { type, caveats, ...rest } = permission
     return {
         ...rest,
@@ -13,7 +13,7 @@ function fromDtoToDbUpdate(permission: WalletPermissionUpdate): Partial<Insertab
     }
 }
 
-function fromDbToDto(permission: Selectable<WalletPermisisonRow>): WalletPermission {
+function fromDbToDto(permission: Selectable<WalletPermissionRow>): WalletPermission {
     return {
         type: "WalletPermissions",
         ...permission,
@@ -48,7 +48,7 @@ export async function savePermission(permission: WalletPermissionUpdate) {
 
     return await db
         .insertInto("walletPermissions")
-        .values(fromDtoToDbUpdate(permission) as Insertable<WalletPermisisonRow>)
+        .values(fromDtoToDbUpdate(permission) as Insertable<WalletPermissionRow>)
         .execute()
 }
 

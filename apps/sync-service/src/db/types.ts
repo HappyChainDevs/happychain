@@ -17,7 +17,7 @@ type WalletPermissionCaveat = {
  *
  * This type is copied from Viem (eip1193.ts)  but we add a user field.
  */
-export type WalletPermisisonRow = {
+export type WalletPermissionRow = {
     // The user to which the permission is granted.
     user: Hex
     // The app to which the permission is granted.
@@ -46,8 +46,7 @@ export type WatchAssetRow = {
     deleted: ColumnType<number, boolean, boolean>
 }
 
-
 export interface Database {
-    walletPermissions: WalletPermisisonRow
+    walletPermissions: WalletPermissionRow
     watchedAssets: WatchAssetRow
 }

@@ -1,9 +1,8 @@
-import { createUUID } from "@happy.tech/common"
 import { type Result, ok } from "neverthrow"
 import { savePermission } from "../../repositories/permissionsRepository"
+import { saveWatchedAsset } from "../../repositories/watchAssetsRepository"
 import { notifyUpdates } from "../../services/notifyUpdates"
 import type { UpdateConfigInput } from "./types"
-import { saveWatchedAsset } from "../../repositories/watchAssetsRepository"
 
 export async function updateConfig(input: UpdateConfigInput): Promise<Result<void, Error>> {
     if (input.type === "WalletPermissions") {

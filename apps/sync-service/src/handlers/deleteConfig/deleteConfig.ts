@@ -1,23 +1,19 @@
-import { createUUID, type Address } from "@happy.tech/common"
+import { type Address, createUUID } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import { deletePermission, getPermission } from "../../repositories/permissionsRepository"
+import { deleteWatchedAsset, getWatchedAsset } from "../../repositories/watchAssetsRepository"
 import { notifyUpdates } from "../../services/notifyUpdates"
 import type { DeleteConfigInput } from "./types"
-import { deleteWatchedAsset, getWatchedAsset } from "../../repositories/watchAssetsRepository"
 
 export async function deleteConfig(input: DeleteConfigInput): Promise<Result<void, Error>> {
-
-    
     const permission = await getPermission(input.id)
     const watchedAsset = await getWatchedAsset(input.id)
-
 
     let user: Address
     if (permission) {
         await deletePermission(input.id)
         user = permission.user
-    }
-    else if (watchedAsset) {
+    } else if (watchedAsset) {
         await deleteWatchedAsset(input.id)
         user = watchedAsset.user
     } else {

@@ -4,6 +4,8 @@ import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
+import { logger as loggerMiddleware } from "hono/logger"
+import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
 import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
@@ -11,6 +13,7 @@ import pkg from "../../package.json" assert { type: "json" }
 import { env } from "../env"
 import { isProduction } from "../utils/isProduction"
 import { logger } from "../utils/logger"
+import { logJSONResponseMiddleware } from "../utils/logger"
 import configRoute from "./configRoute"
 
 const app = new Hono()
@@ -23,10 +26,10 @@ app.use(
     }),
 )
 app.use("*", timingMiddleware())
-// app.use("*", loggerMiddleware())
-// app.use("*", logJSONResponseMiddleware)
-// app.use("*", prettyJSONMiddleware())
+app.use("*", logJSONResponseMiddleware)
+app.use("*", prettyJSONMiddleware())
 app.use("*", requestIdMiddleware())
+app.use("*", loggerMiddleware())
 
 // Routes setup
 app.get("/", (c) => c.text("Welcome to the Settings Service!"))

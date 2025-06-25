@@ -4,7 +4,7 @@ import { Switch } from "#src/components/primitives/toggle-switch/Switch"
 import { PermissionName } from "#src/constants/permissions"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useLocalPermissionChanges } from "#src/hooks/useLocalPermissionChanges"
-import type { AppPermissions, PermissionsRequest, WalletPermission } from "#src/state/permissions"
+import type { AppPermissions, WalletPermission, PermissionsRequest } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { SessionKeyCheckbox } from "./SessionKeyCheckbox"
 

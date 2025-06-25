@@ -30,7 +30,6 @@ function fromDbToDto(watchedAsset: Selectable<WatchAssetRow>): WatchAsset {
     }
 }
 
-
 export function getWatchedAsset(id: string) {
     return db.selectFrom("watchedAssets").where("id", "=", id).selectAll().executeTakeFirst()
 }
@@ -42,9 +41,6 @@ export async function listWatchedAssets(user: Hex, lastUpdated?: number): Promis
         .$if(lastUpdated !== undefined, (qb) => qb.where("updatedAt", ">", lastUpdated as number))
         .selectAll()
         .execute()
-
-    console.log("listWatchedAssets", { user, lastUpdated, result })
-
     return result.map(fromDbToDto)
 }
 

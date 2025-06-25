@@ -43,7 +43,7 @@ export const walletPermissionUpdate = walletPermission.partial().extend({
 
 export type WalletPermissionUpdate = z.infer<typeof walletPermissionUpdate>
 
-export const updateEvent = z.object({
+export const configChangedEvent = z.object({
     event: z.enum(["config.changed"]),
     data: z.object({
         destination: z.string().refine(isAddress).transform(checksum).openapi({
@@ -56,7 +56,7 @@ export const updateEvent = z.object({
     id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
 })
 
-export type UpdateEvent = z.infer<typeof updateEvent>
+export type ConfigChangedEvent = z.infer<typeof configChangedEvent>
 
 export const watchAsset = z.object({
     type: z.literal("ERC20").openapi({
@@ -93,7 +93,7 @@ export const watchAssetUpdate = watchAsset.partial().extend({
         example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         type: "string",
     }),
-    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" })
+    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
 })
 
 export type WatchAssetUpdate = z.infer<typeof watchAssetUpdate>

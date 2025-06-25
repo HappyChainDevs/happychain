@@ -1,7 +1,7 @@
 import { CaretRightIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
-import type { AppPermissions } from "#src/state/permissions"
+import type { AppPermissions } from "#src/state/permissions/types"
 import { getAppURL } from "#src/utils/appURL"
 
 interface ListItemProps {
