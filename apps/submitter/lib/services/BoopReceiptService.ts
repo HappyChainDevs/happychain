@@ -7,7 +7,7 @@ import {
     ifDef,
     pick,
     promiseWithResolvers,
-    sleep,
+    tryCatchAsync,
 } from "@happy.tech/common"
 import type { Log, TransactionReceipt } from "viem"
 import { deployment, env } from "#lib/env"
@@ -21,8 +21,8 @@ import {
     boopStore,
     computeHash,
     dbService,
-    evmNonceManager,
     findExecutionAccount,
+    replaceTransaction,
     simulationCache,
 } from "#lib/services"
 import { TraceMethod } from "#lib/telemetry/traces"
@@ -36,8 +36,6 @@ import {
     SubmitterError,
     extractFeeInfo,
 } from "#lib/types"
-import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
-import { getFees } from "#lib/utils/gas"
 import { logger, receiptLogger } from "#lib/utils/logger"
 import { decodeEvent, decodeRawError, getSelectorFromEventName } from "#lib/utils/parsing"
 import type { EvmReceiptService } from "./EvmReceiptService"
@@ -120,7 +118,7 @@ export class BoopReceiptService {
         sub.count += 1
         sub.entryPoint ??= entryPoint
 
-        // 3. if evmTxInfo supplied, start monitoring for replacement or cancellation
+        // 3. if evmTxInfo supplied, start monitoring the receipt
         if (evmTxInfo) this.setActiveEvmTx(sub, evmTxInfo, boop)
 
         // 4. race the receipt against a timeout
@@ -151,12 +149,7 @@ export class BoopReceiptService {
             .waitForReceipt(evmTx.evmTxHash, env.STUCK_TX_WAIT_TIME) //
             .then(({ receipt, cantFetch, timedOut }) => {
                 if (receipt) void this.#handleTransactionInBlock(receipt, sub)
-                else if (timedOut) void this.replaceOrCancel(sub)
-                else if (cantFetch)
-                    sub.pwr.resolve({
-                        status: SubmitterError.ReceiptTimeout,
-                        error: "Transaction receipt could not be fetched after multiple retries",
-                    })
+                else if (timedOut || cantFetch) void this.replaceOrCancel(sub)
             })
     }
 
@@ -164,8 +157,8 @@ export class BoopReceiptService {
     private async replaceOrCancel(sub: PendingBoopInfo): Promise<void> {
         const tx = sub.latestEvmTx!
 
+        // 1. Retry the transaction once.
         if (sub.attempt++ === 0) {
-            // 1. Retry the transaction once.
             receiptLogger.info(`Resubmitting Transaction: Boop: ${sub.boopHash}, Previous EVM Tx: ${tx.evmTxHash}`)
             const output = await submitInternal({ boop: sub.boop, entryPoint: sub.entryPoint, replacedTx: tx })
             if (output.status === Onchain.Success) return
@@ -174,75 +167,35 @@ export class BoopReceiptService {
         }
 
         // 2. Retry failed, switch to cancellation.
+        boopNonceManager.resetNonce(sub.boop.account, sub.boop.nonceTrack, sub.boop.nonceValue)
         const account = findExecutionAccount(sub.boop)
-        const { fees } = getFees(sub.boopHash, tx)
-        // TODO errors in getFees are unhandled
-        const partialEvmTxInfo = { nonce: tx.nonce, ...fees! } satisfies Omit<EvmTxInfo, "evmTxHash">
-        try {
-            // We identify cancel transaction by making them self-sends.
-            const evmTxHash = await walletClient.sendTransaction({
-                ...partialEvmTxInfo,
-                account,
-                to: account.address,
-                gas: 21_000n,
-            })
-            this.setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
-            boopNonceManager.resetNonce(sub.boop.account, sub.boop.nonceTrack, sub.boop.nonceValue)
-        } catch (error) {
-            if (isNonceTooLowError(error)) {
-                // A tx with the same nonce landed on chain earlier.
-                // This is probably the tx we were trying to replace or cancel.
-                evmNonceManager.resyncIfTooLow(account.address)
-                // Give the actual included tx some time to be processed.
-                await sleep(1000)
-                // Then resolve — this will do nothing if we picked up the included tx and processed it already.
-                sub.pwr.resolve({
-                    status: SubmitterError.ReceiptTimeout,
-                    error: "Timed out while waiting for the receipt (nonce too low).",
-                })
-            } else {
-                logger.error("Error sending cancel tx", sub.boopHash, error)
-            }
-        }
+        await tryCatchAsync(replaceTransaction(account, tx))
+        // The try-catch is theoretically unnecessary — just making extra sure.
+
+        // At this point we know the boop was either cancelled or submitted onchain, and — if cancelled —  is now safe
+        // to be resubmitted by users without causing issues (i.e. the PendingBoopInfo will be cleared from the internal
+        // maps if it hasn't been already), so we can safely delete the boop from the store.
+        boopStore.delete(sub.boop)
+
+        // We don't resolve the subscription here, and let it time out instead, since there is still a slim chance that
+        // it might be included onchain. While resolving here might enable faster retries, the fact we had to go cancel
+        // means that things are busy and the implicit rate limiting here migth be a good thing.
     }
 
     async #handleTransactionInBlock(receipt: TransactionReceipt, sub: PendingBoopInfo): Promise<void> {
         try {
-            if (receipt.to === receipt.from) {
-                // We identify cancel transactions by making them self-sends.
-                // No need to check if the tx was successful (it's 0 self-send, it can't fail),
-                // we only care about the executor address nonce bump.
-                sub.pwr.resolve({
-                    status: SubmitterError.ReceiptTimeout,
-                    error: "The boop was submitted to the mempool but got stuck and was cancelled.",
-                })
-            } else {
-                // Reconstruct boop with fee info matching the EVM tx that landed.
-                const gasInfo = sub.boopGasForEvmTxHash.get(receipt.transactionHash)
-                if (!gasInfo) throw Error("BUG: missing boop fee info for non-cancel EVM transaction")
-                const boop = { ...sub.boop, ...gasInfo }
-                sub.pwr.resolve(await this.getReceiptResult(boop, receipt))
-            }
+            // Reconstruct boop with fee info matching the EVM tx that landed.
+            const gasInfo = sub.boopGasForEvmTxHash.get(receipt.transactionHash)
+            if (!gasInfo) throw Error("BUG: missing boop fee info for non-cancel EVM transaction")
+            const boop = { ...sub.boop, ...gasInfo }
+            sub.pwr.resolve(await this.getReceiptResult(boop, receipt))
         } finally {
             // In principle we don't need the outer `try/finally` statement here
             // as nothing should be able to throw, but better safe than sorry.
 
-            // At this stage, we know that either the boop was included onchain or a cancel transaction
-            // for the one carying the boop was included onchain. We don't need the original boop
-            // for retries anymore, and it is now safe for the same boop to be resubmitted by users
-            // without causing issues (i.e. the PendingBoopInfo will be cleared from the internal
-            // maps if it hasn't been already), so we can safely delete the boop from the store.
+            // At this stage, we know that the boop was included onchain & we don't need it boop for retries anymore.
             boopStore.delete(sub.boop)
         }
-
-        // NOTE: In theory, we could resolve the subscription earlier in case of cancellation,
-        // as well as delete the boop from the store at that stage. We don't do it, (1) because
-        // it makes the code a bit simpler, and (2) because because the negatives are a slightly
-        // faster answer and the ability to resubmit the same boop, but since the submitter is
-        // suffering (and on that boop in particular (*)), the implied throttling is not a bad thing.
-        //
-        // (*) In theory, there's nothing a boop can do that would cause us specific trouble, and going to
-        // cancellation is normally caused by a chain with full blocks. But the makers of this code are not perfect...
     }
 
     @TraceMethod("BoopReceiptService.getReceiptResult")
