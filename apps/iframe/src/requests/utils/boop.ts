@@ -153,6 +153,11 @@ export async function sendBoop(
             needsNonceReset = true
             throw translateBoopError(output)
         }
+        if (output.receipt.status !== Onchain.Success) {
+            const status = output.receipt.status
+            const error = output.receipt.description
+            throw translateBoopError({ status, error })
+        }
         markBoopAsSuccess(boopHash, output.receipt)
         boopCache.putReceipt(boopHash, output.receipt)
         return output.receipt.boopHash
