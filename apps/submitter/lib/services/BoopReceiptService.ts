@@ -187,6 +187,7 @@ export class BoopReceiptService {
                 gas: 21_000n,
             })
             this.setActiveEvmTx(sub, { ...partialEvmTxInfo, evmTxHash }, undefined)
+            boopNonceManager.resetNonce(sub.boop.account, sub.boop.nonceTrack, sub.boop.nonceValue)
         } catch (error) {
             if (isNonceTooLowError(error)) {
                 // A tx with the same nonce landed on chain earlier.
@@ -211,7 +212,6 @@ export class BoopReceiptService {
                 // We identify cancel transactions by making them self-sends.
                 // No need to check if the tx was successful (it's 0 self-send, it can't fail),
                 // we only care about the executor address nonce bump.
-                boopNonceManager.handleCancelledNonce(sub.boop)
                 sub.pwr.resolve({
                     status: SubmitterError.ReceiptTimeout,
                     error: "The boop was submitted to the mempool but got stuck and was cancelled.",
