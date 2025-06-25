@@ -47,23 +47,23 @@ export class BoopNonceManager {
     @TraceMethod("BoopNonceManager.hintNonce")
     hintNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
         const currentNonce = this.#nonces.get(account, nonceTrack)
-        if (!currentNonce || nonceValue > currentNonce) {
-            this.#nonces.set(account, nonceTrack, nonceValue)
-            setTimeout(() => this.pruneNonce(account, nonceTrack), env.MAX_BLOCKED_TIME)
-        }
+        if (currentNonce && nonceValue <= currentNonce) return
+        this.setLocalNonce(account, nonceTrack, nonceValue)
+        setTimeout(() => this.pruneNonce(account, nonceTrack), env.MAX_BLOCKED_TIME)
     }
 
     /**
-     * Advances the local nonce after a boop's cancellation is confirmed on-chain.
-     * This reflects the consumed nonce, allowing submissions for subsequent nonces to proceed.
-     * Additionally guards against race conditions from late-arriving receipts.
+     * Resets the nonce to the given value if currently tracked and higher.
+     *
+     * We call this when we move to cancel a boop transaction. It's possible that the boop will still get included, in
+     * which case {@link hintNonce} *might* be called to fix the situation — otherwise blocked nonces will time out.
      */
     @TraceMethod("BoopNonceManager.handleCancelledNonce")
-    handleCancelledNonce(boop: Boop): void {
-        const { account, nonceTrack, nonceValue } = boop
-        const nextNonce = nonceValue + 1n
-        if (nextNonce > (this.#nonces.get(account, nonceTrack) ?? 0n))
-            this.setLocalNonce(account, nonceTrack, nextNonce)
+    resetNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
+        const currentNonce = this.#nonces.get(account, nonceTrack)
+        if (!currentNonce || currentNonce <= nonceValue) return
+        this.setLocalNonce(account, nonceTrack, nonceValue)
+        setTimeout(() => this.pruneNonce(account, nonceTrack), env.MAX_BLOCKED_TIME)
     }
 
     /**
@@ -191,10 +191,27 @@ export class BoopNonceManager {
 
     @TraceMethod("BoopNonceManager.setLocalNonce")
     private setLocalNonce(account: Address, nonceTrack: NonceTrack, nonceValue: NonceValue): void {
+        const oldNonce = this.#nonces.get(account, nonceTrack)
         this.#nonces.set(account, nonceTrack, nonceValue)
+
+        // Unblock next boop
         const blockedBoop = this.#blockedBoopsMap.get(account, nonceTrack)?.get(nonceValue)
-        if (!blockedBoop) return
-        blockedBoop.resolve(undefined)
+        if (blockedBoop) blockedBoop.resolve(undefined)
+
+        if (!oldNonce || nonceValue <= oldNonce) return
+        // Otherwise we're skipping ahead, cancel pending nonces.
+
+        const blockedMap = this.#blockedBoopsMap.get(account, nonceTrack)
+        if (!blockedMap) return
+        // biome-ignore format: keep on one line
+        const blocked = blockedMap.entries().toArray().sort(([nonceA], [nonceB]) => Number(nonceA - nonceB)) ?? []
+        for (const [blockedNonce, blockedBoop] of blocked) {
+            // Only consider blocked nonces smaller than the new nonce — the `]oldNonce, nonceValue[` range.
+            if (blockedNonce <= oldNonce) continue
+            if (blockedNonce >= nonceValue) break
+            blockedBoop.resolve(this.makeSubmitError(SubmitterError.ExternalSubmit))
+            this.pruneNonce(account, nonceTrack, nonceValue)
+        }
     }
 
     @TraceMethod("BoopNonceManager.getLocalNonce")
@@ -209,6 +226,7 @@ export class BoopNonceManager {
         return await mutex.locked(async () => {
             // NOTE: This behaves like we want: it won't await if the nonce is already set, and after the onchain is
             // awaited, it will only be set if the entry wasn't populated in the meantime.
+            // This is the only case where it's safe to set the nonce without calling `getLocalNonce`.
             return await this.#nonces.getOrSetAsync(
                 account,
                 nonceTrack,
@@ -246,15 +264,6 @@ export class BoopNonceManager {
         if (onchainNonce > localNonce) {
             logger.trace("Onchain nonce is ahead of local nonce — resyncing.", account, nonceTrack)
             this.setLocalNonce(account, nonceTrack, onchainNonce)
-            // biome-ignore format: keep on one line
-            const blocked = blockedMap.entries().toArray().sort(([nonceA], [nonceB]) => Number(nonceA - nonceB)) ?? []
-            for (const [nonceValue, blockedBoop] of blocked) {
-                // Only consider blocked nonces smaller than the new nonce — the `]localNonce, onchainNonce[` range.
-                if (nonceValue <= localNonce) continue
-                if (nonceValue >= onchainNonce) break
-                blockedBoop.resolve(this.makeSubmitError(SubmitterError.ExternalSubmit))
-                this.pruneNonce(account, nonceTrack, nonceValue)
-            }
         }
     }
 }
