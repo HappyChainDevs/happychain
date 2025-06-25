@@ -1,3 +1,4 @@
+import { stringify } from "@happy.tech/common"
 import { SubmitterError } from "@happy.tech/submitter/client"
 import { type ProcessedRequestParams, processRequestParams } from "./requestParams"
 import { constructUrl } from "./urls"
@@ -39,10 +40,11 @@ export class ApiClient {
             const response = await fetch(url, init)
             return await response.json()
         } catch (error) {
+            const errStr = error instanceof Error ? error.message : stringify(error)
             return {
                 status: SubmitterError.ClientError,
-                // biome-ignore lint/suspicious/noExplicitAny:
-                description: `Something unexpected happened and the results could not be parsed: ${(error as any)?.message}`,
+                error: `Something unexpected happened and the results could not be parsed: ${errStr}`,
+                // NOTE: This is currently not type-discoverable.
                 cause: error,
                 response: response,
             }
