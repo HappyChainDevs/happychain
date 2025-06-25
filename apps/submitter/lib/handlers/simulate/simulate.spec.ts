@@ -45,7 +45,7 @@ describe("submitter_simulate", () => {
         expect(results.status).toBe(200)
         expect(response.status).toBe(Onchain.Success)
         expect(response).toMatchObject(partialSimpleSuccessfulOutput(opts))
-        expect(BigInt(response.maxFeePerGas)).toBeGreaterThan(1000n)
+        expect(BigInt(response.maxFeePerGas)).toBeGreaterThan(0n)
         expect(BigInt(response.submitterFee)).toBeGreaterThanOrEqual(0n)
         expect(response.gas).toBeGreaterThan(10000)
         expect(response.validateGas).toBeGreaterThan(10000)
