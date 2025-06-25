@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happy.tech/common"
+import { HappyMethodNames, tryCatchU } from "@happy.tech/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happy.tech/wallet-common"
 import { requiresApproval } from "@happy.tech/wallet-common"
 import { PermissionName } from "#src/constants/permissions"
@@ -31,13 +31,8 @@ export function checkIfRequestRequiresConfirmation(
         case "eth_sendTransaction": {
             const tx = payload.params[0]
             if (hasNonZeroValue(tx)) return true
-            try {
-                return !hasPermissions(app, {
-                    [PermissionName.SessionKey]: { target: checkAndChecksumAddress(tx.to!) },
-                })
-            } catch {
-                return true
-            }
+            const target = tryCatchU(() => checkAndChecksumAddress(tx.to))
+            return !target || !hasPermissions(app, { [PermissionName.SessionKey]: { target } })
         }
 
         case "wallet_requestPermissions":

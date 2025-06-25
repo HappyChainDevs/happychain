@@ -88,7 +88,7 @@ export function checkedWatchedAsset(params: WatchAssetParameters) {
  * Checks that the address is valid, or throws.
  * @throws EIP1474InvalidInput if the address is invalid
  */
-export function checkAddress(address: string): asserts address is Address {
+export function checkAddress(address: string | null | undefined): asserts address is Address {
     if (!address || !isAddress(address)) throw new EIP1474InvalidInput(`invalid address: ${address}`)
 }
 
@@ -96,7 +96,7 @@ export function checkAddress(address: string): asserts address is Address {
  * Returns the checksumed address if it is a valid Ethereum address.
  * @throws EIP1474InvalidInput if the input is not a valid address
  */
-export function checkAndChecksumAddress(address: string): Address {
+export function checkAndChecksumAddress(address: string | null | undefined): Address {
     checkAddress(address)
     return checksum(address)
 }
