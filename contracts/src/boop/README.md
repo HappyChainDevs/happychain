@@ -12,7 +12,7 @@ article][boop-article].
 boop/
 ├── core/                       # Core contracts
 │   ├── EntryPoint.sol              # Singleton contract to which all boops are posted.
-│   ├── Staking.sol                  # Paymaster staking logic inherited by the entry point.
+│   └── Staking.sol                  # Paymaster staking logic inherited by the entry point.
 │
 ├── libs/                       # Library contracts (for use by `core/` and account/paymaster implementations)
 │   ├── Encoding.sol                # Encoding/Decoding boops.
