@@ -20,9 +20,6 @@ export class BoopNonceManager {
     readonly #nonces: Map2<Address, NonceTrack, NonceValue>
     readonly #blockedBoopsMap: Map2<Address, NonceTrack, Map<NonceValue, BlockedBoop>>
 
-    // Invariant: `#nonces.get(account, nonceTrack)` and `#blockedBoopsMaps.get(account, nonceTrack)`
-    // are both undefined or defined at the same time.
-
     constructor() {
         this.#usedCapacity = 0n
         this.#nonceMutexes = new Map2()
@@ -251,16 +248,11 @@ export class BoopNonceManager {
      */
     @TraceMethod("BoopNonceManager.resyncNonce")
     async resyncNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<void> {
-        // No boop blocked on the track, so no local nonce managed, no point to resync.
-        if (!this.#blockedBoopsMap.get(account, nonceTrack)) return
-
+        if (!this.#nonces.get(account, nonceTrack)) return
         const onchainNonce = await this.getOnchainNonce(entryPoint, account, nonceTrack)
         // Recheck after await.
-        const blockedMap = this.#blockedBoopsMap.get(account, nonceTrack)
-        if (!blockedMap) return
-
         const localNonce = this.#nonces.get(account, nonceTrack)
-        if (!localNonce) throw Error("BUG: resyncNonce") // cf. invariant
+        if (!localNonce) return
         if (onchainNonce > localNonce) {
             logger.trace("Onchain nonce is ahead of local nonce — resyncing.", account, nonceTrack)
             this.setLocalNonce(account, nonceTrack, onchainNonce)
