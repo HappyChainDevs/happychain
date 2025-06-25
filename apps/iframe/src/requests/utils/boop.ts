@@ -8,7 +8,7 @@ import type {
     SimulateOutput,
     SimulateSuccess,
 } from "@happy.tech/boop-sdk"
-import { Map2, Mutex, getProp, parseBigInt, stringify } from "@happy.tech/common"
+import { Map2, Mutex, bigIntMax, bigIntMin, getProp, parseBigInt, stringify, tryCatchAsync } from "@happy.tech/common"
 import type { Address, Hash, Hex } from "@happy.tech/common"
 import {
     EIP1474InternalError,
@@ -71,13 +71,35 @@ async function getOnchainNonce(account: Address, nonceTrack = 0n): Promise<bigin
 /**
  * Resets the nonce to the given value, unless the current local nonce is already lower.
  * We call this whenever a boop fails to be included onchain.
+ *
+ * If the {@link resync} flag is passed, then it will fetch the onchain nonce as well and will assign the nonce to that
+ * if it is higher than what the normal result would be. This is used when there was an error and we don't know whether
+ * the nonce made it onchain or not.
  */
-async function resetNonce(account: Address, nonceTrack: bigint, nonceValue: bigint): Promise<void> {
+async function downgradeNonce(
+    account: Address,
+    nonceTrack: bigint,
+    nonceValue: bigint,
+    resync?: "resync",
+): Promise<void> {
     const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
-    void mutex.locked(() => {
-        const nonce = nonces.get(account, nonceTrack)
-        if (!nonce || nonce <= nonceValue) return
-        nonces.set(account, nonceTrack, nonceValue)
+    await mutex.locked(async () => {
+        if (!resync) {
+            const localNonce = nonces.get(account, nonceTrack)
+            const newNonce = bigIntMin(nonceValue, localNonce ?? nonceValue)
+            nonces.set(account, nonceTrack, newNonce)
+        } else {
+            const { value: onchainNonce, error } = await tryCatchAsync(getOnchainNonce(account, nonceTrack))
+            if (error) {
+                reqLogger.error("Error while fetching onchainNonce in resetNonce:", error)
+                // Fallback to deleting the nonce entirely.
+                deleteNonce(account, nonceTrack)
+            } else {
+                const localNonce = nonces.get(account, nonceTrack)
+                const localNewNonce = bigIntMin(nonceValue, localNonce ?? nonceValue)
+                nonces.set(account, nonceTrack, bigIntMax(localNewNonce, onchainNonce))
+            }
+        }
     })
 }
 
@@ -108,9 +130,9 @@ export async function sendBoop(
     retry = 0,
 ): Promise<Hash> {
     let boopHash: Hash | undefined = undefined
-    let needsNonceResync = false // resync = delete nonce, next attempt will fetch onchain
-    let needsNonceReset = false // reset = reset to this boop's nonce (because it failed)
-    let nonceValue = 0n
+    let needsNonceReset = false // resync = delete nonce, next attempt will fetch onchain
+    let nonceNotConsumed = false // reset = reset to this boop's nonce (because it failed)
+    let nonceValue = -1n
 
     try {
         const boopClient = getBoopClient()
@@ -147,10 +169,10 @@ export async function sendBoop(
         reqLogger.trace("boop/execute output", output)
 
         // If the nonce is too low and the wallet is assigning it, we'll need a resync.
-        needsNonceResync = !tx.nonce && output.status === Onchain.InvalidNonce
+        needsNonceReset = !tx.nonce && output.status === Onchain.InvalidNonce
 
         if (output.status !== Onchain.Success) {
-            needsNonceReset = true
+            nonceNotConsumed = true
             throw translateBoopError(output)
         }
         if (output.receipt.status !== Onchain.Success) {
@@ -163,15 +185,23 @@ export async function sendBoop(
         return output.receipt.boopHash
     } catch (err) {
         reqLogger.trace(`boop submission failed — ${retry} attempts left`, err)
-        if (needsNonceResync) {
-            reqLogger.trace("boop nonce resync needed, deleting cached nonce")
-            deleteNonce(account, nonceTrack)
+
+        // Reset nonce to an appropriate state.
+        if (nonceValue === -1n) {
+            // No nonce was consumed. Most likely, the nonce fetch itself failed, no need to do anything.
+        } else if (!(err instanceof HappyRpcError)) {
+            // This is not one of our errors. We don't know whether the boop is making it onchain or not, so we use
+            // downgrade+resync (see comment string over there).
+            void downgradeNonce(account, nonceTrack, nonceValue, "resync")
         } else if (needsNonceReset) {
-            resetNonce(account, nonceTrack, nonceValue)
+            reqLogger.trace("boop nonce reset needed, deleting cached nonce")
+            deleteNonce(account, nonceTrack)
+        } else if (nonceNotConsumed) {
+            downgradeNonce(account, nonceTrack, nonceValue)
         }
 
         // Try one more time if the last attempt failed due to a boop set by the wallet being too low.
-        if (retry > 0 || (retry === 0 && needsNonceResync))
+        if (retry > 0 || (retry === 0 && needsNonceReset))
             return sendBoop({ account, tx, signer, isSponsored, nonceTrack }, app, retry - 1)
 
         if (boopHash) {
