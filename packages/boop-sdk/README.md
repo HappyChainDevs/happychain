@@ -8,4 +8,4 @@ boops.
 For full documentation, visit https://docs.happy.tech/boop/sdk
 
 [boop]: https://docs.happy.tech/boop
-[REST API]: [boop]: https://docs.happy.tech/boop/rest
+[REST API]: https://docs.happy.tech/boop/rest
