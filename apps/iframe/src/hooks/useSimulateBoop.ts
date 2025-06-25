@@ -1,5 +1,5 @@
-import { Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
-import { type Address, stringify } from "@happy.tech/common"
+import { Onchain, Simulate, type SimulateSuccess } from "@happy.tech/boop-sdk"
+import { type Address, bigIntReplacer } from "@happy.tech/common"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useRef } from "react"
 import type { RpcTransactionRequest } from "viem"
@@ -45,19 +45,33 @@ export function useSimulateBoop({ userAddress, tx, enabled }: UseSimulateBoopArg
           } satisfies ValidRpcTransactionRequest)
         : undefined
 
-    const jsonTxQueryKey = useMemo(() => ["simulate-boop", stringify(tx)], [tx])
-
     const lastError = useRef<Error>(null)
+
+    const boopQueryKey = useMemo(
+        () => ["boop-from-tx", JSON.parse(JSON.stringify(filledTx, bigIntReplacer))],
+        [filledTx],
+    )
+    // Fetch the boop once, but don't increment the nonce on repeat
+    const { data: boop, refetch: incrementNonce } = useQuery({
+        queryKey: boopQueryKey,
+        queryFn: async () => await boopFromTransaction(userAddress!, filledTx!, getAppURL()),
+        enabled: !!filledTx && enabled && !lastError.current,
+        staleTime: Number.POSITIVE_INFINITY,
+    })
+
+    const simulateQueryKey = useMemo(() => ["simulate-boop", JSON.parse(JSON.stringify(tx, bigIntReplacer))], [tx])
     const {
         data,
         error,
         isPending: isSimulatePending,
     } = useQuery({
-        queryKey: jsonTxQueryKey,
-        enabled: !!userAddress && enabled && !lastError.current,
+        queryKey: simulateQueryKey,
+        enabled: boop && !!userAddress && enabled && !lastError.current,
         queryFn: async () => {
-            const boop = await boopFromTransaction(userAddress!, filledTx!, getAppURL())
-            return await boopClient.simulate({ entryPoint, boop })
+            if (!boop) throw new Error("Boop data is not available for simulation")
+            const results = await boopClient.simulate({ entryPoint, boop })
+            if (results.status === Onchain.InvalidNonce) incrementNonce()
+            return results
         },
         // the refetches are only performed if the window is in focus,
         // else it's a constant stream of requests
