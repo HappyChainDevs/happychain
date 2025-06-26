@@ -1,4 +1,4 @@
-name: Deploy staging sync service
+name: Deploy sync service
 
 on:
   workflow_dispatch:
