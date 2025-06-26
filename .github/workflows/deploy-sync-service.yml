@@ -37,7 +37,7 @@ jobs:
           rm: true
           debug: true
 
-      - name: Deploy staging sync service to server
+      - name: Deploy sync service to server
         uses: appleboy/ssh-action@25ce8cbbcb08177468c7ff7ec5cbfa236f9341e1 # v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
