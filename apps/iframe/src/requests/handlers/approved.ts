@@ -72,7 +72,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
 
         case "wallet_watchAsset": {
             const params = checkedWatchedAsset(request.payload.params)
-            return addWatchedAsset(user.address, params)
+            return addWatchedAsset(params)
         }
 
         case HappyMethodNames.LOAD_ABI: {

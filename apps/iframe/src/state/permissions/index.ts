@@ -1,130 +1,14 @@
-import { createUUID } from "@happy.tech/common"
-import type { Address, UUID } from "@happy.tech/common"
+import type { Address } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
-import { type Atom, atom, getDefaultStore } from "jotai"
-import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import { PermissionName } from "#src/constants/permissions"
+import { revokedSessionKeys } from "#src/state/interfaceState"
+import { getUser } from "#src/state/user"
+import { type AppURL, getWalletURL, isApp, isStandaloneWallet } from "#src/utils/appURL"
+import { checkIfCaveatsMatch } from "#src/utils/checkIfCaveatsMatch"
+import { emitUserUpdate } from "#src/utils/emitUserUpdate"
 import { permissionsLogger } from "#src/utils/logger"
-import { StorageKey } from "../services/storage"
-import { type AppURL, getAppURL, getWalletURL, isApp, isStandaloneWallet } from "../utils/appURL"
-import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
-import { emitUserUpdate } from "../utils/emitUserUpdate"
-import { revokedSessionKeys } from "./interfaceState"
-import { getUser, userAtom } from "./user"
-
-// STORE INSTANTIATION
-const store = getDefaultStore()
-
-// In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
-// These permissions are scoped per app and per account.
-//
-// The system is not widely adopted and mostly wallet only handles the `eth_accounts` permission,
-// which defines whether an app can get the user's account(s) and subsequently make other requests
-// (some of which will require confirmations, like `eth_sendTransaction`, some of which won't like
-// `eth_call`).
-//
-// Like other wallets, we only handle the `eth_accounts` permission, but we support processing
-// all incoming permission requests.
-//
-// References:
-// https://eips.ethereum.org/EIPS/eip-2255
-
-/**
- * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
- * for that user on that app.
- */
-export type PermissionsMap = Record<Address, Record<AppURL, AppPermissions>>
-
-/**
- * Maps permissions names to permission objects.
- * EIP-2255 specifies that permissions names must be EIP-1193 request names (e.g. `eth_accounts`).
- * However, we type this as a string in case we want to extend the permission system to other
- * names that do not map to a request (or are custom requests).
- */
-export type AppPermissions = Record<string, WalletPermission>
-
-/**
- * Permission object for a specific permission.
- *
- * This type is copied from Viem (eip1193.ts)
- */
-export type WalletPermission = {
-    // The app to which the permission is granted.
-    invoker: AppURL
-    // This is the EIP-1193 request that this permission is mapped to.
-    parentCapability: PermissionName | (string & {})
-    caveats: WalletPermissionCaveat[]
-    date: number
-    // Not in the EIP, but Viem wants this.
-    id: UUID
-}
-
-/**
- * A caveat is a specific specific restrictions applied to the permitted request.
- */
-type WalletPermissionCaveat = {
-    type: string
-    value: unknown
-}
-
-/**
- * A request for one or more permissions.
- */
-export type PermissionRequestObject = {
-    [requestName: string]: { [caveatName: string]: unknown }
-}
-
-/**
- * A refinement of {@link PermissionRequestObject} for requesting session keys.
- */
-export type SessionKeyRequest = {
-    [PermissionName.SessionKey]: { target: Address }
-}
-
-/**
- * A permissions specifier, which can be either a single EIP-1193 request name, or a {@link
- * PermissionRequestObject}.
- */
-export type PermissionsRequest = string | PermissionRequestObject
-
-/**
- * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
- * for that user on that app.
- */
-export const permissionsMapAtom = atomWithStorage<PermissionsMap>(StorageKey.UserPermissions, {}, createJSONStorage(), {
-    getOnInit: true,
-})
-
-type PermissionCheckParams = {
-    permissionsRequest: PermissionsRequest
-    app: AppURL
-}
-
-const _atomForPermissionsCheck: (params: PermissionCheckParams) => Atom<boolean> = //
-    atomFamily(({ permissionsRequest, app }) => {
-        return atom((get) => {
-            const user = get(userAtom)
-            if (!user) return false
-            // This call *might* be required to record the dependency, which occurs via
-            // `getDefaultStore().get` during `hasPermissions`.
-            get(permissionsMapAtom)
-            return hasPermissions(app, permissionsRequest)
-        })
-    })
-
-/**
- * A function that returns a new atom that subscribes to a check on the specified permissions.
- *
- * The atom is cached, but not automatically garbage-collected. If this is called with a changing
- * set of permissions, it is necessary to call `atomForPermissionsCheck.remove(oldPermissions)`
- * when changing the permissions!
- */
-export function atomForPermissionsCheck(
-    permissionsRequest: PermissionsRequest, //
-    app: AppURL = getAppURL(),
-): Atom<boolean> {
-    return _atomForPermissionsCheck({ permissionsRequest, app })
-}
+import { permissionsMapLegend } from "./observable"
+import type { AppPermissions, PermissionsRequest, WalletPermission, WalletPermissionCaveat } from "./types"
 
 // === GET ALL PERMISSIONS =======================================================================================
 
@@ -133,45 +17,52 @@ export function atomForPermissionsCheck(
  */
 export function getAppPermissions(app: AppURL): AppPermissions {
     const user = getUser()
-    const permissionsMap = store.get(permissionsMapAtom)
-    return getAppPermissionsPure(user, app, permissionsMap)
+    const permissionsMap = permissionsMapLegend.get()
+    return getAppPermissionsPure(user, app, Object.values(permissionsMap))
 }
 export function getAppPermissionsPure(
     user: HappyUser | undefined,
     app: AppURL,
-    permissionsMap: PermissionsMap,
+    permissions: WalletPermission[],
 ): AppPermissions {
     if (!user) {
         // This should never happen and requires investigating if it does!
         permissionsLogger.warn("No user found, returning empty permissions.")
         return {}
     }
-    const appPermissions = permissionsMap[user.address]?.[app]
-    if (appPermissions) return appPermissions
 
-    // Permissions don't exist, create them.
+    const appPermissions = permissions.filter((p) => p.invoker === app && p.user === user.address)
 
-    const baseAppPermissions: AppPermissions =
-        app === getWalletURL()
-            ? {
-                  // The iframe is always granted the `eth_accounts` permission.
-                  eth_accounts: {
-                      invoker: app,
-                      parentCapability: "eth_accounts",
-                      caveats: [],
-                      date: Date.now(),
-                      id: createUUID(),
-                  },
-              }
-            : {}
+    if (appPermissions.length > 0) {
+        const appPermissionsObject = appPermissions.reduce((acc, p) => {
+            acc[p.parentCapability] = p
+            return acc
+        }, {} as AppPermissions)
+        return appPermissionsObject
+    }
+    if (app === getWalletURL()) {
+        // Permissions don't exist, create them.
+        // The iframe is always granted the `eth_accounts` permission.
+        const permissionId = `${user.address}-${app}-eth_accounts`
+        const permission: WalletPermission = {
+            type: "WalletPermissions",
+            user: user.address,
+            invoker: app,
+            parentCapability: "eth_accounts",
+            caveats: [],
+            date: Date.now(),
+            id: permissionId,
+            updatedAt: Date.now(),
+            createdAt: Date.now(),
+            deleted: false,
+        }
+        permissionsMapLegend[permissionId].set(permission)
+        return {
+            eth_accounts: permission,
+        }
+    }
 
-    // It's not required to set the permissionsAtom here because the permissions don't actually
-    // change (so nothing dependent on the atom needs to update). We just write them to avoid
-    // rerunning the above logic on each lookup.
-    permissionsMap[user.address] ??= {}
-    permissionsMap[user.address][app] = baseAppPermissions
-
-    return baseAppPermissions
+    return {}
 }
 
 // === WRITE ALL PERMISSIONS =======================================================================================
@@ -189,25 +80,29 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
     }
 
     const permissionArray = Object.values(appPermissions)
-
     if (!permissionArray.length) {
         clearAppPermissions(app)
         return
     }
 
-    store.set(permissionsMapAtom, (prev: PermissionsMap) => {
-        if (!permissionArray.every((a) => a.invoker === app)) {
-            // No all permissions supplied are scoped to the app.
-            // This should never happen!
-            console.warn("Invalid permission update requested, not setting permissions.")
-            return prev
-        }
+    if (!permissionArray.every((a) => a.invoker === app)) {
+        // No all permissions supplied are scoped to the app.
+        // This should never happen!
+        console.warn("Invalid permission update requested, not setting permissions.")
+        return
+    }
 
-        return {
-            ...prev,
-            [user.address]: { ...prev[user.address], [app]: appPermissions },
+    const currentPermissions = getAppPermissions(app)
+
+    for (const permission of Object.values(currentPermissions)) {
+        if (!permissionArray.some((p) => p.id === permission.id)) {
+            permissionsMapLegend[permission.id].delete()
         }
-    })
+    }
+
+    for (const permission of permissionArray) {
+        permissionsMapLegend[permission.id].set(permission)
+    }
 }
 
 // === CLEAR PERMISSIONS ===========================================================================
@@ -218,10 +113,13 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
-    store.set(permissionsMapAtom, (prev) => {
-        const { [user.address]: _, ...rest } = prev
-        return rest
-    })
+
+    const permissions = permissionsMapLegend.get()
+    for (const permission of Object.values(permissions)) {
+        if (permission.user === user.address) {
+            permissionsMapLegend[permission.id].delete()
+        }
+    }
 }
 
 /**
@@ -230,23 +128,20 @@ export function clearPermissions(): void {
 export function clearAppPermissions(app: AppURL): void {
     const user = getUser()
     if (!user) return
-
     // Register session keys for onchain deregistrations.
     Object.values(getAppPermissions(app))
         .filter((p: WalletPermission) => p.parentCapability === PermissionName.SessionKey)
         .flatMap((p) => p.caveats)
         .forEach((c) => revokedSessionKeys.add(c.value as Address))
 
-    // Remove app permissions from storage
-    store.set(permissionsMapAtom, (prev) => {
-        const {
-            [user.address]: { [app]: _, ...otherApps },
-            ...otherUsers
-        } = prev
-        return { ...otherUsers, [user.address]: otherApps }
-    })
-}
+    const permissions = permissionsMapLegend.get()
 
+    for (const permission of Object.values(permissions)) {
+        if (permission.invoker === app && permission.user === user.address) {
+            permissionsMapLegend[permission.id].delete()
+        }
+    }
+}
 type PermissionRequestEntry = {
     name: string
     caveats: WalletPermissionCaveat[]
@@ -292,8 +187,11 @@ export function permissionRequestEntries(permissions: PermissionsRequest): Permi
  * ```
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
-    const grantedPermissions = []
+    const grantedPermissions: WalletPermission[] = []
     const appPermissions = getAppPermissions(app)
+
+    const user = getUser()
+    if (!user) return []
 
     for (const { name, caveats: newCaveats } of permissionRequestEntries(permissionRequest)) {
         // If permission exists, merge new caveats with existing ones
@@ -311,12 +209,18 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
 
             grantedPermissions.push(appPermissions[name])
         } else {
-            const grantedPermission = {
+            const id = `${user.address}-${app}-${name}`
+            const grantedPermission: WalletPermission = {
                 caveats: newCaveats,
                 invoker: app,
                 parentCapability: name,
                 date: Date.now(),
-                id: createUUID(),
+                id,
+                updatedAt: Date.now(),
+                createdAt: Date.now(),
+                type: "WalletPermissions",
+                user: user.address,
+                deleted: false,
             }
             grantedPermissions.push(grantedPermission)
 
@@ -369,7 +273,6 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  */
 export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRequest): void {
     const appPermissions = getAppPermissions(app)
-
     for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
         // Permission is not granted, nothing to do.
         if (!appPermissions[name]) continue
