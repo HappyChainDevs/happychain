@@ -49,7 +49,8 @@ app.get(
                           },
                       ]
                     : []),
-                { url: "https://settings.testnet.happy.tech", description: "Testnet" },
+                { url: "https://sync-staging.happy.tech", description: "Staging" },
+                { url: "https://sync.happy.tech", description: "Production" },
             ],
         },
     }),
