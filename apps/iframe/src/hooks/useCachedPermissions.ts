@@ -1,7 +1,8 @@
 import { useAtomValue } from "jotai"
 import { useState } from "react"
-import { getAppPermissions, getAppPermissionsPure, permissionsMapAtom } from "#src/state/permissions"
-import type { AppPermissions } from "#src/state/permissions"
+import { getAppPermissions, getAppPermissionsPure } from "#src/state/permissions"
+import { permissionsMapLegend } from "#src/state/permissions/observable"
+import type { AppPermissions } from "#src/state/permissions/types"
 import { userAtom } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { canonicalCaveatKey, mergeCaveats } from "#src/utils/caveats"
@@ -11,8 +12,8 @@ export function useCachedPermissions(appURL: AppURL): { permissions: AppPermissi
     // and can be toggle back on while we don't navigate away.
     const [cachedPermissions, setCachedPermissions] = useState(structuredClone(getAppPermissions(appURL)))
     const user = useAtomValue(userAtom)
-    const permissionsMap = useAtomValue(permissionsMapAtom)
-    const reactivePermissions = getAppPermissionsPure(user, appURL, permissionsMap)
+    const permissionsMap = permissionsMapLegend.get()
+    const reactivePermissions = getAppPermissionsPure(user, appURL, Object.values(permissionsMap))
 
     /**
      * flag to track if any update has occurred. If se, we will set state

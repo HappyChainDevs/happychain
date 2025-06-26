@@ -1,5 +1,5 @@
 import type { Address } from "@happy.tech/common"
-import type { Permissions } from "#src/constants/permissions"
+import { PermissionName } from "#src/constants/permissions"
 import type { AppURL } from "#src/utils/appURL"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
@@ -42,7 +42,7 @@ export type WalletPermission = {
     // The app to which the permission is granted.
     invoker: AppURL
     // This is the EIP-1193 request that this permission is mapped to.
-    parentCapability: Permissions | (string & {})
+    parentCapability: PermissionName | (string & {})
     caveats: WalletPermissionCaveat[]
     date: number
     // Not in the EIP, but Viem wants this.
@@ -72,7 +72,7 @@ export type PermissionRequestObject = {
  * A refinement of {@link PermissionRequestObject} for requesting session keys.
  */
 export type SessionKeyRequest = {
-    [Permissions.SessionKey]: { target: Address }
+    [PermissionName.SessionKey]: { target: Address }
 }
 
 /**
