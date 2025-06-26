@@ -1,12 +1,12 @@
-import { deploymentVar } from "#src/env.ts"
 import { observable } from "@legendapp/state"
-import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
-import { getUser } from "../user"
 import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage"
+import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
+import { deploymentVar } from "#src/env.ts"
+import { getUser } from "../user"
 import type { WalletPermission } from "./types"
 
 const SYNC_SERVICE_URL = deploymentVar("VITE_SYNC_SERVICE_URL")
- 
+
 export const permissionsMapLegend = observable(
     syncedCrud({
         list: async ({ lastSync }) => {

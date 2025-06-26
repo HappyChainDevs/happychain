@@ -1,12 +1,12 @@
 import { observable } from "@legendapp/state"
-import { getUser } from "../user"
-import { deploymentVar } from "#src/env.ts"
-import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
-import type { WatchedAsset } from "./types"
 import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage"
+import { syncedCrud } from "@legendapp/state/sync-plugins/crud"
+import { deploymentVar } from "#src/env.ts"
+import { getUser } from "../user"
+import type { WatchedAsset } from "./types"
 
 const SYNC_SERVICE_URL = deploymentVar("VITE_SYNC_SERVICE_URL")
- 
+
 export const watchedAssetsMapLegend = observable(
     syncedCrud({
         list: async ({ lastSync }) => {

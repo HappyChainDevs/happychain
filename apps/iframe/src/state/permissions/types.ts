@@ -1,6 +1,6 @@
 import type { Address } from "@happy.tech/common"
-import type { AppURL } from "#src/utils/appURL"
 import type { Permissions } from "#src/constants/permissions"
+import type { AppURL } from "#src/utils/appURL"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.

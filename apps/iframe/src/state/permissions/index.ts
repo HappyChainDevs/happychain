@@ -1,14 +1,14 @@
 import type { Address } from "@happy.tech/common"
 import { permissionsLogger } from "#src/utils/logger"
 import { PermissionName } from "#src/constants/permissions"
+import { revokedSessionKeys } from "#src/state/interfaceState"
+import { getUser } from "#src/state/user"
 import { type AppURL, getWalletURL, isApp, isStandaloneWallet } from "#src/utils/appURL"
 import { checkIfCaveatsMatch } from "#src/utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "#src/utils/emitUserUpdate"
-import { revokedSessionKeys } from "#src/state/interfaceState"
-import { getUser } from "#src/state/user"
 import { permissionsMapLegend } from "./observable"
-import type { AppPermissions, WalletPermission, WalletPermissionCaveat, PermissionsRequest } from "./types"
 import type { HappyUser } from "@happy.tech/wallet-common"
+import type { AppPermissions, PermissionsRequest, WalletPermission, WalletPermissionCaveat } from "./types"
 
 // === GET ALL PERMISSIONS =======================================================================================
 

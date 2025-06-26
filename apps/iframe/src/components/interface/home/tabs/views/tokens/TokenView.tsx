@@ -1,3 +1,4 @@
+import { observer } from "@legendapp/state/react"
 import { CoinsIcon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
@@ -5,7 +6,6 @@ import { getWatchedAssets } from "#src/state/watchedAssets"
 import { UserNotFoundWarning } from "../UserNotFoundWarning"
 import { TriggerImportTokensDialog } from "./ImportTokensDialog"
 import { WatchedAsset } from "./WatchedAsset"
-import { observer } from "@legendapp/state/react"
 
 /**
  * Displays all watched assets registered by the connected user.

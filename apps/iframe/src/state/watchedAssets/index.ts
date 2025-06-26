@@ -4,7 +4,6 @@ import { getUser } from "#src/state/user"
 import { watchedAssetsMapLegend } from "./observable"
 import type { WatchedAsset } from "./types"
 
-
 // === State Accessors ==================================================================================
 
 /**
