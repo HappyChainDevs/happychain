@@ -1,11 +1,11 @@
 import type { Address } from "@happy.tech/common"
 import { TransactionManager, TransactionStatus } from "@happy.tech/txm"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 import { type Result, err, ok } from "neverthrow"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
 import { FaucetUsage } from "../faucet-usage.entity"
 import { FaucetUsageRepository } from "../faucet-usage.repository"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 
 export class FaucetService {
     private txm: TransactionManager
@@ -66,7 +66,6 @@ export class FaucetService {
         if (result.value.status !== TransactionStatus.Success) {
             return err(new Error("Transaction failed"))
         }
-
 
         const faucetUsage = FaucetUsage.create(address)
         await this.faucetUsageRepository.save(faucetUsage)

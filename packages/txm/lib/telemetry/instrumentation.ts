@@ -18,8 +18,8 @@ export function initializeTelemetry({
     prometheusPort: number
     userMetricReader?: MetricReader
     userTraceExporter?: SpanExporter
-    tracesActive?: boolean,
-    serviceName?: string,
+    tracesActive?: boolean
+    serviceName?: string
 }): void {
     const resource = Resource.default().merge(
         new Resource({
@@ -28,7 +28,6 @@ export function initializeTelemetry({
         }),
     )
 
-    
     let metricReader: MetricReader | undefined
     if (metricsActive) {
         metricReader = userMetricReader || new PrometheusExporter({ port: prometheusPort })

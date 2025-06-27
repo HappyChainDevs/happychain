@@ -94,7 +94,7 @@ export class TxMonitor {
         }
 
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
-            block.number
+            block.number,
         )
 
         for (const transaction of transactions) {
@@ -380,7 +380,7 @@ export class TxMonitor {
                 collectionBlock: Number(transaction.collectionBlock),
                 blockNumber: Number(block.number),
             })
-            return;
+            return
         }
 
         const nonce = this.transactionManager.nonceManager.requestNonce()
