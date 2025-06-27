@@ -39,9 +39,6 @@ export class FaucetService {
             }
         }
 
-        const faucetUsage = FaucetUsage.create(address)
-        await this.faucetUsageRepository.save(faucetUsage)
-
         const tx = await this.txm.createTransaction({
             address,
             value: env.TOKEN_AMOUNT,
@@ -59,6 +56,10 @@ export class FaucetService {
         if (result.value.status !== TransactionStatus.Success) {
             return err(new Error("Transaction failed"))
         }
+
+
+        const faucetUsage = FaucetUsage.create(address)
+        await this.faucetUsageRepository.save(faucetUsage)
 
         return ok(undefined)
     }
