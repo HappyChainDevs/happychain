@@ -81,6 +81,7 @@ jobs:
             export FAUCET_RATE_LIMIT_WINDOW_SECONDS=86400
             export TXM_DB_PATH=/home/faucet/txm.sqlite
             export FAUCET_DB_PATH=/home/faucet/faucet.sqlite
+            export OTEL_EXPORTER_OTLP_ENDPOINT=http://148.113.212.211:4318/v1/traces
             EOF
               # cf. https://github.com/appleboy/drone-ssh/issues/175
               sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' .env
