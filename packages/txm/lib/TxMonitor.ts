@@ -94,7 +94,7 @@ export class TxMonitor {
         }
 
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
-            block.number,
+            block.number + 1n,
         )
 
         for (const transaction of transactions) {
