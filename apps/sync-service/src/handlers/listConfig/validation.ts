@@ -4,7 +4,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { checksum } from "ox/Address"
 import { z } from "zod"
-import { walletPermission, watchAsset } from "../../dtos"
+import { walletPermission, watchAsset, chain } from "../../dtos"
 import { isProduction } from "../../utils/isProduction"
 
 export const listConfigSchema = z
@@ -21,7 +21,7 @@ export const listConfigSchema = z
                 example: "1715702400",
                 type: "number",
             }),
-        type: z.enum(["WalletPermissions", "ERC20"]).optional(),
+        type: z.enum(["WalletPermissions", "ERC20", "Chain"]).optional(),
     })
     .strict()
 
@@ -30,7 +30,7 @@ export const inputSchema = listConfigSchema
 export const outputSchema = z.object({
     success: z.boolean(),
     message: z.string().optional(),
-    data: z.array(z.discriminatedUnion("type", [walletPermission, watchAsset])),
+    data: z.array(z.discriminatedUnion("type", [walletPermission, watchAsset, chain])),
 })
 
 export const listConfigDescription = describeRoute({

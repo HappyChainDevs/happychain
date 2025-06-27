@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai"
 import { RequestDisabled } from "#src/components/requests/common/RequestDisabled"
-import { chainsAtom, currentChainAtom } from "#src/state/chains"
+import { currentChainAtom } from "#src/state/chains"
+import { getChains } from "#src/state/chains/index"
 import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
@@ -10,7 +11,7 @@ export const WalletSwitchEthereumChain = ({
     reject,
     accept,
 }: RequestConfirmationProps<"wallet_switchEthereumChain">) => {
-    const chains = useAtomValue(chainsAtom)
+    const chains = getChains()
     const currentChain = useAtomValue(currentChainAtom)
     const chain = chains[params[0].chainId]
     const headline = "Switch chain"

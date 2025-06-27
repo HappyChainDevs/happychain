@@ -26,7 +26,8 @@ import {
     getTransactionReceipt,
 } from "#src/requests/utils/shared"
 import { eoaSigner, sessionKeySigner } from "#src/requests/utils/signers"
-import { getChains, setChains, setCurrentChain } from "#src/state/chains"
+import { setCurrentChain } from "#src/state/chains"
+import { getChains, setChain } from "#src/state/chains/index"
 import { revokedSessionKeys } from "#src/state/interfaceState"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
@@ -193,7 +194,7 @@ export async function dispatchInjectedRequest(request: ProviderMsgsFromApp[Msgs.
 
             const resp = await sendToWalletClient(request.payload)
 
-            setChains((prev) => ({ ...prev, [params.chainId]: params }))
+            setChain(params)
 
             // Some wallets (Metamask, Rabby, ...) automatically switch to the newly-added chain.
             // Normalize behavior by always switching.

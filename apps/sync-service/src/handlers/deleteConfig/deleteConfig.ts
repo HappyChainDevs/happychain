@@ -4,11 +4,13 @@ import { deletePermission, getPermission } from "../../repositories/permissionsR
 import { deleteWatchedAsset, getWatchedAsset } from "../../repositories/watchAssetsRepository"
 import { notifyUpdates } from "../../services/notifyUpdates"
 import type { DeleteConfigInput } from "./types"
+import { deleteChain, getChain } from "../../repositories/chainRepository"
 
 export async function deleteConfig(input: DeleteConfigInput): Promise<Result<void, Error>> {
     const permission = await getPermission(input.id)
     const watchedAsset = await getWatchedAsset(input.id)
-
+    const chain = await getChain(input.id)
+    
     let user: Address
     if (permission) {
         await deletePermission(input.id)
@@ -16,6 +18,9 @@ export async function deleteConfig(input: DeleteConfigInput): Promise<Result<voi
     } else if (watchedAsset) {
         await deleteWatchedAsset(input.id)
         user = watchedAsset.user
+    } else if (chain) {
+        await deleteChain(input.id)
+        user = chain.user
     } else {
         return err(new Error("Config not found"))
     }

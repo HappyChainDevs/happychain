@@ -46,7 +46,27 @@ export type WatchAssetRow = {
     deleted: ColumnType<number, boolean, boolean>
 }
 
+export type ChainRow = {
+    user: Hex
+    chainId: string
+    chainName: string
+    rpcUrls: ColumnType<string[], string, string>;
+    nativeCurrency?:  ColumnType<{
+        symbol: string;
+        decimals: number;
+        name: string;
+    }, string, string>
+    blockExplorerUrls?: ColumnType<string[], string, string> | undefined;
+    iconUrls?: ColumnType<string[], string, string> | undefined;
+    opStack?: ColumnType<number, boolean, boolean>
+    id: string
+    updatedAt: number
+    createdAt: number
+    deleted: ColumnType<number, boolean, boolean>
+}
+
 export interface Database {
     walletPermissions: WalletPermissionRow
     watchedAssets: WatchAssetRow
+    chains: ChainRow
 }

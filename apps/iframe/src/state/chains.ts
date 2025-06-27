@@ -1,40 +1,10 @@
 import { accessorsFromAtom } from "@happy.tech/common"
-import { chainDefinitions as defaultChains } from "@happy.tech/wallet-common"
 import type { ChainParameters } from "@happy.tech/wallet-common"
 import { type WritableAtom, atom } from "jotai"
-import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
-import { StorageKey } from "../services/storage"
+import { getChainFromSearchParams } from "./chains/index"
 
 // NOTE: If `HAPPY_RPC_OVERRIDE` is set, the RPC URL of all default chains will be set to that RPC server.
-
-export function getChainFromSearchParams(): ChainParameters {
-    const chainId = new URLSearchParams(window.location.search).get("chainId")
-    const chainKey = chainId && `0x${BigInt(chainId).toString(16)}`
-    const chains = getChains()
-    return chainKey && chainKey in chains //
-        ? chains[chainKey]
-        : defaultChains.defaultChain
-}
-
-function getDefaultChainsRecord() {
-    return Object.fromEntries(Object.entries(defaultChains).map(([_, chain]) => [chain.chainId, chain]))
-}
-
-/**
- * This atom maps chain IDs to their respective chain parameters. Initialized with the officially
- * supported chains.
- */
-export const chainsAtom = atomWithStorage<
-    Record<string, AddEthereumChainParameter> //
->(StorageKey.Chains, getDefaultChainsRecord(), undefined, { getOnInit: true })
-
-export const {
-    /** See {@link chainsAtom} */
-    getValue: getChains,
-    /** See {@link chainsAtom} */
-    setValue: setChains,
-} = accessorsFromAtom(chainsAtom)
 
 /**
  * This atom stores the current configuration of the chain that the iframe is connected to.

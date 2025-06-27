@@ -97,3 +97,45 @@ export const watchAssetUpdate = watchAsset.partial().extend({
 })
 
 export type WatchAssetUpdate = z.infer<typeof watchAssetUpdate>
+
+export const chain = z.object({
+    chainId: z.string().openapi({ example: "0xd8" }),
+    chainName: z.string().openapi({ example: "HappyChain Sepolia" }),
+    nativeCurrency: z.object({
+        name: z.string().openapi({ example: "HappyChain" }),
+        symbol: z.string().openapi({ example: "HAPPY" }),
+        decimals: z.number().openapi({ example: 18 })
+    }).optional(),
+    rpcUrls: z.array(z.string()),
+    blockExplorerUrls: z.array(z.string()).optional().openapi({ example: ["https://explorer.testnet.happy.tech"] }),
+    iconUrls: z.array(z.string()).optional(),
+    opStack: z.boolean().optional().openapi({ example: true }),
+    type: z.literal("Chain").openapi({
+        example: "Chain",
+        type: "string",
+    }),
+    user: z.string().refine(isAddress).transform(checksum).openapi({
+        example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        type: "string",
+    }),
+    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+    updatedAt: z.number().openapi({ example: 1715702400 }),
+    createdAt: z.number().openapi({ example: 1715702400 }),
+    deleted: z.boolean().openapi({ example: false }),
+})
+
+export type Chain = z.infer<typeof chain>
+
+export const chainUpdate = chain.partial().extend({
+    type: z.literal("Chain").openapi({
+        example: "Chain",
+        type: "string",
+    }),
+    user: z.string().refine(isAddress).transform(checksum).openapi({
+        example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        type: "string",
+    }),
+    id: z.string().openapi({ example: "78b7d642-e851-4f0f-9cd6-a47c6c2a572a" }),
+})
+
+export type ChainUpdate = z.infer<typeof chainUpdate>
