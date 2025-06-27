@@ -252,6 +252,12 @@ export type TransactionManagerConfig = {
          * Defaults to a console span exporter.
          */
         spanExporter?: SpanExporter
+
+        /**
+         * The service name to use for the traces.
+         * Defaults to "txm".
+         */
+        serviceName?: string
     }
 }
 

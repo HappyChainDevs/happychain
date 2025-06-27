@@ -5,6 +5,7 @@ import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
 import { FaucetUsage } from "../faucet-usage.entity"
 import { FaucetUsageRepository } from "../faucet-usage.repository"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 
 export class FaucetService {
     private txm: TransactionManager
@@ -16,6 +17,15 @@ export class FaucetService {
             chainId: env.CHAIN_ID,
             blockTime: env.BLOCK_TIME,
             privateKey: env.PRIVATE_KEY,
+            traces: {
+                active: true,
+                spanExporter: env.OTEL_EXPORTER_OTLP_ENDPOINT
+                    ? new OTLPTraceExporter({
+                          url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+                      })
+                    : undefined,
+                serviceName: "faucet",
+            },
         })
         this.faucetUsageRepository = new FaucetUsageRepository()
     }
