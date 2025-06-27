@@ -50,7 +50,7 @@ export type ChainRow = {
     user: Hex
     chainId: string
     chainName: string
-    rpcUrls: string[];
+    rpcUrls: ColumnType<string[], string, string>;
     nativeCurrency?:  ColumnType<{
         symbol: string;
         decimals: number;

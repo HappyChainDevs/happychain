@@ -19,6 +19,5 @@ export async function listConfig(input: ListConfigInput): Promise<Result<(Wallet
         const chains = await listChains(input.user, input.lastUpdated)
         config.push(...chains)
     }
-
     return ok(config)
 }
