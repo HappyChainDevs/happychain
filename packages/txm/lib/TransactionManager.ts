@@ -313,6 +313,7 @@ export class TransactionManager {
             userMetricReader: _config.metrics?.metricReader,
             tracesActive: _config.traces?.active ?? false,
             userTraceExporter: _config.traces?.spanExporter,
+            serviceName: _config.traces?.serviceName,
         })
 
         this.collectors = []
