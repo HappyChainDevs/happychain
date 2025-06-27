@@ -3,12 +3,15 @@ import { savePermission } from "../../repositories/permissionsRepository"
 import { saveWatchedAsset } from "../../repositories/watchAssetsRepository"
 import { notifyUpdates } from "../../services/notifyUpdates"
 import type { UpdateConfigInput } from "./types"
+import { saveChain } from "../../repositories/chainRepository"
 
 export async function updateConfig(input: UpdateConfigInput): Promise<Result<void, Error>> {
     if (input.type === "WalletPermissions") {
         await savePermission(input)
     } else if (input.type === "ERC20") {
         await saveWatchedAsset(input)
+    } else if (input.type === "Chain") {
+        await saveChain(input)
     }
 
     notifyUpdates({

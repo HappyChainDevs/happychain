@@ -21,7 +21,7 @@ export const listConfigSchema = z
                 example: "1715702400",
                 type: "number",
             }),
-        type: z.enum(["WalletPermissions", "ERC20"]).optional(),
+        type: z.enum(["WalletPermissions", "ERC20", "Chain"]).optional(),
     })
     .strict()
 

@@ -5,7 +5,8 @@ import { checkAndChecksumAddress, checkedTx, checkedWatchedAsset } from "#src/re
 import { sendToWalletClient } from "#src/requests/utils/sendToClient"
 import { installNewSessionKey } from "#src/requests/utils/sessionKeys"
 import { eoaSigner } from "#src/requests/utils/signers"
-import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/state/chains"
+import { getChains, setChain } from "#src/state/chains/index"
+import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
 import { checkUser, getUser } from "#src/state/user"
@@ -54,7 +55,7 @@ export async function dispatchApprovedRequest(request: PopupMsgs[Msgs.PopupAppro
 
             const response = await sendToWalletClient(request.payload)
             // Only add chain if the request is successful.
-            setChains((prev) => ({ ...prev, [params.chainId]: params }))
+            setChain(params)
             return response
         }
 
