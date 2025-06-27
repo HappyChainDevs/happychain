@@ -372,6 +372,17 @@ export class TxMonitor {
             return transaction.changeStatus(TransactionStatus.Expired)
         }
 
+        if (transaction.collectionBlock && transaction.collectionBlock > block.number - 5n) {
+            // Skip transactions collected in the last 5 blocks to prevent race conditions between
+            // the transaction collector and monitor processing the same transaction simultaneously
+            span.addEvent("txm.tx-monitor.handle-not-attempted-transaction.skip-transaction", {
+                transactionIntentId: transaction.intentId,
+                collectionBlock: Number(transaction.collectionBlock),
+                blockNumber: Number(block.number),
+            })
+            return
+        }
+
         const nonce = this.transactionManager.nonceManager.requestNonce()
 
         span.addEvent("txm.tx-monitor.handle-not-attempted-transaction.requested-nonce", {
