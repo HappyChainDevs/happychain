@@ -60,7 +60,7 @@ jobs:
             DATABASE_URL=/home/staging_submitter/db.sqlite
             CHAIN_ID=216
             NODE_ENV=staging
-            RPC_URLS=ws://localhost:8546,http://localhost:8545,wss://rpc.testnet.happy.tech/ws,https://rpc.testnet.happy.tech/http
+            RPC_URLS=wss://rpc.testnet.happy.tech/ws,https://rpc.testnet.happy.tech/http
             USE_STAGING_CONTRACTS=true
             TRACES_ENDPOINT=http://localhost:4318/v1/traces
             PROMETHEUS_PORT=9091
