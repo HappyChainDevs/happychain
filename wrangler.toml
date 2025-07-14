@@ -3,4 +3,4 @@ name = "happychain"
 # top level environment
 [vars]
 NODE_VERSION="23.9.0"
-BUN_VERSION="1.2.4"
+BUN_VERSION="1.2.18"
