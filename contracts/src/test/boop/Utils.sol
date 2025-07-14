@@ -84,10 +84,6 @@ contract BoopTestUtils is Test {
         return abi.encodeCall(MockERC20.mint, (mintTokenTo, amount));
     }
 
-    function getETHTransferCallData(address transferTo, uint256 amount) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("transfer(address, uint256)", transferTo, amount);
-    }
-
     function getMockRevertCallData() public pure returns (bytes memory) {
         return abi.encodeCall(MockRevert.intentionalRevert, ());
     }
