@@ -34,6 +34,7 @@
         "vite-plugin-node-polyfills": "^0.22.0"
     },
     "dependencies": {
-        "@opentelemetry/api": "^1.9.0"
+        "@opentelemetry/api": "^1.9.0",
+        "uuid": "^11.1.0"
     }
 }

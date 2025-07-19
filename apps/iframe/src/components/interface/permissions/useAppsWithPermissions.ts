@@ -1,16 +1,31 @@
-import { entries } from "@happy.tech/common"
-import { useAtomValue } from "jotai"
-import { useAccount } from "wagmi"
-import { type AppPermissions, permissionsMapAtom } from "#src/state/permissions"
+import { use$ } from "@legendapp/state/react"
+import { permissionsMapLegend } from "#src/state/permissions/observable"
+import type { AppPermissions } from "#src/state/permissions/types"
 import { type AppURL, isWallet } from "#src/utils/appURL"
 
 export function useAppsWithPermissions(): [AppURL, AppPermissions][] {
-    const permissionsMap = useAtomValue(permissionsMapAtom)
-    const account = useAccount()
+    const appsWithPermissions = () => {
+        const permissions = permissionsMapLegend.get()
+        return Object.values(permissions)
+            .filter((permission) => !isWallet(permission.invoker))
+            .reduce(
+                (acc, permission) => {
+                    const existing = acc.find(([app]) => app === permission.invoker)
+                    if (existing) {
+                        existing[1][permission.parentCapability] = permission
+                    } else {
+                        acc.push([
+                            permission.invoker,
+                            {
+                                [permission.parentCapability]: permission,
+                            },
+                        ])
+                    }
+                    return acc
+                },
+                [] as [AppURL, AppPermissions][],
+            )
+    }
 
-    // TODO: the default here should include the wallet app, but currently its empty
-    // adding a permission to an unrelated app will cause the wallet to _also_ be
-    // granted the default permissions and will then show up here
-    return entries(permissionsMap[account?.address ?? "0x0"] ?? {}) //
-        .filter(([app]) => !isWallet(app))
+    return use$(() => appsWithPermissions())
 }

@@ -1,0 +1,27 @@
+{
+    "name": "@happy.tech/sync-service",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "exports": {
+        ".": "./dist/index.es.js",
+        "./migrate": "./dist/migrate.es.js"
+    },
+    "dependencies": {
+        "@happy.tech/common": "workspace:1.0.0",
+        "@hono/node-server": "^1.13.8",
+        "@scalar/hono-api-reference": "^0.5.175",
+        "hono": "^4.7.2",
+        "hono-openapi": "^0.4.4",
+        "neverthrow": "^8.1.0",
+        "zod": "^3.23.8",
+        "zod-openapi": "^4.2.3"
+    },
+    "devDependencies": {
+        "@happy.tech/happybuild": "workspace:1.0.0",
+        "typescript": "^5.6.2",
+        "hono-openapi": "^0.4.4"
+    }
+}

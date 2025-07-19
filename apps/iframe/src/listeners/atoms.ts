@@ -2,7 +2,7 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
-import { permissionsMapAtom } from "#src/state/permissions"
+import { permissionsMapLegend } from "#src/state/permissions/observable"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
@@ -64,7 +64,7 @@ if (store.get(userAtom)) emitUserUpdate(store.get(userAtom))
  * @emits {@link Msgs.UserChanged} (optional)
  * @emits {@link Msgs.ProviderEvent} (optional)
  */
-store.sub(permissionsMapAtom, () => {
+permissionsMapLegend.onChange(() => {
     emitUserUpdate(store.get(userAtom))
 })
 

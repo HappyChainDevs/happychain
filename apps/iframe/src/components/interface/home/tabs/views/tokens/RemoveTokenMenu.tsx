@@ -9,11 +9,10 @@ enum TokenMenuActions {
 }
 
 interface RemoveTokensMenuProps {
-    user: Address
     token: Address
 }
 
-const RemoveTokenMenu = ({ user, token }: RemoveTokensMenuProps) => {
+const RemoveTokenMenu = ({ token }: RemoveTokensMenuProps) => {
     return (
         <Menu.Root aria-label="Asset Options Menu" lazyMount={true} unmountOnExit={true}>
             <Menu.Trigger>
@@ -31,7 +30,7 @@ const RemoveTokenMenu = ({ user, token }: RemoveTokensMenuProps) => {
                         asChild
                         className="text-primary dark:text-content cursor-pointer bg-primary/20 hover:bg-primary/30 dark:bg-primary/10 dark:hover:bg-primary/20 rounded-md p-1.5"
                         value={TokenMenuActions.StopTracking}
-                        onClick={() => removeWatchedAsset(user, token)}
+                        onClick={() => removeWatchedAsset(token)}
                     >
                         <span className="text-primary/60">{TokenMenuActions.StopTracking}</span>
                     </Menu.Item>

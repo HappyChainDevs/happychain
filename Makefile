@@ -415,6 +415,10 @@ monitor-service.build: setup shared.build submitter.build
 	cd apps/monitor-service && make build
 .PHONY: monitor-service.build
 
+sync-service.build: setup shared.build
+	cd apps/sync-service && make build
+.PHONY: sync-service.build
+
 # ==================================================================================================
 ##@ Docs
 

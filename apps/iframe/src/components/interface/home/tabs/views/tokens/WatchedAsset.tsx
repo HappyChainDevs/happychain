@@ -84,7 +84,7 @@ export const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
             </span>
 
             <BalanceDisplay isLoading={isLoading} balance={truncatedBalance} />
-            <RemoveTokenMenu user={userAddress} token={tokenAddress as Address} />
+            <RemoveTokenMenu token={tokenAddress as Address} />
         </div>
     )
 }
