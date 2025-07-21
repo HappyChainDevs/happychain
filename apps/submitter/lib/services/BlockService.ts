@@ -53,11 +53,15 @@ const checkBlock = type({
  */
 export type Block = typeof checkBlock.infer
 
-const TIMEOUT_MSG = "Timed out while waiting for block"
-
 // Note there is an extra block type: `RpcBlock` from Viem representing an raw block from RPC, which we get on
 // our WebSocket subscription. We normalize those to `InputBlock`.
 
+const TIMEOUT_MSG = "Timed out while waiting for block"
+
+/**
+ * This service is represonsible for fetching block information (via subscription or polling depending on the RPC),
+ * and allows other services to subscribe to blocks via {@link #onBlock}.
+ */
 export class BlockService {
     #current?: Block
     #previous?: Block
@@ -83,12 +87,15 @@ export class BlockService {
     /** Call this to unwind the current block subscription and skip to the next client. */
     #skipToNextClient!: RejectType
 
-    /** Timeout for receiving a block. Private so it can be disabled in tests. */
+    /** Timeout for receiving a block. Uses the `private` keyword so it can be disabled in tests. */
     private blockTimeout: Timer | undefined = undefined
 
     // =================================================================================================================
     // PUBLIC METHODS
 
+    /**
+     * Blocks until the block service is properly initialized (after calling {@link #start}.
+     */
     async waitForInitialization(): Promise<void> {
         if (this.#current) return
 
@@ -115,7 +122,11 @@ export class BlockService {
         return this.#current
     }
 
-    /** Register a callback on the current block. */
+    /**
+     * Register a callback to be invoked on new blocks.
+     * The callback is immediately invoked on the current block, unless {@link skipInitial} is provided.
+     * Returns an unsubscribe function.
+     */
     onBlock(callback: (block: Block) => void, skipInitial?: "skipInitial"): () => void {
         this.#callbacks.add(callback)
         if (!skipInitial && this.#current) callback(this.#current)
@@ -136,7 +147,7 @@ export class BlockService {
      * - If there are none, we drop the "no recent failures" requirement.
      */
     async #nextRPC(): Promise<void> {
-        // === Helper function ===
+        // === Helper functions ===
 
         function createClient(url: string, timeout = env.RPC_REQUEST_TIMEOUT): PublicClient {
             const isWs = url.startsWith("ws")
@@ -147,12 +158,13 @@ export class BlockService {
         /** Get latest block from all RPCs. */
         async function pingRpcsForBlock(timeout: number): Promise<PromiseSettledResult<InputBlock>[]> {
             const promises = rpcUrls.map((url) => createClient(url, timeout).getBlock({ includeTransactions: false }))
-            // Note that if a WebSocket RPC is down, some exceptions can escape to the top-level here.
-            // Nothing we can do about it, Viem doesn't catch them. It's benign however.
+            // Note that if a WebSocket RPC is down, some exceptions can escape to the console here.
+            // Nothing we can do about it, Viem doesn't catch them and we can't either (they're in promises), but
+            // it's benign as they are simply logged and do not terminate the process.
             return await Promise.allSettled(promises)
         }
 
-        /** Can be applied to {@link pingRpcsForBlock} result to select successful calls. */
+        /** Can be applied to items of the {@link pingRpcsForBlock} result to select successful calls. */
         function isSuccess(result: PromiseSettledResult<InputBlock>): result is PromiseFulfilledResult<Block> {
             if (result.status !== "fulfilled") return false
             return !(checkBlock(result.value) instanceof ArkErrors)
@@ -161,10 +173,11 @@ export class BlockService {
         // === Find live RPCs ===
 
         if (this.#rpcUrl) {
+            // We had a RPC but we're entering RPC selection, meaning the RPC failed.
             this.#recentlyFailedRpcs.add(this.#rpcUrl)
-            // Don't need to clear. The worse that can happen is it will be removed a bit early
+            // No need to clear the timeout. The worse that can happen is it will be removed a bit early
             // if re-added after the failed set was cleared following a block production stall.
-            // Extremely rare scenario that doesn't break anything. Not worth the extra bookkeeping.
+            // Extremely rare scenario that doesn't jeopardize correctness. Not worth the extra bookkeeping.
             setTimeout(() => this.#recentlyFailedRpcs.delete(this.#rpcUrl), env.RPC_TIMED_OUT_PERIOD)
         }
 
@@ -187,8 +200,8 @@ export class BlockService {
 
         // === Check to see if block production has halted ===
 
-        // Check `this.#client` to avoid waiting & logging an error on initial RPC selection.
         const halted = !rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))
+        // Check `this.#client` to avoid waiting & logging an error on initial RPC selection.
         if (this.#client && halted) {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
@@ -255,7 +268,7 @@ export class BlockService {
     // BLOCK MONITORING
 
     async start(): Promise<void> {
-        // Generic logic — first retry is instant, then `initialRetryDelay` with exponential backoff up
+        // Generic logic: first retry is instant, then `initialRetryDelay` with exponential backoff up
         // to `maxRetryDelay` with a max of `maxAttempts` attempts.
         // However, default values only retries once without delay, otherwise we'd rather move on to another RPC than
         // waste time waiting.
@@ -399,12 +412,12 @@ export class BlockService {
             })
             if (txHashes.length > 0) {
                 rpcBlock.transactions = txHashes
-                // Note that rpcBlock cannot throw if its input is and object.
+                // Note that #handleNewBlock cannot throw if its input is and object.
                 // cast: allows `number` to be null
                 await this.#handleNewBlock(formatBlock(rpcBlock) as Block)
                 return
             }
-            // It may be that the block simplify has no transactions, but out of an abundance of caution, we'll try
+            // It may be that the block simply has no transactions, but out of an abundance of caution, we'll try
             // fetching the block anyway. If there's truly no transactions here, there will be no harm.
         }
 
