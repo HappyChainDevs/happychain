@@ -201,6 +201,7 @@ export class BlockService {
         // === Check to see if block production has halted ===
 
         const halted = !rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))
+        // TODO Is the this.#client check actually necessary?
         // Check `this.#client` to avoid waiting & logging an error on initial RPC selection.
         if (this.#client && halted) {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
@@ -222,6 +223,10 @@ export class BlockService {
                         localMax = r.value
                     }
                 }
+                // TODO: I don't think we need to check .number, and we should only reset if the history does have
+                //       the block!
+                //       This probably does not explain the issues with one correct RPC and a stalled/lagging RPC:
+                //       the current RPC should win the race... unless it flakes on getBlock (which would be unlucky).
                 if (localMax.number && this.#blockHistory.get(localMax.number) !== localMax.hash) {
                     // A re-org might have occured — reset block number and check for forward movement from there.
                     current = localMax
@@ -234,6 +239,10 @@ export class BlockService {
         }
 
         // === Select RPC ===
+
+        // TODO: oops: when selecting the RPC here, we do not ensure that we actually selected a RPC that has made
+        //       forward block progress. This probably explains why in the correct+lagged scenario we were going
+        //       back to the lagged RPC.
 
         // Get most prioritary alive RPC, excluding recently failed ones.
         let index = rpcResults.findIndex((it, i) => isSuccess(it) && !this.#recentlyFailedRpcs.has(rpcUrls[i]))
@@ -249,8 +258,15 @@ export class BlockService {
         // We got a new block in the whole affair, handle it.
         // This is always ok: this is either a more recent block or a re-org occured.
         const newBlock = (rpcResults[index] as PromiseFulfilledResult<Block>).value
+        // TODO: The condition here contradict the comment above: if a re-org occured and the block number went down,
+        //        we do not call handle. Need to check that #handleNewBlock can handle this correctly + that this
+        //        doesn't lead to a duplicate handleNewBlock call (the progress check above should in theory ensure that
+        //        it doesn't, but let's also verify that we can't handle #handleNewBlock form a stray handler).
         if (!this.#current || this.#current.number < newBlock.number) this.#handleNewBlock(newBlock)
     }
+
+    // TODO Verify and update this comment to account for the fact we don't rely on the Viem nonce manager anymore,
+    //      but on our own.
 
     // Note that in the case of re-orgs, we will be missing blocks compared to the "most re-orged"
     // block that we saw. We should handle that but don't sweat too much about it right now. We
