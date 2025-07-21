@@ -549,7 +549,7 @@ export class BlockService {
         // Use a Mutex to avoid backfilling the same range many times.
         return this.#backfillMutex.locked(async () => {
             // It's possible all or part of the range was backfilled while we were waiting.
-            if (this.#current?.number ?? 0n > from) from = this.#current!.number
+            if ((this.#current?.number ?? 0n) > from) from = this.#current!.number
             if (from >= to) return true
 
             blockLogger.info(`Backfilling blocks in [${from}, ${to}] (inclusive).`)
