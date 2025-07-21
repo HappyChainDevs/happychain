@@ -5,6 +5,7 @@ export default defineConfig([
         exports: [".", "./migrate"],
         bunConfig: {
             target: "bun",
+            minify: false,
         },
     },
     {
