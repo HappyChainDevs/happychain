@@ -201,9 +201,7 @@ export class BlockService {
         // === Check to see if block production has halted ===
 
         const halted = !rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))
-        // TODO Is the this.#client check actually necessary?
-        // Check `this.#client` to avoid waiting & logging an error on initial RPC selection.
-        if (this.#client && halted) {
+        if (halted) {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
             blockLogger.error(message)
