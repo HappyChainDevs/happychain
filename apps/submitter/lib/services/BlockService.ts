@@ -147,6 +147,10 @@ export class BlockService {
      * - If there are none, we drop the "no recent failures" requirement.
      */
     async #nextRPC(): Promise<void> {
+        // Current block = most up to date block known.
+        // This might get reset to a block with a lower number if we detect a re-org.
+        let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
+
         // === Helper functions ===
 
         function createClient(url: string, timeout = env.RPC_REQUEST_TIMEOUT): PublicClient {
@@ -168,6 +172,14 @@ export class BlockService {
         function isSuccess(result: PromiseSettledResult<InputBlock>): result is PromiseFulfilledResult<Block> {
             if (result.status !== "fulfilled") return false
             return !(checkBlock(result.value) instanceof ArkErrors)
+        }
+
+        /**
+         * Can be applied to items of the {@link pingRpcsForBlock} result to select calls that are successful
+         * and yield a block whose number exceed the current block.
+         */
+        function isProgress(result: PromiseSettledResult<InputBlock>): result is PromiseFulfilledResult<Block> {
+            return isSuccess(result) && result.value.number > current.number
         }
 
         // === Find live RPCs ===
@@ -200,14 +212,13 @@ export class BlockService {
 
         // === Check to see if block production has halted ===
 
-        const halted = !rpcResults.some((it) => isSuccess(it) && it.value.number > (this.#current?.number ?? 0n))
+        const halted = !rpcResults.some(isProgress)
         if (halted) {
             // This might trigger at the start of testing and is benign, it just means the RPC isn't spun up yet.
             const message = "Block production has halted, waiting for it to resume."
             blockLogger.error(message)
             sendAlert(message, AlertType.BLOCK_PRODUCTION_HALTED)
             const { promise, resolve } = promiseWithResolvers()
-            let current = this.#current ?? { number: 0n, hash: "0x" as Hash }
             const pollingTimer = setInterval(async () => {
                 rpcResults = await pingRpcsForBlock(env.RPC_REQUEST_TIMEOUT)
                 // The block amongst the result with the higher number.
@@ -235,15 +246,11 @@ export class BlockService {
 
         // === Select RPC ===
 
-        // TODO: oops: when selecting the RPC here, we do not ensure that we actually selected a RPC that has made
-        //       forward block progress. This probably explains why in the correct+lagged scenario we were going
-        //       back to the lagged RPC.
-
-        // Get most prioritary alive RPC, excluding recently failed ones.
-        let index = rpcResults.findIndex((it, i) => isSuccess(it) && !this.#recentlyFailedRpcs.has(rpcUrls[i]))
+        // Get most prioritary alive RPC that made progress, excluding recently failed ones.
+        let index = rpcResults.findIndex((it, i) => isProgress(it) && !this.#recentlyFailedRpcs.has(rpcUrls[i]))
         if (index < 0) {
             blockLogger.error("Every alive RPC has failed within the last minute, but some RPCs are live.")
-            index = rpcResults.findIndex(isSuccess) // we know this must be > 0
+            index = rpcResults.findIndex(isProgress) // we know this must be > 0
         }
 
         this.#rpcUrl = rpcUrls[index]
