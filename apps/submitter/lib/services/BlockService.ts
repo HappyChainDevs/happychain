@@ -260,11 +260,7 @@ export class BlockService {
         // We got a new block in the whole affair, handle it.
         // This is always ok: this is either a more recent block or a re-org occured.
         const newBlock = (rpcResults[index] as PromiseFulfilledResult<Block>).value
-        // TODO: The condition here contradict the comment above: if a re-org occured and the block number went down,
-        //        we do not call handle. Need to check that #handleNewBlock can handle this correctly + that this
-        //        doesn't lead to a duplicate handleNewBlock call (the progress check above should in theory ensure that
-        //        it doesn't, but let's also verify that we can't handle #handleNewBlock form a stray handler).
-        if (!this.#current || this.#current.number < newBlock.number) this.#handleNewBlock(newBlock)
+        this.#handleNewBlock(newBlock)
     }
 
     // TODO Verify and update this comment to account for the fact we don't rely on the Viem nonce manager anymore,
