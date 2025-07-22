@@ -221,11 +221,8 @@ export class BlockService {
                         localMax = r.value
                     }
                 }
-                // TODO: I don't think we need to check .number, and we should only reset if the history does have
-                //       the block!
-                //       This probably does not explain the issues with one correct RPC and a stalled/lagging RPC:
-                //       the current RPC should win the race... unless it flakes on getBlock (which would be unlucky).
-                if (localMax.number && this.#blockHistory.get(localMax.number) !== localMax.hash) {
+                const oldBlockHash = this.#blockHistory.get(localMax.number)
+                if (oldBlockHash && oldBlockHash !== localMax.hash) {
                     // A re-org might have occured — reset block number and check for forward movement from there.
                     current = localMax
                 }
