@@ -263,14 +263,11 @@ export class BlockService {
         this.#handleNewBlock(newBlock)
     }
 
-    // TODO Verify and update this comment to account for the fact we don't rely on the Viem nonce manager anymore,
-    //      but on our own.
-
-    // Note that in the case of re-orgs, we will be missing blocks compared to the "most re-orged"
-    // block that we saw. We should handle that but don't sweat too much about it right now. We
-    // haven't really audited the code for re-orgs. In theory, the Viem nonce manager should handle
-    // EVM tx nonces. Boop nonces get a resync via `InvalidNonce`, and the nonce cache expires fast
-    // anyway. We might suffer from stuck transactions in the future (meant for pre-re-org chain).
+    // Note that in the case of re-orgs, we might be missing blocks compared to the "most re-orged" block that we saw.
+    // We should handle that but don't sweat too much about it right now. We haven't really audited the code for
+    // re-orgs. Our nonce manager should handle EVM tx nonces. Boop nonces get a resync via `InvalidNonce`, and the
+    // nonce cache expires fast anyway. We might suffer from stuck transactions in the future (meant for pre-re-org
+    // chain).
     //
     // The most immediate to-do item is to call out the resync system to cancel submit and
     // createAccount transactions, which we need for robustness.
