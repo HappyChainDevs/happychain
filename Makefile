@@ -691,20 +691,33 @@ select-docs-prod:
 	make select-docs url=https://docs.happy.tech posthog=true
 .PHONY: select-docs-prod
 
+# Use the local setup (chain & all services to run locally).
 select-all-local: select-chain-local select-submitter-local select-iframe-local select-auth-local select-docs-local
 .PHONY: select-all-local
 
+# Use the staging setup — this is useful as a base for other rules & for scripts.
 select-all-staging: select-chain-staging select-submitter-staging select-iframe-staging select-auth-staging select-docs-staging
 .PHONY: select-all-staging
 
+# Use the prod setup — this is useful for bundling/publishing packages, and as a base for other rules & for scripts.
 select-all-prod: select-chain-prod select-submitter-prod select-iframe-prod select-auth-prod select-docs-prod
 .PHONY: select-all-prod
 
+# Use the staging setup, but run the iframe locally.
 select-iframe-dev-staging: select-all-staging select-iframe-local
 .PHONY: select-iframe-dev-staging
 
+# Use the prod setup, but run the iframe locally.
 select-iframe-dev-prod: select-all-prod select-iframe-local
 .PHONY: select-iframe-dev-prod
+
+# Use the staging setup, but run the iframe and the submitter locally.
+select-submitter-dev-staging: select-iframe-dev-staging select-submitter-staging
+.PHONY: select-submitter-dev-staging
+
+# Use the prod setup, but run the iframe and submitter locally.
+select-submitter-dev-prod: select-iframe-dev-prod select-submitter-prod
+.PHONY: select-submitter-dev-prod
 
 setup-local-chain: select-chain-local
 	@cd contracts && make anvil-background
