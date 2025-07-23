@@ -1,7 +1,9 @@
 /**
- * Fully generic function type. Any functions can be assigned to `Fn`.
+ * Fully generic function type. Any functions can be assigned to `Fn` and it can be called with any parameters
+ * if the `Args` type parameter is not specified.
  */
-export type Fn<Result = unknown, Args extends never[] = never[]> = (...args: Args) => Result
+// biome-ignore lint/suspicious/noExplicitAny: For both contravariance (assigning to type) and covariance (calling).
+export type Fn<Result = unknown, Args extends any[] = any[]> = (...args: Args) => Result
 
 /** Union between `T` and functions returning `T`. */
 export type Lazy<T> = T extends CallableFunction ? never : T | (() => T)
