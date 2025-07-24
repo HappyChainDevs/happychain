@@ -34,6 +34,7 @@ type SubmitInternalInput = SubmitInput & {
     timeout?: number
     earlyExit?: boolean
     replacedTx?: EvmTxInfo
+    noNonceRetry?: boolean
 }
 
 type SubmitInternalOutput =
@@ -41,7 +42,7 @@ type SubmitInternalOutput =
     | (SubmitError & { evmTxHash?: undefined; receiptPromise?: undefined })
 
 async function submitInternal(input: SubmitInternalInput): Promise<SubmitInternalOutput> {
-    const { entryPoint = deployment.EntryPoint, timeout, earlyExit, replacedTx } = input
+    const { entryPoint = deployment.EntryPoint, timeout, earlyExit, replacedTx, noNonceRetry } = input
     let boop = input.boop
 
     const boopHash = computeHash(boop)
@@ -164,9 +165,13 @@ async function submitInternal(input: SubmitInternalInput): Promise<SubmitInterna
                 const receiptPromise = boopReceiptService.waitForInclusion(args)
                 return { status: Onchain.Success, boopHash, entryPoint, evmTxHash, receiptPromise }
             } catch (error) {
-                if (isNonceTooLowError(error)) evmNonceManager.resyncIfTooLow(accountDeployer.address)
-
-                if ((error as BaseError)?.walk((e) => e instanceof InsufficientFundsError)) {
+                if (isNonceTooLowError(error)) {
+                    evmNonceManager.resyncIfTooLow(accountDeployer.address)
+                    if (!noNonceRetry) {
+                        logger.warn("EVM nonce too low, retrying submit", boopHash)
+                        return await submitInternal({ ...input, noNonceRetry: true })
+                    }
+                } else if ((error as BaseError)?.walk((e) => e instanceof InsufficientFundsError)) {
                     return {
                         status: SubmitterError.UnexpectedError,
                         error: "Submitter failed to pay for the boop.",
