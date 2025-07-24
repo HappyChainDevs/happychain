@@ -5,8 +5,7 @@ import { describe, expect, it } from "bun:test"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { abis, deployment } from "#lib/env"
 import { computeHappyAccountAddress } from "#lib/handlers/createAccount/computeHappyAccountAddress"
-import { publicClient } from "#lib/utils/clients"
-import { createSmartAccount } from "#lib/utils/test"
+import { createSmartAccount, publicClient } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 describe("routes: api/accounts", () => {

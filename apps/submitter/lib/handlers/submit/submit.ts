@@ -12,14 +12,15 @@ import {
     computeHash,
     evmNonceManager,
     findExecutionAccount,
+    walletClient,
 } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type Boop, type EvmTxInfo, Onchain, SubmitterError } from "#lib/types"
 import { encodeBoop, updateBoopFromSimulation } from "#lib/utils/boop"
-import { isNonceTooLowError, walletClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
+import { isNonceTooLowError } from "#lib/utils/viem"
 import type { SubmitError, SubmitInput, SubmitOutput, SubmitSuccess } from "./types"
 
 async function submit(input: SubmitInput): Promise<SubmitOutput> {

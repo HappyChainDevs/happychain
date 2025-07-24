@@ -9,7 +9,7 @@ import {
 } from "viem"
 import { encodePacked, parseAbi } from "viem/utils"
 import { abis, deployment } from "#lib/env"
-import { publicClient } from "#lib/utils/clients"
+import { publicClient } from "#lib/services"
 import { logger } from "#lib/utils/logger"
 
 const initializeAbi = parseAbi(["function initialize(address owner)"])

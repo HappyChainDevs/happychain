@@ -8,8 +8,15 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { env } from "#lib/env"
 import type { SubmitError, SubmitSuccess } from "#lib/handlers/submit"
 import { type Boop, type BoopReceipt, Onchain, SubmitterError } from "#lib/types"
-import { publicClient } from "#lib/utils/clients"
-import { apiClient, assertMintLog, createMintBoop, createSmartAccount, getNonce, signBoop } from "#lib/utils/test"
+import {
+    apiClient,
+    assertMintLog,
+    createMintBoop,
+    createSmartAccount,
+    getNonce,
+    publicClient,
+    signBoop,
+} from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = (tx: Boop) => signBoop(testAccount, tx)

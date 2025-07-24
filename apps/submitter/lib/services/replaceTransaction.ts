@@ -4,12 +4,12 @@ import { env } from "#lib/env"
 import { blockService, evmNonceManager } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
 import type { EvmTxInfo } from "#lib/types"
-import { isNonceTooLowError, publicClient, walletClient } from "#lib/utils/clients"
 import { getFees, getLatestBaseFee } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
+import { isNonceTooLowError } from "#lib/utils/viem"
+import { publicClient, walletClient } from "./clients"
 
-// TODO: use this in BoopReceiptService
-// TODO: can we unify this with resync, with a function that operates on [low, high] nonce range?
+// TODO: can we unify this with resync.ts, with a function that operates on [low, high] nonce range?
 //       could we then also attempt to coalesce adjacent nonce transaction cancellations?
 
 /**

@@ -9,9 +9,9 @@ import {
 } from "@happy.tech/common"
 import type { GetTransactionReceiptErrorType, TransactionReceipt } from "viem"
 import { env } from "#lib/env"
-import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
 import type { BlockService } from "./BlockService"
+import { publicClient } from "./clients"
 
 // biome-ignore format: pretty
 export type EvmReceiptResult = UnionFill<

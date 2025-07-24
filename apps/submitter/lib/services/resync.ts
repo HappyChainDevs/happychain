@@ -3,9 +3,9 @@ import type { Account, Hash } from "viem"
 import { env } from "#lib/env"
 import { blockService } from "#lib/services"
 import { traceFunction } from "#lib/telemetry/traces"
-import { publicClient, walletClient } from "#lib/utils/clients"
 import { getFees, getLatestBaseFee } from "#lib/utils/gas"
 import { resyncLogger } from "#lib/utils/logger"
+import { publicClient, walletClient } from "./clients"
 import { accountDeployer, executorAccounts } from "./evmAccounts"
 
 // TODO Most of this is based upon the incorrect assumption that `getBlock({ block: "pending" }) would return

@@ -1,17 +1,31 @@
+import { abis, deployment, env } from "#lib/env"
+import { type PublicClient, type WalletClient, chain, rpcUrls } from "#lib/services/clients"
+import { findExecutionAccount } from "#lib/services/evmAccounts"
+
 import { expect } from "bun:test"
 import type { Address } from "@happy.tech/common"
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
-import type { PrivateKeyAccount } from "viem"
-import { decodeEventLog, zeroAddress } from "viem"
+import {
+    http,
+    type PrivateKeyAccount,
+    createPublicClient,
+    createWalletClient,
+    decodeEventLog,
+    webSocket,
+    zeroAddress,
+} from "viem"
 import { encodeFunctionData, parseEther } from "viem/utils"
-import { abis, deployment, env } from "#lib/env"
-import type { Boop, BoopReceipt } from "#lib/types"
-import { computeBoopHash } from "#lib/utils/boop"
-import { publicClient, walletClient } from "#lib/utils/clients"
-
 // no barrel import: don't start service
 import { EvmNonceManager } from "#lib/services/EvmNonceManager"
-import { findExecutionAccount } from "#lib/services/evmAccounts"
+import type { Boop, BoopReceipt } from "#lib/types"
+import { computeBoopHash } from "#lib/utils/boop"
+
+// Use bespoke clients to avoid getting the test logic tangled with RPC selection.
+// If we start testing RPC selection, we should add a TEST_RPC variable to further isolate.
+
+export const transport = rpcUrls[0].startsWith("http") ? http(rpcUrls[0]) : webSocket(rpcUrls[0])
+export const publicClient: PublicClient = createPublicClient({ chain, transport })
+export const walletClient: WalletClient = createWalletClient({ chain, transport })
 
 /**
  * Fetches the nonce using the configured deploy entryPoint
