@@ -1,9 +1,10 @@
 import { ifDef } from "@happy.tech/common"
 import { type TestClient, createTestClient } from "viem"
 import { env } from "#lib/env"
-import { config } from "#lib/utils/clients"
+import { chain } from "#lib/services/clients"
+import { transport } from "./helpers"
 
-export const anvilClient: TestClient = createTestClient({ ...config, mode: "anvil" })
+export const anvilClient: TestClient = createTestClient({ chain, transport, mode: "anvil" })
 
 export const USING_ANVIL = true // for now, only Anvil is supported
 const BLOCK_TIME = ifDef(process.env.ANVIL_BLOCK_TIME, Number) ?? 2

@@ -1,19 +1,17 @@
 import { type Address, type Optional, assertDef } from "@happy.tech/common"
-import { createWalletClient } from "viem"
 import { abis, deployment, env } from "#lib/env"
 import { outputForGenericError } from "#lib/handlers/errors"
-import { evmNonceManager, evmReceiptService, replaceTransaction } from "#lib/services"
+import { evmNonceManager, evmReceiptService, publicClient, replaceTransaction, walletClient } from "#lib/services"
 import { accountDeployer } from "#lib/services/evmAccounts"
 import { traceFunction } from "#lib/telemetry/traces"
 import { type EvmTxInfo, SubmitterError } from "#lib/types"
-import { config, isNonceTooLowError, publicClient } from "#lib/utils/clients"
 import { getFees } from "#lib/utils/gas"
 import { logger } from "#lib/utils/logger"
 import { decodeEvent } from "#lib/utils/parsing"
+import { isNonceTooLowError } from "#lib/utils/viem"
 import { computeHappyAccountAddress } from "./computeHappyAccountAddress"
 import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from "./types"
 
-const walletClient = createWalletClient({ ...config, account: accountDeployer })
 const WaitForReceiptError = Symbol("WaitForReceiptError")
 
 async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {

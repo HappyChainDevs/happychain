@@ -18,9 +18,10 @@ import { AlertType } from "#lib/policies/alerting"
 import { currentBlockGauge } from "#lib/telemetry/metrics"
 import { LruCache } from "#lib/utils/LruCache"
 import { recoverAlert, sendAlert } from "#lib/utils/alert"
-import { chain, publicClient, rpcUrls, stringify } from "#lib/utils/clients"
 import { blockLogger } from "#lib/utils/logger"
 import { Bytes } from "#lib/utils/validation/ark"
+import { stringify } from "#lib/utils/viem"
+import { chain, publicClient, rpcUrls } from "./clients"
 
 /**
  * Type of block we get from Viem's `getBlock` — made extra permissive for safety,
@@ -65,8 +66,6 @@ const TIMEOUT_MSG = "Timed out while waiting for block"
 export class BlockService {
     #current?: Block
     #previous?: Block
-    #client!: PublicClient
-    #backfillMutex = new Mutex()
     #callbacks: Set<(block: Block) => void | Promise<void>> = new Set()
 
     /** Zero-index attempt number for the current client. */
@@ -74,6 +73,9 @@ export class BlockService {
 
     /** Current RPC URL (a value from {@link rpcUrls}) */
     #rpcUrl = ""
+
+    /** RPC URls besides {@link #rpcUrl} that are live and keeping up with blocks, as of the latest RPC selection. */
+    #otherLiveRpcUrls: string[] = rpcUrls
 
     /** Set of RPCs that failed in the last minute, we will prioritize selecting a RPC not in this set if possible. */
     #recentlyFailedRpcs = new Set<string>()
@@ -117,6 +119,14 @@ export class BlockService {
         }
     }
 
+    getRpcUrl(): string {
+        return this.#rpcUrl
+    }
+
+    getOtherLiveRpcUrls(): string[] {
+        return this.#otherLiveRpcUrls
+    }
+
     getCurrentBlock(): Block {
         if (!this.#current) throw Error("BlockService not initialized!")
         return this.#current
@@ -137,7 +147,7 @@ export class BlockService {
     // RPC SELECTION
 
     /**
-     * Select a new RPC service and sets {@link this.#client} to a client for it.
+     * Select a new RPC service and sets {@link this.#rpcUrl}.
      *
      * Sketch of the process:
      * - Ping all RPCs for latest block to determine who is alive.
@@ -254,7 +264,9 @@ export class BlockService {
         }
 
         this.#rpcUrl = rpcUrls[index]
-        this.#client = createClient(this.#rpcUrl)
+        this.#otherLiveRpcUrls = rpcResults
+            .map((it, i) => (isProgress(it) && rpcUrls[i] !== this.#rpcUrl ? rpcUrls[i] : null))
+            .filter((i) => i !== null)
         this.#attempt = 0
 
         // We got a new block in the whole affair, handle it.
@@ -293,13 +305,13 @@ export class BlockService {
         while (true) {
             // 1. Initialize next client if needed, or wait until next attempt.
             init: try {
-                if (!this.#client /* very first init */ || skipToNextClient) {
+                if (!this.#rpcUrl /* very first init */ || skipToNextClient) {
                     await this.#nextRPC()
                     break init
                 }
 
                 if (this.#attempt >= maxAttempts) {
-                    blockLogger.warn(`Max retries (${maxAttempts}) reached for ${this.#client.name}.`)
+                    blockLogger.warn(`Max retries (${maxAttempts}) reached for ${this.#rpcUrl}.`)
                     await this.#nextRPC()
                     break init
                 }
@@ -307,7 +319,7 @@ export class BlockService {
                 if (this.#attempt > 1) {
                     // We want first retry (attempt = 1) to be instant.
                     const delay = Math.min(baseDelay * 2 ** (this.#attempt - 2), maxDelay)
-                    blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#client.name}`)
+                    blockLogger.info(`Waiting ${delay / 1000} seconds to retry with ${this.#rpcUrl}`)
                     await sleep(delay)
                 }
             } catch (e) {
@@ -316,8 +328,8 @@ export class BlockService {
                 continue
             }
 
-            const client = this.#client.name
-            blockLogger.info(`Starting block watcher with ${client} (Attempt ${this.#attempt + 1}/${maxAttempts}).`)
+            const attemptString = `Attempt ${this.#attempt + 1}/${maxAttempts}`
+            blockLogger.info(`Starting block watcher with ${this.#rpcUrl} (${attemptString})`)
 
             // 2. Setup subscription
             const { promise, reject } = promiseWithResolvers<void>()
@@ -331,9 +343,9 @@ export class BlockService {
 
             this.#startBlockTimeout()
 
-            if (this.#client.transport.type === "webSocket") {
+            if (publicClient.transport.type === "webSocket") {
                 try {
-                    ;({ unsubscribe } = await this.#client.transport.subscribe({
+                    ;({ unsubscribe } = await publicClient.transport.subscribe({
                         params: ["newHeads"],
                         // Type is unchecked, we're being conservative with what we receive.
                         onData: (data?: { result?: Partial<RpcBlock> }) => {
@@ -358,7 +370,7 @@ export class BlockService {
             } else {
                 pollingTimer = setInterval(async () => {
                     // biome-ignore format: terse
-                    try { void this.#handleNewBlock(await this.#client.getBlock({ includeTransactions: false })) }
+                    try { void this.#handleNewBlock(await publicClient.getBlock({ includeTransactions: false })) }
                     catch (e) { reject(e) }
                 }, pollingInterval)
             }
@@ -367,7 +379,7 @@ export class BlockService {
             // it because we need to control the retry logic ourselves to implement RPC fallback
             // for subscriptions, as well as resubscriptions — two things Viem doesn't handle.
 
-            // unwatch = this.#client.watchBlocks({
+            // unwatch = publicClient.watchBlocks({
             //     pollingInterval,
             //     includeTransactions: false,
             //     emitOnBegin: false,
@@ -384,8 +396,8 @@ export class BlockService {
                 clearTimeout(this.blockTimeout)
                 // This happens more than the rest, and if the timeout persist, there will be plenty of other logs
                 // for us to notice as the RPC will rotate.
-                if (e === TIMEOUT_MSG) blockLogger.info(TIMEOUT_MSG, client)
-                else blockLogger.error("Block watcher error", client, stringify(e))
+                if (e === TIMEOUT_MSG) blockLogger.info(TIMEOUT_MSG, this.#rpcUrl)
+                else blockLogger.error("Block watcher error", this.#rpcUrl, stringify(e))
                 ++this.#attempt
             }
         }
@@ -436,7 +448,7 @@ export class BlockService {
         for (let i = 1; i <= 3; ++i) {
             try {
                 // `includeTransactions: false` still gives us a list of transaction hashes
-                block = await this.#client.getBlock({ blockNumber, includeTransactions: false })
+                block = await publicClient.getBlock({ blockNumber, includeTransactions: false })
                 break
             } catch {
                 await sleep(env.LINEAR_RETRY_DELAY * i)
@@ -462,7 +474,7 @@ export class BlockService {
         // Check for duplicates
         if (block.hash === this.#current?.hash) {
             // Don't warn when polling, since this is expected to happen all the time.
-            if (this.#client.transport.type === "webSocket")
+            if (publicClient.transport.type === "webSocket")
                 blockLogger.warn(`Received duplicate block ${block.number}, skipping.`)
             return false
         }
@@ -507,7 +519,7 @@ export class BlockService {
         }
 
         if (this.#attempt > 0) {
-            blockLogger.info(`Retrieved block ${block.number} with ${this.#client.name}. Resetting attempt count.`)
+            blockLogger.info(`Retrieved block ${block.number} with ${this.#rpcUrl}. Resetting attempt count.`)
             this.#attempt = 0
         }
 
@@ -532,6 +544,8 @@ export class BlockService {
         return true
     }
 
+    #backfillMutex = new Mutex()
+
     /**
      * Backfills blocks with numbers in [from, to] (inclusive).
      * Returns true iff the backfill is successful for the entire range.
@@ -551,7 +565,7 @@ export class BlockService {
 
             const promises = []
             for (let blockNumber = from; blockNumber <= to; blockNumber++) {
-                promises.push(this.#client.getBlock({ blockNumber, includeTransactions: false }))
+                promises.push(publicClient.getBlock({ blockNumber, includeTransactions: false }))
             }
 
             for (let blockNumber = from; blockNumber <= to; blockNumber++) {

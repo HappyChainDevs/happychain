@@ -10,9 +10,9 @@ import { env } from "#lib/env"
 import type { ExecuteError, ExecuteSuccess } from "#lib/handlers/execute"
 import type { SimulateError } from "#lib/handlers/simulate"
 import { blockService, boopReceiptService } from "#lib/services"
+import { chain } from "#lib/services/clients"
 import { type Boop, Onchain, SubmitterError } from "#lib/types"
 import { computeBoopHash } from "#lib/utils/boop"
-import { config } from "#lib/utils/clients"
 import {
     apiClient,
     assertMintLog,
@@ -23,10 +23,11 @@ import {
     getNonce,
     mockDeployments,
     signBoop,
+    transport,
     withInterval,
 } from "#lib/utils/test"
 
-const testClient = createTestClient({ ...config, mode: "anvil" })
+const testClient = createTestClient({ chain, transport, mode: "anvil" })
 const testAccount = privateKeyToAccount(generatePrivateKey())
 const sign = async (tx: Boop) => await signBoop(testAccount, tx)
 

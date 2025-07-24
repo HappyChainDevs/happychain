@@ -1,7 +1,7 @@
 import { type Address, HappyMap, Mutex, tryCatchAsync } from "@happy.tech/common"
 import type { GetTransactionCountErrorType } from "viem"
-import { publicClient } from "#lib/utils/clients"
 import { logger } from "#lib/utils/logger"
+import { publicClient } from "./clients"
 
 type _Import = GetTransactionCountErrorType
 
