@@ -14,7 +14,10 @@ import { CreateAccount, type CreateAccountInput, type CreateAccountOutput } from
 
 const WaitForReceiptError = Symbol("WaitForReceiptError")
 
-async function createAccount({ salt, owner }: CreateAccountInput): Promise<CreateAccountOutput> {
+async function createAccount(
+    { salt, owner }: CreateAccountInput,
+    noNonceRetry?: "noNonceRetry",
+): Promise<CreateAccountOutput> {
     assertDef(salt) // from validator
     let evmTxInfo: Optional<EvmTxInfo, "evmTxHash"> | undefined
     const predictedAddress = computeHappyAccountAddress(salt, owner)
@@ -75,7 +78,14 @@ async function createAccount({ salt, owner }: CreateAccountInput): Promise<Creat
         logger.trace("Successfully created account", address, owner, salt)
         return { status: CreateAccount.Success, owner, salt, address }
     } catch (error) {
-        if (isNonceTooLowError(error)) evmNonceManager.resyncIfTooLow(accountDeployer.address)
+        if (isNonceTooLowError(error)) {
+            evmNonceManager.resyncIfTooLow(accountDeployer.address)
+            if (!noNonceRetry) {
+                logger.warn("EVM nonce too low, retrying account creation", { salt, owner })
+                return await createAccount({ salt, owner }, "noNonceRetry")
+            }
+            return { ...outputForGenericError(error), owner, salt }
+        }
 
         if (evmTxInfo) {
             // The nonce has been consumed. A transaction must occur with that nonce because other other transactions
