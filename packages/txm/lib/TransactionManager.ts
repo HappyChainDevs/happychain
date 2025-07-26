@@ -252,6 +252,12 @@ export type TransactionManagerConfig = {
          * Defaults to a console span exporter.
          */
         spanExporter?: SpanExporter
+
+        /**
+         * The service name to use for the traces.
+         * Defaults to "txm".
+         */
+        serviceName?: string
     }
 }
 
@@ -307,6 +313,7 @@ export class TransactionManager {
             userMetricReader: _config.metrics?.metricReader,
             tracesActive: _config.traces?.active ?? false,
             userTraceExporter: _config.traces?.spanExporter,
+            serviceName: _config.traces?.serviceName,
         })
 
         this.collectors = []

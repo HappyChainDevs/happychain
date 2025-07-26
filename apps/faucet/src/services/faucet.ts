@@ -1,5 +1,6 @@
 import type { Address } from "@happy.tech/common"
 import { TransactionManager, TransactionStatus } from "@happy.tech/txm"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 import { type Result, err, ok } from "neverthrow"
 import { env } from "../env"
 import { FaucetRateLimitError } from "../errors"
@@ -16,6 +17,15 @@ export class FaucetService {
             chainId: env.CHAIN_ID,
             blockTime: env.BLOCK_TIME,
             privateKey: env.PRIVATE_KEY,
+            traces: {
+                active: true,
+                spanExporter: env.OTEL_EXPORTER_OTLP_ENDPOINT
+                    ? new OTLPTraceExporter({
+                          url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+                      })
+                    : undefined,
+                serviceName: "faucet",
+            },
         })
         this.faucetUsageRepository = new FaucetUsageRepository()
     }
@@ -39,9 +49,6 @@ export class FaucetService {
             }
         }
 
-        const faucetUsage = FaucetUsage.create(address)
-        await this.faucetUsageRepository.save(faucetUsage)
-
         const tx = await this.txm.createTransaction({
             address,
             value: env.TOKEN_AMOUNT,
@@ -59,6 +66,9 @@ export class FaucetService {
         if (result.value.status !== TransactionStatus.Success) {
             return err(new Error("Transaction failed"))
         }
+
+        const faucetUsage = FaucetUsage.create(address)
+        await this.faucetUsageRepository.save(faucetUsage)
 
         return ok(undefined)
     }
