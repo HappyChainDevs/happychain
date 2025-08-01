@@ -30,6 +30,7 @@ export class FundMonitor {
     private async onBlock(): Promise<void> {
         for (const address of env.MONITOR_ADDRESSES) {
             const balance = await this.monitorService.viemClient.getBalance({ address })
+            logger.info(`Received ${address} balance: ${balance}`)
 
             if (balance <= env.FUND_THRESHOLD) {
                 logger.info("Account has less than threshold balance", { address, balance })
