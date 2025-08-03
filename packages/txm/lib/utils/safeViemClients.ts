@@ -1,6 +1,7 @@
 import { bigIntReplacer, unknownToError } from "@happy.tech/common"
+import { isNullish } from "@happy.tech/common"
 import type { Counter, Histogram, Tracer } from "@opentelemetry/api"
-import { ResultAsync } from "neverthrow"
+import { ResultAsync, errAsync, okAsync } from "neverthrow"
 import type {
     Account,
     Chain,
@@ -133,7 +134,8 @@ export function convertToSafeViemPublicClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.estimateGas(...args), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "estimateGas" })
@@ -141,7 +143,6 @@ export function convertToSafeViemPublicClient(
                     result: JSON.stringify(result, bigIntReplacer),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -159,7 +160,8 @@ export function convertToSafeViemPublicClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.getTransactionReceipt(...args), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionReceipt" })
@@ -167,7 +169,6 @@ export function convertToSafeViemPublicClient(
                     result: JSON.stringify(result, bigIntReplacer),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -191,6 +192,7 @@ export function convertToSafeViemPublicClient(
             }),
             unknownToError,
         )
+            .andThen(errorOnNullish)
             .map((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
@@ -215,7 +217,8 @@ export function convertToSafeViemPublicClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.getChainId(), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getChainId" })
@@ -223,7 +226,6 @@ export function convertToSafeViemPublicClient(
                     result: result.toString(),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -241,7 +243,8 @@ export function convertToSafeViemPublicClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.getTransactionCount(...args), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionCount" })
@@ -249,7 +252,6 @@ export function convertToSafeViemPublicClient(
                     result: result.toString(),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -267,7 +269,8 @@ export function convertToSafeViemPublicClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.getFeeHistory(...args), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getFeeHistory" })
@@ -275,7 +278,6 @@ export function convertToSafeViemPublicClient(
                     result: JSON.stringify(result, bigIntReplacer),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -322,7 +324,8 @@ export function convertToSafeViemWalletClient(
         const startTime = Date.now()
 
         return ResultAsync.fromPromise(client.sendRawTransaction(...args), unknownToError)
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "sendRawTransaction" })
@@ -330,7 +333,6 @@ export function convertToSafeViemWalletClient(
                     result: result.toString(),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -365,7 +367,8 @@ export function convertToSafeViemWalletClient(
                 "A viem update probably change the internal signing API.");
             return client.signTransaction(args)
         })()
-            .map((result) => {
+            .andThen(errorOnNullish)
+            .andTee((result) => {
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "signTransaction" })
@@ -373,7 +376,6 @@ export function convertToSafeViemWalletClient(
                     result: JSON.stringify(result, bigIntReplacer),
                 })
                 span?.end()
-                return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
@@ -386,4 +388,15 @@ export function convertToSafeViemWalletClient(
     }
 
     return safeClient
+}
+
+class NullishResultError extends Error {}
+
+// Note that undefined error results are not hypothetical: we have observed them with our ProxyServer testing util when
+// the connection is shut down. This should now never occurs, but we used ProxyServer shut down the connection when
+// instructed to not answer — now we wait for 1 minute (but then shut down the connection). Viem just doesn't seem to
+// handle this case gracefully?
+
+function errorOnNullish<T>(result: T): ResultAsync<T, NullishResultError> {
+    return isNullish(result) ? errAsync(new NullishResultError("nullish result")) : okAsync(result)
 }
