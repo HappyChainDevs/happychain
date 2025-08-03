@@ -3,7 +3,7 @@ import type { UUID } from "@happy.tech/common"
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
-import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
+import { NotFinalizedStatuses, Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
 import { TxmMetrics } from "./telemetry/metrics"
@@ -42,9 +42,11 @@ export class TransactionRepository {
         }
     }
 
-    @TraceMethod("txm.transaction-repository.get-not-finalized-transactions-older-than")
-    getNotFinalizedTransactionsOlderThan(blockNumber: bigint): Transaction[] {
-        return this.notFinalizedTransactions.filter((t) => t.collectionBlock && t.collectionBlock < blockNumber)
+    @TraceMethod("txm.transaction-repository.get-in-flight-transactions-older-than")
+    getInFlightTransactionsOlderThan(blockNumber: bigint): Transaction[] {
+        return this.notFinalizedTransactions.filter(
+            (t) => t.status !== TransactionStatus.NotAttempted && t.collectionBlock! < blockNumber,
+        )
     }
 
     @TraceMethod("txm.transaction-repository.get-transaction")
