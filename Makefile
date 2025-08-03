@@ -136,7 +136,7 @@ nuke: clean ## Removes build artifacts and dependencies
 	$(MAKE) remove-modules
 .PHONY: nuke
 
-test: sdk.test iframe.test ## Run tests
+test: sdk.test iframe.test txm.test ## Run tests
 .PHONY: test
 
 test.all: test contracts.test
@@ -266,16 +266,20 @@ sdk.test:
 	$(call forall_make , $(SDK_PKGS) , test)
 .PHONY: sdk.test
 
-sdk.check:
-	$(call forall_make , $(SDK_PKGS) , check)
-.PHONY: sdk.check
-
 iframe.test:
 	$(call forall_make , $(IFRAME_PKGS) , test)
 .PHONY: iframe.test
 
+txm.test:
+	cd packages/txm && make test
+.PHONY: iframe.test
+
 # ==================================================================================================
 # FORMATTING
+
+sdk.check:
+	$(call forall_make , $(SDK_PKGS) , check)
+.PHONY: sdk.check
 
 iframe.check:
 	$(call forall_make , $(IFRAME_PKGS) , check)
