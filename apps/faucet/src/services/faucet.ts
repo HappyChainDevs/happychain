@@ -35,6 +35,13 @@ export class FaucetService {
     }
 
     async sendTokens(address: Address): Promise<Result<undefined, Error>> {
+        // TODO faucet is being drained by attackers, temporarily suspend
+        if (address !== "0x37b33141735Fa526759E9bE4AfAbbE3803f7FA22") {
+            const msg =
+                "Faucet temporarily out of commission — you don't need testnet tokens to do anything anyway, it's all sponsored!"
+            return err(Error(msg))
+        }
+
         const faucetUsageResult = await this.faucetUsageRepository.findAllByAddress(address)
         if (faucetUsageResult.isErr()) {
             return err(faucetUsageResult.error)
