@@ -1,6 +1,6 @@
 import type { Server } from "node:http"
 import type { Http2SecureServer, Http2Server } from "node:http2"
-import { type Logger, type TaggedLogger, stringify } from "@happy.tech/common"
+import { type Logger, type TaggedLogger, sleep, stringify } from "@happy.tech/common"
 import { waitForCondition } from "@happy.tech/wallet-common"
 import { serve } from "@hono/node-server"
 import { createNodeWebSocket } from "@hono/node-ws"
@@ -185,7 +185,20 @@ export class ProxyServer {
             const body = await c.req.json()
             const response = this.#getNextBehavior(body.method)
 
-            if (response === ProxyBehavior.NotAnswer) return
+            if (response === ProxyBehavior.NotAnswer) {
+                // There is no way to keep the connection hanging after returning, so the best we can do is sleep a
+                // really long time that should exceed all timeouts.
+                // TODO Commented out because the TXM test suite just doesn't handle this correctly at the moment.
+                //      This causes the liveness monitor to go off the rails, etc...
+                // await sleep(60_000)
+
+                // Mark context as handled to prevent Hono finalization warning.
+                c.finalized = true
+                // Returning here will shut down the connection without sending an answer — this causes Viem to
+                // seemingly return undefined results (??).
+                // TODO add connection shutdown as its own behaviour
+                return
+            }
             if (response === ProxyBehavior.Fail) return c.json({ error: "Proxy error" }, 500)
 
             // ProxyBehavior.forward
