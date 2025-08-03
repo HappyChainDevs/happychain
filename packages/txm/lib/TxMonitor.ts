@@ -81,6 +81,7 @@ export class TxMonitor {
     @TraceMethod("txm.tx-monitor.handle-new-block")
     private async handleNewBlock(block: LatestBlock) {
         const span = trace.getSpan(context.active())!
+        const txRepository = this.transactionManager.transactionRepository
 
         span.addEvent("txm.tx-monitor.handle-new-block.started", {
             blockNumber: Number(block.number),
@@ -93,9 +94,7 @@ export class TxMonitor {
             return
         }
 
-        const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
-            block.number,
-        )
+        const transactions = txRepository.getInFlightTransactionsOlderThan(block.number)
 
         for (const transaction of transactions) {
             span.addEvent("txm.tx-monitor.handle-new-block.monitoring-transaction", {
@@ -228,10 +227,7 @@ export class TxMonitor {
 
         await Promise.all(promises)
 
-        const result = await ResultAsync.fromPromise(
-            this.transactionManager.transactionRepository.saveTransactions(transactions),
-            unknownToError,
-        )
+        const result = await ResultAsync.fromPromise(txRepository.saveTransactions(transactions), unknownToError)
 
         if (result.isErr()) {
             logger.error("Error flushing transactions in onNewBlock")
@@ -370,17 +366,6 @@ export class TxMonitor {
 
         if (transaction.isExpired(block, this.transactionManager.blockTime)) {
             return transaction.changeStatus(TransactionStatus.Expired)
-        }
-
-        if (transaction.collectionBlock && transaction.collectionBlock > block.number - 5n) {
-            // Skip transactions collected in the last 5 blocks to prevent race conditions between
-            // the transaction collector and monitor processing the same transaction simultaneously
-            span.addEvent("txm.tx-monitor.handle-not-attempted-transaction.skip-transaction", {
-                transactionIntentId: transaction.intentId,
-                collectionBlock: Number(transaction.collectionBlock),
-                blockNumber: Number(block.number),
-            })
-            return
         }
 
         const nonce = this.transactionManager.nonceManager.requestNonce()

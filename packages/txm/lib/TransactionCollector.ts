@@ -95,7 +95,7 @@ export class TransactionCollector {
                 })
 
                 if (transaction.status === TransactionStatus.Interrupted) {
-                    transaction.changeStatus(TransactionStatus.Pending)
+                    transaction.changeStatus(TransactionStatus.NotAttempted)
                 }
 
                 const submissionResult = await this.txmgr.transactionSubmitter.submitNewAttempt(transaction, {
@@ -104,6 +104,9 @@ export class TransactionCollector {
                     maxFeePerGas,
                     maxPriorityFeePerGas,
                 })
+
+                // Only after submitting the initial attempt to avoid concurrent attempts here & in the TxMonitor.
+                transaction.changeStatus(TransactionStatus.Pending)
 
                 if (submissionResult.isErr()) {
                     eventBus.emit(Topics.TransactionSubmissionFailed, {

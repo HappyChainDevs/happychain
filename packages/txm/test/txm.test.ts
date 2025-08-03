@@ -220,7 +220,7 @@ test("TransactionSubmissionFailed hook works correctly", async () => {
 
     const cleanHook = await txm.addHook(TxmHookType.TransactionSubmissionFailed, (transactionInHook) => {
         hookTriggered = true
-        expect(transactionInHook.status).toBe(TransactionStatus.Pending)
+        expect(transactionInHook.status).toBe(TransactionStatus.NotAttempted)
         expect(transactionInHook.intentId).toBe(transaction.intentId)
     })
 
@@ -260,7 +260,7 @@ test("TransactionSaveFailed hook works correctly", async () => {
 
     const cleanHook = await txm.addHook(TxmHookType.TransactionSaveFailed, (transactionInHook) => {
         hookTriggered = true
-        expect(transactionInHook.status).toBe(TransactionStatus.Pending)
+        expect(transactionInHook.status).toBe(TransactionStatus.NotAttempted)
         expect(transactionInHook.intentId).toBe(transaction.intentId)
     })
 

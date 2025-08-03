@@ -13,7 +13,12 @@ import { TraceMethod } from "./telemetry/traces"
 
 export enum TransactionStatus {
     /**
-     * Default state for new transaction: the transaction is awaiting processing by TXM or has been submitted in the mempool and is waiting to be included in a block.
+     * Default state for new transaction: we're awaiting submission of the first attempt for the transaction.
+     */
+    NotAttempted = "NotAttempted",
+    /**
+     * At least one attempt to submit the transaction has been made — it might have hit the mempool and waiting for
+     * inclusion in a block, or it might have failed before that.
      */
     Pending = "Pending",
     /**
@@ -62,7 +67,11 @@ export enum TransactionCallDataFormat {
     Function = "Function",
 }
 
-export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
+export const NotFinalizedStatuses = [
+    TransactionStatus.NotAttempted,
+    TransactionStatus.Pending,
+    TransactionStatus.Cancelling,
+]
 
 interface TransactionConstructorBaseConfig {
     /**
@@ -181,7 +190,7 @@ export class Transaction {
         this.address = config.address
         this.value = config.value ?? 0n
         this.deadline = config.deadline
-        this.status = config.status ?? TransactionStatus.Pending
+        this.status = config.status ?? TransactionStatus.NotAttempted
         this.attempts = config.attempts ?? []
         this.collectionBlock = config.collectionBlock
         this.createdAt = config.createdAt ?? new Date()
