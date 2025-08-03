@@ -8,12 +8,12 @@
     "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "default": "./dist/index.es.js",
-            "types": "./dist/index.es.d.ts"
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
         },
         "./migrate": {
-            "default": "./dist/migrate.es.js",
-            "types": "./dist/migrate.es.d.ts"
+            "types": "./dist/migrate.es.d.ts",
+            "default": "./dist/migrate.es.js"
         }
     },
     "dependencies": {
