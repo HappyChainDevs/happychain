@@ -32,6 +32,10 @@ import { deployMockContracts } from "./utils/contracts"
 import { assertIsDefined, assertIsOk, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
 
+// Logs are disabled by default, uncomment for log info.
+// import { logger } from "../lib/utils/logger"
+// logger.setLogLevel(LogLevel.INFO)
+
 const retryManager = new TestRetryManager()
 
 const txmConfig: TransactionManagerConfig = {
@@ -395,6 +399,19 @@ test("Transaction retried", async () => {
     ).rejects.toThrow()
 
     expect(transactionPending.status).toBe(TransactionStatus.Pending)
+
+    // TODO If we fix ProxyServer to hang on ProxyBehaviour.NotAnswer, the previous line needs to be replaced by the
+    //      code below. Other tests also need to be fixed, I only attempted to fix this one and gave up halfway,
+    //      as this isn't really a priority.
+
+    // // Will still be NotAttempted as the submit call hasn't timed out yet.
+    // expect(transactionPending.status).toBe(TransactionStatus.NotAttempted)
+    // // Necessary so that the liveness monitor doesn't get tripped up.
+    // const interval = setInterval(() => {
+    //     mineBlock()
+    // }, 2000)
+    // await sleep(8_000) // ensures the initial attempt times out & RPC recovers healthy status
+    // clearInterval(interval)
 
     await mineBlock()
 
