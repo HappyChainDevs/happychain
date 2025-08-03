@@ -200,9 +200,10 @@ test("onTransactionStatusChanged hook works correctly", async () => {
 
     transactionQueue.push(transaction)
 
+    let counter = 0
     const cleanHook = await txm.addHook(TxmHookType.TransactionStatusChanged, (transactionInHook) => {
         hookTriggered = true
-        expect(transactionInHook.status).toBe(TransactionStatus.Success)
+        expect(transactionInHook.status).toBe(counter++ === 0 ? TransactionStatus.Pending : TransactionStatus.Success)
         expect(transactionInHook.intentId).toBe(transaction.intentId)
     })
 
@@ -220,7 +221,7 @@ test("TransactionSubmissionFailed hook works correctly", async () => {
 
     const cleanHook = await txm.addHook(TxmHookType.TransactionSubmissionFailed, (transactionInHook) => {
         hookTriggered = true
-        expect(transactionInHook.status).toBe(TransactionStatus.NotAttempted)
+        expect(transactionInHook.status).toBe(TransactionStatus.Pending)
         expect(transactionInHook.intentId).toBe(transaction.intentId)
     })
 
