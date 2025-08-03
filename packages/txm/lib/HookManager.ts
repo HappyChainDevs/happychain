@@ -4,6 +4,15 @@ import type { Transaction } from "./Transaction.js"
 import type { AttemptSubmissionErrorCause } from "./TransactionSubmitter"
 import { TraceMethod } from "./telemetry/traces"
 
+// TODO
+//
+// TransactionSubmissionFailed is weird: it only triggers when the first attempt fails to submit in the Tx, but the
+// TxMonitor will still make further attempts (whose failure are not reported via hooks).
+//
+// TransactionSaveFailed has the same quirk, but there it makes sense as failing to save the transaction at the
+// collection stage means there won't be any further attempts, whereas further failures are not really user-relevant.
+// This is only used in tests, and probably this shouldn't be a user-exposed hook.
+
 export enum TxmHookType {
     All = "All",
     TransactionStatusChanged = "TransactionStatusChanged",
