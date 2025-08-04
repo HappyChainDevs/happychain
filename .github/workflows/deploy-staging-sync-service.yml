@@ -1,0 +1,67 @@
+name: Deploy staging sync service
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      
+      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
+        with:
+          bun-version: '1.2.4'
+
+      - name: Build code
+        run: |
+          make sync-service.build
+  
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@917f8b81dfc1ccd331fef9e2d61bdc6c8be94634 # v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "apps/sync-service/build/*"
+          target: /home/deployer/staging_sync_service
+          strip_components: 2   
+          rm: true
+          debug: true
+
+      - name: Deploy staging sync service to server
+        uses: appleboy/ssh-action@25ce8cbbcb08177468c7ff7ec5cbfa236f9341e1 # v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script_stop: true
+          script: |
+            chmod -R o+rX /home/deployer/staging_sync_service
+            rm -rf /tmp/staging_sync_service
+            mv /home/deployer/staging_sync_service /tmp
+            sudo -u staging_sync_service bash -c '
+              rm -rf /home/staging_sync_service/build
+              cp -r /tmp/staging_sync_service/* /home/staging_sync_service/build
+              
+              cat > /home/staging_sync_service/build/.env <<-EOF
+            NODE_ENV=production
+            APP_PORT=49534
+            SETTINGS_DB_URL=settings.sqlite
+            EOF
+              # cf. https://github.com/appleboy/drone-ssh/issues/175
+              sed -i '/DRONE_SSH_PREV_COMMAND_EXIT_CODE/d' /home/staging_sync_service/build/.env
+              cd /home/staging_sync_service/build
+              bun migrate.es.js
+            '
+            rm -rf /tmp/staging_sync_service
+            sudo /bin/systemctl restart staging-sync.service

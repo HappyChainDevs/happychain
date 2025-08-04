@@ -9,8 +9,8 @@ import {
     hasPermissions,
     revokePermissions,
 } from "#src/state/permissions"
+import { setUser } from "#src/state/user"
 import { disablePermissionWarnings } from "#src/testing/utils"
-import { setUser } from "../state/user"
 
 const { appURL, walletURL, appURLMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
